@@ -229,6 +229,56 @@
   .liunian-box p{margin:0;color:var(--text-1);font-size:.9rem;}
   .liunian-box .ln-title{color:var(--text-0);font-weight:700;margin-bottom:6px;font-size:1rem;}
 
+  section.compat-section{padding:20px 0 70px;}
+  .section-head{text-align:center;margin-bottom:28px;}
+  .section-head h2{font-family:'Noto Serif JP',serif;font-size:1.6rem;margin:10px 0 8px;}
+  .section-head p{color:var(--text-2);font-size:.9rem;margin:0;}
+
+  #partner-form.is-disabled{opacity:.45;pointer-events:none;}
+
+  .family-row{
+    display:grid;grid-template-columns:1.1fr 1fr 1fr auto;gap:12px;align-items:end;
+    margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--border);
+  }
+  .family-row:last-of-type{border-bottom:none;}
+  @media(max-width:680px){.family-row{grid-template-columns:1fr 1fr;}}
+  .family-row label{display:block;font-size:.78rem;color:var(--text-2);margin-bottom:8px;font-weight:500;}
+  .family-row input[type="text"],
+  .family-row input[type="date"],
+  .family-row input[type="time"]{
+    width:100%;padding:11px 12px;border-radius:10px;
+    border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
+    color:var(--text-0);font-size:.92rem;font-family:inherit;color-scheme:dark;
+  }
+  .family-row input:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .family-row .remove-row{
+    background:none;border:1px solid var(--border);color:var(--text-2);
+    border-radius:9px;padding:11px 14px;cursor:pointer;font-size:.85rem;white-space:nowrap;
+  }
+  .family-row .remove-row:hover{border-color:#ff9a9a;color:#ff9a9a;}
+  .family-row .remove-row:disabled{opacity:.3;cursor:not-allowed;}
+
+  .compat-result{display:flex;flex-direction:column;gap:18px;margin-top:26px;}
+  .compat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px clamp(18px,4vw,30px);}
+  .compat-card .pair-head{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:20px;flex-wrap:wrap;text-align:center;}
+  .compat-person .p-name{color:var(--text-2);font-size:.8rem;margin-bottom:8px;}
+  .compat-person .p-kanji{font-family:'Noto Serif JP',serif;font-size:1.6rem;font-weight:700;color:var(--text-0);}
+  .compat-link{font-family:'Noto Serif JP',serif;color:var(--gold);font-size:1.2rem;}
+  .compat-tier{display:flex;justify-content:center;margin-bottom:18px;}
+  .compat-tier span{
+    font-family:'Noto Serif JP',serif;font-weight:700;font-size:1.05rem;
+    padding:.5em 1.4em;border-radius:999px;border:1px solid var(--gold);
+    color:var(--gold-soft);background:rgba(212,175,55,0.08);
+  }
+  .compat-notes{color:var(--text-1);font-size:.9rem;}
+  .compat-notes p{margin:0 0 12px;}
+  .compat-notes p:last-child{margin-bottom:0;}
+  .compat-tg-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  @media(max-width:560px){.compat-tg-row{grid-template-columns:1fr;}}
+  .compat-tg-row .tg-box{border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:.85rem;color:var(--text-1);}
+  .compat-tg-row .tg-box strong{color:var(--gold-soft);}
+  .compat-empty{color:var(--text-2);font-size:.88rem;text-align:center;padding:8px 0;}
+
   .reset-row{text-align:center;margin-top:44px;}
   .reset-btn{
     background:none;border:1px solid var(--border);color:var(--text-1);
@@ -358,6 +408,60 @@
       <div class="reset-row">
         <button class="reset-btn" id="reset-btn">もう一度鑑定する</button>
       </div>
+    </div>
+  </section>
+
+  <section class="compat-section" id="partner-section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">相性診断</span>
+        <h2>パートナーとの相性</h2>
+        <p>あなたとお相手、二人の命式を照らし合わせて相性を診断します。</p>
+      </div>
+      <div class="card">
+        <p class="desc" id="partner-gate-msg">まずはページ上部で、あなた自身の命式を鑑定してください。鑑定が終わると、この下の入力欄が使えるようになります。</p>
+        <form class="bazi-form is-disabled" id="partner-form">
+          <div class="row">
+            <div>
+              <label for="partner-date">お相手の生年月日</label>
+              <input type="date" id="partner-date" name="partner-date" min="1900-01-01" max="2026-12-31">
+            </div>
+            <div>
+              <label for="partner-time">お相手の出生時刻</label>
+              <input type="time" id="partner-time" name="partner-time">
+            </div>
+          </div>
+          <div class="unknown-row">
+            <input type="checkbox" id="partner-time-unknown" name="partner-time-unknown">
+            <label for="partner-time-unknown" style="margin:0;">出生時刻が分からない</label>
+          </div>
+          <div class="submit-row">
+            <button type="submit" class="submit" id="partner-submit" disabled>相性を診断する</button>
+            <span class="error-msg" id="partner-error"></span>
+          </div>
+        </form>
+      </div>
+      <div class="compat-result" id="partner-result" hidden></div>
+    </div>
+  </section>
+
+  <section class="compat-section" id="family-section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">相性診断</span>
+        <h2>家族の相性</h2>
+        <p>家族それぞれの生年月日を登録すると、全員分の組み合わせ（父と息子、母と息子…）で相性を診断します。</p>
+      </div>
+      <div class="card">
+        <p class="desc">名前や続柄（父・母・長男など）と生年月日を入力してください。出生時刻が分からない場合は空欄のままで構いません。2人以上を登録すると診断できます。</p>
+        <div id="family-rows"></div>
+        <button type="button" class="reset-btn" id="add-family-row">＋ 家族を追加</button>
+        <div class="submit-row" style="margin-top:24px;">
+          <button type="button" class="submit" id="family-submit">相性を診断する</button>
+          <span class="error-msg" id="family-error"></span>
+        </div>
+      </div>
+      <div class="compat-result" id="family-result" hidden></div>
     </div>
   </section>
 </main>
@@ -677,6 +781,115 @@
     正印:'知性と包容力、学びの心を表します。'
   };
 
+  // ---------- 相性診断 ----------
+  var SIX_HE = {子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
+  var SIX_CHONG = {子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
+  var SANHE_GROUPS = [['申','子','辰'],['亥','卯','未'],['寅','午','戌'],['巳','酉','丑']];
+
+  function branchRelation(b1, b2){
+    if (b1===b2) return {type:'比和', score:1, label:'同じ地支'};
+    if (SIX_HE[b1]===b2) return {type:'合', score:2, label:'六合'};
+    if (SIX_CHONG[b1]===b2) return {type:'冲', score:-2, label:'六冲'};
+    var group = SANHE_GROUPS.filter(function(g){ return g.indexOf(b1)!==-1; })[0];
+    if (group && group.indexOf(b2)!==-1) return {type:'半合', score:1, label:'三合(部分)'};
+    return {type:'なし', score:0, label:''};
+  }
+
+  function dayMasterRelation(stemIdxA, stemIdxB){
+    var elA = STEM_ELEMENT[STEMS[stemIdxA]], elB = STEM_ELEMENT[STEMS[stemIdxB]];
+    if (elA===elB) return {type:'比和', score:1};
+    if (GENERATES[elA]===elB || GENERATES[elB]===elA) return {type:'相生', score:3};
+    return {type:'相克', score:-2};
+  }
+
+  var DMREL_TEXT = {
+    相生:'五行の面では、お互いを生かし合う「相生」の関係。自然に支え合え、一緒にいると力が湧きやすい相性です。',
+    比和:'五行の面では、同じ気質を持つ「比和」の関係。似た者同士で分かり合いやすい一方、張り合う場面も出てきそうです。',
+    相克:'五行の面では、片方がもう片方を制する「相克」の関係。刺激や緊張感がありますが、うまく付き合うとお互いを大きく成長させ合えます。'
+  };
+  var TIER_TEXT = {
+    '◎':'とても相性の良い、支え合える組み合わせです。',
+    '○':'良い相性です。お互いを尊重する気持ちがあれば、さらに良い関係を築けるでしょう。',
+    '△':'個性の違いが目立つ相性ですが、違いを面白がる気持ちがあれば良い関係になります。',
+    '▲':'刺激の多い相性です。ぶつかることもありますが、それだけ強く影響し合える相手ともいえます。'
+  };
+  var COMPAT_TENGOD_TEXT = {
+    比肩:'対等な仲間のような関係。気が合いやすい反面、主導権をめぐって張り合うことも。',
+    劫財:'良きライバルのような関係。刺激し合えますが、価値観の違いには配慮が必要です。',
+    食神:'一緒にいて自然体でいられる、癒やしのような関係。',
+    傷官:'刺激的で会話が弾む関係。ただし言葉がぶつかりやすい面もあります。',
+    偏財:'気楽に楽しめる関係。フットワーク軽く一緒に行動できる相手です。',
+    正財:'大切に守り、支えたくなる関係。安定した信頼関係を築きやすいです。',
+    偏官:'緊張感と刺激のある関係。惹かれ合う反面、衝突も起きやすいでしょう。',
+    正官:'頼れる存在として尊敬・信頼できる関係。ただし窮屈に感じることもあります。',
+    偏印:'静かに支え合う、独特の理解が生まれる関係。',
+    正印:'包み込むように支えてくれる、安心できる関係。'
+  };
+
+  function compatTier(total){
+    if (total>=4) return '◎';
+    if (total>=1) return '○';
+    if (total>=-1) return '△';
+    return '▲';
+  }
+
+  function computeCompatibility(a, b){
+    var dmStemA = STEMS.indexOf(a.stem), dmStemB = STEMS.indexOf(b.stem);
+    var dmRel = dayMasterRelation(dmStemA, dmStemB);
+    var dayRel = branchRelation(a.dayBranch, b.dayBranch);
+    var yearRel = branchRelation(a.yearBranch, b.yearBranch);
+    var total = dmRel.score + dayRel.score + yearRel.score;
+    return {
+      dmRel: dmRel,
+      dayRel: dayRel,
+      yearRel: yearRel,
+      total: total,
+      tier: compatTier(total),
+      tgAtoB: tenGod(dmStemA, dmStemB),
+      tgBtoA: tenGod(dmStemB, dmStemA)
+    };
+  }
+
+  function bziToCompatProfile(bz){
+    return {stem: bz.day.stem, dayBranch: bz.day.branch, yearBranch: bz.year.branch};
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  function renderCompatCard(nameA, profA, nameB, profB){
+    var c = computeCompatibility(profA, profB);
+    var notes = [];
+    notes.push('<p>'+DMREL_TEXT[c.dmRel.type]+'</p>');
+    if (c.dayRel.type!=='なし'){
+      notes.push('<p>日支同士は「'+c.dayRel.label+'」の関係。'+(c.dayRel.score>0 ? '身近な相性の良さを感じやすい組み合わせです。' : '距離感の取り方に一工夫あると、より良い関係になります。')+'</p>');
+    }
+    if (c.yearRel.type!=='なし'){
+      notes.push('<p>年支同士は「'+c.yearRel.label+'」の関係。'+(c.yearRel.score>0 ? '世代を超えて自然と結びつきやすい相性です。' : '世代の感覚の違いを、思いやりで補うと良いでしょう。')+'</p>');
+    }
+    notes.push('<p>'+TIER_TEXT[c.tier]+'</p>');
+
+    var tgBox =
+      '<div class="compat-tg-row">'+
+        '<div class="tg-box"><strong>'+escapeHtml(nameA)+'</strong>から見た<strong>'+escapeHtml(nameB)+'</strong>は「'+c.tgAtoB+'」<br>'+COMPAT_TENGOD_TEXT[c.tgAtoB]+'</div>'+
+        '<div class="tg-box"><strong>'+escapeHtml(nameB)+'</strong>から見た<strong>'+escapeHtml(nameA)+'</strong>は「'+c.tgBtoA+'」<br>'+COMPAT_TENGOD_TEXT[c.tgBtoA]+'</div>'+
+      '</div>';
+
+    return '<div class="compat-card">'+
+      '<div class="pair-head">'+
+        '<div class="compat-person"><div class="p-name">'+escapeHtml(nameA)+'</div><div class="p-kanji">'+profA.stem+profA.dayBranch+'</div></div>'+
+        '<div class="compat-link">×</div>'+
+        '<div class="compat-person"><div class="p-name">'+escapeHtml(nameB)+'</div><div class="p-kanji">'+profB.stem+profB.dayBranch+'</div></div>'+
+      '</div>'+
+      '<div class="compat-tier"><span>'+c.tier+'　'+c.dmRel.type+'</span></div>'+
+      '<div class="compat-notes">'+notes.join('')+'</div>'+
+      tgBox+
+    '</div>';
+  }
+
   // ---------- 表示 ----------
   var PILLAR_LABELS = {year:'年柱',month:'月柱',day:'日柱',hour:'時柱'};
 
@@ -868,6 +1081,8 @@
   var resultSection = document.getElementById('result-section');
   var timeUnknownCheckbox = document.getElementById('time-unknown');
   var timeInput = document.getElementById('birth-time');
+  var selfBazi = null;
+  var selfLabel = 'あなた';
 
   timeUnknownCheckbox.addEventListener('change', function(){
     timeInput.disabled = timeUnknownCheckbox.checked;
@@ -927,11 +1142,137 @@
 
     resultSection.hidden = false;
     resultSection.scrollIntoView({behavior:'smooth', block:'start'});
+
+    selfBazi = bz;
+    enablePartnerForm();
   });
 
   document.getElementById('reset-btn').addEventListener('click', function(){
     resultSection.hidden = true;
     document.getElementById('form-section').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  // ---------- パートナーとの相性 ----------
+  function enablePartnerForm(){
+    document.getElementById('partner-form').classList.remove('is-disabled');
+    document.getElementById('partner-submit').disabled = false;
+    document.getElementById('partner-gate-msg').textContent = 'お相手の生年月日を入力してください。時刻が分からない場合は空欄のままで構いません。';
+  }
+
+  var partnerTimeUnknown = document.getElementById('partner-time-unknown');
+  var partnerTimeInput = document.getElementById('partner-time');
+  partnerTimeUnknown.addEventListener('change', function(){
+    partnerTimeInput.disabled = partnerTimeUnknown.checked;
+    if (partnerTimeUnknown.checked) partnerTimeInput.value = '';
+  });
+
+  document.getElementById('partner-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var errEl = document.getElementById('partner-error');
+    if (!selfBazi){
+      errEl.textContent = 'まずはページ上部で、あなた自身の命式を鑑定してください。';
+      errEl.style.display = 'inline';
+      return;
+    }
+    var dateVal = document.getElementById('partner-date').value;
+    var timeVal = partnerTimeInput.value;
+    var timeUnknown = partnerTimeUnknown.checked || !timeVal;
+    if (!dateVal){
+      errEl.textContent = 'お相手の生年月日を入力してください。';
+      errEl.style.display = 'inline';
+      return;
+    }
+    errEl.style.display = 'none';
+
+    var dp = dateVal.split('-').map(Number);
+    var hour=0, minute=0;
+    if (!timeUnknown){
+      var tp = timeVal.split(':').map(Number);
+      hour=tp[0]; minute=tp[1];
+    }
+    var partnerBazi = calcBazi(dp[0], dp[1], dp[2], hour, minute, timeUnknown);
+
+    var html = renderCompatCard(selfLabel, bziToCompatProfile(selfBazi), 'お相手', bziToCompatProfile(partnerBazi));
+    var resultEl = document.getElementById('partner-result');
+    resultEl.innerHTML = html;
+    resultEl.hidden = false;
+    resultEl.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  // ---------- 家族の相性 ----------
+  var familyRowsEl = document.getElementById('family-rows');
+  var familyRowCount = 0;
+
+  function addFamilyRow(presetLabel){
+    familyRowCount++;
+    var row = document.createElement('div');
+    row.className = 'family-row';
+    row.innerHTML =
+      '<div><label>名前・続柄</label><input type="text" class="fam-label" placeholder="例：父" value="'+(presetLabel?escapeHtml(presetLabel):'')+'"></div>'+
+      '<div><label>生年月日</label><input type="date" class="fam-date" min="1900-01-01" max="2026-12-31"></div>'+
+      '<div><label>出生時刻（任意）</label><input type="time" class="fam-time"></div>'+
+      '<button type="button" class="remove-row">削除</button>';
+    familyRowsEl.appendChild(row);
+    row.querySelector('.remove-row').addEventListener('click', function(){
+      row.remove();
+      updateRemoveButtons();
+    });
+    updateRemoveButtons();
+  }
+
+  function updateRemoveButtons(){
+    var rows = familyRowsEl.querySelectorAll('.family-row');
+    rows.forEach(function(r){
+      r.querySelector('.remove-row').disabled = rows.length<=2;
+    });
+  }
+
+  document.getElementById('add-family-row').addEventListener('click', function(){
+    addFamilyRow();
+  });
+
+  addFamilyRow('父');
+  addFamilyRow('息子');
+
+  document.getElementById('family-submit').addEventListener('click', function(){
+    var errEl = document.getElementById('family-error');
+    var rows = familyRowsEl.querySelectorAll('.family-row');
+    var people = [];
+    var hasIncomplete = false;
+
+    rows.forEach(function(r){
+      var label = r.querySelector('.fam-label').value.trim();
+      var dateVal = r.querySelector('.fam-date').value;
+      var timeVal = r.querySelector('.fam-time').value;
+      if (!dateVal) return;
+      if (!label) hasIncomplete = true;
+      var dp = dateVal.split('-').map(Number);
+      var hour=0, minute=0, timeUnknown=true;
+      if (timeVal){
+        var tp = timeVal.split(':').map(Number);
+        hour=tp[0]; minute=tp[1]; timeUnknown=false;
+      }
+      var bz = calcBazi(dp[0], dp[1], dp[2], hour, minute, timeUnknown);
+      people.push({label: label || '名称未設定', profile: bziToCompatProfile(bz)});
+    });
+
+    if (people.length < 2){
+      errEl.textContent = '生年月日を入力した家族を2人以上登録してください。';
+      errEl.style.display = 'inline';
+      return;
+    }
+    errEl.style.display = 'none';
+
+    var cards = [];
+    for (var i=0;i<people.length;i++){
+      for (var j=i+1;j<people.length;j++){
+        cards.push(renderCompatCard(people[i].label, people[i].profile, people[j].label, people[j].profile));
+      }
+    }
+    var resultEl = document.getElementById('family-result');
+    resultEl.innerHTML = cards.join('');
+    resultEl.hidden = false;
+    resultEl.scrollIntoView({behavior:'smooth', block:'start'});
   });
 })();
 </script>
