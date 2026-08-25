@@ -109,6 +109,9 @@
   form.bazi-form input:focus{outline:2px solid var(--gold);outline-offset:1px;}
   .unknown-row{display:flex;align-items:center;gap:10px;margin:-6px 0 24px;color:var(--text-2);font-size:.88rem;}
   .unknown-row input{accent-color:var(--gold);}
+  .gender-toggle{display:flex;gap:16px;}
+  .gender-opt{display:flex;align-items:center;gap:8px;font-size:.92rem;color:var(--text-1);font-weight:400;cursor:pointer;}
+  .gender-opt input{accent-color:var(--gold);}
   .submit-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
   button.submit{
     appearance:none;border:none;cursor:pointer;
@@ -188,6 +191,44 @@
   .narrative-box p{margin:0 0 12px;}
   .narrative-box p:last-child{margin-bottom:0;}
 
+  .strength-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 26px;}
+  .strength-verdict{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
+  .strength-verdict .verdict-badge{
+    font-family:'Noto Serif JP',serif;font-weight:700;font-size:1.05rem;
+    padding:.5em 1.2em;border-radius:999px;border:1px solid var(--gold);color:var(--gold-soft);
+    background:rgba(212,175,55,0.08);white-space:nowrap;
+  }
+  .strength-verdict .score-note{color:var(--text-2);font-size:.8rem;}
+  .strength-detail{color:var(--text-1);font-size:.9rem;margin:0 0 18px;}
+  .god-groups{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:560px){.god-groups{grid-template-columns:1fr;}}
+  .god-group{border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+  .god-group h4{margin:0 0 10px;font-size:.88rem;color:var(--text-0);font-weight:700;}
+  .god-group .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .god-group .badges span{font-size:.9rem;padding:.2em .65em;border-radius:7px;border:1px solid rgba(255,255,255,0.12);}
+  .god-group p{margin:0;color:var(--text-2);font-size:.82rem;}
+
+  .dayun-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;overflow-x:auto;}
+  .dayun-meta{color:var(--text-1);font-size:.88rem;margin:0 0 18px;}
+  .dayun-timeline{display:flex;gap:10px;min-width:640px;}
+  .dayun-period{
+    flex:1;min-width:76px;text-align:center;padding:14px 6px;border-radius:12px;
+    border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);
+  }
+  .dayun-period.current{border-color:var(--gold);background:rgba(212,175,55,0.1);box-shadow:0 0 0 1px rgba(212,175,55,0.35) inset;}
+  .dayun-period .age{font-size:.72rem;color:var(--text-2);margin-bottom:8px;}
+  .dayun-period .kanji{font-family:'Noto Serif JP',serif;font-size:1.15rem;font-weight:700;line-height:1.3;}
+  .dayun-period .tg{font-size:.72rem;color:var(--gold-soft);margin-top:6px;}
+
+  .liunian-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;display:flex;gap:20px;align-items:center;}
+  @media(max-width:560px){.liunian-box{flex-direction:column;text-align:center;}}
+  .liunian-box .ln-kanji{
+    font-family:'Noto Serif JP',serif;font-size:1.6rem;font-weight:900;color:var(--gold-soft);
+    border:1px solid var(--gold);border-radius:14px;padding:10px 18px;flex:none;
+  }
+  .liunian-box p{margin:0;color:var(--text-1);font-size:.9rem;}
+  .liunian-box .ln-title{color:var(--text-0);font-weight:700;margin-bottom:6px;font-size:1rem;}
+
   .reset-row{text-align:center;margin-top:44px;}
   .reset-btn{
     background:none;border:1px solid var(--border);color:var(--text-1);
@@ -243,6 +284,15 @@
             <input type="checkbox" id="time-unknown" name="time-unknown">
             <label for="time-unknown" style="margin:0;">出生時刻が分からない</label>
           </div>
+          <div class="row" style="margin-bottom:24px;">
+            <div>
+              <label>性別（大運の算出に使用）</label>
+              <div class="gender-toggle">
+                <label class="gender-opt"><input type="radio" name="gender" value="male" required> 男性</label>
+                <label class="gender-opt"><input type="radio" name="gender" value="female" required> 女性</label>
+              </div>
+            </div>
+          </div>
           <div class="submit-row">
             <button type="submit" class="submit">鑑定する</button>
             <span class="error-msg" id="error-msg">生年月日を入力してください。</span>
@@ -275,11 +325,29 @@
       </div>
 
       <div class="section-block">
+        <h3><span class="ico">◆</span>身強・身弱 と 用神</h3>
+        <p class="subdesc">日主が命式の中でどれだけ「強い」か「弱い」かを判定し、そこから運気を助ける五行（用神）を導きます。</p>
+        <div class="strength-box" id="strength-box"></div>
+      </div>
+
+      <div class="section-block">
         <h3><span class="ico">◆</span>十神・蔵干 詳細</h3>
         <p class="subdesc">十神は日主から見た他の柱との関係性を表し、蔵干は地支の内部に隠れた天干です。</p>
         <div class="detail-table-wrap">
           <table class="detail-table" id="detail-table"></table>
         </div>
+      </div>
+
+      <div class="section-block">
+        <h3><span class="ico">◆</span>大運（10年ごとの運気の流れ）</h3>
+        <p class="subdesc" id="dayun-subdesc">生年の陰陽と性別によって運気が巡る向きが決まり、生まれてから最初の大運が始まるまでの年齢（起運）も算出されます。</p>
+        <div class="dayun-wrap" id="dayun-wrap"></div>
+      </div>
+
+      <div class="section-block">
+        <h3><span class="ico">◆</span>今年の運勢（流年）</h3>
+        <p class="subdesc">現在の年の干支が命式にどう作用するかを示します。</p>
+        <div class="liunian-box" id="liunian-box"></div>
       </div>
 
       <div class="section-block">
@@ -317,6 +385,17 @@
   };
   var ELEMENT_CLASS = {木:'el-wood',火:'el-fire',土:'el-earth',金:'el-metal',水:'el-water'};
   var ELEMENT_FILL = {木:'fill-wood',火:'fill-fire',土:'fill-earth',金:'fill-metal',水:'fill-water'};
+  var ELEMENT_ORDER = ['木','火','土','金','水'];
+  var GENERATED_BY = {火:'木',土:'火',金:'土',水:'金',木:'水'};
+  var SEASON_ELEMENT = {
+    寅:'木', 卯:'木', 巳:'火', 午:'火', 申:'金', 酉:'金', 亥:'水', 子:'水',
+    辰:'土', 戌:'土', 丑:'土', 未:'土'
+  };
+  var STRENGTH_DESC = {
+    身強:'日主の力が強い命式です。自分の意志やペースを押し通しすぎると周囲とぶつかりやすいため、力を「発散」させる五行を取り入れるとバランスが整いやすくなります。',
+    身弱:'日主の力がやや弱い命式です。頑張りすぎると息切れしやすいため、自分を「支える」五行を意識すると、運気が安定しやすくなります。',
+    中和:'日主の強さに大きな偏りがなく、整った命式です。特定の五行に頼りすぎず、状況に応じて柔軟に力を発揮できるタイプです。'
+  };
 
   var JIE_TERMS = [
     {lon:315, branch:'寅', month:2,  day:4},
@@ -424,7 +503,123 @@
       var hourStemIdx = mod(hourBase+hourBranchIdx,10);
       result.hour = {stem:STEMS[hourStemIdx], branch:BRANCHES[hourBranchIdx]};
     }
+
+    result._meta = {
+      birthYear: y,
+      birthJD: birthJD,
+      termCandidates: termCandidates,
+      monthStemIdx: monthStemIdx,
+      monthBranchIdx: monthBranchIdx,
+      yearStemIdx: yearStemIdx
+    };
     return result;
+  }
+
+  // ---------- 60干支インデックス ----------
+  function ganzhiIndex(stemIdx, branchIdx){
+    for (var k=0;k<60;k++){
+      if (k%10===stemIdx && k%12===branchIdx) return k;
+    }
+    return 0;
+  }
+
+  // ---------- 身強・身弱 / 用神 ----------
+  function computeStrength(bz){
+    var dm = STEM_ELEMENT[bz.day.stem];
+    var seasonEl = SEASON_ELEMENT[bz.month.branch];
+    var seasonScore;
+    if (seasonEl===dm) seasonScore = 3;
+    else if (GENERATES[seasonEl]===dm) seasonScore = 2;
+    else if (GENERATES[dm]===seasonEl) seasonScore = 0;
+    else if (CONTROLS[seasonEl]===dm) seasonScore = -2;
+    else seasonScore = -3;
+
+    var others = [];
+    others.push(STEM_ELEMENT[bz.year.stem]);
+    others.push(BRANCH_ELEMENT[bz.year.branch]);
+    others.push(STEM_ELEMENT[bz.month.stem]);
+    others.push(BRANCH_ELEMENT[bz.day.branch]);
+    if (bz.hour){
+      others.push(STEM_ELEMENT[bz.hour.stem]);
+      others.push(BRANCH_ELEMENT[bz.hour.branch]);
+    }
+    var groupScore = 0;
+    others.forEach(function(el){
+      if (el===dm || GENERATED_BY[dm]===el) groupScore += 1;
+      else groupScore -= 1;
+    });
+
+    var total = seasonScore*2 + groupScore;
+    var level = (total>=3) ? '身強' : (total<=-3 ? '身弱' : '中和');
+    return {dm:dm, seasonScore:seasonScore, groupScore:groupScore, total:total, level:level};
+  }
+
+  function favorableElements(dm, level){
+    var support = [dm, GENERATED_BY[dm]];
+    var drain = ELEMENT_ORDER.filter(function(el){ return support.indexOf(el)===-1; });
+    if (level==='身強') return {favorable:drain, caution:support};
+    if (level==='身弱') return {favorable:support, caution:drain};
+    return {favorable:[], caution:[]};
+  }
+
+  // ---------- 大運 ----------
+  function computeDayun(bz, gender){
+    var meta = bz._meta;
+    var monthGanIdx = ganzhiIndex(meta.monthStemIdx, meta.monthBranchIdx);
+    var yearStemIsYang = meta.yearStemIdx%2===0;
+    var genderIsMale = gender==='male';
+    var forward = (yearStemIsYang && genderIsMale) || (!yearStemIsYang && !genderIsMale);
+    var dir = forward ? 1 : -1;
+
+    var terms = meta.termCandidates;
+    var nextTerm = null, prevTerm = null;
+    for (var i=0;i<terms.length;i++){
+      if (terms[i].jd > meta.birthJD){ nextTerm = terms[i]; break; }
+    }
+    for (var j=terms.length-1;j>=0;j--){
+      if (terms[j].jd <= meta.birthJD){ prevTerm = terms[j]; break; }
+    }
+    var targetJD = forward ? (nextTerm ? nextTerm.jd : meta.birthJD) : (prevTerm ? prevTerm.jd : meta.birthJD);
+    var diffDays = Math.abs(targetJD - meta.birthJD);
+    var startAgeYears = diffDays/3;
+
+    var periods = [];
+    for (var p=0;p<8;p++){
+      var ganIdx = mod(monthGanIdx + dir*(p+1), 60);
+      periods.push({
+        stemIdx: ganIdx%10,
+        branchIdx: ganIdx%12,
+        startAge: startAgeYears + p*10
+      });
+    }
+    return {direction: forward?'順行':'逆行', startAgeYears:startAgeYears, periods:periods};
+  }
+
+  function calcCurrentAge(y,m,d){
+    var now = new Date();
+    var age = now.getFullYear() - y;
+    var hadBirthday = (now.getMonth()+1 > m) || (now.getMonth()+1===m && now.getDate() >= d);
+    if (!hadBirthday) age -= 1;
+    return age;
+  }
+
+  function formatAge(years){
+    var yrs = Math.floor(years);
+    var months = Math.round((years-yrs)*12);
+    if (months>=12){ yrs += 1; months = 0; }
+    return yrs+'歳'+(months>0 ? months+'ヶ月' : '');
+  }
+
+  // ---------- 流年(今年の運勢) ----------
+  function computeLiunian(){
+    var now = new Date();
+    var nowY=now.getFullYear(), nowM=now.getMonth()+1, nowD=now.getDate();
+    var nowJD = toJD(nowY,nowM,nowD,0) + (now.getHours()+now.getMinutes()/60-9)/24;
+    var lichunJD = findSolarTermJD(nowY, 315, 2, 4);
+    var liunianYear = (nowJD < lichunJD) ? nowY-1 : nowY;
+    var stemIdx = mod(liunianYear-4,10);
+    var branchIdx = mod(liunianYear-4,12);
+    return {year:liunianYear, stemIdx:stemIdx, branchIdx:branchIdx};
   }
 
   // ---------- 十神 ----------
@@ -581,7 +776,58 @@
     document.getElementById('detail-table').innerHTML = head+stemRow+branchRow+hiddenRow+tgRow;
   }
 
-  function renderNarrative(bz){
+  function renderStrength(strength, favorable){
+    var scoreSign = function(n){ return (n>=0?'+':'')+n; };
+    var html = '<div class="strength-verdict">'+
+      '<span class="verdict-badge">'+strength.level+'</span>'+
+      '<span class="score-note">総合スコア '+scoreSign(strength.total)+'（季節 '+scoreSign(strength.seasonScore*2)+' ／ 他の柱 '+scoreSign(strength.groupScore)+'）</span>'+
+    '</div>';
+    html += '<p class="strength-detail">'+STRENGTH_DESC[strength.level]+'</p>';
+    if (strength.level!=='中和'){
+      html += '<div class="god-groups">'+
+        '<div class="god-group"><h4>用神（運気を助けやすい五行）</h4><div class="badges">'+favorable.favorable.map(elBadge).join('')+'</div><p>意識して取り入れると運気の味方になりやすい五行です。</p></div>'+
+        '<div class="god-group"><h4>忌神（やや控えめが吉な五行）</h4><div class="badges">'+favorable.caution.map(elBadge).join('')+'</div><p>偏りすぎると負担になりやすい五行です。</p></div>'+
+      '</div>';
+    }
+    document.getElementById('strength-box').innerHTML = html;
+  }
+
+  function renderDayun(dayun, dmStem, currentAge){
+    var html = '<p class="dayun-meta">運気が巡る向きは<strong>'+dayun.direction+'</strong>。最初の大運が始まるのは、生まれてからおよそ<strong>'+formatAge(dayun.startAgeYears)+'</strong>のときです。</p>';
+    html += '<div class="dayun-timeline">';
+    dayun.periods.forEach(function(p){
+      var stem = STEMS[p.stemIdx], branch = BRANCHES[p.branchIdx];
+      var tg = tenGod(STEMS.indexOf(dmStem), p.stemIdx);
+      var floorAge = Math.floor(p.startAge);
+      var isCurrent = (currentAge!=null && currentAge>=p.startAge && currentAge<p.startAge+10);
+      html += '<div class="dayun-period'+(isCurrent?' current':'')+'">'+
+        '<div class="age">'+floorAge+'〜'+(floorAge+9)+'歳</div>'+
+        '<div class="kanji">'+stem+branch+'</div>'+
+        '<div class="tg">'+tg+'</div>'+
+      '</div>';
+    });
+    html += '</div>';
+    document.getElementById('dayun-wrap').innerHTML = html;
+  }
+
+  function renderLiunian(liunian, dmStem, favorable){
+    var stem = STEMS[liunian.stemIdx], branch = BRANCHES[liunian.branchIdx];
+    var el = STEM_ELEMENT[stem];
+    var tg = tenGod(STEMS.indexOf(dmStem), liunian.stemIdx);
+    var comment;
+    if (favorable.favorable.indexOf(el)!==-1){
+      comment = '今年は、あなたの用神である「'+el+'」の気が巡る年。持ち前の力を発揮しやすく、追い風を感じやすい一年になりそうです。';
+    } else if (favorable.caution.indexOf(el)!==-1){
+      comment = '今年は「'+el+'」の気が強まる年。頑張りすぎず、ペース配分を意識するとより安定して過ごせるでしょう。';
+    } else {
+      comment = '今年は「'+el+'」の気が巡る年。バランスを大切にしながら過ごすと良いでしょう。';
+    }
+    var html = '<div class="ln-kanji">'+stem+branch+'</div>'+
+      '<div><div class="ln-title">'+liunian.year+'年（'+stem+branch+'年） ・ 十神：'+tg+'</div><p>'+comment+'</p></div>';
+    document.getElementById('liunian-box').innerHTML = html;
+  }
+
+  function renderNarrative(bz, strength, favorable){
     var stem = bz.day.stem;
     var el = STEM_ELEMENT[stem];
     var tgList = [];
@@ -599,6 +845,9 @@
       var tgText = tgUnique.map(function(t){ return '「'+t+'」（'+TENGOD_MEANING[t]+'）'; }).join('、');
       html += '<p>命式には '+tgText+' の気が見られます。これらはあなたが人生の中で発揮しやすい資質のヒントです。</p>';
     }
+    html += '<p>命式全体では「'+strength.level+'」タイプ。'+STRENGTH_DESC[strength.level]+
+      (favorable.favorable.length ? '特に'+favorable.favorable.join('・')+'の気を意識すると、運気の流れに乗りやすくなるでしょう。' : '')+
+    '</p>';
     if (bz.timeUnknown){
       html += '<p>※ 出生時刻が未入力のため、時柱および時柱に関する十神は算出していません。より詳しい鑑定には出生時刻の入力をおすすめします。</p>';
     }
@@ -630,8 +879,10 @@
     var dateVal = document.getElementById('birth-date').value;
     var timeVal = document.getElementById('birth-time').value;
     var timeUnknown = timeUnknownCheckbox.checked;
+    var genderInput = document.querySelector('input[name="gender"]:checked');
 
     if (!dateVal){
+      errorMsg.textContent = '生年月日を入力してください。';
       errorMsg.style.display = 'inline';
       return;
     }
@@ -640,7 +891,13 @@
       errorMsg.style.display = 'inline';
       return;
     }
+    if (!genderInput){
+      errorMsg.textContent = '大運の算出のため、性別を選択してください。';
+      errorMsg.style.display = 'inline';
+      return;
+    }
     errorMsg.style.display = 'none';
+    var gender = genderInput.value;
 
     var dateParts = dateVal.split('-').map(Number);
     var y = dateParts[0], m = dateParts[1], d = dateParts[2];
@@ -651,6 +908,11 @@
     }
 
     var bz = calcBazi(y, m, d, hour, minute, timeUnknown);
+    var strength = computeStrength(bz);
+    var favorable = favorableElements(strength.dm, strength.level);
+    var dayun = computeDayun(bz, gender);
+    var currentAge = calcCurrentAge(y, m, d);
+    var liunian = computeLiunian();
 
     document.getElementById('result-name-date').textContent =
       formatDateLabel(y,m,d,hour,minute,timeUnknown) + 'の命式';
@@ -658,7 +920,10 @@
     renderDaymaster(bz);
     renderElements(bz);
     renderDetailTable(bz);
-    renderNarrative(bz);
+    renderStrength(strength, favorable);
+    renderDayun(dayun, bz.day.stem, currentAge);
+    renderLiunian(liunian, bz.day.stem, favorable);
+    renderNarrative(bz, strength, favorable);
 
     resultSection.hidden = false;
     resultSection.scrollIntoView({behavior:'smooth', block:'start'});
