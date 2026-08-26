@@ -227,6 +227,10 @@
   const stages = [
     {
       name: "第1章　灯をともす",
+      place: "はじまりの谷",
+      request: ["……さむいよ……", "……だれか、いないの……"],
+      rewardName: "めざめの光",
+      rewardText: "谷の若い星たちが、目覚めた喜びを分けてくれた。",
       playerStart: { x: 50, y: 408 },
       platforms: [
         { x: 0, y: 420, w: 800, h: 30 },
@@ -243,6 +247,10 @@
     },
     {
       name: "第2章　谷を越えて",
+      place: "こだまの裂け谷",
+      request: ["むこう側の声が、", "遠くなっていく……", "とどけて……"],
+      rewardName: "こだまの糸",
+      rewardText: "引き裂かれていた対の星が、再びつながった証。",
       playerStart: { x: 50, y: 408 },
       platforms: [
         { x: 0, y: 420, w: 250, h: 30 },
@@ -262,6 +270,10 @@
     },
     {
       name: "第3章　星への昇降機",
+      place: "みちびきの頂",
+      request: ["……おぼえて、いない……", "わたしは、なぜ、", "ここに……"],
+      rewardName: "はじまりの温もり",
+      rewardText: "この空でいちばん最初に灯った星の、遠い記憶。",
       playerStart: { x: 50, y: 408 },
       platforms: [
         { x: 0, y: 420, w: 800, h: 30 },
@@ -284,9 +296,17 @@
     },
   ];
 
+  const hubNodePositions = [
+    { x: 150, y: 230 },
+    { x: 400, y: 170 },
+    { x: 650, y: 230 },
+  ];
+
   // ---------- Game state ----------
-  let gameState = "title"; // title | playing | stageClear | complete
+  let gameState = "title"; // title | hub | questIntro | playing | stageClear | reward | complete
   let currentStageIndex = 0;
+  let selectedQuestIndex = 0;
+  let questCleared = stages.map(() => false);
   let platforms = [];
   let fragments = [];
   let beacons = [];
@@ -325,23 +345,51 @@
     player.vx = 0; player.vy = 0;
   }
 
-  function startGame() {
+  function isUnlocked(i) {
+    return i === 0 || questCleared[i - 1];
+  }
+
+  function startGameFromTitle() {
     initAudio();
-    currentStageIndex = 0;
-    loadStage(0);
+    gameState = "hub";
+    selectedQuestIndex = 0;
   }
 
   function restartGame() {
-    currentStageIndex = 0;
-    loadStage(0);
+    questCleared = stages.map(() => false);
+    selectedQuestIndex = 0;
+    gameState = "hub";
   }
 
-  function advanceStage() {
-    if (currentStageIndex + 1 < stages.length) {
-      currentStageIndex++;
-      loadStage(currentStageIndex);
-    } else {
+  function giveUpToHub() {
+    selectedQuestIndex = currentStageIndex;
+    gameState = "hub";
+  }
+
+  function moveHubSelection(delta) {
+    let i = selectedQuestIndex;
+    for (let step = 0; step < stages.length; step++) {
+      i = (i + delta + stages.length) % stages.length;
+      if (isUnlocked(i)) { selectedQuestIndex = i; return; }
+    }
+  }
+
+  function confirmHub() {
+    if (!isUnlocked(selectedQuestIndex)) return;
+    currentStageIndex = selectedQuestIndex;
+    gameState = "questIntro";
+  }
+
+  function confirmQuestIntro() {
+    loadStage(currentStageIndex);
+  }
+
+  function confirmReward() {
+    if (currentStageIndex === stages.length - 1) {
       gameState = "complete";
+    } else {
+      gameState = "hub";
+      if (isUnlocked(currentStageIndex + 1)) selectedQuestIndex = currentStageIndex + 1;
     }
   }
 
@@ -437,9 +485,10 @@
           playDeliver();
           spawnBurst(b.x, b.y, "255,200,120", 20);
           if (litCount >= beacons.length) {
+            questCleared[currentStageIndex] = true;
             playStageClear();
             gameState = "stageClear";
-            stageClearTimer = 100;
+            stageClearTimer = 90;
           }
           break;
         }
@@ -608,7 +657,7 @@
     ctx.save();
     ctx.font = "16px 'Hiragino Sans','Segoe UI',sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillText(`ステージ ${currentStageIndex + 1} / ${stages.length}`, 16, 26);
+    ctx.fillText(stages[currentStageIndex].place, 16, 26);
     ctx.fillText(`光 ${litCount} / ${beacons.length}`, 16, 48);
     ctx.restore();
   }
@@ -639,7 +688,7 @@
     centeredText("ホシノコ", 250, 42, "#ffe9c4");
     centeredText("〜 星屑の郵便配達人 〜", 282, 18, "rgba(234,230,255,0.85)");
     const pulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.003));
-    centeredText("Space か クリックで はじめる", 340, 18, `rgba(255,224,160,${pulse.toFixed(2)})`);
+    centeredText("Space か クリックで 依頼を受ける", 340, 18, `rgba(255,224,160,${pulse.toFixed(2)})`);
   }
 
   function drawStageIntro() {
@@ -656,6 +705,87 @@
     centeredText("ステージクリア！", 220, 34, "#ffe9c4");
   }
 
+  function drawHub(t) {
+    drawOverlayBackdrop(0.15);
+    centeredText("灯台からの依頼", 56, 24, "#ffe9c4");
+    const clearedCount = questCleared.filter(Boolean).length;
+    centeredText(`想いの欠片　${clearedCount} / ${stages.length}`, 82, 13, "rgba(234,230,255,0.7)");
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,224,160,0.25)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    hubNodePositions.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+    ctx.stroke();
+    ctx.restore();
+
+    hubNodePositions.forEach((p, i) => {
+      const unlocked = isUnlocked(i);
+      const cleared = questCleared[i];
+      ctx.save();
+      if (i === selectedQuestIndex && unlocked) {
+        ctx.strokeStyle = "rgba(255,224,160,0.8)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 26, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      if (unlocked) {
+        const pulse = cleared ? 1 : 1 + 0.12 * Math.sin(t * 0.004 + i);
+        ctx.shadowColor = cleared ? "#ffdf8f" : "rgba(255,220,140,0.9)";
+        ctx.shadowBlur = cleared ? 12 : 16;
+        ctx.fillStyle = cleared ? "#ffdf8f" : "#ffe9a8";
+        drawStar(p.x, p.y, 16 * pulse, 7 * pulse, 5, -Math.PI / 2);
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = "rgba(150,160,220,0.5)";
+        ctx.lineWidth = 2;
+        drawStar(p.x, p.y, 14, 6, 5, -Math.PI / 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+      ctx.font = "13px 'Hiragino Sans','Segoe UI',sans-serif";
+      ctx.fillStyle = unlocked ? "rgba(255,236,190,0.9)" : "rgba(180,190,255,0.45)";
+      ctx.textAlign = "center";
+      ctx.fillText(unlocked ? stages[i].place : "???", p.x, p.y + 42);
+      ctx.textAlign = "left";
+    });
+
+    const sel = stages[selectedQuestIndex];
+    const lines = questCleared[selectedQuestIndex] ? ["もう一度めぐる"] : sel.request;
+    lines.forEach((line, i) => centeredText(line, 330 + i * 22, 14, "rgba(234,230,255,0.8)"));
+    const pulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.003));
+    centeredText("◀ ▶ で選択　↑ / Space で出発", 420, 14, `rgba(255,224,160,${pulse.toFixed(2)})`);
+  }
+
+  function drawQuestIntro(t) {
+    drawOverlayBackdrop(0.55);
+    const s = stages[currentStageIndex];
+    centeredText(s.place, 150, 26, "#ffe9c4");
+    s.request.forEach((line, i) => centeredText(line, 210 + i * 28, 17, "rgba(234,230,255,0.85)"));
+    const pulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.003));
+    centeredText("タップ / Space で出発する", 380, 15, `rgba(255,224,160,${pulse.toFixed(2)})`);
+  }
+
+  function drawReward(t) {
+    drawOverlayBackdrop(0.55);
+    const s = stages[currentStageIndex];
+    const bob = Math.sin(t * 0.002) * 5;
+    ctx.save();
+    ctx.shadowColor = "#ffe9a8";
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = "#fff3c4";
+    drawStar(W / 2, 150 + bob, 20, 9, 5, -Math.PI / 2);
+    ctx.fill();
+    ctx.restore();
+    centeredText("想いの欠片を受け取った", 210, 16, "rgba(234,230,255,0.8)");
+    centeredText(`「${s.rewardName}」`, 246, 26, "#ffe9c4");
+    centeredText(s.rewardText, 284, 14, "rgba(234,230,255,0.7)");
+    const pulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.003));
+    const nextLabel = currentStageIndex === stages.length - 1 ? "タップ / Space で締めくくる" : "タップ / Space で谷へ戻る";
+    centeredText(nextLabel, 380, 14, `rgba(255,224,160,${pulse.toFixed(2)})`);
+  }
+
   function drawCompleteOverlay(t) {
     drawOverlayBackdrop(0.5);
     const bob = Math.sin(t * 0.002) * 6;
@@ -663,20 +793,24 @@
     ctx.shadowColor = "#ffe9a8";
     ctx.shadowBlur = 24;
     ctx.fillStyle = "#fff3c4";
-    drawStar(W / 2, 160 + bob, 24, 11, 5, -Math.PI / 2);
+    drawStar(W / 2, 130 + bob, 24, 11, 5, -Math.PI / 2);
     ctx.fill();
     ctx.restore();
-    centeredText("すべての星に灯がともった", 250, 28, "#ffe9c4");
-    centeredText("ありがとう、ホシノコ。", 282, 18, "rgba(234,230,255,0.85)");
+    centeredText("すべての星に灯がともった", 220, 26, "#ffe9c4");
+    centeredText(`集めた想い　${stages.map((s) => s.rewardName).join("・")}`, 254, 13, "rgba(234,230,255,0.7)");
+    centeredText("ありがとう、ホシノコ。", 286, 17, "rgba(234,230,255,0.85)");
     const pulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.003));
-    centeredText("R キー か ↺ ボタンで もう一度", 340, 16, `rgba(255,224,160,${pulse.toFixed(2)})`);
+    centeredText("R キー か ↺ ボタンで もう一度", 340, 15, `rgba(255,224,160,${pulse.toFixed(2)})`);
   }
 
   // ---------- Input ----------
   const MOVE_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", " ", "a", "A", "d", "D", "w", "W"];
 
-  function pressJumpOrConfirm() {
-    if (gameState === "title") { startGame(); return; }
+  function handleConfirm() {
+    if (gameState === "title") { startGameFromTitle(); return; }
+    if (gameState === "hub") { confirmHub(); return; }
+    if (gameState === "questIntro") { confirmQuestIntro(); return; }
+    if (gameState === "reward") { confirmReward(); return; }
     if (gameState === "complete") { restartGame(); return; }
     if (gameState === "playing" && player.onGround) {
       player.vy = JUMP_VELOCITY;
@@ -688,14 +822,17 @@
 
   window.addEventListener("keydown", (e) => {
     if (MOVE_KEYS.includes(e.key)) e.preventDefault();
-    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
-    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
-
-    if (gameState === "complete") {
-      if (e.key === "r" || e.key === "R") restartGame();
-      return;
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+      keys.left = true;
+      if (gameState === "hub") moveHubSelection(-1);
     }
-    if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") pressJumpOrConfirm();
+    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+      keys.right = true;
+      if (gameState === "hub") moveHubSelection(1);
+    }
+
+    if (gameState === "complete" && (e.key === "r" || e.key === "R")) { restartGame(); return; }
+    if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") handleConfirm();
   }, { passive: false });
 
   window.addEventListener("keyup", (e) => {
@@ -704,12 +841,16 @@
   });
 
   canvas.addEventListener("click", () => {
-    if (gameState === "title") startGame();
-    else if (gameState === "complete") restartGame();
+    if (gameState === "title" || gameState === "questIntro" || gameState === "reward" || gameState === "complete") {
+      handleConfirm();
+    }
   });
 
   muteBtn.addEventListener("click", toggleMute);
-  restartBtn.addEventListener("click", restartGame);
+  restartBtn.addEventListener("click", () => {
+    if (gameState === "playing" || gameState === "questIntro") giveUpToHub();
+    else restartGame();
+  });
 
   function bindHoldButton(el, onDown, onUp) {
     const start = (e) => { e.preventDefault(); el.classList.add("is-pressed"); onDown(); };
@@ -720,9 +861,15 @@
     el.addEventListener("pointerleave", end);
   }
 
-  bindHoldButton(btnLeft, () => { keys.left = true; }, () => { keys.left = false; });
-  bindHoldButton(btnRight, () => { keys.right = true; }, () => { keys.right = false; });
-  bindHoldButton(btnJump, pressJumpOrConfirm);
+  bindHoldButton(btnLeft, () => {
+    if (gameState === "hub") { moveHubSelection(-1); return; }
+    keys.left = true;
+  }, () => { keys.left = false; });
+  bindHoldButton(btnRight, () => {
+    if (gameState === "hub") { moveHubSelection(1); return; }
+    keys.right = true;
+  }, () => { keys.right = false; });
+  bindHoldButton(btnJump, handleConfirm);
 
   // ---------- Main loop ----------
   function loop(ts) {
@@ -730,11 +877,13 @@
     const t = ts || 0;
     ctx.clearRect(0, 0, W, H);
     drawBackground(t);
+    restartBtn.title = (gameState === "playing" || gameState === "questIntro") ? "ひきかえす" : "最初からやり直す";
 
-    if (gameState === "title") {
-      drawTitleScreen(t);
-      return;
-    }
+    if (gameState === "title") { drawTitleScreen(t); return; }
+    if (gameState === "hub") { drawHub(t); return; }
+    if (gameState === "questIntro") { drawQuestIntro(t); return; }
+    if (gameState === "reward") { drawReward(t); return; }
+    if (gameState === "complete") { drawCompleteOverlay(t); return; }
 
     updateMovingPlatforms(t * 0.001);
 
@@ -758,10 +907,8 @@
     if (gameState === "stageClear") {
       stageClearTimer--;
       drawStageClearOverlay();
-      if (stageClearTimer <= 0) advanceStage();
+      if (stageClearTimer <= 0) gameState = "reward";
     }
-
-    if (gameState === "complete") drawCompleteOverlay(t);
   }
 
   requestAnimationFrame(loop);
