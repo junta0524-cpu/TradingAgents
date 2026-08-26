@@ -1,7 +1,6 @@
-// 戦闘システム ― コマンド選択式のターン制バトル(たたかう/じゅもん/どうぐ/にげる)
+// 戦闘システム ― パーティ全員が順番にコマンドを選ぶターン制バトル
 var Game = window.Game || {};
 Game.Battle = (function () {
-  var R = null; // renderer は init 時に注入
   var state = null;
 
   function cloneMonster(id) {
@@ -15,10 +14,12 @@ Game.Battle = (function () {
     state = {
       phase: 'intro',
       enemies: monsterIds.map(cloneMonster),
-      actorId: Game.Data.PARTY_ORDER[0],
+      turnOrder: Game.Party.aliveList().map(function (m) { return m.id; }),
+      turnIndex: 0,
       menu: 'main',
       cursor: 0,
-      targetCursor: 0,
+      pendingSkill: null,
+      pendingItem: null,
       onEnd: onEnd,
       log: [],
     };
@@ -29,8 +30,8 @@ Game.Battle = (function () {
   }
 
   function isActive() { return !!state; }
-
   function aliveEnemies() { return state.enemies.filter(function (e) { return e.curHp > 0; }); }
+  function currentActor() { return Game.Party.get(state.turnOrder[state.turnIndex]); }
 
   function commandList() {
     return [
@@ -48,7 +49,22 @@ Game.Battle = (function () {
   }
 
   function usableItems() {
-    return Game.Party.inventory().filter(function (it) { return it.count > 0; });
+    return Game.Party.inventory().filter(function (it) {
+      if (it.count <= 0) return false;
+      var def = Game.Data.Items[it.id];
+      return def.kind !== 'return'; // 帰還アイテムは戦闘中は使えない
+    });
+  }
+
+  function isHealKind(kind) {
+    return kind === 'heal_hp' || kind === 'heal_mp' || kind === 'revive' ||
+      kind === 'cure' || kind === 'cure_undead' || kind === 'ward';
+  }
+
+  function allyTargetsFor(kind) {
+    var list = Game.Party.list();
+    if (kind === 'revive') return list.filter(function (m) { return m.hp <= 0; });
+    return list.filter(function (m) { return m.hp > 0; });
   }
 
   function damageOf(atk, def) {
@@ -57,31 +73,33 @@ Game.Battle = (function () {
     return base + Math.floor(Math.random() * (variance * 2 + 1)) - variance;
   }
 
-  function queueEnemyTurns() {
-    aliveEnemies().forEach(function (enemy) {
-      var target = Game.Party.get(state.actorId);
-      if (target.hp <= 0) return;
-      var dmg = damageOf(enemy.atk, target.def);
-      target.hp = Math.max(0, target.hp - dmg);
-      state.log.push(enemy.name + 'の こうげき! ' + target.name + 'に ' + dmg + ' の ダメージ');
-    });
-  }
-
   function flushLog(next) {
     if (state.log.length === 0) { next(); return; }
     var msg = state.log.shift();
     Game.Dialogue.show(msg, function () { flushLog(next); });
   }
 
-  function afterPlayerAction() {
+  function advanceTurn() {
+    state.turnIndex += 1;
+    if (state.turnIndex < state.turnOrder.length) {
+      state.phase = 'command';
+      state.menu = 'main';
+      state.cursor = 0;
+    } else {
+      endPlayerPhase();
+    }
+  }
+
+  function endPlayerPhase() {
     checkEnemiesDefeated(function (over) {
       if (over) return;
       queueEnemyTurns();
       flushLog(function () {
-        var actor = Game.Party.get(state.actorId);
-        if (actor.hp <= 0) {
+        if (Game.Party.isWiped()) {
           endBattle('lost');
         } else {
+          state.turnOrder = Game.Party.aliveList().map(function (m) { return m.id; });
+          state.turnIndex = 0;
           state.phase = 'command';
           state.menu = 'main';
           state.cursor = 0;
@@ -90,69 +108,95 @@ Game.Battle = (function () {
     });
   }
 
+  function queueEnemyTurns() {
+    aliveEnemies().forEach(function (enemy) {
+      var alive = Game.Party.aliveList();
+      if (alive.length === 0) return;
+      var useSkill = enemy.boss && enemy.bossSkills && Math.random() < 0.35;
+      if (useSkill) {
+        var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
+        if (skill.target === 'all_party') {
+          alive.forEach(function (member) {
+            var dmg = Math.round(damageOf(enemy.atk, member.def) * skill.power);
+            member.hp = Math.max(0, member.hp - dmg);
+            state.log.push(enemy.name + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
+          });
+          return;
+        }
+      }
+      var target = alive[Math.floor(Math.random() * alive.length)];
+      var dmg2 = damageOf(enemy.atk, target.def);
+      target.hp = Math.max(0, target.hp - dmg2);
+      state.log.push(enemy.name + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
+    });
+  }
+
   function checkEnemiesDefeated(cb) {
     if (aliveEnemies().length > 0) { cb(false); return; }
     var exp = state.enemies.reduce(function (s, e) { return s + e.exp; }, 0);
     var gold = state.enemies.reduce(function (s, e) { return s + e.gold; }, 0);
     Game.Party.addGold(gold);
-    var leveled = Game.Party.addExp(state.actorId, exp);
+    var levelMsgs = Game.Party.addExp(exp);
     var msg = 'せんとうに かちどきをあげた! ' + exp + 'の けいけんちと ' + gold + 'ゴールドを てにいれた';
     Game.Dialogue.show(msg, function () {
-      if (leveled) {
-        var actor = Game.Party.get(state.actorId);
-        Game.Dialogue.show(actor.name + ' は レベル' + actor.level + ' に あがった!', function () { endBattle('won'); });
-      } else {
-        endBattle('won');
-      }
+      flushArray(levelMsgs, function () { endBattle('won'); });
     });
     cb(true);
   }
 
+  function flushArray(msgs, done) {
+    if (!msgs || msgs.length === 0) { done(); return; }
+    var m = msgs.shift();
+    Game.Dialogue.show(m, function () { flushArray(msgs, done); });
+  }
+
   function endBattle(result) {
     var cb = state.onEnd;
+    var defeatedIds = state.enemies.map(function (e) { return e.id; });
     state = null;
-    if (cb) cb(result);
+    if (cb) cb(result, defeatedIds);
   }
 
   function doAttack(target) {
-    var actor = Game.Party.get(state.actorId);
+    var actor = currentActor();
     var dmg = damageOf(actor.atk, target.def);
     target.curHp = Math.max(0, target.curHp - dmg);
     state.log.push(actor.name + 'の こうげき! ' + target.name + 'に ' + dmg + ' の ダメージ');
     if (target.curHp <= 0) state.log.push(target.name + 'を たおした!');
     state.phase = 'resolving';
-    flushLog(afterPlayerAction);
+    flushLog(advanceTurn);
   }
 
   function doSkill(skill, target) {
-    var actor = Game.Party.get(state.actorId);
+    var actor = currentActor();
     actor.mp -= skill.mp;
     if (skill.kind === 'heal') {
-      actor.hp = Math.min(actor.maxHp, actor.hp + skill.power);
-      state.log.push(actor.name + 'は ' + skill.name + 'を となえた! HPが かいふくした');
+      target.hp = Math.min(target.maxHp, target.hp + skill.power);
+      state.log.push(actor.name + 'は ' + skill.name + 'を となえた! ' + target.name + 'の HPが かいふくした');
     } else if (skill.kind === 'attack') {
       var targets = skill.target === 'all_enemies' ? aliveEnemies() : [target];
       targets.forEach(function (t) {
         var dmg = Math.round(damageOf(actor.atk, t.def) * (skill.power || 1));
         t.curHp = Math.max(0, t.curHp - dmg);
         state.log.push(actor.name + 'の ' + skill.name + '! ' + t.name + 'に ' + dmg + ' の ダメージ');
+        if (t.curHp <= 0) state.log.push(t.name + 'を たおした!');
       });
     }
     state.phase = 'resolving';
-    flushLog(afterPlayerAction);
+    flushLog(advanceTurn);
   }
 
-  function doItem(itemEntry) {
-    var actor = Game.Party.get(state.actorId);
-    Game.Party.useItem(itemEntry.id, state.actorId);
+  function doItem(itemEntry, target) {
+    var actor = currentActor();
     var def = Game.Data.Items[itemEntry.id];
-    state.log.push(actor.name + 'は ' + def.name + 'を つかった!');
+    var resultMsg = Game.Party.useItem(itemEntry.id, target.id);
+    state.log.push(actor.name + 'は ' + def.name + 'を つかった! ' + (resultMsg || ''));
     state.phase = 'resolving';
-    flushLog(afterPlayerAction);
+    flushLog(advanceTurn);
   }
 
   function doFlee() {
-    var actor = Game.Party.get(state.actorId);
+    var actor = currentActor();
     var avgEnemySpd = state.enemies.reduce(function (s, e) { return s + e.spd; }, 0) / state.enemies.length;
     var success = Math.random() < (0.5 + (actor.spd - avgEnemySpd) * 0.03);
     if (success) {
@@ -160,51 +204,68 @@ Game.Battle = (function () {
     } else {
       state.log.push('にげられなかった!');
       state.phase = 'resolving';
-      flushLog(afterPlayerAction);
+      flushLog(endPlayerPhase);
     }
+  }
+
+  function currentMenuList() {
+    var actor = currentActor();
+    if (state.menu === 'main') return commandList();
+    if (state.menu === 'skill') return usableSkills(actor);
+    if (state.menu === 'item') return usableItems();
+    if (state.menu === 'target') return aliveEnemies();
+    if (state.menu === 'allytarget') {
+      var kind = state.pendingSkill ? 'heal' : Game.Data.Items[state.pendingItem.id].kind;
+      return allyTargetsFor(kind);
+    }
+    return [];
   }
 
   function update() {
     if (!state) return;
+    var dialogueWasActive = Game.Dialogue.isActive();
     Game.Dialogue.update();
-    // Dialogue.update() 内のコールバックで endBattle() が同期的に呼ばれ、
-    // state がここで null になっている場合があるため再チェックする
-    if (!state) return;
+    if (!state) return; // ダイアログのコールバックで戦闘が終わっている場合がある
+    // ダイアログを閉じたのと同じフレームの confirm 入力を、コマンド選択に二重に使わない
+    if (dialogueWasActive) return;
     if (Game.Dialogue.isActive() || state.phase === 'resolving' || state.phase === 'intro') return;
+    if (state.phase !== 'command') return;
 
-    if (state.phase === 'command') {
-      var list = state.menu === 'main' ? commandList()
-        : state.menu === 'skill' ? usableSkills(Game.Party.get(state.actorId))
-        : state.menu === 'item' ? usableItems() : [];
+    var list = currentMenuList();
 
-      if (Game.Input.wasPressed('down')) state.cursor = (state.cursor + 1) % Math.max(1, list.length);
-      if (Game.Input.wasPressed('up')) state.cursor = (state.cursor - 1 + list.length) % Math.max(1, list.length);
+    if (Game.Input.wasPressed('down')) state.cursor = (list.length === 0) ? 0 : (state.cursor + 1) % list.length;
+    if (Game.Input.wasPressed('up')) state.cursor = (list.length === 0) ? 0 : (state.cursor - 1 + list.length) % list.length;
 
-      if (Game.Input.wasPressed('cancel') && state.menu !== 'main') { state.menu = 'main'; state.cursor = 0; return; }
+    if (Game.Input.wasPressed('cancel')) {
+      if (state.menu === 'target' || state.menu === 'allytarget') { state.menu = state.pendingSkill ? 'skill' : (state.pendingItem ? 'item' : 'main'); state.pendingSkill = null; state.pendingItem = null; state.cursor = 0; }
+      else if (state.menu !== 'main') { state.menu = 'main'; state.cursor = 0; }
+      return;
+    }
 
-      if (Game.Input.wasPressed('confirm')) {
-        if (state.menu === 'main') {
-          var cmd = list[state.cursor].id;
-          if (cmd === 'attack') { state.menu = 'target'; state.cursor = 0; }
-          else if (cmd === 'skill') { state.menu = 'skill'; state.cursor = 0; }
-          else if (cmd === 'item') { state.menu = 'item'; state.cursor = 0; }
-          else if (cmd === 'flee') { doFlee(); }
-        } else if (state.menu === 'skill') {
-          if (list.length === 0) return;
-          state.pendingSkill = list[state.cursor];
-          if (state.pendingSkill.kind === 'heal') { doSkill(state.pendingSkill, null); }
-          else { state.menu = 'target'; state.cursor = 0; }
-        } else if (state.menu === 'item') {
-          if (list.length === 0) return;
-          doItem(list[state.cursor]);
-        } else if (state.menu === 'target') {
-          var enemies = aliveEnemies();
-          var target = enemies[state.cursor];
-          if (!target) return;
-          if (state.pendingSkill) { doSkill(state.pendingSkill, target); state.pendingSkill = null; }
-          else { doAttack(target); }
-        }
-      }
+    if (!Game.Input.wasPressed('confirm') || list.length === 0) return;
+
+    if (state.menu === 'main') {
+      var cmd = list[state.cursor].id;
+      if (cmd === 'attack') { state.menu = 'target'; state.cursor = 0; }
+      else if (cmd === 'skill') { state.menu = 'skill'; state.cursor = 0; }
+      else if (cmd === 'item') { state.menu = 'item'; state.cursor = 0; }
+      else if (cmd === 'flee') { doFlee(); }
+    } else if (state.menu === 'skill') {
+      state.pendingSkill = list[state.cursor];
+      state.menu = isHealKind(state.pendingSkill.kind) ? 'allytarget' : 'target';
+      state.cursor = 0;
+    } else if (state.menu === 'item') {
+      state.pendingItem = list[state.cursor];
+      state.menu = 'allytarget';
+      state.cursor = 0;
+    } else if (state.menu === 'target') {
+      var enemyTarget = list[state.cursor];
+      if (state.pendingSkill) { var sk = state.pendingSkill; state.pendingSkill = null; doSkill(sk, enemyTarget); }
+      else { doAttack(enemyTarget); }
+    } else if (state.menu === 'allytarget') {
+      var allyTarget = list[state.cursor];
+      if (state.pendingSkill) { var sk2 = state.pendingSkill; state.pendingSkill = null; doSkill(sk2, allyTarget); }
+      else { var it = state.pendingItem; state.pendingItem = null; doItem(it, allyTarget); }
     }
   }
 
@@ -213,45 +274,59 @@ Game.Battle = (function () {
     ctx.fillStyle = '#171b2b';
     ctx.fillRect(0, 0, W, H);
 
-    // enemies
     var enemies = state.enemies;
     var startX = W / 2 - (enemies.length - 1) * 70;
     enemies.forEach(function (e, i) {
-      var x = startX + i * 140, y = 150;
+      var x = startX + i * 140, y = 130;
       ctx.fillStyle = e.curHp > 0 ? (e.boss ? '#8a3230' : '#96702a') : '#333b57';
-      ctx.beginPath(); ctx.arc(x, y, 34, 0, Math.PI * 2); ctx.fill();
-      Game.Renderer.drawText(ctx, e.name, x, y + 60, { align: 'center', size: 13 });
-      if (e.curHp > 0) Game.Renderer.drawBar(ctx, x - 40, y + 68, 80, 8, e.curHp / e.hp, '#8a3230');
+      ctx.beginPath(); ctx.arc(x, y, e.boss ? 42 : 34, 0, Math.PI * 2); ctx.fill();
+      Game.Renderer.drawText(ctx, e.name, x, y + (e.boss ? 68 : 60), { align: 'center', size: 12 });
+      if (e.curHp > 0) Game.Renderer.drawBar(ctx, x - 40, y + (e.boss ? 76 : 68), 80, 7, e.curHp / e.hp, '#8a3230');
       if (state.menu === 'target' && aliveEnemies()[state.cursor] === e) {
-        Game.Renderer.drawText(ctx, '▼', x, y - 46, { align: 'center', size: 18, color: '#d4af5a' });
+        Game.Renderer.drawText(ctx, '▼', x, y - (e.boss ? 54 : 46), { align: 'center', size: 18, color: '#d4af5a' });
       }
     });
 
-    // party status
-    var actor = Game.Party.get(state.actorId);
-    Game.Renderer.drawPanel(ctx, 16, H - 150, 220, 90);
-    Game.Renderer.drawText(ctx, actor.name + '  Lv' + actor.level, 30, H - 124, { size: 14 });
-    Game.Renderer.drawText(ctx, 'HP', 30, H - 100, { size: 12, color: '#a49b86' });
-    Game.Renderer.drawBar(ctx, 60, H - 108, 150, 10, actor.hp / actor.maxHp, '#5fae5f');
-    Game.Renderer.drawText(ctx, actor.hp + '/' + actor.maxHp, 218, H - 100, { size: 11, align: 'right', color: '#a49b86' });
-    Game.Renderer.drawText(ctx, 'MP', 30, H - 80, { size: 12, color: '#a49b86' });
-    Game.Renderer.drawBar(ctx, 60, H - 88, 150, 10, actor.maxMp ? actor.mp / actor.maxMp : 0, '#5c8ecf');
-    Game.Renderer.drawText(ctx, actor.mp + '/' + actor.maxMp, 218, H - 80, { size: 11, align: 'right', color: '#a49b86' });
-
-    // command menu
-    if (state.phase === 'command' && state.menu !== 'target') {
-      var list = state.menu === 'main' ? commandList()
-        : state.menu === 'skill' ? usableSkills(actor)
-        : usableItems();
-      var x = 260, y = H - 150, w = W - 276, h = 90;
-      Game.Renderer.drawPanel(ctx, x, y, w, h);
-      if (list.length === 0) {
-        Game.Renderer.drawText(ctx, '(つかえるものが ない)', x + 16, y + 30, { size: 13, color: '#a49b86' });
+    // パーティ全員のステータス(横一列、人数に応じて幅を自動調整)
+    var party = Game.Party.list();
+    var statusY = H - 158, statusH = 68, gap = 6;
+    var cardW = (W - 16 - (party.length - 1) * gap) / party.length;
+    party.forEach(function (m, i) {
+      var x = 8 + i * (cardW + gap), y = statusY;
+      var isCurrent = state.phase === 'command' && m.id === state.turnOrder[state.turnIndex];
+      Game.Renderer.drawPanel(ctx, x, y, cardW, statusH);
+      Game.Renderer.drawText(ctx, (isCurrent ? '▶' : '') + m.name, x + 8, y + 18, { size: 11, color: m.hp <= 0 ? '#6b6354' : (isCurrent ? '#d4af5a' : '#ece7da') });
+      Game.Renderer.drawBar(ctx, x + 8, y + 26, cardW - 16, 7, m.hp / m.maxHp, '#5fae5f');
+      Game.Renderer.drawText(ctx, m.hp + '/' + m.maxHp, x + cardW - 8, y + 39, { size: 9, align: 'right', color: '#a49b86' });
+      if (m.maxMp > 0) {
+        Game.Renderer.drawBar(ctx, x + 8, y + 44, cardW - 16, 7, m.mp / m.maxMp, '#5c8ecf');
+        Game.Renderer.drawText(ctx, m.mp + '/' + m.maxMp, x + cardW - 8, y + 57, { size: 9, align: 'right', color: '#a49b86' });
       }
+    });
+
+    // コマンドメニュー(下段・横いっぱい、現在の行動者ぶんのみ)
+    var menuY = H - 84, menuH = 76;
+    if (state.phase === 'command' && state.menu !== 'target' && state.menu !== 'allytarget') {
+      var list = currentMenuList();
+      Game.Renderer.drawPanel(ctx, 8, menuY, W - 16, menuH);
+      if (list.length === 0) {
+        Game.Renderer.drawText(ctx, '(つかえるものが ない)', 20, menuY + 24, { size: 12, color: '#a49b86' });
+      }
+      var cols = list.length > 4 ? 2 : 1;
+      var colW = (W - 32) / cols;
       list.forEach(function (item, i) {
         var label = item.label || item.name || (Game.Data.Items[item.id] && Game.Data.Items[item.id].name + ' x' + item.count);
         var prefix = i === state.cursor ? '▶ ' : '　';
-        Game.Renderer.drawText(ctx, prefix + label, x + 16, y + 26 + i * 20, { size: 14 });
+        var col = Math.floor(i / Math.ceil(list.length / cols));
+        var row = i % Math.ceil(list.length / cols);
+        Game.Renderer.drawText(ctx, prefix + label, 20 + col * colW, menuY + 20 + row * 18, { size: 12 });
+      });
+    } else if (state.phase === 'command' && state.menu === 'allytarget') {
+      Game.Renderer.drawPanel(ctx, 8, menuY, W - 16, menuH);
+      Game.Renderer.drawText(ctx, 'だれに つかう?', 20, menuY + 18, { size: 12, color: '#a49b86' });
+      currentMenuList().forEach(function (m, i) {
+        var prefix = i === state.cursor ? '▶ ' : '　';
+        Game.Renderer.drawText(ctx, prefix + m.name, 20 + (i % 2) * (W / 2 - 20), menuY + 38 + Math.floor(i / 2) * 18, { size: 12 });
       });
     }
 

@@ -1,19 +1,20 @@
-// フィールド移動 ― タイル単位の移動、遭遇判定、街の門への到達判定
+// フィールド移動 ― タイル単位の移動、遭遇判定、門/ボス床/NPCへの到達判定
 var Game = window.Game || {};
 Game.Field = (function () {
   var map = null;
   var px = 0, py = 0;
   var moveCooldown = 0;
   var MOVE_DELAY = 9; // フレーム数(約60fpsで0.15秒間隔)
-  var onEncounter = null;
-  var onGate = null;
+  var callbacks = {};
 
-  function load(mapId, callbacks) {
+  function load(mapId, cbs) {
     map = Game.Data.Maps[mapId];
     px = map.startX; py = map.startY;
-    onEncounter = callbacks.onEncounter;
-    onGate = callbacks.onGate;
+    callbacks = cbs || {};
   }
+
+  function currentMap() { return map; }
+  function playerPos() { return { x: px, y: py }; }
 
   function tileAt(x, y) {
     var row = map.tiles[y];
@@ -28,7 +29,8 @@ Game.Field = (function () {
   }
 
   function pickEncounter() {
-    var table = Game.Data.EncounterTable;
+    var table = Game.Data.EncounterTables[map.encounterTable];
+    if (!table || table.length === 0) return null;
     var total = table.reduce(function (s, e) { return s + e.weight; }, 0);
     var r = Math.random() * total;
     for (var i = 0; i < table.length; i++) {
@@ -57,8 +59,13 @@ Game.Field = (function () {
     px = nx; py = ny;
     moveCooldown = MOVE_DELAY;
 
-    if (def.isGate) { onGate && onGate(); return; }
-    if (tryEncounter(tile)) { onEncounter && onEncounter(pickEncounter()); }
+    if (def.isGate) { callbacks.onGate && callbacks.onGate(); return; }
+    if (def.isBoss) { callbacks.onBoss && callbacks.onBoss(map.bossId); return; }
+    if (def.isNpc) { callbacks.onNpc && callbacks.onNpc(map); return; }
+    if (tryEncounter(tile)) {
+      var mid = pickEncounter();
+      if (mid) callbacks.onEncounter && callbacks.onEncounter(mid);
+    }
   }
 
   function draw(ctx) {
@@ -67,5 +74,5 @@ Game.Field = (function () {
     Game.Renderer.drawToken(ctx, px, py, '#d4af5a');
   }
 
-  return { load: load, update: update, draw: draw };
+  return { load: load, currentMap: currentMap, playerPos: playerPos, update: update, draw: draw };
 })();

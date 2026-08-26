@@ -14,11 +14,12 @@ Game.Menu = (function () {
 
   function draw(ctx, W, H) {
     if (!open) return;
-    var x = W / 2 - 160, y = 60, w = 320, h = 220;
+    var party = Game.Party.list();
+    var x = W / 2 - 160, y = 50, w = 320, h = 70 + party.length * 58;
     Game.Renderer.drawPanel(ctx, x, y, w, h);
-    Game.Renderer.drawText(ctx, 'パーティ', x + 16, y + 30, { size: 16, color: '#d4af5a' });
-    Game.Party.list().forEach(function (m, i) {
-      var ly = y + 60 + i * 60;
+    Game.Renderer.drawText(ctx, Game.Story.currentTitle(), x + 16, y + 26, { size: 13, color: '#d4af5a' });
+    party.forEach(function (m, i) {
+      var ly = y + 56 + i * 58;
       Game.Renderer.drawText(ctx, m.name + '  Lv' + m.level, x + 16, ly, { size: 14 });
       Game.Renderer.drawText(ctx, 'HP', x + 16, ly + 22, { size: 11, color: '#a49b86' });
       Game.Renderer.drawBar(ctx, x + 44, ly + 14, 110, 8, m.hp / m.maxHp, '#5fae5f');

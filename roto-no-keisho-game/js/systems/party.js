@@ -1,4 +1,4 @@
-// パーティ状態管理 ― Data.Characters を元にした実行時ステータス(HP増減・経験値・所持品)
+// パーティ状態管理 ― Data.Characters を元にした実行時ステータス(HP増減・経験値・所持品・仲間加入)
 var Game = window.Game || {};
 Game.Party = (function () {
   var members = {};
@@ -17,46 +17,70 @@ Game.Party = (function () {
     gold = 60;
   }
 
-  function list() { return order.map(function (id) { return members[id]; }); }
-  function get(id) { return members[id]; }
-
-  function isWiped() {
-    return list().every(function (m) { return m.hp <= 0; });
+  function recruit(id) {
+    if (order.indexOf(id) !== -1) return;
+    var base = Game.Data.Characters[id];
+    members[id] = JSON.parse(JSON.stringify(base));
+    order.push(id);
   }
 
-  function addExp(id, exp) {
-    var m = members[id];
-    m.exp += exp;
-    var leveledUp = false;
-    while (m.exp >= m.expToNext) {
-      m.exp -= m.expToNext;
-      m.level += 1;
-      m.maxHp += 6; m.hp = m.maxHp;
-      m.maxMp += 1; m.mp = m.maxMp;
-      m.atk += 2; m.def += 1; m.spd += 1;
-      m.expToNext = Math.round(m.expToNext * 1.35);
-      leveledUp = true;
-    }
-    return leveledUp;
+  function list() { return order.map(function (id) { return members[id]; }); }
+  function aliveList() { return list().filter(function (m) { return m.hp > 0; }); }
+  function get(id) { return members[id]; }
+  function isWiped() { return list().every(function (m) { return m.hp <= 0; }); }
+
+  function addExp(exp) {
+    var leveledNames = [];
+    aliveList().forEach(function (m) {
+      m.exp += exp;
+      while (m.exp >= m.expToNext) {
+        m.exp -= m.expToNext;
+        m.level += 1;
+        m.maxHp += 6; m.hp = m.maxHp;
+        if (m.maxMp > 0) { m.maxMp += 2; m.mp = m.maxMp; }
+        m.atk += 2; m.def += 1; m.spd += 1;
+        m.expToNext = Math.round(m.expToNext * 1.35);
+        leveledNames.push(m.name + 'は レベル' + m.level + 'に あがった!');
+      }
+    });
+    return leveledNames;
   }
 
   function findItem(id) { return inventory.find(function (it) { return it.id === id; }); }
-  function useItem(itemId, targetId) {
-    var entry = findItem(itemId);
-    if (!entry || entry.count <= 0) return false;
-    var def = Game.Data.Items[itemId];
-    var target = members[targetId];
+
+  // kind に応じて回復対象へ効果を適用する。戻り値はメッセージ用の説明文字列。
+  function applyItemEffect(def, target) {
     if (def.kind === 'heal_hp') {
       target.hp = Math.min(target.maxHp, target.hp + def.power);
-    } else if (def.kind === 'cure') {
-      target.status = null;
+      return 'HPが かいふくした';
     }
+    if (def.kind === 'heal_mp') {
+      target.mp = Math.min(target.maxMp, target.mp + def.power);
+      return 'MPが かいふくした';
+    }
+    if (def.kind === 'revive') {
+      target.hp = Math.max(1, Math.floor(target.maxHp * def.power));
+      return 'いきかえった!';
+    }
+    if (def.kind === 'cure' || def.kind === 'cure_undead' || def.kind === 'ward') {
+      return 'すこし らくになったようだ';
+    }
+    return '';
+  }
+
+  function useItem(itemId, targetId) {
+    var entry = findItem(itemId);
+    if (!entry || entry.count <= 0) return null;
+    var def = Game.Data.Items[itemId];
+    var target = members[targetId];
+    var msg = applyItemEffect(def, target);
     entry.count -= 1;
-    return true;
+    return msg;
   }
 
   return {
-    init: init, list: list, get: get, isWiped: isWiped, addExp: addExp,
+    init: init, recruit: recruit,
+    list: list, aliveList: aliveList, get: get, isWiped: isWiped, addExp: addExp,
     inventory: function () { return inventory; },
     useItem: useItem,
     gold: function () { return gold; },
