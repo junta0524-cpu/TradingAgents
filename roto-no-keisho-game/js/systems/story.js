@@ -32,6 +32,7 @@ Game.Story = (function () {
 
   function loadStage() {
     var st = stage();
+    applyOnComplete(st.onEnter);
     var proceed = function () {
       Game.Field.load(st.map, {
         onEncounter: function (monsterId) {

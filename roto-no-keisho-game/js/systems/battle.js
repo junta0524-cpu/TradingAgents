@@ -81,6 +81,9 @@ Game.Battle = (function () {
 
   function advanceTurn() {
     state.turnIndex += 1;
+    // 敵が全滅していたら、残りの行動者の手番は飛ばして即ラウンドを終える
+    // (放っておくと「たたかう」を選んでも対象がいない target メニューで入力を待ち続けてしまう)
+    if (aliveEnemies().length === 0) { endPlayerPhase(); return; }
     if (state.turnIndex < state.turnOrder.length) {
       state.phase = 'command';
       state.menu = 'main';

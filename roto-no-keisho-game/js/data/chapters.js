@@ -26,10 +26,13 @@ Game.Data.Chapters = [
     intro: ['一方その頃、エルロードは大陸北方の高原、古代文明の遺構「蒼穹の塔」を目指していた。'],
     stages: [
       { map: 'azure_plain', type: 'gate' },
-      { map: 'azure_tower', type: 'boss', bossId: 'astro_guardian', intro: ['塔の最上層に、古代文明が遺した封印の番人が立ちはだかった。'] },
+      {
+        map: 'azure_tower', type: 'boss', bossId: 'astro_guardian',
+        onEnter: { recruit: 'elrode' },
+        intro: ['塔の中でロトはエルロードと合流した。エルロード「共に行きましょう」', '塔の最上層に、古代文明が遺した封印の番人が立ちはだかった。'],
+      },
     ],
-    outro: ['封印の番人を退け、エルロードは「知の国」を興す決意を固めた。ロトの一行に加わり、共に歩むこととなる。'],
-    onComplete: { recruit: 'elrode' },
+    outro: ['封印の番人を退け、エルロードは「知の国」を興す決意を固めた。以後もロトの一行として、共に歩むこととなる。'],
   },
   {
     title: '第三章 ― 月下の誓い',

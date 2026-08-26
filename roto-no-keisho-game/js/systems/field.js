@@ -15,6 +15,8 @@ Game.Field = (function () {
 
   function currentMap() { return map; }
   function playerPos() { return { x: px, y: py }; }
+  // 全滅から復帰した際など、現在のマップの入り口へ戻す
+  function resetToStart() { if (map) { px = map.startX; py = map.startY; } }
 
   function tileAt(x, y) {
     var row = map.tiles[y];
@@ -74,5 +76,5 @@ Game.Field = (function () {
     Game.Renderer.drawToken(ctx, px, py, '#d4af5a');
   }
 
-  return { load: load, currentMap: currentMap, playerPos: playerPos, update: update, draw: draw };
+  return { load: load, currentMap: currentMap, playerPos: playerPos, resetToStart: resetToStart, update: update, draw: draw };
 })();

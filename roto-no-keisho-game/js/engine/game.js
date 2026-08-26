@@ -20,9 +20,10 @@ Game.Core = (function () {
   }
 
   function onPartyWiped() {
-    // DQ 式の温情リスポーン: HPが少し残った状態で継続
+    // DQ 式の温情リスポーン: HPが少し残った状態で、そのマップの入り口からやり直す
     Game.Party.list().forEach(function (m) { m.hp = Math.max(1, Math.floor(m.maxHp * 0.3)); });
-    Game.Dialogue.show('目の前が まっくらに なった……。一行は 気を取り直して 歩き出した。');
+    Game.Field.resetToStart();
+    Game.Dialogue.show('目の前が まっくらに なった……。一行は 気を取り直して、入り口から 歩き出した。');
   }
 
   function update() {

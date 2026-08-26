@@ -95,30 +95,32 @@ add('fuuin_no_shugosekizou', '封印の守護石像', 'late', ['azure_tower'], {
 Game.Data.Monsters = M;
 
 // ---- ボス(魔物図鑑「ボス」より) ----
+// HP/ATKは、その章時点のパーティ人数(第二章=2人、第五・六章=3人、第七章=3人、第十一章=4人)を
+// 想定して調整している。第二章のみエルロードが戦闘直前に合流するので2人想定。
 Game.Data.Monsters.galoz = {
   id: 'galoz', name: '牙のオーガ将軍ガロズ', boss: true, loc: ['ogre_camp'],
-  hp: 120, atk: 18, def: 8, spd: 5, exp: 80, gold: 150,
-  bossSkills: [{ name: '咆哮', power: 1.4, target: 'all_party' }],
+  hp: 90, atk: 13, def: 7, spd: 5, exp: 80, gold: 150,
+  bossSkills: [{ name: '咆哮', power: 1.3, target: 'all_party' }],
 };
 Game.Data.Monsters.astro_guardian = {
   id: 'astro_guardian', name: '星読みの巨像アストロガーディアン', boss: true, loc: ['azure_tower'],
-  hp: 140, atk: 16, def: 12, spd: 4, exp: 100, gold: 180,
-  bossSkills: [{ name: '星導の光', power: 1.3, target: 'all_party' }],
+  hp: 70, atk: 11, def: 9, spd: 4, exp: 100, gold: 180,
+  bossSkills: [{ name: '星導の光', power: 1.2, target: 'all_party' }],
 };
 Game.Data.Monsters.magatsuki = {
   id: 'magatsuki', name: '名もなき召魔「まがつき」', boss: true, loc: ['academy_altar'],
-  hp: 100, atk: 15, def: 7, spd: 9, exp: 70, gold: 120,
-  bossSkills: [{ name: '禁呪の残滓', power: 1.3, target: 'all_party' }],
+  hp: 80, atk: 12, def: 6, spd: 9, exp: 70, gold: 120,
+  bossSkills: [{ name: '禁呪の残滓', power: 1.2, target: 'all_party' }],
 };
 Game.Data.Monsters.abyss_matriarch = {
   id: 'abyss_matriarch', name: '深淵の巣母', boss: true, loc: ['abyss_depth'],
-  hp: 160, atk: 19, def: 10, spd: 5, exp: 130, gold: 220,
-  bossSkills: [{ name: '深淵の波動', power: 1.4, target: 'all_party' }],
+  hp: 110, atk: 14, def: 8, spd: 5, exp: 130, gold: 220,
+  bossSkills: [{ name: '深淵の波動', power: 1.3, target: 'all_party' }],
 };
 Game.Data.Monsters.genso_no_katsubo = {
   id: 'genso_no_katsubo', name: '原初の渇望', boss: true, loc: ['forbidden_ritual_chamber'],
-  hp: 190, atk: 21, def: 11, spd: 7, exp: 160, gold: 260,
-  bossSkills: [{ name: '渇望の奔流', power: 1.5, target: 'all_party' }],
+  hp: 150, atk: 16, def: 10, spd: 7, exp: 160, gold: 260,
+  bossSkills: [{ name: '渇望の奔流', power: 1.4, target: 'all_party' }],
 };
 
 // ---- ロケーションごとの出現テーブル(重み付き抽選)。M の loc から自動生成 ----
