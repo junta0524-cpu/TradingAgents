@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ホシノコ 〜星屑の郵便配達人〜</title>
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0a0818;
+    color: #eae6ff;
+    font-family: "Hiragino Sans", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #game-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+  }
+  #canvas-frame {
+    position: relative;
+    width: 800px;
+    max-width: 94vw;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  canvas#game {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #0b1030;
+    cursor: pointer;
+  }
+  #ui-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 5;
+  }
+  #ui-overlay button {
+    background: rgba(20, 16, 40, 0.55);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #eae6ff;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  #ui-overlay button:hover {
+    background: rgba(60, 50, 100, 0.7);
+    transform: translateY(-1px);
+  }
+  #hint {
+    font-size: 13px;
+    color: rgba(234, 230, 255, 0.65);
+    text-align: center;
+    line-height: 1.6;
+    max-width: 640px;
+  }
+  #hint b { color: rgba(255, 224, 160, 0.95); font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <div id="canvas-frame">
+    <canvas id="game" width="800" height="450"></canvas>
+    <div id="ui-overlay">
+      <button id="muteBtn" title="音を消す / 戻す">🔊</button>
+      <button id="restartBtn" title="最初からやり直す">↺</button>
+    </div>
+  </div>
+  <div id="hint">
+    <b>← / → (A・D)</b> 移動　<b>↑ / Space (W)</b> ジャンプ　光のかけらに触れて拾い、光っていない灯台に届けよう。
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const W = 800, H = 450;
+
+  const muteBtn = document.getElementById("muteBtn");
+  const restartBtn = document.getElementById("restartBtn");
+
+  // ---------- Constants ----------
+  const GRAVITY = 0.5;
+  const MOVE_SPEED = 3.6;
+  const JUMP_VELOCITY = -11.5;
+  const PLAYER_HALF = 12;
+
+  // ---------- Audio ----------
+  let audioCtx = null;
+  let muted = false;
+  let ambient = null;
+
+  function initAudio() {
+    if (audioCtx) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    audioCtx = new Ctx();
+    startAmbient();
+  }
+
+  function tone(freq, dur, type, peak, delay) {
+    if (!audioCtx || muted) return;
+    const t0 = audioCtx.currentTime + (delay || 0);
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(peak, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.03);
+  }
+
+  const playJump = () => tone(440, 0.12, "square", 0.07, 0);
+  const playPickup = () => tone(920, 0.1, "triangle", 0.12, 0);
+  const playDeliver = () => [659, 784, 988].forEach((f, i) => tone(f, 0.2, "sine", 0.15, i * 0.09));
+  const playStageClear = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, "triangle", 0.14, i * 0.12));
+
+  function startAmbient() {
+    if (!audioCtx || ambient) return;
+    const g = audioCtx.createGain();
+    g.gain.value = muted ? 0 : 0.045;
+    const o1 = audioCtx.createOscillator();
+    o1.type = "sine"; o1.frequency.value = 220;
+    const o2 = audioCtx.createOscillator();
+    o2.type = "sine"; o2.frequency.value = 277.18;
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 0.12;
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 0.018;
+    lfo.connect(lfoGain).connect(g.gain);
+    o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+    o1.start(); o2.start(); lfo.start();
+    ambient = { g, o1, o2, lfo };
+  }
+
+  function toggleMute() {
+    muted = !muted;
+    if (ambient) ambient.g.gain.value = muted ? 0 : 0.045;
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+  }
+
+  // ---------- Background stars ----------
+  const bgStars = Array.from({ length: 90 }, () => ({
+    x: Math.random() * W,
+    y: Math.random() * H,
+    r: Math.random() * 1.4 + 0.3,
+    phase: Math.random() * Math.PI * 2,
+    speed: 0.5 + Math.random() * 1.5,
+  }));
+
+  // ---------- Stage data ----------
+  const stages = [
+    {
+      name: "第1章　灯をともす",
+      playerStart: { x: 50, y: 408 },
+      platforms: [
+        { x: 0, y: 420, w: 800, h: 30 },
+        { x: 300, y: 340, w: 140, h: 20 },
+      ],
+      fragments: [
+        { x: 150, y: 408 },
+        { x: 360, y: 328 },
+      ],
+      beacons: [
+        { x: 480, y: 408 },
+        { x: 700, y: 408 },
+      ],
+    },
+    {
+      name: "第2章　谷を越えて",
+      playerStart: { x: 50, y: 408 },
+      platforms: [
+        { x: 0, y: 420, w: 250, h: 30 },
+        { x: 380, y: 420, w: 420, h: 30 },
+        { x: 560, y: 320, w: 120, h: 20 },
+      ],
+      fragments: [
+        { x: 100, y: 408 },
+        { x: 430, y: 408 },
+        { x: 610, y: 308 },
+      ],
+      beacons: [
+        { x: 210, y: 408 },
+        { x: 700, y: 408 },
+        { x: 560, y: 408 },
+      ],
+    },
+    {
+      name: "第3章　星への昇降機",
+      playerStart: { x: 50, y: 408 },
+      platforms: [
+        { x: 0, y: 420, w: 800, h: 30 },
+        { x: 340, y: 150, w: 140, h: 20 },
+        {
+          x: 400, y: 400, w: 80, h: 20,
+          moveAxis: "y", moveMin: 150, moveMax: 400, moveSpeed: 0.6,
+        },
+      ],
+      fragments: [
+        { x: 80, y: 408 },
+        { x: 440, y: 138 },
+        { x: 720, y: 408 },
+      ],
+      beacons: [
+        { x: 220, y: 408 },
+        { x: 600, y: 408 },
+        { x: 440, y: 408 },
+      ],
+    },
+  ];
+
+  // ---------- Game state ----------
+  let gameState = "title"; // title | playing | stageClear | complete
+  let currentStageIndex = 0;
+  let platforms = [];
+  let fragments = [];
+  let beacons = [];
+  let litCount = 0;
+  let particles = [];
+  let stageIntroTimer = 0;
+  let stageClearTimer = 0;
+
+  const player = {
+    x: 50, y: 408, vx: 0, vy: 0,
+    onGround: false, restingPlatform: null,
+    carrying: false, facing: 1,
+  };
+
+  const keys = { left: false, right: false };
+
+  function loadStage(idx) {
+    const data = stages[idx];
+    platforms = data.platforms.map((p) => ({ ...p }));
+    fragments = data.fragments.map((f) => ({ x: f.x, y: f.y, active: true }));
+    beacons = data.beacons.map((b) => ({ x: b.x, y: b.y, lit: false }));
+    player.x = data.playerStart.x;
+    player.y = data.playerStart.y;
+    player.vx = 0; player.vy = 0;
+    player.onGround = false; player.restingPlatform = null;
+    player.carrying = false;
+    litCount = 0;
+    particles = [];
+    stageIntroTimer = 100;
+    gameState = "playing";
+  }
+
+  function respawnPlayer() {
+    const start = stages[currentStageIndex].playerStart;
+    player.x = start.x; player.y = start.y;
+    player.vx = 0; player.vy = 0;
+  }
+
+  function startGame() {
+    initAudio();
+    currentStageIndex = 0;
+    loadStage(0);
+  }
+
+  function restartGame() {
+    currentStageIndex = 0;
+    loadStage(0);
+  }
+
+  function advanceStage() {
+    if (currentStageIndex + 1 < stages.length) {
+      currentStageIndex++;
+      loadStage(currentStageIndex);
+    } else {
+      gameState = "complete";
+    }
+  }
+
+  // ---------- Physics ----------
+  function rectsOverlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function playerRect() {
+    return { x: player.x - PLAYER_HALF, y: player.y - PLAYER_HALF, w: PLAYER_HALF * 2, h: PLAYER_HALF * 2 };
+  }
+
+  function resolveHorizontalCollisions() {
+    for (const p of platforms) {
+      if (rectsOverlap(playerRect(), p)) {
+        if (player.vx > 0) player.x = p.x - PLAYER_HALF;
+        else if (player.vx < 0) player.x = p.x + p.w + PLAYER_HALF;
+        player.vx = 0;
+      }
+    }
+  }
+
+  function resolveVerticalCollisions() {
+    for (const p of platforms) {
+      if (rectsOverlap(playerRect(), p)) {
+        if (player.vy > 0) {
+          player.y = p.y - PLAYER_HALF;
+          player.vy = 0;
+          player.onGround = true;
+          player.restingPlatform = p;
+        } else if (player.vy < 0) {
+          player.y = p.y + p.h + PLAYER_HALF;
+          player.vy = 0;
+        }
+      }
+    }
+  }
+
+  function updateMovingPlatforms(t) {
+    for (const p of platforms) {
+      if (!p.moveAxis) continue;
+      const prev = p.moveAxis === "y" ? p.y : p.x;
+      const range = p.moveMax - p.moveMin;
+      const next = p.moveMin + range * (0.5 + 0.5 * Math.sin(t * p.moveSpeed));
+      const delta = next - prev;
+      if (p.moveAxis === "y") { p.y = next; p.moveDY = delta; p.moveDX = 0; }
+      else { p.x = next; p.moveDX = delta; p.moveDY = 0; }
+    }
+  }
+
+  function updatePlayer() {
+    let targetVX = 0;
+    if (keys.left) targetVX -= MOVE_SPEED;
+    if (keys.right) targetVX += MOVE_SPEED;
+    player.vx += (targetVX - player.vx) * 0.25;
+    if (Math.abs(player.vx) < 0.01) player.vx = 0;
+    if (player.vx !== 0) player.facing = player.vx > 0 ? 1 : -1;
+
+    if (player.restingPlatform && player.restingPlatform.moveDX) player.x += player.restingPlatform.moveDX;
+    if (player.restingPlatform && player.restingPlatform.moveDY) player.y += player.restingPlatform.moveDY;
+
+    player.x += player.vx;
+    resolveHorizontalCollisions();
+
+    player.vy += GRAVITY;
+    player.y += player.vy;
+    player.onGround = false;
+    player.restingPlatform = null;
+    resolveVerticalCollisions();
+
+    if (player.y > H + 80) respawnPlayer();
+  }
+
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+  function checkPickupsAndDelivery() {
+    if (!player.carrying) {
+      for (const f of fragments) {
+        if (f.active && dist(player, f) < 22) {
+          f.active = false;
+          player.carrying = true;
+          playPickup();
+          spawnBurst(f.x, f.y, "255,220,150", 10);
+          break;
+        }
+      }
+    } else {
+      for (const b of beacons) {
+        if (!b.lit && dist(player, b) < 26) {
+          b.lit = true;
+          player.carrying = false;
+          litCount++;
+          playDeliver();
+          spawnBurst(b.x, b.y, "255,200,120", 20);
+          if (litCount >= beacons.length) {
+            playStageClear();
+            gameState = "stageClear";
+            stageClearTimer = 100;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // ---------- Particles ----------
+  function spawnBurst(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 1 + Math.random() * 2.5;
+      particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 30 + Math.random() * 20, maxLife: 50, color });
+    }
+  }
+
+  function spawnTrail(x, y) {
+    particles.push({
+      x: x + (Math.random() - 0.5) * 8, y: y + (Math.random() - 0.5) * 8,
+      vx: (Math.random() - 0.5) * 0.5, vy: -0.3 - Math.random() * 0.3,
+      life: 20, maxLife: 20, color: "255,220,150",
+    });
+  }
+
+  function updateParticles() {
+    for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.02; p.life--; }
+    particles = particles.filter((p) => p.life > 0);
+  }
+
+  // ---------- Drawing ----------
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawStar(cx, cy, outerR, innerR, points, rotation) {
+    ctx.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const a = rotation + (i * Math.PI) / points;
+      const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  function drawBackground(t) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#0b1030");
+    g.addColorStop(1, "#241a45");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    for (const s of bgStars) {
+      const a = 0.35 + 0.55 * Math.abs(Math.sin(t * 0.001 * s.speed + s.phase));
+      ctx.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawPlatforms() {
+    for (const p of platforms) {
+      const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+      g.addColorStop(0, p.moveAxis ? "#5a4a9a" : "#4a3f7a");
+      g.addColorStop(1, p.moveAxis ? "#382a6a" : "#2c2454");
+      ctx.fillStyle = g;
+      roundRect(p.x, p.y, p.w, p.h, 6);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  function drawFragments(t) {
+    for (const f of fragments) {
+      if (!f.active) continue;
+      const pulse = 1 + 0.15 * Math.sin(t * 0.005 + f.x);
+      ctx.save();
+      ctx.shadowColor = "rgba(255,220,140,0.9)";
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = "#ffe9a8";
+      drawStar(f.x, f.y, 9 * pulse, 4 * pulse, 4, t * 0.002);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawBeacons(t) {
+    for (const b of beacons) {
+      ctx.save();
+      if (b.lit) {
+        const pulse = 1 + 0.1 * Math.sin(t * 0.004 + b.x);
+        const grad = ctx.createRadialGradient(b.x, b.y, 2, b.x, b.y, 40 * pulse);
+        grad.addColorStop(0, "rgba(255,210,120,0.85)");
+        grad.addColorStop(1, "rgba(255,210,120,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 40 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowColor = "#ffdf8f";
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = "#ffdf8f";
+      } else {
+        ctx.strokeStyle = "rgba(180,190,255,0.6)";
+        ctx.lineWidth = 2;
+        ctx.fillStyle = "rgba(60,60,100,0.5)";
+      }
+      drawStar(b.x, b.y - 4, 14, 6, 5, -Math.PI / 2);
+      ctx.fill();
+      if (!b.lit) ctx.stroke();
+      ctx.fillStyle = b.lit ? "#ffdf8f" : "rgba(150,160,220,0.6)";
+      ctx.fillRect(b.x - 3, b.y + 6, 6, 10);
+      ctx.restore();
+    }
+  }
+
+  function drawPlayer() {
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.scale(player.facing, 1);
+    if (player.carrying) {
+      const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, 28);
+      grad.addColorStop(0, "rgba(255,220,150,0.5)");
+      grad.addColorStop(1, "rgba(255,220,150,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, 28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const stretch = Math.max(-0.25, Math.min(0.25, player.vy * 0.02));
+    ctx.save();
+    ctx.scale(1 - stretch, 1 + stretch);
+    ctx.shadowColor = "#ffe9a8";
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = "#fff3c4";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 13, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#3a2f5c";
+    ctx.beginPath();
+    ctx.arc(4, -2, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      const a = p.life / p.maxLife;
+      ctx.fillStyle = `rgba(${p.color},${a.toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.5 * a + 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawHUD() {
+    ctx.save();
+    ctx.font = "16px 'Hiragino Sans','Segoe UI',sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(`ステージ ${currentStageIndex + 1} / ${stages.length}`, 16, 26);
+    ctx.fillText(`光 ${litCount} / ${beacons.length}`, 16, 48);
+    ctx.restore();
+  }
+
+  function drawOverlayBackdrop(alpha) {
+    ctx.fillStyle = `rgba(6,4,20,${alpha})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function centeredText(text, y, size, color) {
+    ctx.font = `${size}px 'Hiragino Sans','Segoe UI',sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.fillText(text, W / 2, y);
+    ctx.textAlign = "left";
+  }
+
+  function drawTitleScreen(t) {
+    drawOverlayBackdrop(0.35);
+    const bob = Math.sin(t * 0.002) * 6;
+    ctx.save();
+    ctx.shadowColor = "#ffe9a8";
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = "#fff3c4";
+    drawStar(W / 2, 150 + bob, 22, 10, 5, -Math.PI / 2);
+    ctx.fill();
+    ctx.restore();
+    centeredText("ホシノコ", 250, 42, "#ffe9c4");
+    centeredText("〜 星屑の郵便配達人 〜", 282, 18, "rgba(234,230,255,0.85)");
+    const pulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.003));
+    centeredText("Space か クリックで はじめる", 340, 18, `rgba(255,224,160,${pulse.toFixed(2)})`);
+  }
+
+  function drawStageIntro() {
+    const alpha = Math.min(1, stageIntroTimer / 30) * (stageIntroTimer > 70 ? (100 - stageIntroTimer) / 30 : 1);
+    if (stageIntroTimer < 100 - 20 && stageIntroTimer > 20) {
+      centeredText(stages[currentStageIndex].name, 90, 26, `rgba(255,236,190,0.95)`);
+    } else {
+      centeredText(stages[currentStageIndex].name, 90, 26, `rgba(255,236,190,${Math.max(0, alpha).toFixed(2)})`);
+    }
+  }
+
+  function drawStageClearOverlay() {
+    drawOverlayBackdrop(0.3);
+    centeredText("ステージクリア！", 220, 34, "#ffe9c4");
+  }
+
+  function drawCompleteOverlay(t) {
+    drawOverlayBackdrop(0.5);
+    const bob = Math.sin(t * 0.002) * 6;
+    ctx.save();
+    ctx.shadowColor = "#ffe9a8";
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = "#fff3c4";
+    drawStar(W / 2, 160 + bob, 24, 11, 5, -Math.PI / 2);
+    ctx.fill();
+    ctx.restore();
+    centeredText("すべての星に灯がともった", 250, 28, "#ffe9c4");
+    centeredText("ありがとう、ホシノコ。", 282, 18, "rgba(234,230,255,0.85)");
+    const pulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 0.003));
+    centeredText("R キー か ↺ ボタンで もう一度", 340, 16, `rgba(255,224,160,${pulse.toFixed(2)})`);
+  }
+
+  // ---------- Input ----------
+  const MOVE_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", " ", "a", "A", "d", "D", "w", "W"];
+
+  window.addEventListener("keydown", (e) => {
+    if (MOVE_KEYS.includes(e.key)) e.preventDefault();
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
+    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
+
+    if (gameState === "title") {
+      if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") startGame();
+      return;
+    }
+    if (gameState === "complete") {
+      if (e.key === "r" || e.key === "R") restartGame();
+      return;
+    }
+    if (gameState === "playing") {
+      if ((e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") && player.onGround) {
+        player.vy = JUMP_VELOCITY;
+        player.onGround = false;
+        player.restingPlatform = null;
+        playJump();
+      }
+    }
+  }, { passive: false });
+
+  window.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
+    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
+  });
+
+  canvas.addEventListener("click", () => {
+    if (gameState === "title") startGame();
+    else if (gameState === "complete") restartGame();
+  });
+
+  muteBtn.addEventListener("click", toggleMute);
+  restartBtn.addEventListener("click", restartGame);
+
+  // ---------- Main loop ----------
+  function loop(ts) {
+    requestAnimationFrame(loop);
+    const t = ts || 0;
+    ctx.clearRect(0, 0, W, H);
+    drawBackground(t);
+
+    if (gameState === "title") {
+      drawTitleScreen(t);
+      return;
+    }
+
+    updateMovingPlatforms(t * 0.001);
+
+    if (gameState === "playing") {
+      updatePlayer();
+      checkPickupsAndDelivery();
+      if (player.carrying && Math.random() < 0.5) spawnTrail(player.x, player.y + 10);
+      if (stageIntroTimer > 0) stageIntroTimer--;
+    }
+
+    updateParticles();
+    drawPlatforms();
+    drawFragments(t);
+    drawBeacons(t);
+    drawParticles();
+    drawPlayer();
+    drawHUD();
+
+    if (gameState === "playing" && stageIntroTimer > 0) drawStageIntro();
+
+    if (gameState === "stageClear") {
+      stageClearTimer--;
+      drawStageClearOverlay();
+      if (stageClearTimer <= 0) advanceStage();
+    }
+
+    if (gameState === "complete") drawCompleteOverlay(t);
+  }
+
+  requestAnimationFrame(loop);
+
+  if (location.search.includes("debug")) {
+    window.__hoshinoko = {
+      player,
+      keys,
+      get gameState() { return gameState; },
+      get stage() { return currentStageIndex; },
+    };
+  }
+})();
+</script>
+</body>
+</html>
