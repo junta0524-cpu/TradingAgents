@@ -66,14 +66,48 @@
     background: rgba(60, 50, 100, 0.7);
     transform: translateY(-1px);
   }
-  #hint {
+  .hint {
     font-size: 13px;
     color: rgba(234, 230, 255, 0.65);
     text-align: center;
     line-height: 1.6;
     max-width: 640px;
   }
-  #hint b { color: rgba(255, 224, 160, 0.95); font-weight: 600; }
+  .hint b { color: rgba(255, 224, 160, 0.95); font-weight: 600; }
+  .hint.touch-hint { display: none; }
+  #touch-controls {
+    display: none;
+    width: 800px;
+    max-width: 94vw;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tc-group { display: flex; gap: 14px; }
+  .tc-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(30, 24, 58, 0.75);
+    color: #eae6ff;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    user-select: none;
+  }
+  .tc-btn.is-pressed {
+    background: rgba(255, 224, 160, 0.35);
+    border-color: rgba(255, 224, 160, 0.65);
+  }
+  .tc-jump { width: 64px; height: 64px; font-size: 24px; }
+  @media (pointer: coarse) {
+    #touch-controls { display: flex; }
+    .hint.kb-hint { display: none; }
+    .hint.touch-hint { display: block; }
+  }
 </style>
 </head>
 <body>
@@ -85,8 +119,18 @@
       <button id="restartBtn" title="最初からやり直す">↺</button>
     </div>
   </div>
-  <div id="hint">
+  <div id="touch-controls">
+    <div class="tc-group">
+      <button id="btnLeft" class="tc-btn" aria-label="左に移動">◀</button>
+      <button id="btnRight" class="tc-btn" aria-label="右に移動">▶</button>
+    </div>
+    <button id="btnJump" class="tc-btn tc-jump" aria-label="ジャンプ / 決定">↑</button>
+  </div>
+  <div class="hint kb-hint">
     <b>← / → (A・D)</b> 移動　<b>↑ / Space (W)</b> ジャンプ　光のかけらに触れて拾い、光っていない灯台に届けよう。
+  </div>
+  <div class="hint touch-hint">
+    左右ボタンで<b>移動</b>、<b>↑</b>ボタンで<b>ジャンプ</b>。光のかけらに触れて拾い、光っていない灯台に届けよう。
   </div>
 </div>
 
@@ -100,6 +144,9 @@
 
   const muteBtn = document.getElementById("muteBtn");
   const restartBtn = document.getElementById("restartBtn");
+  const btnLeft = document.getElementById("btnLeft");
+  const btnRight = document.getElementById("btnRight");
+  const btnJump = document.getElementById("btnJump");
 
   // ---------- Constants ----------
   const GRAVITY = 0.5;
@@ -625,27 +672,27 @@
   // ---------- Input ----------
   const MOVE_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", " ", "a", "A", "d", "D", "w", "W"];
 
+  function pressJumpOrConfirm() {
+    if (gameState === "title") { startGame(); return; }
+    if (gameState === "complete") { restartGame(); return; }
+    if (gameState === "playing" && player.onGround) {
+      player.vy = JUMP_VELOCITY;
+      player.onGround = false;
+      player.restingPlatform = null;
+      playJump();
+    }
+  }
+
   window.addEventListener("keydown", (e) => {
     if (MOVE_KEYS.includes(e.key)) e.preventDefault();
     if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
     if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
 
-    if (gameState === "title") {
-      if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") startGame();
-      return;
-    }
     if (gameState === "complete") {
       if (e.key === "r" || e.key === "R") restartGame();
       return;
     }
-    if (gameState === "playing") {
-      if ((e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") && player.onGround) {
-        player.vy = JUMP_VELOCITY;
-        player.onGround = false;
-        player.restingPlatform = null;
-        playJump();
-      }
-    }
+    if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") pressJumpOrConfirm();
   }, { passive: false });
 
   window.addEventListener("keyup", (e) => {
@@ -660,6 +707,19 @@
 
   muteBtn.addEventListener("click", toggleMute);
   restartBtn.addEventListener("click", restartGame);
+
+  function bindHoldButton(el, onDown, onUp) {
+    const start = (e) => { e.preventDefault(); el.classList.add("is-pressed"); onDown(); };
+    const end = (e) => { e.preventDefault(); el.classList.remove("is-pressed"); if (onUp) onUp(); };
+    el.addEventListener("pointerdown", start);
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", end);
+    el.addEventListener("pointerleave", end);
+  }
+
+  bindHoldButton(btnLeft, () => { keys.left = true; }, () => { keys.left = false; });
+  bindHoldButton(btnRight, () => { keys.right = true; }, () => { keys.right = false; });
+  bindHoldButton(btnJump, pressJumpOrConfirm);
 
   // ---------- Main loop ----------
   function loop(ts) {
