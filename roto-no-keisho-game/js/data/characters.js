@@ -25,7 +25,8 @@ Game.Data.Characters = {
     level: 1, exp: 0, expToNext: 12,
     hp: 28, maxHp: 28, mp: 4, maxMp: 4,
     atk: 12, def: 8, spd: 9,
-    weapon: '銅の剣',
+    equipKinds: ['sword', 'armor', 'shield', 'helmet', 'accessory'],
+    equip: { weapon: 'copper_sword', armor: 'cloth_robe' },
     skills: ['nagiharai', 'ukenagashi', 'kanni_kaifuku'],
   },
   elrode: {
@@ -33,7 +34,8 @@ Game.Data.Characters = {
     level: 3, exp: 0, expToNext: 22,
     hp: 20, maxHp: 20, mp: 12, maxMp: 12,
     atk: 8, def: 5, spd: 7,
-    weapon: '銀の杖',
+    equipKinds: ['staff', 'armor', 'accessory'],
+    equip: { weapon: 'silver_staff', armor: 'cloth_robe' },
     skills: ['mera', 'merazoma'],
   },
   celestia: {
@@ -41,7 +43,8 @@ Game.Data.Characters = {
     level: 3, exp: 0, expToNext: 22,
     hp: 24, maxHp: 24, mp: 8, maxMp: 8,
     atk: 12, def: 6, spd: 12,
-    weapon: '鋼の弓',
+    equipKinds: ['bow', 'armor', 'helmet', 'accessory'],
+    equip: { weapon: 'steel_bow', armor: 'leather_armor' },
     skills: ['getsuko_no_ya', 'mangetsu_no_ichiya'],
   },
   garai: {
@@ -49,7 +52,8 @@ Game.Data.Characters = {
     level: 5, exp: 0, expToNext: 41,
     hp: 46, maxHp: 46, mp: 12, maxMp: 12,
     atk: 15, def: 13, spd: 5,
-    weapon: '鋼の大剣',
+    equipKinds: ['greatsword', 'armor', 'shield', 'helmet', 'accessory'],
+    equip: { weapon: 'steel_greatsword', armor: 'chainmail', helmet: 'iron_helm' },
     skills: ['garai_nagiharai', 'chikai_no_ichigeki'],
   },
 };

@@ -63,6 +63,7 @@ Game.Field = (function () {
 
     if (def.isGate) { callbacks.onGate && callbacks.onGate(); return; }
     if (def.isBoss) { callbacks.onBoss && callbacks.onBoss(map.bossId); return; }
+    if (def.shop) { callbacks.onShop && callbacks.onShop(def.shop, map.id); return; }
     if (def.isNpc) { callbacks.onNpc && callbacks.onNpc(map); return; }
     if (tryEncounter(tile)) {
       var mid = pickEncounter();

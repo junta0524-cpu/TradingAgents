@@ -1,31 +1,59 @@
-// パーティ状態管理 ― Data.Characters を元にした実行時ステータス(HP増減・経験値・所持品・仲間加入)
+// パーティ状態管理 ― 実行時ステータス(HP/MP・経験値)、所持品、装備、所持金をまとめて扱う。
+// atk/def/spd は「素の値(base*) + 装備の補正」で、装備を変えるたびに recalc() で組み直す。
 var Game = window.Game || {};
 Game.Party = (function () {
   var members = {};
   var order = [];
-  var inventory = [];
+  var inventory = [];  // 消耗品 [{id, count}]
+  var gear = [];       // 所持している装備 [{id, count}](装備中のものは含まない)
   var gold = 60;
+
+  function equipDef(id) { return id ? Game.Data.Equipment[id] : null; }
+
+  // 装備込みの実効ステータスを組み直す
+  function recalc(m) {
+    var atk = m.baseAtk, def = m.baseDef, spd = m.baseSpd;
+    Game.Data.EQUIP_SLOTS.forEach(function (slot) {
+      var e = equipDef(m.equip[slot]);
+      if (!e) return;
+      atk += e.atk || 0;
+      def += e.def || 0;
+      spd += e.spd || 0;
+    });
+    m.atk = atk; m.def = def; m.spd = spd;
+  }
+
+  function spawn(id) {
+    var base = Game.Data.Characters[id];
+    var m = JSON.parse(JSON.stringify(base));
+    m.baseAtk = base.atk; m.baseDef = base.def; m.baseSpd = base.spd;
+    m.equip = m.equip || {};
+    recalc(m);
+    return m;
+  }
 
   function init() {
     order = Game.Data.PARTY_ORDER.slice();
     members = {};
-    order.forEach(function (id) {
-      var base = Game.Data.Characters[id];
-      members[id] = JSON.parse(JSON.stringify(base));
-    });
+    order.forEach(function (id) { members[id] = spawn(id); });
     inventory = Game.Data.START_INVENTORY.map(function (it) { return { id: it.id, count: it.count }; });
+    gear = [];
     gold = 60;
   }
 
   function recruit(id) {
     if (order.indexOf(id) !== -1) return;
-    var base = Game.Data.Characters[id];
-    members[id] = JSON.parse(JSON.stringify(base));
+    members[id] = spawn(id);
     order.push(id);
   }
 
-  // 章の区切りでの休息。HP/MPを全快させ、倒れた仲間も立ち上がる。
-  // (この作品には宿屋・教会が無いため、ここが唯一の全体回復ポイントになる)
+  function list() { return order.map(function (id) { return members[id]; }); }
+  function aliveList() { return list().filter(function (m) { return m.hp > 0; }); }
+  function deadList() { return list().filter(function (m) { return m.hp <= 0; }); }
+  function get(id) { return members[id]; }
+  function isWiped() { return list().every(function (m) { return m.hp <= 0; }); }
+
+  // 章の区切りや宿屋での休息。HP/MPを全快させ、倒れた仲間も立ち上がる。
   function restAll() {
     list().forEach(function (m) {
       m.hp = m.maxHp;
@@ -34,10 +62,13 @@ Game.Party = (function () {
     });
   }
 
-  function list() { return order.map(function (id) { return members[id]; }); }
-  function aliveList() { return list().filter(function (m) { return m.hp > 0; }); }
-  function get(id) { return members[id]; }
-  function isWiped() { return list().every(function (m) { return m.hp <= 0; }); }
+  // 教会での蘇生。HPを半分まで戻して復帰させる。
+  function revive(id) {
+    var m = members[id];
+    if (!m || m.hp > 0) return false;
+    m.hp = Math.max(1, Math.floor(m.maxHp / 2));
+    return true;
+  }
 
   function addExp(exp) {
     var leveledNames = [];
@@ -48,7 +79,8 @@ Game.Party = (function () {
         m.level += 1;
         m.maxHp += 6; m.hp = m.maxHp;
         if (m.maxMp > 0) { m.maxMp += 2; m.mp = m.maxMp; }
-        m.atk += 2; m.def += 1; m.spd += 1;
+        m.baseAtk += 2; m.baseDef += 1; m.baseSpd += 1;
+        recalc(m);
         m.expToNext = Math.round(m.expToNext * 1.35);
         leveledNames.push(m.name + 'は レベル' + m.level + 'に あがった!');
       }
@@ -56,9 +88,19 @@ Game.Party = (function () {
     return leveledNames;
   }
 
-  function findItem(id) { return inventory.find(function (it) { return it.id === id; }); }
+  // ---- 所持品 ----
+  function stackAdd(bag, id, n) {
+    var e = bag.find(function (it) { return it.id === id; });
+    if (e) e.count += n; else bag.push({ id: id, count: n });
+  }
+  function stackRemove(bag, id, n) {
+    var e = bag.find(function (it) { return it.id === id; });
+    if (!e || e.count < n) return false;
+    e.count -= n;
+    if (e.count <= 0) bag.splice(bag.indexOf(e), 1);
+    return true;
+  }
 
-  // kind に応じて回復対象へ効果を適用する。戻り値はメッセージ用の説明文字列。
   function applyItemEffect(def, target) {
     if (def.kind === 'heal_hp') {
       target.hp = Math.min(target.maxHp, target.hp + def.power);
@@ -79,21 +121,96 @@ Game.Party = (function () {
   }
 
   function useItem(itemId, targetId) {
-    var entry = findItem(itemId);
-    if (!entry || entry.count <= 0) return null;
-    var def = Game.Data.Items[itemId];
-    var target = members[targetId];
-    var msg = applyItemEffect(def, target);
-    entry.count -= 1;
+    var e = inventory.find(function (it) { return it.id === itemId; });
+    if (!e || e.count <= 0) return null;
+    var msg = applyItemEffect(Game.Data.Items[itemId], members[targetId]);
+    stackRemove(inventory, itemId, 1);
     return msg;
   }
 
+  // ---- 売買 ----
+  function canAfford(price) { return gold >= price; }
+
+  function buyItem(itemId) {
+    var def = Game.Data.Items[itemId];
+    if (!def || !canAfford(def.price)) return false;
+    gold -= def.price;
+    stackAdd(inventory, itemId, 1);
+    return true;
+  }
+
+  function buyGear(gearId) {
+    var def = Game.Data.Equipment[gearId];
+    if (!def || def.story || !canAfford(def.price)) return false;
+    gold -= def.price;
+    stackAdd(gear, gearId, 1);
+    return true;
+  }
+
+  // 売値は買値の半額(DQ の慣例)。物語上の装備は売れない。
+  function sellPriceOf(def) { return Math.floor((def.price || 0) / 2); }
+
+  function sellItem(itemId) {
+    var def = Game.Data.Items[itemId];
+    if (!def || !stackRemove(inventory, itemId, 1)) return 0;
+    var p = sellPriceOf(def);
+    gold += p;
+    return p;
+  }
+
+  function sellGear(gearId) {
+    var def = Game.Data.Equipment[gearId];
+    if (!def || def.story || !stackRemove(gear, gearId, 1)) return 0;
+    var p = sellPriceOf(def);
+    gold += p;
+    return p;
+  }
+
+  // ---- 装備 ----
+  function canEquip(m, gearId) {
+    var def = Game.Data.Equipment[gearId];
+    if (!def) return false;
+    return (m.equipKinds || []).indexOf(def.kind) !== -1;
+  }
+
+  // 手持ちの装備を身につける。今つけていたものは手持ちに戻る。
+  function equipGear(memberId, gearId) {
+    var m = members[memberId];
+    var def = Game.Data.Equipment[gearId];
+    if (!m || !def || !canEquip(m, gearId)) return false;
+    if (!stackRemove(gear, gearId, 1)) return false;
+    var prev = m.equip[def.slot];
+    if (prev) stackAdd(gear, prev, 1);
+    m.equip[def.slot] = gearId;
+    recalc(m);
+    return true;
+  }
+
+  function unequipSlot(memberId, slot) {
+    var m = members[memberId];
+    if (!m || !m.equip[slot]) return false;
+    stackAdd(gear, m.equip[slot], 1);
+    m.equip[slot] = null;
+    recalc(m);
+    return true;
+  }
+
+  // 物語の褒賞など、店を介さず直接手に入る装備
+  function grantGear(gearId) { stackAdd(gear, gearId, 1); }
+
   return {
-    init: init, recruit: recruit, restAll: restAll,
-    list: list, aliveList: aliveList, get: get, isWiped: isWiped, addExp: addExp,
+    init: init, recruit: recruit, restAll: restAll, revive: revive,
+    list: list, aliveList: aliveList, deadList: deadList, get: get,
+    isWiped: isWiped, addExp: addExp,
     inventory: function () { return inventory; },
+    gearBag: function () { return gear; },
     useItem: useItem,
     gold: function () { return gold; },
     addGold: function (n) { gold += n; },
+    spend: function (n) { if (gold < n) return false; gold -= n; return true; },
+    canAfford: canAfford,
+    buyItem: buyItem, buyGear: buyGear,
+    sellItem: sellItem, sellGear: sellGear, sellPriceOf: sellPriceOf,
+    canEquip: canEquip, equipGear: equipGear, unequipSlot: unequipSlot, grantGear: grantGear,
   };
 })();

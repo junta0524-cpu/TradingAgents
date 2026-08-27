@@ -52,6 +52,8 @@ Game.Core = (function () {
       }
     } else if (mode === 'battle') {
       Game.Battle.update();
+    } else if (mode === 'shop') {
+      Game.Shop.update();
     } else if (mode === 'ending') {
       // エンディングでは操作待ちのみ
     }
@@ -69,6 +71,9 @@ Game.Core = (function () {
       Game.Dialogue.draw(ctx, W, H);
     } else if (mode === 'battle') {
       Game.Battle.draw(ctx, W, H);
+    } else if (mode === 'shop') {
+      Game.Field.draw(ctx); // 店の背景として街を描いておく
+      Game.Shop.draw(ctx, W, H);
     } else if (mode === 'ending') {
       drawEnding();
     }

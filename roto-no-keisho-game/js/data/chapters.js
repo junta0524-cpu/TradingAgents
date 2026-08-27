@@ -33,6 +33,7 @@ Game.Data.Chapters = [
       },
     ],
     outro: ['封印の番人を退け、エルロードは「知の国」を興す決意を固めた。以後もロトの一行として、共に歩むこととなる。'],
+    onComplete: { gear: ['azure_staff'], gold: 200 },
   },
   {
     title: '第三章 ― 月下の誓い',
@@ -42,7 +43,7 @@ Game.Data.Chapters = [
       { map: 'cliff_village', type: 'gate', intro: ['断崖の氏族村で、深海から現れた異形の魔物と、それを操るとおぼしき仮面の人物を目撃した。正体は掴めぬまま、姿を消した。'] },
     ],
     outro: ['セレスティアは「西方の脅威はまだ終わっていない」と確信し、ロトの一行に加わった。'],
-    onComplete: { recruit: 'celestia' },
+    onComplete: { recruit: 'celestia', gear: ['moon_bow'], gold: 200 },
   },
   {
     title: '第四章 ― 三者の道、それぞれの礎',
@@ -87,6 +88,8 @@ Game.Data.Chapters = [
     ],
     stages: [{ map: 'loureshia_town', type: 'gate' }],
     outro: ['三国建国の宴は、幾日も続いたという。'],
+    // ロトの遺産の分与。剣はローレシア王家に、鎧は学院に、盾はムーンブルクの防人へ。
+    onComplete: { gear: ['roto_sword', 'silver_armor', 'roto_shield'], gold: 500 },
   },
   {
     title: '第九章 ― 影の萌芽',
@@ -105,7 +108,7 @@ Game.Data.Chapters = [
     ],
     stages: [{ map: 'loureshia_town', type: 'gate' }],
     outro: ['ガライはロトの最も忠実な右腕として、正式に一行へ加わった。'],
-    onComplete: { recruit: 'garai' },
+    onComplete: { recruit: 'garai', gear: ['oathkeeper'], gold: 400 },
   },
   {
     title: '第十一章 ― 賢者の代償',

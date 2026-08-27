@@ -26,6 +26,12 @@ Game.Renderer = (function () {
           ctx.font = '18px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText('⛩', px + TILE / 2, py + TILE / 2 + 6);
+        } else if (def.glyph) {
+          // 店・宿屋・教会は一文字で示す(あとで看板の絵に差し替えられる)
+          ctx.fillStyle = '#f7f3e9';
+          ctx.font = 'bold 15px "Yu Gothic","Hiragino Sans",sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(def.glyph, px + TILE / 2, py + TILE / 2 + 5);
         }
       }
     }

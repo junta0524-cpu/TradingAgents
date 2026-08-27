@@ -49,6 +49,10 @@ Game.Story = (function () {
           Game.Battle.start([bossId], handleBossBattleEnd);
         }
       },
+      onShop: function (shopKind, mapId) {
+        onModeChange && onModeChange('shop');
+        Game.Shop.open(shopKind, mapId, function () { onModeChange && onModeChange('field'); });
+      },
       onNpc: function (map) {
         Game.Dialogue.show(map.name + 'の 住人「ロトさま、道中お気をつけて」');
       },
@@ -103,6 +107,15 @@ Game.Story = (function () {
       Game.Party.recruit(onComplete.recruit);
       var m = Game.Party.get(onComplete.recruit);
       Game.Dialogue.show(m.name + 'が なかまに なった!');
+    }
+    // 物語の褒賞として受け取る装備(店には並ばない品)
+    (onComplete.gear || []).forEach(function (gearId) {
+      Game.Party.grantGear(gearId);
+      Game.Dialogue.show(Game.Data.Equipment[gearId].name + 'を 手に入れた! (メニューで そうびできる)');
+    });
+    if (onComplete.gold) {
+      Game.Party.addGold(onComplete.gold);
+      Game.Dialogue.show(onComplete.gold + 'ゴールドを 受け取った');
     }
   }
 

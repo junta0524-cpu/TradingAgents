@@ -18,6 +18,11 @@ Game.Data.TileDefs = {
   'C': { walkable: true, color: '#b08d3e', encounter: 0, isGate: true },
   'B': { walkable: true, color: '#8a3230', encounter: 0, isBoss: true },
   'N': { walkable: true, color: '#8a76b8', encounter: 0, isNpc: true },
+  // 街の施設。踏むとそれぞれの画面が開く
+  'S': { walkable: true, color: '#4f8a5c', encounter: 0, shop: 'item', glyph: '道' },
+  'W': { walkable: true, color: '#8a6a3a', encounter: 0, shop: 'gear', glyph: '武' },
+  'I': { walkable: true, color: '#5c6f9c', encounter: 0, shop: 'inn', glyph: '宿' },
+  'H': { walkable: true, color: '#9c8f5c', encounter: 0, shop: 'church', glyph: '教' },
 };
 
 // ---- フィールド(街道)テンプレート:東方街道で検証済みの形をそのまま使い回す ----
@@ -62,9 +67,11 @@ function dungeonGrid(cols, rows) {
   return grid.map(function (row) { return row.join(''); });
 }
 
-// ---- 街:安全な広場 + 会話イベントタイル + 出口 ----
-function townGrid(cols, rows, npcSpots) {
+// ---- 街:安全な広場 + 施設 + 会話イベントタイル + 出口 ----
+// facilities は [{ch:'S', x, y}] の形。施設タイルは上段に、出口は下段中央に置く。
+function townGrid(cols, rows, opts) {
   cols = cols || 16; rows = rows || 10;
+  opts = opts || {};
   var grid = [];
   for (var y = 0; y < rows; y++) {
     var row = [];
@@ -74,17 +81,46 @@ function townGrid(cols, rows, npcSpots) {
     grid.push(row);
   }
   grid[rows - 2][Math.floor(cols / 2)] = 'C';
-  (npcSpots || []).forEach(function (p) { grid[p.y][p.x] = 'N'; });
+  (opts.npcs || []).forEach(function (p) { grid[p.y][p.x] = 'N'; });
+  (opts.facilities || []).forEach(function (p) { grid[p.y][p.x] = p.ch; });
   return grid.map(function (row) { return row.join(''); });
+}
+
+// 街の標準的な施設配置(道具屋・武器防具屋・宿屋・教会)
+function townFacilities(hasChurch) {
+  var f = [
+    { ch: 'S', x: 3, y: 2 },
+    { ch: 'W', x: 6, y: 2 },
+    { ch: 'I', x: 9, y: 2 },
+  ];
+  if (hasChurch) f.push({ ch: 'H', x: 12, y: 2 });
+  return f;
 }
 
 Game.Data.Maps = {
   // 街
-  radatome: { id: 'radatome', name: 'ラダトーム', kind: 'town', tiles: townGrid(16, 10, [{ x: 4, y: 4 }]), startX: 8, startY: 7 },
-  loureshia_town: { id: 'loureshia_town', name: 'ローレシア城下', kind: 'town', tiles: townGrid(16, 10, [{ x: 4, y: 4 }, { x: 11, y: 4 }]), startX: 8, startY: 7 },
-  samaltria_town: { id: 'samaltria_town', name: '学院都市サマルトリア', kind: 'town', tiles: townGrid(16, 10, [{ x: 4, y: 4 }, { x: 11, y: 4 }]), startX: 8, startY: 7 },
-  moonbrook_town: { id: 'moonbrook_town', name: 'ムーンブルク', kind: 'town', tiles: townGrid(16, 10, [{ x: 4, y: 4 }]), startX: 8, startY: 7 },
-  cliff_village: { id: 'cliff_village', name: '断崖の氏族村', kind: 'town', tiles: townGrid(14, 9, [{ x: 4, y: 4 }]), startX: 7, startY: 6 },
+  // 街の開始位置は出口(下段中央)から離しておく。隣接していると、一歩動いただけで
+  // 店に寄る間もなく街を出てしまうため。
+  radatome: {
+    id: 'radatome', name: 'ラダトーム', kind: 'town', startX: 8, startY: 5,
+    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }], facilities: townFacilities(false) }),
+  },
+  loureshia_town: {
+    id: 'loureshia_town', name: 'ローレシア城下', kind: 'town', startX: 8, startY: 5,
+    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }, { x: 11, y: 6 }], facilities: townFacilities(true) }),
+  },
+  samaltria_town: {
+    id: 'samaltria_town', name: '学院都市サマルトリア', kind: 'town', startX: 8, startY: 5,
+    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }, { x: 11, y: 6 }], facilities: townFacilities(true) }),
+  },
+  moonbrook_town: {
+    id: 'moonbrook_town', name: 'ムーンブルク', kind: 'town', startX: 8, startY: 5,
+    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }], facilities: townFacilities(true) }),
+  },
+  cliff_village: {
+    id: 'cliff_village', name: '断崖の氏族村', kind: 'town', startX: 7, startY: 4,
+    tiles: townGrid(14, 9, { npcs: [{ x: 4, y: 6 }], facilities: townFacilities(false) }),
+  },
 
   // フィールド
   east_road: { id: 'east_road', name: '東方街道', kind: 'field', tiles: fieldGrid(), startX: 2, startY: 4, encounterTable: 'east_road' },
