@@ -72,8 +72,9 @@ Game.Field = (function () {
 
   function draw(ctx) {
     if (!map) return;
-    Game.Renderer.drawMap(ctx, map);
-    Game.Renderer.drawToken(ctx, px, py, '#d4af5a');
+    var off = Game.Renderer.mapOffset(map, ctx.canvas.width);
+    Game.Renderer.drawMap(ctx, map, off);
+    Game.Renderer.drawToken(ctx, px, py, '#d4af5a', off);
   }
 
   return { load: load, currentMap: currentMap, playerPos: playerPos, resetToStart: resetToStart, update: update, draw: draw };

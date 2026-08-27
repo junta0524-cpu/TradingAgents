@@ -19,6 +19,11 @@ Game.Story = (function () {
 
   function enterChapter() {
     var ch = chapter();
+    // 章の切り替わりは旅の区切り。ここで全員を休ませる(倒れた仲間もここで復帰する)
+    Game.Party.restAll();
+    // 章タイトルと導入を読んでいる間、背後にこれから進む舞台を映しておく
+    // (先にマップを読み込まないと、導入の間ずっと真っ暗な画面になってしまう)
+    Game.Field.load(ch.stages[0].map, fieldCallbacksFor(ch.stages[0]));
     Game.Dialogue.show(ch.title, function () {
       showLines(ch.intro.slice(), function () { loadStage(); });
     });
@@ -30,28 +35,37 @@ Game.Story = (function () {
     Game.Dialogue.show(l, function () { showLines(lines, done); });
   }
 
+  // そのステージ用のフィールドイベント一式。enterChapter の先読みと loadStage で共用する
+  function fieldCallbacksFor(st) {
+    return {
+      onEncounter: function (monsterId) {
+        onModeChange && onModeChange('battle');
+        Game.Battle.start([monsterId], handleRandomBattleEnd);
+      },
+      onGate: function () { if (st.type === 'gate') handleStageClear(); },
+      onBoss: function (bossId) {
+        if (st.type === 'boss' && bossId === st.bossId) {
+          onModeChange && onModeChange('battle');
+          Game.Battle.start([bossId], handleBossBattleEnd);
+        }
+      },
+      onNpc: function (map) {
+        Game.Dialogue.show(map.name + 'の 住人「ロトさま、道中お気をつけて」');
+      },
+    };
+  }
+
   function loadStage() {
     var st = stage();
     applyOnComplete(st.onEnter);
-    var proceed = function () {
-      Game.Field.load(st.map, {
-        onEncounter: function (monsterId) {
-          onModeChange && onModeChange('battle');
-          Game.Battle.start([monsterId], handleRandomBattleEnd);
-        },
-        onGate: function () { if (st.type === 'gate') handleStageClear(); },
-        onBoss: function (bossId) {
-          if (st.type === 'boss' && bossId === st.bossId) {
-            onModeChange && onModeChange('battle');
-            Game.Battle.start([bossId], handleBossBattleEnd);
-          }
-        },
-        onNpc: function (map) {
-          Game.Dialogue.show(map.name + 'の 住人「ロトさま、道中お気をつけて」');
-        },
-      });
-    };
-    if (st.intro) showLines(st.intro.slice(), proceed); else proceed();
+    var proceed = function () { Game.Field.load(st.map, fieldCallbacksFor(st)); };
+    if (st.intro) {
+      // ステージ導入の間も、その舞台を背景に出しておく
+      Game.Field.load(st.map, fieldCallbacksFor(st));
+      showLines(st.intro.slice(), proceed);
+    } else {
+      proceed();
+    }
   }
 
   function handleRandomBattleEnd(result) {

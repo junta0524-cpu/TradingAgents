@@ -5,7 +5,8 @@ Game.Data = Game.Data || {};
 Game.Data.Skills = {
   // ロト
   nagiharai: { id: 'nagiharai', name: 'なぎ払い', mp: 3, kind: 'attack', power: 1.3, target: 'all_enemies' },
-  ukenagashi: { id: 'ukenagashi', name: '受け流し', mp: 0, kind: 'guard' },
+  // guard は自分にかけるので target: 'self'(敵の選択画面を挟まない)
+  ukenagashi: { id: 'ukenagashi', name: '受け流し', mp: 0, kind: 'guard', target: 'self', reduction: 0.5 },
   kanni_kaifuku: { id: 'kanni_kaifuku', name: 'ホイミ(簡易)', mp: 4, kind: 'heal', power: 18, target: 'one_ally' },
   // エルロード
   mera: { id: 'mera', name: 'メラ', mp: 3, kind: 'attack', power: 1.1, target: 'one_enemy' },
@@ -46,7 +47,7 @@ Game.Data.Characters = {
   garai: {
     id: 'garai', name: 'ガライ将軍', title: '牙を折った将',
     level: 5, exp: 0, expToNext: 41,
-    hp: 46, maxHp: 46, mp: 0, maxMp: 0,
+    hp: 46, maxHp: 46, mp: 12, maxMp: 12,
     atk: 15, def: 13, spd: 5,
     weapon: '鋼の大剣',
     skills: ['garai_nagiharai', 'chikai_no_ichigeki'],

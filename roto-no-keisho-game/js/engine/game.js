@@ -10,6 +10,7 @@ Game.Core = (function () {
     canvas.width = W;
     canvas.height = H;
     ctx = canvas.getContext('2d');
+    Game.Dialogue.setWidth(W); // 会話ウィンドウの折り返し幅をキャンバス幅に合わせる
     requestAnimationFrame(loop);
   }
 
@@ -20,8 +21,13 @@ Game.Core = (function () {
   }
 
   function onPartyWiped() {
-    // DQ 式の温情リスポーン: HPが少し残った状態で、そのマップの入り口からやり直す
-    Game.Party.list().forEach(function (m) { m.hp = Math.max(1, Math.floor(m.maxHp * 0.3)); });
+    // DQ 式の温情リスポーン: HP/MPが少し残った状態で、そのマップの入り口からやり直す
+    // (MPも戻さないと、立て直す手段が無いまま同じ場所で詰んでしまう)
+    Game.Party.list().forEach(function (m) {
+      m.hp = Math.max(1, Math.floor(m.maxHp * 0.3));
+      m.mp = Math.max(m.mp, Math.floor(m.maxMp * 0.3));
+      m.guarding = false;
+    });
     Game.Field.resetToStart();
     Game.Dialogue.show('目の前が まっくらに なった……。一行は 気を取り直して、入り口から 歩き出した。');
   }

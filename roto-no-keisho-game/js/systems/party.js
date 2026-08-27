@@ -24,6 +24,16 @@ Game.Party = (function () {
     order.push(id);
   }
 
+  // 章の区切りでの休息。HP/MPを全快させ、倒れた仲間も立ち上がる。
+  // (この作品には宿屋・教会が無いため、ここが唯一の全体回復ポイントになる)
+  function restAll() {
+    list().forEach(function (m) {
+      m.hp = m.maxHp;
+      m.mp = m.maxMp;
+      m.guarding = false;
+    });
+  }
+
   function list() { return order.map(function (id) { return members[id]; }); }
   function aliveList() { return list().filter(function (m) { return m.hp > 0; }); }
   function get(id) { return members[id]; }
@@ -79,7 +89,7 @@ Game.Party = (function () {
   }
 
   return {
-    init: init, recruit: recruit,
+    init: init, recruit: recruit, restAll: restAll,
     list: list, aliveList: aliveList, get: get, isWiped: isWiped, addExp: addExp,
     inventory: function () { return inventory; },
     useItem: useItem,

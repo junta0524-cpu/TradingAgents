@@ -23,6 +23,7 @@ Game.Battle = (function () {
       onEnd: onEnd,
       log: [],
     };
+    clearGuards();
     var names = state.enemies.map(function (e) { return e.name; }).join('と');
     Game.Dialogue.show(names + 'が あらわれた!', function () {
       state.phase = 'command';
@@ -52,13 +53,25 @@ Game.Battle = (function () {
     return Game.Party.inventory().filter(function (it) {
       if (it.count <= 0) return false;
       var def = Game.Data.Items[it.id];
-      return def.kind !== 'return'; // 帰還アイテムは戦闘中は使えない
+      if (def.kind === 'return') return false; // 帰還アイテムは戦闘中は使えない
+      // 蘇生アイテムは、倒れている仲間がいない間は候補から外す
+      // (出すと対象ゼロの選択画面になり、行き止まりに見えてしまう)
+      if (def.kind === 'revive' && allyTargetsFor('revive').length === 0) return false;
+      return true;
     });
   }
 
   function isHealKind(kind) {
     return kind === 'heal_hp' || kind === 'heal_mp' || kind === 'revive' ||
       kind === 'cure' || kind === 'cure_undead' || kind === 'ward';
+  }
+
+  // 自分にかける技(受け流しなど)は、味方も敵も選ばせずそのまま発動する
+  function isSelfSkill(skill) { return skill.kind === 'guard' || skill.target === 'self'; }
+
+  // 新しいラウンドに入ったら、前ラウンドの「防御中」状態を解除する
+  function clearGuards() {
+    Game.Party.list().forEach(function (m) { m.guarding = false; });
   }
 
   function allyTargetsFor(kind) {
@@ -101,6 +114,7 @@ Game.Battle = (function () {
         if (Game.Party.isWiped()) {
           endBattle('lost');
         } else {
+          clearGuards(); // 防御の効果はこのラウンドの敵の攻撃までで切れる
           state.turnOrder = Game.Party.aliveList().map(function (m) { return m.id; });
           state.turnIndex = 0;
           state.phase = 'command';
@@ -109,6 +123,13 @@ Game.Battle = (function () {
         }
       });
     });
+  }
+
+  // 防御中(受け流し)なら被ダメージを軽減して適用し、実際に与えたダメージを返す
+  function hurt(member, rawDmg) {
+    var dmg = member.guarding ? Math.max(1, Math.round(rawDmg * (1 - member.guarding))) : rawDmg;
+    member.hp = Math.max(0, member.hp - dmg);
+    return dmg;
   }
 
   function queueEnemyTurns() {
@@ -120,16 +141,14 @@ Game.Battle = (function () {
         var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
         if (skill.target === 'all_party') {
           alive.forEach(function (member) {
-            var dmg = Math.round(damageOf(enemy.atk, member.def) * skill.power);
-            member.hp = Math.max(0, member.hp - dmg);
+            var dmg = hurt(member, Math.round(damageOf(enemy.atk, member.def) * skill.power));
             state.log.push(enemy.name + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
           });
           return;
         }
       }
       var target = alive[Math.floor(Math.random() * alive.length)];
-      var dmg2 = damageOf(enemy.atk, target.def);
-      target.hp = Math.max(0, target.hp - dmg2);
+      var dmg2 = hurt(target, damageOf(enemy.atk, target.def));
       state.log.push(enemy.name + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
     });
   }
@@ -173,7 +192,10 @@ Game.Battle = (function () {
   function doSkill(skill, target) {
     var actor = currentActor();
     actor.mp -= skill.mp;
-    if (skill.kind === 'heal') {
+    if (skill.kind === 'guard') {
+      actor.guarding = skill.reduction || 0.5;
+      state.log.push(actor.name + 'は ' + skill.name + 'の かまえを とった!');
+    } else if (skill.kind === 'heal') {
       target.hp = Math.min(target.maxHp, target.hp + skill.power);
       state.log.push(actor.name + 'は ' + skill.name + 'を となえた! ' + target.name + 'の HPが かいふくした');
     } else if (skill.kind === 'attack') {
@@ -218,8 +240,9 @@ Game.Battle = (function () {
     if (state.menu === 'item') return usableItems();
     if (state.menu === 'target') return aliveEnemies();
     if (state.menu === 'allytarget') {
-      var kind = state.pendingSkill ? 'heal' : Game.Data.Items[state.pendingItem.id].kind;
-      return allyTargetsFor(kind);
+      if (state.pendingSkill) return allyTargetsFor('heal');
+      if (state.pendingItem) return allyTargetsFor(Game.Data.Items[state.pendingItem.id].kind);
+      return []; // 対象が確定していない状態で来ることは本来ないが、落ちないようにしておく
     }
     return [];
   }
@@ -254,8 +277,15 @@ Game.Battle = (function () {
       else if (cmd === 'item') { state.menu = 'item'; state.cursor = 0; }
       else if (cmd === 'flee') { doFlee(); }
     } else if (state.menu === 'skill') {
-      state.pendingSkill = list[state.cursor];
-      state.menu = isHealKind(state.pendingSkill.kind) ? 'allytarget' : 'target';
+      var chosen = list[state.cursor];
+      if (isSelfSkill(chosen)) {
+        // 自分にかける技は対象選択を挟まず即発動する
+        state.pendingSkill = null;
+        doSkill(chosen, currentActor());
+        return;
+      }
+      state.pendingSkill = chosen;
+      state.menu = isHealKind(chosen.kind) ? 'allytarget' : 'target';
       state.cursor = 0;
     } else if (state.menu === 'item') {
       state.pendingItem = list[state.cursor];
@@ -292,7 +322,8 @@ Game.Battle = (function () {
 
     // パーティ全員のステータス(横一列、人数に応じて幅を自動調整)
     var party = Game.Party.list();
-    var statusY = H - 158, statusH = 68, gap = 6;
+    // 会話ウィンドウ(下から110px)と重ならない高さに置く
+    var statusY = H - 190, statusH = 68, gap = 6;
     var cardW = (W - 16 - (party.length - 1) * gap) / party.length;
     party.forEach(function (m, i) {
       var x = 8 + i * (cardW + gap), y = statusY;
@@ -318,7 +349,9 @@ Game.Battle = (function () {
       var cols = list.length > 4 ? 2 : 1;
       var colW = (W - 32) / cols;
       list.forEach(function (item, i) {
-        var label = item.label || item.name || (Game.Data.Items[item.id] && Game.Data.Items[item.id].name + ' x' + item.count);
+        var label = item.label
+          || (item.name && item.name + (item.mp > 0 ? '  MP' + item.mp : ''))
+          || (Game.Data.Items[item.id] && Game.Data.Items[item.id].name + ' x' + item.count);
         var prefix = i === state.cursor ? '▶ ' : '　';
         var col = Math.floor(i / Math.ceil(list.length / cols));
         var row = i % Math.ceil(list.length / cols);
