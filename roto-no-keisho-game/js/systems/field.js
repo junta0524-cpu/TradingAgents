@@ -97,7 +97,12 @@ Game.Field = (function () {
     if (def.isGate) { callbacks.onGate && callbacks.onGate(); return; }
     if (def.isBoss) { callbacks.onBoss && callbacks.onBoss(map.bossId); return; }
     if (def.shop) { callbacks.onShop && callbacks.onShop(def.shop, map.id); return; }
-    if (def.isNpc) { callbacks.onNpc && callbacks.onNpc(map); return; }
+    if (def.isNpc) {
+      // 誰に話しかけたかは、立ち位置から引く
+      var npcId = map.npcAt && map.npcAt[nx + ',' + ny];
+      callbacks.onNpc && callbacks.onNpc(npcId, map);
+      return;
+    }
     if (tryEncounter(tile)) {
       var mid = pickEncounter();
       if (mid) callbacks.onEncounter && callbacks.onEncounter(mid);

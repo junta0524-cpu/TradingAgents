@@ -18,6 +18,7 @@ Game.Data.TileDefs = {
   'C': { walkable: true, color: '#b08d3e', encounter: 0, isGate: true },
   'B': { walkable: true, color: '#8a3230', encounter: 0, isBoss: true },
   'N': { walkable: true, color: '#8a76b8', encounter: 0, isNpc: true },
+  'K': { walkable: true, color: '#9c7c2e', encounter: 0, isNpc: true, glyph: '王' },
   // 街の施設。踏むとそれぞれの画面が開く
   'S': { walkable: true, color: '#4f8a5c', encounter: 0, shop: 'item', glyph: '道' },
   'W': { walkable: true, color: '#8a6a3a', encounter: 0, shop: 'gear', glyph: '武' },
@@ -67,11 +68,11 @@ function dungeonGrid(cols, rows) {
   return grid.map(function (row) { return row.join(''); });
 }
 
-// ---- 街:安全な広場 + 施設 + 会話イベントタイル + 出口 ----
-// facilities は [{ch:'S', x, y}] の形。施設タイルは上段に、出口は下段中央に置く。
-function townGrid(cols, rows, opts) {
-  cols = cols || 16; rows = rows || 10;
-  opts = opts || {};
+// ---- 街:安全な広場 + 施設 + 人 + 出口 ----
+// npcs は [{x, y, id}] の形。id は js/data/npcs.js の会話データを指す。
+// 誰がどこに立っているかは npcAt("x,y" -> id) に持たせ、話しかけたときに引く。
+function buildTown(def) {
+  var cols = def.cols || 16, rows = def.rows || 10;
   var grid = [];
   for (var y = 0; y < rows; y++) {
     var row = [];
@@ -81,9 +82,20 @@ function townGrid(cols, rows, opts) {
     grid.push(row);
   }
   grid[rows - 2][Math.floor(cols / 2)] = 'C';
-  (opts.npcs || []).forEach(function (p) { grid[p.y][p.x] = 'N'; });
-  (opts.facilities || []).forEach(function (p) { grid[p.y][p.x] = p.ch; });
-  return grid.map(function (row) { return row.join(''); });
+  (def.facilities || []).forEach(function (p) { grid[p.y][p.x] = p.ch; });
+
+  var npcAt = {};
+  (def.npcs || []).forEach(function (p) {
+    grid[p.y][p.x] = p.king ? 'K' : 'N';
+    npcAt[p.x + ',' + p.y] = p.id;
+  });
+
+  return {
+    id: def.id, name: def.name, kind: 'town',
+    startX: def.startX, startY: def.startY,
+    tiles: grid.map(function (row) { return row.join(''); }),
+    npcAt: npcAt,
+  };
 }
 
 // 街の標準的な施設配置(道具屋・武器防具屋・宿屋・教会)
@@ -101,26 +113,52 @@ Game.Data.Maps = {
   // 街
   // 街の開始位置は出口(下段中央)から離しておく。隣接していると、一歩動いただけで
   // 店に寄る間もなく街を出てしまうため。
-  radatome: {
-    id: 'radatome', name: 'ラダトーム', kind: 'town', startX: 8, startY: 5,
-    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }], facilities: townFacilities(false) }),
-  },
-  loureshia_town: {
-    id: 'loureshia_town', name: 'ローレシア城下', kind: 'town', startX: 8, startY: 5,
-    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }, { x: 11, y: 6 }], facilities: townFacilities(true) }),
-  },
-  samaltria_town: {
-    id: 'samaltria_town', name: '学院都市サマルトリア', kind: 'town', startX: 8, startY: 5,
-    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }, { x: 11, y: 6 }], facilities: townFacilities(true) }),
-  },
-  moonbrook_town: {
-    id: 'moonbrook_town', name: 'ムーンブルク', kind: 'town', startX: 8, startY: 5,
-    tiles: townGrid(16, 10, { npcs: [{ x: 4, y: 6 }], facilities: townFacilities(true) }),
-  },
-  cliff_village: {
-    id: 'cliff_village', name: '断崖の氏族村', kind: 'town', startX: 7, startY: 4,
-    tiles: townGrid(14, 9, { npcs: [{ x: 4, y: 6 }], facilities: townFacilities(false) }),
-  },
+  // 王・重臣は広間の奥(上段)に、町の人は広場に立たせている。
+  radatome: buildTown({
+    id: 'radatome', name: 'ラダトーム', startX: 8, startY: 5,
+    facilities: townFacilities(false),
+    npcs: [
+      { x: 12, y: 2, id: 'radatome_king', king: true },
+      { x: 4, y: 6, id: 'radatome_soldier' },
+      { x: 11, y: 6, id: 'radatome_oldwoman' },
+    ],
+  }),
+  loureshia_town: buildTown({
+    id: 'loureshia_town', name: 'ローレシア城下', startX: 8, startY: 5,
+    facilities: townFacilities(true),
+    npcs: [
+      { x: 6, y: 4, id: 'loureshia_roula' },
+      { x: 4, y: 6, id: 'loureshia_smith' },
+      { x: 11, y: 6, id: 'loureshia_noble' },
+      { x: 10, y: 4, id: 'loureshia_garai' },
+    ],
+  }),
+  samaltria_town: buildTown({
+    id: 'samaltria_town', name: '学院都市サマルトリア', startX: 8, startY: 5,
+    facilities: townFacilities(true),
+    npcs: [
+      { x: 6, y: 4, id: 'samaltria_elrode' },
+      { x: 4, y: 6, id: 'samaltria_vance' },
+      { x: 11, y: 6, id: 'samaltria_librarian' },
+    ],
+  }),
+  moonbrook_town: buildTown({
+    id: 'moonbrook_town', name: 'ムーンブルク', startX: 8, startY: 5,
+    facilities: townFacilities(true),
+    npcs: [
+      { x: 6, y: 4, id: 'moonbrook_celestia' },
+      { x: 4, y: 6, id: 'moonbrook_knight' },
+      { x: 11, y: 6, id: 'moonbrook_priestess' },
+    ],
+  }),
+  cliff_village: buildTown({
+    id: 'cliff_village', name: '断崖の氏族村', cols: 14, rows: 9, startX: 7, startY: 4,
+    facilities: townFacilities(false),
+    npcs: [
+      { x: 4, y: 6, id: 'cliff_elder' },
+      { x: 9, y: 6, id: 'cliff_fisher' },
+    ],
+  }),
 
   // フィールド
   east_road: { id: 'east_road', name: '東方街道', kind: 'field', tiles: fieldGrid(), startX: 2, startY: 4, encounterTable: 'east_road' },

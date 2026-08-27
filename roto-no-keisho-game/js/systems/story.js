@@ -71,10 +71,25 @@ Game.Story = (function () {
         onModeChange && onModeChange('shop');
         Game.Shop.open(shopKind, mapId, function () { onModeChange && onModeChange('field'); });
       },
-      onNpc: function (map) {
-        Game.Dialogue.show(map.name + 'の 住人「ロトさま、道中お気をつけて」');
-      },
+      onNpc: function (npcId, map) { talkTo(npcId, map); },
     };
+  }
+
+  // 話しかけられた相手の、いまの章に合った台詞を流す。
+  // その章専用の台詞が無ければ default に落ちる。
+  function talkTo(npcId, map) {
+    var npc = npcId && Game.Data.Npcs[npcId];
+    if (!npc) {
+      Game.Dialogue.show(map.name + 'の 住人「ロトさま、道中お気をつけて」');
+      return;
+    }
+    // まだ仲間になっていない人物は、その場に居ないことにする
+    if (npc.requires && !Game.Party.get(npc.requires)) {
+      Game.Dialogue.show(map.name + 'の 住人「その方なら、まだこの街には……」');
+      return;
+    }
+    var lines = npc.lines[chapterIndex] || npc.lines.default || [];
+    showLines(lines.slice(), function () {});
   }
 
   function loadStage() {
