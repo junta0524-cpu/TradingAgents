@@ -49,6 +49,31 @@ Game.Field = (function () {
     return table[0].id;
   }
 
+  // 毒に侵された仲間は歩くたびに削られる。一定歩数ごとに1ダメージ。
+  // 歩いて死ぬのは理不尽なので、HPは1で止める。
+  var stepsWalked = 0;
+  function tickFieldPoison() {
+    var poisoned = Game.Party.aliveList().filter(function (m) {
+      var d = Game.Party.statusOf(m);
+      return d && d.fieldStepDamage;
+    });
+    if (poisoned.length === 0) { stepsWalked = 0; return false; }
+
+    stepsWalked += 1;
+    var def = Game.Party.statusOf(poisoned[0]);
+    if (stepsWalked < def.fieldStepInterval) return false;
+    stepsWalked = 0;
+
+    var names = [];
+    poisoned.forEach(function (m) {
+      var d = Game.Party.statusOf(m);
+      m.hp = Math.max(1, m.hp - d.fieldStepDamage);
+      names.push(m.name);
+    });
+    Game.Dialogue.show(names.join('と') + 'は どくで じわじわと 体力を うばわれている……');
+    return true;
+  }
+
   function update() {
     if (!map) return;
     if (moveCooldown > 0) { moveCooldown--; return; }
@@ -67,6 +92,7 @@ Game.Field = (function () {
 
     px = nx; py = ny;
     moveCooldown = MOVE_DELAY;
+    if (tickFieldPoison()) return; // 毒で誰かが倒れたら、その報告を優先する
 
     if (def.isGate) { callbacks.onGate && callbacks.onGate(); return; }
     if (def.isBoss) { callbacks.onBoss && callbacks.onBoss(map.bossId); return; }

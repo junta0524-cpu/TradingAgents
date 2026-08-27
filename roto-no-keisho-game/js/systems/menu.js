@@ -107,8 +107,10 @@ Game.Menu = (function () {
     party().forEach(function (m, i) {
       var ly = y + 54 + i * 58;
       var prefix = i === state.cursor ? '▶ ' : '　';
+      var st = Game.Party.statusOf(m);
       Game.Renderer.drawText(ctx, prefix + m.name + '  Lv' + m.level, x + 16, ly,
         { size: 14, color: m.hp <= 0 ? '#6b6354' : '#ece7da' });
+      if (st) Game.Renderer.drawText(ctx, '[' + st.name + ']', x + 200, ly, { size: 12, color: st.color });
       Game.Renderer.drawText(ctx, 'HP', x + 16, ly + 22, { size: 11, color: '#a49b86' });
       Game.Renderer.drawBar(ctx, x + 44, ly + 14, 110, 8, m.hp / m.maxHp, '#5fae5f');
       Game.Renderer.drawText(ctx, m.hp + '/' + m.maxHp, x + 162, ly + 22, { size: 11, color: '#a49b86' });

@@ -25,9 +25,7 @@ Game.Battle = (function () {
     };
     clearGuards();
     var names = state.enemies.map(function (e) { return e.name; }).join('と');
-    Game.Dialogue.show(names + 'が あらわれた!', function () {
-      state.phase = 'command';
-    });
+    Game.Dialogue.show(names + 'が あらわれた!', function () { beginTurn(); });
   }
 
   function isActive() { return !!state; }
@@ -92,18 +90,73 @@ Game.Battle = (function () {
     Game.Dialogue.show(msg, function () { flushLog(next); });
   }
 
+  // 手番が回ってきたキャラの状態異常を処理する。
+  // 行動できないなら false を返し、その手番は飛ばす。
+  function resolveTurnStatus(actor) {
+    var def = Game.Party.statusOf(actor);
+    if (!def) return true;
+
+    if (def.skipsTurn) {
+      if (Math.random() < def.wakeChance) {
+        state.log.push(Game.Party.cure(actor, [def.id]));
+        return true;
+      }
+      state.log.push(actor.name + def.onTick);
+      return false;
+    }
+    if (def.randomTarget && Math.random() < def.recoverChance) {
+      state.log.push(Game.Party.cure(actor, [def.id]));
+    }
+    return true;
+  }
+
+  // 混乱中は対象を選ばせず、敵味方の中からでたらめに殴る
+  function actConfused(actor) {
+    var pool = aliveEnemies().concat(Game.Party.aliveList().filter(function (m) { return m.id !== actor.id; }));
+    var target = pool[Math.floor(Math.random() * pool.length)];
+    state.log.push(actor.name + Game.Party.statusOf(actor).onTick);
+    if (!target) { state.log.push(actor.name + 'は あたりを 殴りつけた!'); return; }
+    var isEnemy = target.curHp !== undefined;
+    var dmg = damageOf(actor.atk, target.def);
+    if (isEnemy) {
+      target.curHp = Math.max(0, target.curHp - dmg);
+      state.log.push(actor.name + 'の こうげき! ' + target.name + 'に ' + dmg + ' の ダメージ');
+      if (target.curHp <= 0) state.log.push(target.name + 'を たおした!');
+    } else {
+      hurt(target, dmg);
+      state.log.push(actor.name + 'は なかまの ' + target.name + 'を 殴ってしまった! ' + dmg + ' の ダメージ');
+    }
+  }
+
+  // 手番の開始処理。眠っていたり混乱していたら、コマンドを出さずに解決する。
+  function beginTurn() {
+    var actor = currentActor();
+    if (!actor || actor.hp <= 0) { advanceTurn(); return; }
+    var canAct = resolveTurnStatus(actor);
+    var statusDef = Game.Party.statusOf(actor);
+    if (!canAct) {
+      state.phase = 'resolving';
+      flushLog(advanceTurn);
+      return;
+    }
+    if (statusDef && statusDef.randomTarget) {
+      actConfused(actor);
+      state.phase = 'resolving';
+      flushLog(advanceTurn);
+      return;
+    }
+    state.phase = 'command';
+    state.menu = 'main';
+    state.cursor = 0;
+  }
+
   function advanceTurn() {
     state.turnIndex += 1;
     // 敵が全滅していたら、残りの行動者の手番は飛ばして即ラウンドを終える
     // (放っておくと「たたかう」を選んでも対象がいない target メニューで入力を待ち続けてしまう)
     if (aliveEnemies().length === 0) { endPlayerPhase(); return; }
-    if (state.turnIndex < state.turnOrder.length) {
-      state.phase = 'command';
-      state.menu = 'main';
-      state.cursor = 0;
-    } else {
-      endPlayerPhase();
-    }
+    if (state.turnIndex < state.turnOrder.length) beginTurn();
+    else endPlayerPhase();
   }
 
   function endPlayerPhase() {
@@ -115,11 +168,13 @@ Game.Battle = (function () {
           endBattle('lost');
         } else {
           clearGuards(); // 防御の効果はこのラウンドの敵の攻撃までで切れる
-          state.turnOrder = Game.Party.aliveList().map(function (m) { return m.id; });
-          state.turnIndex = 0;
-          state.phase = 'command';
-          state.menu = 'main';
-          state.cursor = 0;
+          tickPoison();
+          flushLog(function () {
+            if (Game.Party.isWiped()) { endBattle('lost'); return; }
+            state.turnOrder = Game.Party.aliveList().map(function (m) { return m.id; });
+            state.turnIndex = 0;
+            beginTurn();
+          });
         }
       });
     });
@@ -130,6 +185,16 @@ Game.Battle = (function () {
     var dmg = member.guarding ? Math.max(1, Math.round(rawDmg * (1 - member.guarding))) : rawDmg;
     member.hp = Math.max(0, member.hp - dmg);
     return dmg;
+  }
+
+  // ラウンドの終わりに、毒に侵されている仲間を削る
+  function tickPoison() {
+    Game.Party.aliveList().forEach(function (m) {
+      var def = Game.Party.statusOf(m);
+      if (!def || !def.poisonDamage) return;
+      m.hp = Math.max(0, m.hp - def.poisonDamage);
+      state.log.push(m.name + def.onTick + ' ' + def.poisonDamage + ' の ダメージ');
+    });
   }
 
   function queueEnemyTurns() {
@@ -150,6 +215,11 @@ Game.Battle = (function () {
       var target = alive[Math.floor(Math.random() * alive.length)];
       var dmg2 = hurt(target, damageOf(enemy.atk, target.def));
       state.log.push(enemy.name + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
+      // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
+      if (enemy.inflict && target.hp > 0 && Math.random() < enemy.inflict.chance) {
+        var msg = Game.Party.inflict(target, enemy.inflict.status);
+        if (msg) state.log.push(msg);
+      }
     });
   }
 
@@ -175,6 +245,8 @@ Game.Battle = (function () {
   function endBattle(result) {
     var cb = state.onEnd;
     var defeatedIds = state.enemies.map(function (e) { return e.id; });
+    // 眠りと混乱は戦闘が終われば解ける。毒だけは持ち越す。
+    Game.Party.clearTemporaryStatuses();
     state = null;
     if (cb) cb(result, defeatedIds);
   }
@@ -330,6 +402,8 @@ Game.Battle = (function () {
       var isCurrent = state.phase === 'command' && m.id === state.turnOrder[state.turnIndex];
       Game.Renderer.drawPanel(ctx, x, y, cardW, statusH);
       Game.Renderer.drawText(ctx, (isCurrent ? '▶' : '') + m.name, x + 8, y + 18, { size: 11, color: m.hp <= 0 ? '#6b6354' : (isCurrent ? '#d4af5a' : '#ece7da') });
+      var st = Game.Party.statusOf(m);
+      if (st) Game.Renderer.drawText(ctx, st.short, x + cardW - 8, y + 18, { size: 11, align: 'right', color: st.color });
       Game.Renderer.drawBar(ctx, x + 8, y + 26, cardW - 16, 7, m.hp / m.maxHp, '#5fae5f');
       Game.Renderer.drawText(ctx, m.hp + '/' + m.maxHp, x + cardW - 8, y + 39, { size: 9, align: 'right', color: '#a49b86' });
       if (m.maxMp > 0) {

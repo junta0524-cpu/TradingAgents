@@ -53,12 +53,48 @@ Game.Party = (function () {
   function get(id) { return members[id]; }
   function isWiped() { return list().every(function (m) { return m.hp <= 0; }); }
 
-  // 章の区切りや宿屋での休息。HP/MPを全快させ、倒れた仲間も立ち上がる。
+  // 章の区切りや宿屋での休息。HP/MPを全快させ、状態異常も解け、倒れた仲間も立ち上がる。
   function restAll() {
     list().forEach(function (m) {
       m.hp = m.maxHp;
       m.mp = m.maxMp;
       m.guarding = false;
+      m.status = null;
+      m.ward = false;
+    });
+  }
+
+  // ---- 状態異常 ----
+  function statusOf(m) { return m.status ? Game.Data.Statuses[m.status] : null; }
+
+  // 状態異常をかける。護符を持っていれば一度だけ弾く。すでに同じ異常なら重ねがけしない。
+  // 戻り値は表示用のメッセージ(何も起きなければ null)。
+  function inflict(m, statusId) {
+    if (m.hp <= 0 || m.status === statusId) return null;
+    var def = Game.Data.Statuses[statusId];
+    if (!def) return null;
+    if (m.ward) {
+      m.ward = false;
+      return m.name + 'は 加護に まもられた!';
+    }
+    m.status = statusId;
+    return m.name + def.onInflict;
+  }
+
+  function cure(m, statusIds) {
+    if (!m.status || statusIds.indexOf(m.status) === -1) return null;
+    var def = Game.Data.Statuses[m.status];
+    m.status = null;
+    return m.name + def.onCure;
+  }
+
+  function cureAll(m) { return cure(m, Game.Data.CURE_ALL); }
+
+  // 戦闘が終わったとき、毒以外の状態異常は自然に解ける
+  function clearTemporaryStatuses() {
+    list().forEach(function (m) {
+      m.guarding = false;
+      if (m.status && !Game.Data.Statuses[m.status].persists) m.status = null;
     });
   }
 
@@ -67,6 +103,7 @@ Game.Party = (function () {
     var m = members[id];
     if (!m || m.hp > 0) return false;
     m.hp = Math.max(1, Math.floor(m.maxHp / 2));
+    m.status = null; // 祈りは毒も清める
     return true;
   }
 
@@ -112,10 +149,16 @@ Game.Party = (function () {
     }
     if (def.kind === 'revive') {
       target.hp = Math.max(1, Math.floor(target.maxHp * def.power));
+      target.status = null;
       return 'いきかえった!';
     }
-    if (def.kind === 'cure' || def.kind === 'cure_undead' || def.kind === 'ward') {
-      return 'すこし らくになったようだ';
+    if (def.kind === 'cure') {
+      var msg = cure(target, def.cures || []);
+      return msg || 'しかし なにも おこらなかった';
+    }
+    if (def.kind === 'ward') {
+      target.ward = true;
+      return target.name + 'は 加護に つつまれた';
     }
     return '';
   }
@@ -229,6 +272,8 @@ Game.Party = (function () {
     init: init, recruit: recruit, restAll: restAll, revive: revive,
     list: list, aliveList: aliveList, deadList: deadList, get: get,
     isWiped: isWiped, addExp: addExp,
+    statusOf: statusOf, inflict: inflict, cure: cure, cureAll: cureAll,
+    clearTemporaryStatuses: clearTemporaryStatuses,
     inventory: function () { return inventory; },
     gearBag: function () { return gear; },
     useItem: useItem,

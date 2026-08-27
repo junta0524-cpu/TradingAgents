@@ -22,11 +22,11 @@ function add(id, name, tier, loc, over) { M[id] = mon(id, name, tier, loc, over)
 
 // ---- スライム系 ----
 add('chibi_slime', 'ちびスライム', 'early', ['east_road', 'azure_plain', 'cliff_road'], { hp: 5, atk: 3 });
-add('aka_slime', 'あかスライム', 'early', ['east_road'], { hp: 8, atk: 5 });
+add('aka_slime', 'あかスライム', 'early', ['east_road'], { hp: 8, atk: 5, inflict: { status: 'confuse', chance: 0.12 } });
 add('hagure_slime', 'はぐれスライム', 'early', ['ogre_camp'], { hp: 10, atk: 6 });
 add('king_slime_kakera', 'キングスライムの欠片', 'mid', ['cliff_road'], { hp: 24 });
 add('hane_slime', 'はねスライム', 'mid', ['east_road', 'azure_plain', 'cliff_road'], { hp: 10, exp: 12, gold: 20 });
-add('hedoro_slime', 'ヘドロスライム', 'mid', ['abyss_depth']);
+add('hedoro_slime', 'ヘドロスライム', 'mid', ['abyss_depth'], { inflict: { status: 'poison', chance: 0.3 } });
 
 // ---- 竜王軍残党系 ----
 add('nora_goblin', '野良ゴブリン', 'early', ['east_road'], { hp: 12, atk: 6, spd: 6 });
@@ -41,21 +41,21 @@ add('magarou', '牙狼(まがろう)', 'early', ['east_road', 'azure_plain'], { 
 add('magatsu_shika', 'まがつ鹿', 'early', ['azure_plain']);
 add('anaguma_modoki', '穴熊もどき', 'early', ['east_road'], { def: 4 });
 add('kagizume_taka', 'かぎづめ鷹', 'mid', ['cliff_road'], { spd: 10 });
-add('dokuo_no_sasori', '毒尾のさそり', 'mid', ['azure_plain']);
+add('dokuo_no_sasori', '毒尾のさそり', 'mid', ['azure_plain'], { inflict: { status: 'poison', chance: 0.35 } });
 add('hagure_inoshishi', '平原のはぐれ猪', 'early', ['east_road']);
 
 // ---- 植物系 ----
-add('hamigusa', '喰み草', 'early', ['east_road'], { def: 4, spd: 2 });
-add('toge_no_mandrake', '棘のマンドレイク', 'mid', ['azure_plain']);
-add('dokugiri_kinoko', '毒霧茸', 'mid', ['cliff_road']);
-add('karamitsuki_tsuta', '絡みつき蔦', 'mid', ['azure_tower']);
-add('tanemaki_poppy', '種撒きポピー', 'early', ['azure_plain']);
+add('hamigusa', '喰み草', 'early', ['east_road'], { def: 4, spd: 2, inflict: { status: 'sleep', chance: 0.18 } });
+add('toge_no_mandrake', '棘のマンドレイク', 'mid', ['azure_plain'], { inflict: { status: 'confuse', chance: 0.3 } });
+add('dokugiri_kinoko', '毒霧茸', 'mid', ['cliff_road'], { inflict: { status: 'poison', chance: 0.35 } });
+add('karamitsuki_tsuta', '絡みつき蔦', 'mid', ['azure_tower'], { inflict: { status: 'sleep', chance: 0.22 } });
+add('tanemaki_poppy', '種撒きポピー', 'early', ['azure_plain'], { inflict: { status: 'sleep', chance: 0.3 } });
 add('kobokuno_bannin', '古木の番人', 'mid', ['azure_plain'], { hp: 40, exp: 14, gold: 24 });
 
 // ---- 空中系 ----
 add('koumori', 'こうもり', 'early', ['azure_tower'], { hp: 6, spd: 7 });
 add('yogiri_no_fukurou', '夜霧のフクロウ', 'early', ['cliff_road']);
-add('dangai_no_harpy', '断崖のハーピー', 'mid', ['cliff_road']);
+add('dangai_no_harpy', '断崖のハーピー', 'mid', ['cliff_road'], { inflict: { status: 'confuse', chance: 0.28 } });
 add('soukyu_wyvern_ko', '蒼穹のワイバーン子', 'mid', ['azure_tower']);
 add('arane_griffin_youju', '嵐羽のグリフィン幼獣', 'late', ['azure_tower']);
 add('kagewatari_bat_gun', '影渡りのバット群', 'mid', ['academy_altar']);
@@ -65,24 +65,24 @@ add('samayou_yoroi', 'さまよう鎧', 'mid', ['azure_tower'], { def: 8 });
 add('kodai_no_bourei', '古代の亡霊', 'mid', ['azure_tower']);
 add('hone_no_banpei', '骨の番兵', 'mid', ['azure_tower']);
 add('norowareta_gakuto', '呪われた学徒の霊', 'mid', ['academy_altar']);
-add('souhaku_no_moja', '蒼白の亡者', 'late', ['forbidden_ritual_chamber']);
+add('souhaku_no_moja', '蒼白の亡者', 'late', ['forbidden_ritual_chamber'], { inflict: { status: 'poison', chance: 0.3 } });
 add('dokuro_no_eishousha', '髑髏の詠唱者', 'late', ['forbidden_ritual_chamber']);
 
 // ---- 悪魔系 ----
 add('warau_kage', '嗤う影', 'mid', ['azure_plain']);
 add('jujutsushi_modoki', '呪術師もどき', 'mid', ['cliff_road']);
 add('keiyaku_no_akuma_inu', '契約の悪魔犬', 'late', ['east_road'], { spd: 12 });
-add('genwaku_no_imp', '幻惑のインプ', 'mid', ['azure_tower']);
+add('genwaku_no_imp', '幻惑のインプ', 'mid', ['azure_tower'], { inflict: { status: 'confuse', chance: 0.3 } });
 add('chi_no_daikousha', '血の代行者', 'late', ['east_road']);
 add('nanamonaki_shito', '名もなき使徒', 'late', ['forbidden_ritual_chamber']);
 
 // ---- 深海系 ----
-add('hakkou_kurage', '発光クラゲ', 'mid', ['abyss_depth']);
+add('hakkou_kurage', '発光クラゲ', 'mid', ['abyss_depth'], { inflict: { status: 'sleep', chance: 0.25 } });
 add('koukaku_kani', '甲殻の蟹型魔物', 'mid', ['abyss_depth'], { def: 9 });
 add('shokushu_uo', '触手魚', 'mid', ['abyss_depth']);
 add('shinkai_lobster', '深海のロブスター', 'mid', ['abyss_depth'], { def: 10 });
 add('subo_no_youtai', '巣母の幼体', 'mid', ['abyss_depth']);
-add('shinen_no_ankou', '深淵のアンコウ', 'mid', ['abyss_depth']);
+add('shinen_no_ankou', '深淵のアンコウ', 'mid', ['abyss_depth'], { inflict: { status: 'confuse', chance: 0.25 } });
 
 // ---- 古代文明系 ----
 add('ishi_no_bannin', '石の番人', 'mid', ['azure_tower'], { def: 10, spd: 3 });
