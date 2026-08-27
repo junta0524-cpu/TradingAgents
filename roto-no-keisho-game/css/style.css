@@ -9,12 +9,17 @@ html, body {
   align-items: center;
   min-height: 100vh;
   justify-content: center;
+  /* スマホで仮想パッドを操作したときに画面が引っぱられないようにする */
+  overscroll-behavior: none;
 }
 
 #game-canvas {
   image-rendering: pixelated;
   border: 2px solid #cbbfa0;
   box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  /* 画面が狭い端末では縦横比を保ったまま縮める */
+  max-width: 100%;
+  height: auto;
 }
 
 .hint {
@@ -22,4 +27,11 @@ html, body {
   font-size: 13px;
   color: #a49b86;
   text-align: center;
+  padding: 0 12px;
+}
+
+/* 指で操作する端末では、キーボードの案内は出さない */
+@media (pointer: coarse) {
+  .hint { display: none; }
+  body { justify-content: flex-start; padding-top: 12px; }
 }

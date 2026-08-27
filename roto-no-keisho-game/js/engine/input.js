@@ -27,9 +27,17 @@ Game.Input = (function () {
     down[action] = false;
   });
 
+  // 画面上の仮想ボタン(スマホのパッド)からも、キーボードと同じ経路で入力を流す
+  function press(action) {
+    if (!down[action]) pressedThisFrame[action] = true;
+    down[action] = true;
+  }
+  function release(action) { down[action] = false; }
+
   return {
     isDown: function (action) { return !!down[action]; },
     wasPressed: function (action) { return !!pressedThisFrame[action]; },
+    press: press, release: release,
     // 各フレームの終わりに呼び、「今フレームで押された」を消費する
     endFrame: function () { pressedThisFrame = {}; },
   };
