@@ -18,6 +18,13 @@ Game.Field = (function () {
   // 全滅から復帰した際など、現在のマップの入り口へ戻す
   function resetToStart() { if (map) { px = map.startX; py = map.startY; } }
 
+  // セーブから復帰したときに、記録されていた立ち位置へ戻す
+  function setPosition(x, y) {
+    if (!map) return;
+    var def = Game.Data.TileDefs[tileAt(x, y)];
+    if (def && def.walkable) { px = x; py = y; }
+  }
+
   function tileAt(x, y) {
     var row = map.tiles[y];
     if (!row) return null;
@@ -78,5 +85,9 @@ Game.Field = (function () {
     Game.Renderer.drawToken(ctx, px, py, '#d4af5a', off);
   }
 
-  return { load: load, currentMap: currentMap, playerPos: playerPos, resetToStart: resetToStart, update: update, draw: draw };
+  return {
+    load: load, currentMap: currentMap, playerPos: playerPos,
+    resetToStart: resetToStart, setPosition: setPosition,
+    update: update, draw: draw,
+  };
 })();

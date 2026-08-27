@@ -36,7 +36,8 @@ Game.Menu = (function () {
   }
 
   function listLength() {
-    if (state.view === 'status') return party().length;
+    // 一覧の最後の行は「ぼうけんのしょに きろくする」
+    if (state.view === 'status') return party().length + 1;
     if (state.view === 'member') return Game.Data.EQUIP_SLOTS.length;
     if (state.view === 'gear') return gearChoicesFor(currentMember(), Game.Data.EQUIP_SLOTS[state.slotIndex]).length;
     return 0;
@@ -57,7 +58,7 @@ Game.Menu = (function () {
     if (!Game.Input.wasPressed('confirm')) return;
 
     if (state.view === 'status') {
-      if (len === 0) { close(); return; }
+      if (state.cursor >= party().length) { doSave(); return; }
       state.memberIndex = state.cursor;
       state.view = 'member';
       state.cursor = 0;
@@ -76,6 +77,13 @@ Game.Menu = (function () {
       state.view = 'member';
       state.cursor = state.slotIndex;
     }
+  }
+
+  function doSave() {
+    close();
+    Game.Dialogue.show(Game.Save.save()
+      ? 'ぼうけんのしょに きろくした。'
+      : 'このブラウザでは きろくを のこせないようだ……');
   }
 
   function draw(ctx, W, H) {
@@ -109,7 +117,11 @@ Game.Menu = (function () {
       Game.Renderer.drawText(ctx, 'こうげき ' + m.atk + '  しゅび ' + m.def + '  すばやさ ' + m.spd,
         x + 340, ly + 22, { size: 11, color: '#a49b86' });
     });
-    Game.Renderer.drawText(ctx, 'Z: そうびをみる    X: とじる', x + 16, y + h - 14, { size: 12, color: '#6b6354' });
+    var saveRow = y + 54 + party().length * 58;
+    var savePrefix = state.cursor >= party().length ? '▶ ' : '　';
+    Game.Renderer.drawText(ctx, savePrefix + 'ぼうけんのしょに きろくする', x + 16, saveRow,
+      { size: 14, color: state.cursor >= party().length ? '#d4af5a' : '#ece7da' });
+    Game.Renderer.drawText(ctx, 'Z: えらぶ    X: とじる', x + 16, y + h - 14, { size: 12, color: '#6b6354' });
   }
 
   function drawMember(ctx, x, y, w, h) {

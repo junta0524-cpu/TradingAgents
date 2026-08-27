@@ -198,6 +198,33 @@ Game.Party = (function () {
   // 物語の褒賞など、店を介さず直接手に入る装備
   function grantGear(gearId) { stackAdd(gear, gearId, 1); }
 
+  // ---- セーブ/ロード ----
+  function serialize() {
+    return { order: order, members: members, inventory: inventory, gear: gear, gold: gold };
+  }
+
+  function deserialize(data) {
+    if (!data) return false;
+    order = data.order.slice();
+    members = {};
+    order.forEach(function (id) {
+      var m = JSON.parse(JSON.stringify(data.members[id]));
+      // 古いセーブや欠けた項目があっても壊れないよう、足りない値は今の定義から補う
+      var base = Game.Data.Characters[id] || {};
+      if (m.baseAtk === undefined) m.baseAtk = base.atk;
+      if (m.baseDef === undefined) m.baseDef = base.def;
+      if (m.baseSpd === undefined) m.baseSpd = base.spd;
+      m.equip = m.equip || {};
+      m.guarding = false;
+      members[id] = m;
+      recalc(m);
+    });
+    inventory = (data.inventory || []).map(function (it) { return { id: it.id, count: it.count }; });
+    gear = (data.gear || []).map(function (it) { return { id: it.id, count: it.count }; });
+    gold = data.gold || 0;
+    return true;
+  }
+
   return {
     init: init, recruit: recruit, restAll: restAll, revive: revive,
     list: list, aliveList: aliveList, deadList: deadList, get: get,
@@ -212,5 +239,6 @@ Game.Party = (function () {
     buyItem: buyItem, buyGear: buyGear,
     sellItem: sellItem, sellGear: sellGear, sellPriceOf: sellPriceOf,
     canEquip: canEquip, equipGear: equipGear, unequipSlot: unequipSlot, grantGear: grantGear,
+    serialize: serialize, deserialize: deserialize,
   };
 })();

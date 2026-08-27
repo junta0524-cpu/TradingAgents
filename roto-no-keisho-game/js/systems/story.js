@@ -17,6 +17,24 @@ Game.Story = (function () {
     enterChapter();
   }
 
+  // ---- セーブ/ロード ----
+  function serialize() {
+    return { chapterIndex: chapterIndex, stageIndex: stageIndex, finished: finished };
+  }
+
+  // 記録した地点から再開する。章の導入は流し直さず、褒賞や仲間加入も
+  // 二重に適用しないよう、マップの読み込みだけをやり直す。
+  function resume(data, modeChangeCb) {
+    onModeChange = modeChangeCb;
+    chapterIndex = Math.min(data.chapterIndex || 0, Game.Data.Chapters.length - 1);
+    finished = !!data.finished;
+    var stages = chapter().stages;
+    stageIndex = Math.min(data.stageIndex || 0, stages.length - 1);
+    var st = stage();
+    Game.Field.load(st.map, fieldCallbacksFor(st));
+    return st;
+  }
+
   function enterChapter() {
     var ch = chapter();
     // 章の切り替わりは旅の区切り。ここで全員を休ませる(倒れた仲間もここで復帰する)
@@ -62,7 +80,11 @@ Game.Story = (function () {
   function loadStage() {
     var st = stage();
     applyOnComplete(st.onEnter);
-    var proceed = function () { Game.Field.load(st.map, fieldCallbacksFor(st)); };
+    var proceed = function () {
+      Game.Field.load(st.map, fieldCallbacksFor(st));
+      // 節目ごとに自動で記録しておく(長丁場なので、事故で最初からになるのを防ぐ)
+      Game.Save.save();
+    };
     if (st.intro) {
       // ステージ導入の間も、その舞台を背景に出しておく
       Game.Field.load(st.map, fieldCallbacksFor(st));
@@ -119,5 +141,8 @@ Game.Story = (function () {
     }
   }
 
-  return { begin: begin, isFinished: isFinished, currentTitle: currentTitle };
+  return {
+    begin: begin, resume: resume, serialize: serialize,
+    isFinished: isFinished, currentTitle: currentTitle,
+  };
 })();

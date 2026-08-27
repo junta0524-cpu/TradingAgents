@@ -3,7 +3,12 @@ var Game = window.Game || {};
 Game.Core = (function () {
   var canvas, ctx;
   var W = 640, H = 480;
-  var mode = 'title'; // 'title' | 'field' | 'battle' | 'ending'
+  var mode = 'title'; // 'title' | 'field' | 'battle' | 'shop' | 'ending'
+  var titleCursor = 0;
+
+  function titleOptions() {
+    return Game.Save.exists() ? ['つづきから', 'はじめから'] : ['はじめから'];
+  }
 
   function init(canvasEl) {
     canvas = canvasEl;
@@ -14,10 +19,19 @@ Game.Core = (function () {
     requestAnimationFrame(loop);
   }
 
+  function onModeChange(nextMode) { mode = nextMode; }
+
   function startNewGame() {
+    Game.Save.clear();
     Game.Party.init();
     mode = 'field';
-    Game.Story.begin(function (nextMode) { mode = nextMode; });
+    Game.Story.begin(onModeChange);
+  }
+
+  function continueGame() {
+    if (!Game.Save.load(onModeChange)) { startNewGame(); return; }
+    mode = 'field';
+    Game.Dialogue.show('ぼうけんのしょから 旅を再開した。');
   }
 
   function onPartyWiped() {
@@ -34,7 +48,12 @@ Game.Core = (function () {
 
   function update() {
     if (mode === 'title') {
-      if (Game.Input.wasPressed('confirm')) startNewGame();
+      var opts = titleOptions();
+      if (Game.Input.wasPressed('down')) titleCursor = (titleCursor + 1) % opts.length;
+      if (Game.Input.wasPressed('up')) titleCursor = (titleCursor - 1 + opts.length) % opts.length;
+      if (Game.Input.wasPressed('confirm')) {
+        if (opts[titleCursor] === 'つづきから') continueGame(); else startNewGame();
+      }
     } else if (mode === 'field') {
       if (Game.Story.isFinished()) { mode = 'ending'; Game.Input.endFrame(); return; }
       var dialogueWasActive = Game.Dialogue.isActive();
@@ -86,9 +105,23 @@ Game.Core = (function () {
   function drawTitle() {
     ctx.fillStyle = '#171b2b';
     ctx.fillRect(0, 0, W, H);
-    Game.Renderer.drawText(ctx, 'ロトの継承', W / 2, H / 2 - 40, { align: 'center', size: 32, color: '#d4af5a' });
-    Game.Renderer.drawText(ctx, '― 三国建国記 ―', W / 2, H / 2 - 10, { align: 'center', size: 14, color: '#a49b86' });
-    Game.Renderer.drawText(ctx, 'Z / Enter でスタート', W / 2, H / 2 + 60, { align: 'center', size: 14 });
+    Game.Renderer.drawText(ctx, 'ロトの継承', W / 2, H / 2 - 70, { align: 'center', size: 32, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, '― 三国建国記 ―', W / 2, H / 2 - 40, { align: 'center', size: 14, color: '#a49b86' });
+
+    var opts = titleOptions();
+    opts.forEach(function (label, i) {
+      var selected = i === titleCursor;
+      Game.Renderer.drawText(ctx, (selected ? '▶ ' : '　') + label, W / 2, H / 2 + 10 + i * 28,
+        { align: 'center', size: 16, color: selected ? '#d4af5a' : '#ece7da' });
+    });
+
+    var sum = Game.Save.summary();
+    if (sum) {
+      Game.Renderer.drawText(ctx, sum.title + '  /  Lv' + sum.level + '  なかま' + sum.partySize + '人',
+        W / 2, H / 2 + 84, { align: 'center', size: 12, color: '#a49b86' });
+    }
+    Game.Renderer.drawText(ctx, '↑↓ でえらび Z / Enter できめる', W / 2, H - 30,
+      { align: 'center', size: 12, color: '#6b6354' });
   }
 
   function drawEnding() {
