@@ -27,7 +27,12 @@ Game.Data.Characters = {
     atk: 12, def: 8, spd: 9,
     equipKinds: ['sword', 'armor', 'shield', 'helmet', 'accessory'],
     equip: { weapon: 'copper_sword', armor: 'cloth_robe' },
-    skills: ['nagiharai', 'ukenagashi', 'kanni_kaifuku'],
+    // level はその技を覚えるレベル。上がるたびに「〜を おぼえた!」と告げる
+    skills: [
+      { id: 'ukenagashi', level: 1 },
+      { id: 'kanni_kaifuku', level: 3 },
+      { id: 'nagiharai', level: 6 },
+    ],
   },
   elrode: {
     id: 'elrode', name: 'エルロード', title: '蒼穹の賢者',
@@ -36,7 +41,10 @@ Game.Data.Characters = {
     atk: 8, def: 5, spd: 7,
     equipKinds: ['staff', 'armor', 'accessory'],
     equip: { weapon: 'silver_staff', armor: 'cloth_robe' },
-    skills: ['mera', 'merazoma'],
+    skills: [
+      { id: 'mera', level: 1 },
+      { id: 'merazoma', level: 8 },
+    ],
   },
   celestia: {
     id: 'celestia', name: 'セレスティア', title: '月衆の乙女',
@@ -45,7 +53,10 @@ Game.Data.Characters = {
     atk: 12, def: 6, spd: 12,
     equipKinds: ['bow', 'armor', 'helmet', 'accessory'],
     equip: { weapon: 'steel_bow', armor: 'leather_armor' },
-    skills: ['getsuko_no_ya', 'mangetsu_no_ichiya'],
+    skills: [
+      { id: 'getsuko_no_ya', level: 1 },
+      { id: 'mangetsu_no_ichiya', level: 9 },
+    ],
   },
   garai: {
     id: 'garai', name: 'ガライ将軍', title: '牙を折った将',
@@ -54,7 +65,10 @@ Game.Data.Characters = {
     atk: 15, def: 13, spd: 5,
     equipKinds: ['greatsword', 'armor', 'shield', 'helmet', 'accessory'],
     equip: { weapon: 'steel_greatsword', armor: 'chainmail', helmet: 'iron_helm' },
-    skills: ['garai_nagiharai', 'chikai_no_ichigeki'],
+    skills: [
+      { id: 'garai_nagiharai', level: 1 },
+      { id: 'chikai_no_ichigeki', level: 7 },
+    ],
   },
 };
 

@@ -107,22 +107,36 @@ Game.Party = (function () {
     return true;
   }
 
+  // そのレベルで使える技だけを返す(まだ覚えていない技は出さない)
+  function learnedSkills(m) {
+    return (m.skills || [])
+      .filter(function (s) { return m.level >= s.level; })
+      .map(function (s) { return Game.Data.Skills[s.id]; });
+  }
+
   function addExp(exp) {
-    var leveledNames = [];
+    var messages = [];
     aliveList().forEach(function (m) {
       m.exp += exp;
       while (m.exp >= m.expToNext) {
         m.exp -= m.expToNext;
+        var before = m.level;
         m.level += 1;
         m.maxHp += 6; m.hp = m.maxHp;
         if (m.maxMp > 0) { m.maxMp += 2; m.mp = m.maxMp; }
         m.baseAtk += 2; m.baseDef += 1; m.baseSpd += 1;
         recalc(m);
         m.expToNext = Math.round(m.expToNext * 1.35);
-        leveledNames.push(m.name + 'は レベル' + m.level + 'に あがった!');
+        messages.push(m.name + 'は レベル' + m.level + 'に あがった!');
+        // このレベルで新しく覚えた技を告げる
+        (m.skills || []).forEach(function (s) {
+          if (s.level > before && s.level <= m.level) {
+            messages.push(m.name + 'は ' + Game.Data.Skills[s.id].name + 'を おぼえた!');
+          }
+        });
       }
     });
-    return leveledNames;
+    return messages;
   }
 
   // ---- 所持品 ----
@@ -240,6 +254,8 @@ Game.Party = (function () {
 
   // 物語の褒賞など、店を介さず直接手に入る装備
   function grantGear(gearId) { stackAdd(gear, gearId, 1); }
+  // 宝箱の中身など、代金を払わずに受け取る道具
+  function grantItem(itemId, n) { stackAdd(inventory, itemId, n || 1); }
 
   // ---- セーブ/ロード ----
   function serialize() {
@@ -271,7 +287,7 @@ Game.Party = (function () {
   return {
     init: init, recruit: recruit, restAll: restAll, revive: revive,
     list: list, aliveList: aliveList, deadList: deadList, get: get,
-    isWiped: isWiped, addExp: addExp,
+    isWiped: isWiped, addExp: addExp, learnedSkills: learnedSkills,
     statusOf: statusOf, inflict: inflict, cure: cure, cureAll: cureAll,
     clearTemporaryStatuses: clearTemporaryStatuses,
     inventory: function () { return inventory; },
@@ -283,7 +299,8 @@ Game.Party = (function () {
     canAfford: canAfford,
     buyItem: buyItem, buyGear: buyGear,
     sellItem: sellItem, sellGear: sellGear, sellPriceOf: sellPriceOf,
-    canEquip: canEquip, equipGear: equipGear, unequipSlot: unequipSlot, grantGear: grantGear,
+    canEquip: canEquip, equipGear: equipGear, unequipSlot: unequipSlot,
+    grantGear: grantGear, grantItem: grantItem,
     serialize: serialize, deserialize: deserialize,
   };
 })();

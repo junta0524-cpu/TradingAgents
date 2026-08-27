@@ -49,6 +49,22 @@ Game.Field = (function () {
     return table[0].id;
   }
 
+  // 一体だけでなく、群れで出てくることがある。
+  // 弱い魔物ほど数を揃えやすく、強い個体は単独で現れる。
+  function pickEncounterGroup() {
+    var lead = pickEncounter();
+    if (!lead) return [];
+    var def = Game.Data.Monsters[lead];
+    var maxCount = def.tier === 'early' ? 3 : def.tier === 'mid' ? 2 : 1;
+    var count = 1 + Math.floor(Math.random() * maxCount);
+    var group = [lead];
+    for (var i = 1; i < count; i++) {
+      // ときどき違う魔物が混ざる
+      group.push(Math.random() < 0.3 ? (pickEncounter() || lead) : lead);
+    }
+    return group;
+  }
+
   // 毒に侵された仲間は歩くたびに削られる。一定歩数ごとに1ダメージ。
   // 歩いて死ぬのは理不尽なので、HPは1で止める。
   var stepsWalked = 0;
@@ -97,6 +113,11 @@ Game.Field = (function () {
     if (def.isGate) { callbacks.onGate && callbacks.onGate(); return; }
     if (def.isBoss) { callbacks.onBoss && callbacks.onBoss(map.bossId); return; }
     if (def.shop) { callbacks.onShop && callbacks.onShop(def.shop, map.id); return; }
+    if (def.isChest) {
+      var chestId = map.chestAt && map.chestAt[nx + ',' + ny];
+      callbacks.onChest && callbacks.onChest(chestId, map.id, nx + ',' + ny);
+      return;
+    }
     if (def.isNpc) {
       // 誰に話しかけたかは、立ち位置から引く
       var npcId = map.npcAt && map.npcAt[nx + ',' + ny];
@@ -104,8 +125,8 @@ Game.Field = (function () {
       return;
     }
     if (tryEncounter(tile)) {
-      var mid = pickEncounter();
-      if (mid) callbacks.onEncounter && callbacks.onEncounter(mid);
+      var group = pickEncounterGroup();
+      if (group.length) callbacks.onEncounter && callbacks.onEncounter(group);
     }
   }
 

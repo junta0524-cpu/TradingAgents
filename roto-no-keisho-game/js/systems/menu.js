@@ -118,6 +118,9 @@ Game.Menu = (function () {
       Game.Renderer.drawBar(ctx, x + 244, ly + 14, 70, 8, m.maxMp ? m.mp / m.maxMp : 0, '#5c8ecf');
       Game.Renderer.drawText(ctx, 'こうげき ' + m.atk + '  しゅび ' + m.def + '  すばやさ ' + m.spd,
         x + 340, ly + 22, { size: 11, color: '#a49b86' });
+      // DQ のように「つぎのレベルまで あと N」を出す
+      Game.Renderer.drawText(ctx, 'つぎのレベルまで あと ' + Math.max(0, m.expToNext - m.exp),
+        x + 340, ly + 38, { size: 11, color: '#6b6354' });
     });
     var saveRow = y + 54 + party().length * 58;
     var savePrefix = state.cursor >= party().length ? '▶ ' : '　';

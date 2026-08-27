@@ -23,9 +23,34 @@ Game.Battle = (function () {
       onEnd: onEnd,
       log: [],
     };
+    labelEnemies(state.enemies);
     clearGuards();
-    var names = state.enemies.map(function (e) { return e.name; }).join('と');
-    Game.Dialogue.show(names + 'が あらわれた!', function () { beginTurn(); });
+    Game.Dialogue.show(encounterLine(state.enemies), function () { beginTurn(); });
+  }
+
+  // 「スライムが 2ひき あらわれた!」のように、同じ魔物はまとめて数える
+  function encounterLine(enemies) {
+    var order = [], counts = {};
+    enemies.forEach(function (e) {
+      if (counts[e.name] === undefined) { counts[e.name] = 0; order.push(e.name); }
+      counts[e.name] += 1;
+    });
+    var parts = order.map(function (name) {
+      return counts[name] > 1 ? name + ' ' + counts[name] + 'ひき' : name;
+    });
+    return parts.join('と') + 'が あらわれた!';
+  }
+
+  // 同じ名前が並ぶと区別できないので、2体目からは A/B/C を添える
+  function labelEnemies(enemies) {
+    var seen = {};
+    enemies.forEach(function (e) { seen[e.name] = (seen[e.name] || 0) + 1; });
+    var used = {};
+    enemies.forEach(function (e) {
+      if (seen[e.name] < 2) { e.label = e.name; return; }
+      used[e.name] = (used[e.name] || 0) + 1;
+      e.label = e.name + ' ' + String.fromCharCode(64 + used[e.name]); // A, B, C...
+    });
   }
 
   function isActive() { return !!state; }
@@ -42,9 +67,8 @@ Game.Battle = (function () {
   }
 
   function usableSkills(actor) {
-    return actor.skills
-      .map(function (sid) { return Game.Data.Skills[sid]; })
-      .filter(function (s) { return s.mp <= actor.mp; });
+    // 覚えている技のうち、いまのMPで唱えられるものだけ
+    return Game.Party.learnedSkills(actor).filter(function (s) { return s.mp <= actor.mp; });
   }
 
   function usableItems() {
@@ -120,8 +144,8 @@ Game.Battle = (function () {
     var dmg = damageOf(actor.atk, target.def);
     if (isEnemy) {
       target.curHp = Math.max(0, target.curHp - dmg);
-      state.log.push(actor.name + 'の こうげき! ' + target.name + 'に ' + dmg + ' の ダメージ');
-      if (target.curHp <= 0) state.log.push(target.name + 'を たおした!');
+      state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
+      if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
     } else {
       hurt(target, dmg);
       state.log.push(actor.name + 'は なかまの ' + target.name + 'を 殴ってしまった! ' + dmg + ' の ダメージ');
@@ -207,14 +231,14 @@ Game.Battle = (function () {
         if (skill.target === 'all_party') {
           alive.forEach(function (member) {
             var dmg = hurt(member, Math.round(damageOf(enemy.atk, member.def) * skill.power));
-            state.log.push(enemy.name + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
+            state.log.push(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
           });
           return;
         }
       }
       var target = alive[Math.floor(Math.random() * alive.length)];
       var dmg2 = hurt(target, damageOf(enemy.atk, target.def));
-      state.log.push(enemy.name + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
+      state.log.push(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
       // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
       if (enemy.inflict && target.hp > 0 && Math.random() < enemy.inflict.chance) {
         var msg = Game.Party.inflict(target, enemy.inflict.status);
@@ -255,8 +279,8 @@ Game.Battle = (function () {
     var actor = currentActor();
     var dmg = damageOf(actor.atk, target.def);
     target.curHp = Math.max(0, target.curHp - dmg);
-    state.log.push(actor.name + 'の こうげき! ' + target.name + 'に ' + dmg + ' の ダメージ');
-    if (target.curHp <= 0) state.log.push(target.name + 'を たおした!');
+    state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
+    if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
     state.phase = 'resolving';
     flushLog(advanceTurn);
   }
@@ -275,8 +299,8 @@ Game.Battle = (function () {
       targets.forEach(function (t) {
         var dmg = Math.round(damageOf(actor.atk, t.def) * (skill.power || 1));
         t.curHp = Math.max(0, t.curHp - dmg);
-        state.log.push(actor.name + 'の ' + skill.name + '! ' + t.name + 'に ' + dmg + ' の ダメージ');
-        if (t.curHp <= 0) state.log.push(t.name + 'を たおした!');
+        state.log.push(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + dmg + ' の ダメージ');
+        if (t.curHp <= 0) state.log.push(t.label + 'を たおした!');
       });
     }
     state.phase = 'resolving';
@@ -385,7 +409,7 @@ Game.Battle = (function () {
       var x = startX + i * 140, y = 130;
       ctx.fillStyle = e.curHp > 0 ? (e.boss ? '#8a3230' : '#96702a') : '#333b57';
       ctx.beginPath(); ctx.arc(x, y, e.boss ? 42 : 34, 0, Math.PI * 2); ctx.fill();
-      Game.Renderer.drawText(ctx, e.name, x, y + (e.boss ? 68 : 60), { align: 'center', size: 12 });
+      Game.Renderer.drawText(ctx, e.label || e.name, x, y + (e.boss ? 68 : 60), { align: 'center', size: 12 });
       if (e.curHp > 0) Game.Renderer.drawBar(ctx, x - 40, y + (e.boss ? 76 : 68), 80, 7, e.curHp / e.hp, '#8a3230');
       if (state.menu === 'target' && aliveEnemies()[state.cursor] === e) {
         Game.Renderer.drawText(ctx, '▼', x, y - (e.boss ? 54 : 46), { align: 'center', size: 18, color: '#d4af5a' });

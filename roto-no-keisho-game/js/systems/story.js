@@ -4,6 +4,7 @@ Game.Story = (function () {
   var chapterIndex = 0;
   var stageIndex = 0;
   var finished = false;
+  var openedChests = {}; // "mapId:x,y" -> true
   var onModeChange = null; // 'field' | 'battle' への切り替えを Core に伝える
 
   function chapter() { return Game.Data.Chapters[chapterIndex]; }
@@ -14,12 +15,16 @@ Game.Story = (function () {
   function begin(modeChangeCb) {
     onModeChange = modeChangeCb;
     chapterIndex = 0; stageIndex = 0; finished = false;
+    openedChests = {};
     enterChapter();
   }
 
   // ---- セーブ/ロード ----
   function serialize() {
-    return { chapterIndex: chapterIndex, stageIndex: stageIndex, finished: finished };
+    return {
+      chapterIndex: chapterIndex, stageIndex: stageIndex, finished: finished,
+      openedChests: openedChests,
+    };
   }
 
   // 記録した地点から再開する。章の導入は流し直さず、褒賞や仲間加入も
@@ -28,6 +33,7 @@ Game.Story = (function () {
     onModeChange = modeChangeCb;
     chapterIndex = Math.min(data.chapterIndex || 0, Game.Data.Chapters.length - 1);
     finished = !!data.finished;
+    openedChests = data.openedChests || {};
     var stages = chapter().stages;
     stageIndex = Math.min(data.stageIndex || 0, stages.length - 1);
     var st = stage();
@@ -56,9 +62,9 @@ Game.Story = (function () {
   // そのステージ用のフィールドイベント一式。enterChapter の先読みと loadStage で共用する
   function fieldCallbacksFor(st) {
     return {
-      onEncounter: function (monsterId) {
+      onEncounter: function (monsterIds) {
         onModeChange && onModeChange('battle');
-        Game.Battle.start([monsterId], handleRandomBattleEnd);
+        Game.Battle.start(monsterIds, handleRandomBattleEnd);
       },
       onGate: function () { if (st.type === 'gate') handleStageClear(); },
       onBoss: function (bossId) {
@@ -71,8 +77,22 @@ Game.Story = (function () {
         onModeChange && onModeChange('shop');
         Game.Shop.open(shopKind, mapId, function () { onModeChange && onModeChange('field'); });
       },
+      onChest: function (chestId, mapId, pos) { openChest(chestId, mapId, pos); },
       onNpc: function (npcId, map) { talkTo(npcId, map); },
     };
+  }
+
+  // 開けた宝箱は覚えておき、二度目からは空にする(セーブにも含める)
+  function openChest(chestId, mapId, pos) {
+    var key = mapId + ':' + pos;
+    if (openedChests[key]) {
+      Game.Dialogue.show('宝箱は 空っぽだ。');
+      return;
+    }
+    openedChests[key] = true;
+    Game.Dialogue.show('宝箱を 開けた!', function () {
+      Game.Dialogue.show(Game.Data.openTreasure(chestId));
+    });
   }
 
   // 話しかけられた相手の、いまの章に合った台詞を流す。

@@ -19,6 +19,7 @@ Game.Data.TileDefs = {
   'B': { walkable: true, color: '#8a3230', encounter: 0, isBoss: true },
   'N': { walkable: true, color: '#8a76b8', encounter: 0, isNpc: true },
   'K': { walkable: true, color: '#9c7c2e', encounter: 0, isNpc: true, glyph: '王' },
+  'T': { walkable: true, color: '#7a5a24', encounter: 0, isChest: true, glyph: '宝' },
   // 街の施設。踏むとそれぞれの画面が開く
   'S': { walkable: true, color: '#4f8a5c', encounter: 0, shop: 'item', glyph: '道' },
   'W': { walkable: true, color: '#8a6a3a', encounter: 0, shop: 'gear', glyph: '武' },
@@ -47,8 +48,10 @@ function fieldGrid() {
 }
 
 // ---- ダンジョン:壁で仕切った蛇腹通路を生成し、最奥にボス部屋を置く(接続保証) ----
-function dungeonGrid(cols, rows) {
-  cols = cols || 20; rows = rows || 14;
+// chests に置き場所を渡すと宝箱を配置し、chestAt("x,y" -> 中身のid)を返す。
+// 中身は js/data/treasures.js を引く。
+function buildDungeon(def) {
+  var cols = def.cols || 20, rows = def.rows || 14;
   var grid = [];
   for (var y = 0; y < rows; y++) grid.push(new Array(cols).fill('#'));
   var corridorRows = [];
@@ -65,7 +68,22 @@ function dungeonGrid(cols, rows) {
   var lastRy = corridorRows[lastIdx];
   var endX = (lastIdx % 2 === 0) ? cols - 2 : 1;
   grid[lastRy][endX] = 'B';
-  return grid.map(function (row) { return row.join(''); });
+
+  // 宝箱は通路の途中に置く。ボス部屋と入口には重ねない。
+  var chestAt = {};
+  (def.chests || []).forEach(function (c) {
+    if (grid[c.y][c.x] !== 'D') return;
+    grid[c.y][c.x] = 'T';
+    chestAt[c.x + ',' + c.y] = c.id;
+  });
+
+  return {
+    id: def.id, name: def.name, kind: 'dungeon',
+    startX: def.startX, startY: def.startY,
+    encounterTable: def.encounterTable, bossId: def.bossId,
+    tiles: grid.map(function (row) { return row.join(''); }),
+    chestAt: chestAt,
+  };
 }
 
 // ---- 街:安全な広場 + 施設 + 人 + 出口 ----
@@ -165,10 +183,54 @@ Game.Data.Maps = {
   azure_plain: { id: 'azure_plain', name: '蒼穹平原', kind: 'field', tiles: fieldGrid(), startX: 2, startY: 4, encounterTable: 'azure_plain' },
   cliff_road: { id: 'cliff_road', name: '断崖の道', kind: 'field', tiles: fieldGrid(), startX: 2, startY: 4, encounterTable: 'cliff_road' },
 
-  // ダンジョン
-  ogre_camp: { id: 'ogre_camp', name: 'はぐれオーガの野営地', kind: 'dungeon', tiles: dungeonGrid(), startX: 1, startY: 1, encounterTable: 'ogre_camp', bossId: 'galoz' },
-  azure_tower: { id: 'azure_tower', name: '蒼穹の塔', kind: 'dungeon', tiles: dungeonGrid(), startX: 1, startY: 1, encounterTable: 'azure_tower', bossId: 'astro_guardian' },
-  academy_altar: { id: 'academy_altar', name: '学院地下祭壇', kind: 'dungeon', tiles: dungeonGrid(), startX: 1, startY: 1, encounterTable: 'academy_altar', bossId: 'magatsuki' },
-  abyss_depth: { id: 'abyss_depth', name: '業の底', kind: 'dungeon', tiles: dungeonGrid(), startX: 1, startY: 1, encounterTable: 'abyss_depth', bossId: 'abyss_matriarch' },
-  forbidden_ritual_chamber: { id: 'forbidden_ritual_chamber', name: '禁呪暴走空間', kind: 'dungeon', tiles: dungeonGrid(), startX: 1, startY: 1, encounterTable: 'forbidden_ritual_chamber', bossId: 'genso_no_katsubo' },
+  // ダンジョン(宝箱は通路の途中に置き、奥へ行くほど中身が良くなる)
+  ogre_camp: buildDungeon({
+    id: 'ogre_camp', name: 'はぐれオーガの野営地', startX: 1, startY: 1,
+    encounterTable: 'ogre_camp', bossId: 'galoz',
+    chests: [
+      { x: 14, y: 1, id: 'ogre_gold_s' },
+      { x: 5, y: 5, id: 'ogre_yakusou' },
+      { x: 15, y: 7, id: 'ogre_shield' },
+      { x: 6, y: 11, id: 'ogre_gold_l' },
+    ],
+  }),
+  azure_tower: buildDungeon({
+    id: 'azure_tower', name: '蒼穹の塔', startX: 1, startY: 1,
+    encounterTable: 'azure_tower', bossId: 'astro_guardian',
+    chests: [
+      { x: 11, y: 1, id: 'tower_mahou' },
+      { x: 4, y: 5, id: 'tower_gofu' },
+      { x: 16, y: 7, id: 'tower_gold' },
+      { x: 8, y: 11, id: 'tower_staff' },
+    ],
+  }),
+  academy_altar: buildDungeon({
+    id: 'academy_altar', name: '学院地下祭壇', startX: 1, startY: 1,
+    encounterTable: 'academy_altar', bossId: 'magatsuki',
+    chests: [
+      { x: 9, y: 3, id: 'altar_seisui' },
+      { x: 14, y: 7, id: 'altar_gold' },
+      { x: 5, y: 11, id: 'altar_earring' },
+    ],
+  }),
+  abyss_depth: buildDungeon({
+    id: 'abyss_depth', name: '業の底', startX: 1, startY: 1,
+    encounterTable: 'abyss_depth', bossId: 'abyss_matriarch',
+    chests: [
+      { x: 12, y: 1, id: 'abyss_jokyu' },
+      { x: 6, y: 5, id: 'abyss_phoenix' },
+      { x: 15, y: 9, id: 'abyss_gold' },
+      { x: 4, y: 11, id: 'abyss_brooch' },
+    ],
+  }),
+  forbidden_ritual_chamber: buildDungeon({
+    id: 'forbidden_ritual_chamber', name: '禁呪暴走空間', startX: 1, startY: 1,
+    encounterTable: 'forbidden_ritual_chamber', bossId: 'genso_no_katsubo',
+    chests: [
+      { x: 13, y: 3, id: 'ritual_phoenix' },
+      { x: 7, y: 5, id: 'ritual_ring' },
+      { x: 16, y: 9, id: 'ritual_armor' },
+      { x: 5, y: 11, id: 'ritual_gold' },
+    ],
+  }),
 };

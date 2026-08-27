@@ -42,8 +42,15 @@ Game.Core = (function () {
       m.mp = Math.max(m.mp, Math.floor(m.maxMp * 0.3));
       m.guarding = false;
     });
+    // DQ の慣例にならい、全滅すると所持金の半分を落とす
+    var lost = Math.floor(Game.Party.gold() / 2);
+    Game.Party.spend(lost);
     Game.Field.resetToStart();
-    Game.Dialogue.show('目の前が まっくらに なった……。一行は 気を取り直して、入り口から 歩き出した。');
+    Game.Dialogue.show('目の前が まっくらに なった……。', function () {
+      Game.Dialogue.show(lost > 0
+        ? '気がつくと 入り口に 倒れていた。' + lost + 'ゴールドを 失ってしまった……'
+        : '気がつくと 入り口に 倒れていた。');
+    });
   }
 
   function update() {
