@@ -1,8 +1,14 @@
-// パーティメニュー ― フィールドで決定キーを押すと開く。状態確認と装備の付け替えを行う。
+// パーティメニュー ― フィールドで決定キーを押すと開く。
+// 状態確認・どうぐ袋・装備の付け替え・ぼうけんのしょへの記録をここから行う。
 var Game = window.Game || {};
 Game.Menu = (function () {
-  // view: 'status'(一覧) / 'member'(装備部位の選択) / 'gear'(付け替える装備の選択)
-  var state = { open: false, view: 'status', cursor: 0, memberIndex: 0, slotIndex: 0 };
+  // view:
+  //   'status'     一覧(仲間 → どうぐ → きろくする)
+  //   'items'      どうぐ袋
+  //   'itemTarget' その道具を誰に使うか
+  //   'member'     装備部位の選択
+  //   'gear'       付け替える装備の選択
+  var state = { open: false, view: 'status', cursor: 0, memberIndex: 0, slotIndex: 0, itemIndex: 0 };
 
   function isOpen() { return state.open; }
   function close() { state.open = false; }
@@ -13,6 +19,15 @@ Game.Menu = (function () {
 
   function party() { return Game.Party.list(); }
   function currentMember() { return party()[state.memberIndex]; }
+  function bag() { return Game.Party.inventory(); }
+  function currentItem() {
+    var e = bag()[state.itemIndex];
+    return e ? { entry: e, def: Game.Data.Items[e.id] } : null;
+  }
+
+  // 一覧の並びは「仲間… / どうぐ / ぼうけんのしょに きろくする」
+  function ITEM_ROW() { return party().length; }
+  function SAVE_ROW() { return party().length + 1; }
 
   // そのキャラがその部位に何か装備できるか(杖使いは盾を持てない、など)
   function slotIsWearable(member, slot) {
@@ -35,9 +50,20 @@ Game.Menu = (function () {
     return out;
   }
 
+  // 道具を使う相手。生き返らせる薬は倒れている仲間だけ、それ以外は動ける仲間だけ。
+  function targetsFor(def) {
+    if (!def) return [];
+    if (def.kind === 'revive') return Game.Party.deadList();
+    return Game.Party.aliveList();
+  }
+
+  // 相手を選ばずに使う道具(帰還の羽根など)
+  function needsTarget(def) { return def && def.kind !== 'return'; }
+
   function listLength() {
-    // 一覧の最後の行は「ぼうけんのしょに きろくする」
-    if (state.view === 'status') return party().length + 1;
+    if (state.view === 'status') return party().length + 2;
+    if (state.view === 'items') return bag().length;
+    if (state.view === 'itemTarget') return targetsFor(currentItem() && currentItem().def).length;
     if (state.view === 'member') return Game.Data.EQUIP_SLOTS.length;
     if (state.view === 'gear') return gearChoicesFor(currentMember(), Game.Data.EQUIP_SLOTS[state.slotIndex]).length;
     return 0;
@@ -51,6 +77,8 @@ Game.Menu = (function () {
 
     if (Game.Input.wasPressed('cancel')) {
       if (state.view === 'status') close();
+      else if (state.view === 'items') { state.view = 'status'; state.cursor = ITEM_ROW(); }
+      else if (state.view === 'itemTarget') { state.view = 'items'; state.cursor = state.itemIndex; }
       else if (state.view === 'member') { state.view = 'status'; state.cursor = state.memberIndex; }
       else { state.view = 'member'; state.cursor = state.slotIndex; }
       return;
@@ -58,10 +86,30 @@ Game.Menu = (function () {
     if (!Game.Input.wasPressed('confirm')) return;
 
     if (state.view === 'status') {
-      if (state.cursor >= party().length) { doSave(); return; }
+      if (state.cursor === SAVE_ROW()) { doSave(); return; }
+      if (state.cursor === ITEM_ROW()) { state.view = 'items'; state.cursor = 0; return; }
       state.memberIndex = state.cursor;
       state.view = 'member';
       state.cursor = 0;
+    } else if (state.view === 'items') {
+      if (bag().length === 0) return;
+      state.itemIndex = state.cursor;
+      var picked = currentItem();
+      if (!needsTarget(picked.def)) { useOnField(picked); return; }
+      if (targetsFor(picked.def).length === 0) {
+        Game.Dialogue.show('いま ' + picked.def.name + 'を つかう相手が いない。');
+        close();
+        return;
+      }
+      state.view = 'itemTarget';
+      state.cursor = 0;
+    } else if (state.view === 'itemTarget') {
+      var item = currentItem();
+      var target = targetsFor(item.def)[state.cursor];
+      if (!item || !target) return;
+      var msg = Game.Party.useItem(item.entry.id, target.id);
+      close();
+      Game.Dialogue.show(target.name + 'に ' + item.def.name + 'を つかった! ' + (msg || ''));
     } else if (state.view === 'member') {
       state.slotIndex = state.cursor;
       state.view = 'gear';
@@ -79,6 +127,14 @@ Game.Menu = (function () {
     }
   }
 
+  // 帰還の羽根 ― いま居るマップの入り口まで一気に戻る
+  function useOnField(picked) {
+    Game.Party.consumeItem(picked.entry.id);
+    Game.Field.resetToStart();
+    close();
+    Game.Dialogue.show(picked.def.name + 'を 空へ かざした! ひとっとびで 入り口まで もどった。');
+  }
+
   function doSave() {
     close();
     Game.Dialogue.show(Game.Save.save()
@@ -86,56 +142,119 @@ Game.Menu = (function () {
       : 'このブラウザでは きろくを のこせないようだ……');
   }
 
+  // 道具の効き目を一行で説明する
+  function itemEffectText(def) {
+    if (def.kind === 'heal_hp') return 'HPを ' + def.power + ' かいふく';
+    if (def.kind === 'heal_mp') return 'MPを ' + def.power + ' かいふく';
+    if (def.kind === 'revive') return 'たおれた仲間を いきかえらせる';
+    if (def.kind === 'ward') return 'つぎの状態異常を 一度だけ 防ぐ';
+    if (def.kind === 'return') return 'マップの 入り口へ もどる';
+    if (def.kind === 'cure') {
+      return (def.cures || []).map(function (c) { return Game.Data.Statuses[c].name; }).join('・') + 'を なおす';
+    }
+    return '';
+  }
+
   function draw(ctx, W, H) {
     if (!state.open) return;
     // 背後のフィールドを暗く落として、数値を読みやすくする
     ctx.fillStyle = 'rgba(8,10,18,0.72)';
     ctx.fillRect(0, 0, W, H);
-    var x = 24, y = 40, w = W - 48, h = 300;
+    var x = 24, y = 36, w = W - 48, h = 326;
     Game.Renderer.drawPanel(ctx, x, y, w, h);
 
     if (state.view === 'status') drawStatus(ctx, x, y, w, h);
+    else if (state.view === 'items') drawItems(ctx, x, y, w, h);
+    else if (state.view === 'itemTarget') drawItemTargets(ctx, x, y, w, h);
     else if (state.view === 'member') drawMember(ctx, x, y, w, h);
     else drawGearChoices(ctx, x, y, w, h);
 
-    Game.Renderer.drawText(ctx, 'しょじきん ' + Game.Party.gold() + 'G', x + w - 16, y + h - 14,
+    Game.Renderer.drawText(ctx, 'しょじきん ' + Game.Party.gold() + 'G', x + w - 16, y + h - 12,
       { size: 12, align: 'right', color: '#a49b86' });
   }
 
   function drawStatus(ctx, x, y, w, h) {
-    Game.Renderer.drawText(ctx, Game.Story.currentTitle(), x + 16, y + 24, { size: 13, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, Game.Story.currentTitle(), x + 16, y + 22, { size: 13, color: '#d4af5a' });
     party().forEach(function (m, i) {
-      var ly = y + 54 + i * 58;
+      var ly = y + 50 + i * 54;
       var prefix = i === state.cursor ? '▶ ' : '　';
       var st = Game.Party.statusOf(m);
       Game.Renderer.drawText(ctx, prefix + m.name + '  Lv' + m.level, x + 16, ly,
         { size: 14, color: m.hp <= 0 ? '#6b6354' : '#ece7da' });
-      if (st) Game.Renderer.drawText(ctx, '[' + st.name + ']', x + 200, ly, { size: 12, color: st.color });
-      Game.Renderer.drawText(ctx, 'HP', x + 16, ly + 22, { size: 11, color: '#a49b86' });
-      Game.Renderer.drawBar(ctx, x + 44, ly + 14, 110, 8, m.hp / m.maxHp, '#5fae5f');
-      Game.Renderer.drawText(ctx, m.hp + '/' + m.maxHp, x + 162, ly + 22, { size: 11, color: '#a49b86' });
-      Game.Renderer.drawText(ctx, 'MP', x + 216, ly + 22, { size: 11, color: '#a49b86' });
-      Game.Renderer.drawBar(ctx, x + 244, ly + 14, 70, 8, m.maxMp ? m.mp / m.maxMp : 0, '#5c8ecf');
-      Game.Renderer.drawText(ctx, 'こうげき ' + m.atk + '  しゅび ' + m.def + '  すばやさ ' + m.spd,
-        x + 340, ly + 22, { size: 11, color: '#a49b86' });
-      // DQ のように「つぎのレベルまで あと N」を出す
+      if (st) Game.Renderer.drawText(ctx, '[' + st.name + ']', x + 190, ly, { size: 12, color: st.color });
+      Game.Renderer.drawText(ctx, 'HP', x + 16, ly + 20, { size: 11, color: '#a49b86' });
+      Game.Renderer.drawBar(ctx, x + 44, ly + 12, 104, 8, m.hp / m.maxHp, '#5fae5f');
+      Game.Renderer.drawText(ctx, m.hp + '/' + m.maxHp, x + 154, ly + 20, { size: 11, color: '#a49b86' });
+      Game.Renderer.drawText(ctx, 'MP', x + 206, ly + 20, { size: 11, color: '#a49b86' });
+      Game.Renderer.drawBar(ctx, x + 232, ly + 12, 60, 8, m.maxMp ? m.mp / m.maxMp : 0, '#5c8ecf');
+      Game.Renderer.drawText(ctx, m.mp + '/' + m.maxMp, x + 298, ly + 20, { size: 11, color: '#a49b86' });
+      // ドラクエ風に、こうげき・しゅび・すばやさ・まりょく・うんのよさ をすべて出す
+      Game.Renderer.drawText(ctx, 'こうげき ' + m.atk + '   しゅび ' + m.def + '   すばやさ ' + m.spd,
+        x + 340, ly + 4, { size: 11, color: '#a49b86' });
+      Game.Renderer.drawText(ctx, 'まりょく ' + m.mag + '   うんのよさ ' + m.luck,
+        x + 340, ly + 20, { size: 11, color: '#a49b86' });
       Game.Renderer.drawText(ctx, 'つぎのレベルまで あと ' + Math.max(0, m.expToNext - m.exp),
-        x + 340, ly + 38, { size: 11, color: '#6b6354' });
+        x + 340, ly + 36, { size: 11, color: '#6b6354' });
     });
-    var saveRow = y + 54 + party().length * 58;
-    var savePrefix = state.cursor >= party().length ? '▶ ' : '　';
-    Game.Renderer.drawText(ctx, savePrefix + 'ぼうけんのしょに きろくする', x + 16, saveRow,
-      { size: 14, color: state.cursor >= party().length ? '#d4af5a' : '#ece7da' });
-    Game.Renderer.drawText(ctx, 'Z: えらぶ    X: とじる', x + 16, y + h - 14, { size: 12, color: '#6b6354' });
+
+    var rowY = y + 50 + party().length * 54;
+    var itemSelected = state.cursor === ITEM_ROW();
+    Game.Renderer.drawText(ctx, (itemSelected ? '▶ ' : '　') + 'どうぐ', x + 16, rowY,
+      { size: 14, color: itemSelected ? '#d4af5a' : '#ece7da' });
+    Game.Renderer.drawText(ctx, bag().length + ' しゅるい', x + 190, rowY, { size: 12, color: '#a49b86' });
+
+    var saveSelected = state.cursor === SAVE_ROW();
+    Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'ぼうけんのしょに きろくする', x + 16, rowY + 24,
+      { size: 14, color: saveSelected ? '#d4af5a' : '#ece7da' });
+    Game.Renderer.drawText(ctx, 'Z: えらぶ    X: とじる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
+  }
+
+  function drawItems(ctx, x, y, w, h) {
+    Game.Renderer.drawText(ctx, 'どうぐ袋', x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    var items = bag();
+    if (items.length === 0) {
+      Game.Renderer.drawText(ctx, 'なにも もっていない。', x + 16, y + 60, { size: 13, color: '#a49b86' });
+    }
+    items.slice(0, 10).forEach(function (it, i) {
+      var def = Game.Data.Items[it.id];
+      var ly = y + 56 + i * 24;
+      var selected = i === state.cursor;
+      Game.Renderer.drawText(ctx, (selected ? '▶ ' : '　') + def.name, x + 16, ly,
+        { size: 13, color: selected ? '#d4af5a' : '#ece7da' });
+      Game.Renderer.drawText(ctx, 'x' + it.count, x + 210, ly, { size: 12, color: '#a49b86' });
+      Game.Renderer.drawText(ctx, itemEffectText(def), x + 260, ly, { size: 11, color: '#a49b86' });
+    });
+    Game.Renderer.drawText(ctx, 'Z: つかう    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
+  }
+
+  function drawItemTargets(ctx, x, y, w, h) {
+    var item = currentItem();
+    if (!item) return;
+    Game.Renderer.drawText(ctx, item.def.name + ' を だれに?', x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    targetsFor(item.def).forEach(function (m, i) {
+      var ly = y + 60 + i * 30;
+      var selected = i === state.cursor;
+      Game.Renderer.drawText(ctx, (selected ? '▶ ' : '　') + m.name, x + 16, ly,
+        { size: 14, color: selected ? '#d4af5a' : '#ece7da' });
+      Game.Renderer.drawText(ctx, 'HP ' + m.hp + '/' + m.maxHp + '   MP ' + m.mp + '/' + m.maxMp,
+        x + 190, ly, { size: 12, color: '#a49b86' });
+      var st = Game.Party.statusOf(m);
+      if (st) Game.Renderer.drawText(ctx, '[' + st.name + ']', x + 380, ly, { size: 12, color: st.color });
+    });
+    Game.Renderer.drawText(ctx, 'Z: きめる    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
+  }
+
+  function statLine(m) {
+    return 'こうげき ' + m.atk + '  しゅび ' + m.def + '  すばやさ ' + m.spd +
+      '  まりょく ' + m.mag + '  うん ' + m.luck;
   }
 
   function drawMember(ctx, x, y, w, h) {
     var m = currentMember();
-    Game.Renderer.drawText(ctx, m.name + ' の そうび', x + 16, y + 24, { size: 15, color: '#d4af5a' });
-    Game.Renderer.drawText(ctx, 'こうげき ' + m.atk + '   しゅび ' + m.def + '   すばやさ ' + m.spd,
-      x + w - 16, y + 24, { size: 12, align: 'right', color: '#a49b86' });
+    Game.Renderer.drawText(ctx, m.name + ' の そうび', x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, statLine(m), x + 16, y + 44, { size: 12, color: '#a49b86' });
     Game.Data.EQUIP_SLOTS.forEach(function (slot, i) {
-      var ly = y + 62 + i * 26;
+      var ly = y + 80 + i * 26;
       var prefix = i === state.cursor ? '▶ ' : '　';
       var equipped = m.equip[slot] ? Game.Data.Equipment[m.equip[slot]].name : '―';
       var wearable = slotIsWearable(m, slot);
@@ -143,37 +262,38 @@ Game.Menu = (function () {
         { size: 13, color: wearable ? '#ece7da' : '#6b6354' });
       Game.Renderer.drawText(ctx, equipped, x + 200, ly, { size: 13, color: wearable ? '#ece7da' : '#6b6354' });
     });
-    Game.Renderer.drawText(ctx, 'Z: つけかえる    X: もどる', x + 16, y + h - 14, { size: 12, color: '#6b6354' });
+    Game.Renderer.drawText(ctx, 'Z: つけかえる    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 
   function drawGearChoices(ctx, x, y, w, h) {
     var m = currentMember();
     var slot = Game.Data.EQUIP_SLOTS[state.slotIndex];
     var choices = gearChoicesFor(m, slot);
-    Game.Renderer.drawText(ctx, m.name + ' の ' + Game.Data.SLOT_LABELS[slot], x + 16, y + 24,
+    Game.Renderer.drawText(ctx, m.name + ' の ' + Game.Data.SLOT_LABELS[slot], x + 16, y + 22,
       { size: 15, color: '#d4af5a' });
     var now = m.equip[slot] ? Game.Data.Equipment[m.equip[slot]] : null;
-    Game.Renderer.drawText(ctx, 'いま: ' + (now ? now.name : '―'), x + w - 16, y + 24,
+    Game.Renderer.drawText(ctx, 'いま: ' + (now ? now.name : '―'), x + w - 16, y + 22,
       { size: 12, align: 'right', color: '#a49b86' });
+    Game.Renderer.drawText(ctx, statLine(m), x + 16, y + 44, { size: 12, color: '#a49b86' });
 
     if (choices.length === 0) {
-      Game.Renderer.drawText(ctx, 'つけられる そうびが ない', x + 16, y + 64, { size: 13, color: '#a49b86' });
+      Game.Renderer.drawText(ctx, 'つけられる そうびが ない', x + 16, y + 80, { size: 13, color: '#a49b86' });
     }
-    choices.slice(0, 8).forEach(function (c, i) {
-      var ly = y + 64 + i * 24;
+    choices.slice(0, 9).forEach(function (c, i) {
+      var ly = y + 80 + i * 24;
       var prefix = i === state.cursor ? '▶ ' : '　';
       if (c.id === null) {
         Game.Renderer.drawText(ctx, prefix + c.label, x + 16, ly, { size: 13, color: '#a49b86' });
         return;
       }
       var parts = [];
-      if (c.def.atk) parts.push('攻+' + c.def.atk);
-      if (c.def.def) parts.push('守+' + c.def.def);
-      if (c.def.spd) parts.push('速+' + c.def.spd);
+      Game.Data.GEAR_STATS.forEach(function (s) {
+        if (c.def[s.key]) parts.push(s.label + '+' + c.def[s.key]);
+      });
       Game.Renderer.drawText(ctx, prefix + c.def.name + (c.count > 1 ? ' x' + c.count : ''), x + 16, ly, { size: 13 });
       Game.Renderer.drawText(ctx, parts.join(' '), x + w - 16, ly, { size: 12, align: 'right', color: '#a49b86' });
     });
-    Game.Renderer.drawText(ctx, 'Z: きめる    X: もどる', x + 16, y + h - 14, { size: 12, color: '#6b6354' });
+    Game.Renderer.drawText(ctx, 'Z: きめる    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 
   return { toggle: toggle, isOpen: isOpen, close: close, update: update, draw: draw };

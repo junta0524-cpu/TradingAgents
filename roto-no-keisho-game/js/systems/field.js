@@ -132,7 +132,7 @@ Game.Field = (function () {
 
   function draw(ctx) {
     if (!map) return;
-    var off = Game.Renderer.mapOffset(map, ctx.canvas.width);
+    var off = Game.Renderer.mapOffset(map, ctx.canvas.width, ctx.canvas.height, { x: px, y: py });
     Game.Renderer.drawMap(ctx, map, off);
     Game.Renderer.drawToken(ctx, px, py, '#d4af5a', off);
   }

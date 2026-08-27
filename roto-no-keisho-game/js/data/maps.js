@@ -1,19 +1,22 @@
 // マップデータ ― 地誌譜の全13ロケーションをタイルマップ化。
-// フィールド/ダンジョン/街はそれぞれ共通ジェネレータで生成し(現状は色面のプレースホルダー)、
-// 実タイル絵に差し替える際もこの生成部分だけ置き換えれば良い構造にしている。
+// 一枚ずつ形を描き分けている:街道は森を縫い、平原は湖を回り込み、断崖は桟道が折り返す。
+// ダンジョンも野営地・塔・納骨堂・洞窟・渦と、それぞれ違う構造を持たせた。
+// 絵はまだ色面のプレースホルダーだが、タイル絵に差し替えるときも形はこのまま使える。
 var Game = window.Game || {};
 Game.Data = Game.Data || {};
 
 // タイル凡例:
-//   #木(進入不可) .草原(遭遇率:高) =街道(遭遇率:低) ~水場(進入不可)
-//   D ダンジョン床(遭遇率:中)      F 街の床(遭遇率:なし)
-//   C 出口/門(到達でイベント)      B ボス部屋(到達でボス戦)   N NPC(会話イベント)
+//   進入不可 … # 木立 / X 岩壁・崖 / Y 建物 / ~ 水場
+//   通行可   … . 草原(遭遇:高) = 街道(遭遇:低) D ダンジョン床(遭遇:中) F 街の床(遭遇:なし)
+//   イベント … C 出口/門  B ボス部屋  N 町の人  K 王  T 宝箱  S/W/I/H 道具屋/武器屋/宿屋/教会
 Game.Data.TileDefs = {
   '#': { walkable: false, color: '#3c5c33', encounter: 0 },
-  '.': { walkable: true, color: '#6fa84a', encounter: 0.09 },
-  '=': { walkable: true, color: '#c9b27c', encounter: 0.035 },
+  'X': { walkable: false, color: '#5a5348', encounter: 0 },
+  'Y': { walkable: false, color: '#7a6248', encounter: 0 },
+  '.': { walkable: true, color: '#6fa84a', encounter: 0.075 },
+  '=': { walkable: true, color: '#c9b27c', encounter: 0.03 },
   '~': { walkable: false, color: '#3d6e86', encounter: 0 },
-  'D': { walkable: true, color: '#4a4658', encounter: 0.14 },
+  'D': { walkable: true, color: '#4a4658', encounter: 0.12 },
   'F': { walkable: true, color: '#b7a888', encounter: 0 },
   'C': { walkable: true, color: '#b08d3e', encounter: 0, isGate: true },
   'B': { walkable: true, color: '#8a3230', encounter: 0, isBoss: true },
@@ -27,210 +30,370 @@ Game.Data.TileDefs = {
   'H': { walkable: true, color: '#9c8f5c', encounter: 0, shop: 'church', glyph: '教' },
 };
 
-// ---- フィールド(街道)テンプレート:東方街道で検証済みの形をそのまま使い回す ----
-function fieldGrid() {
-  return [
-    '####################',
-    '#..................#',
-    '#..##..........##..#',
-    '#..............=...#',
-    '#===============C..#',
-    '#..............=...#',
-    '#..##..........##..#',
-    '#..................#',
-    '#....~~~....###....#',
-    '#....~~~....###....#',
-    '#..................#',
-    '#..##..........##..#',
-    '#..................#',
-    '####################',
-  ];
-}
-
-// ---- ダンジョン:壁で仕切った蛇腹通路を生成し、最奥にボス部屋を置く(接続保証) ----
-// chests に置き場所を渡すと宝箱を配置し、chestAt("x,y" -> 中身のid)を返す。
-// 中身は js/data/treasures.js を引く。
-function buildDungeon(def) {
-  var cols = def.cols || 20, rows = def.rows || 14;
-  var grid = [];
-  for (var y = 0; y < rows; y++) grid.push(new Array(cols).fill('#'));
-  var corridorRows = [];
-  for (var ry = 1; ry < rows - 1; ry += 2) corridorRows.push(ry);
-  corridorRows.forEach(function (ry, idx) {
-    for (var cx = 1; cx < cols - 1; cx++) grid[ry][cx] = 'D';
-    if (idx < corridorRows.length - 1) {
-      var nextRy = corridorRows[idx + 1];
-      var connX = (idx % 2 === 0) ? cols - 2 : 1;
-      for (var cy = ry; cy <= nextRy; cy++) grid[cy][connX] = 'D';
+// 各マップは art(タイルの絵)をそのまま持つ。
+// art の中の数字は目印で、chests / npcs の対応表を引いて宝箱・人物に置き換える。
+// こうしておくと、形を描き替えても座標を数え直さずに済む。
+function buildMap(def) {
+  var chestAt = {}, npcAt = {};
+  var tiles = def.art.map(function (row, y) {
+    var out = '';
+    for (var x = 0; x < row.length; x++) {
+      var ch = row[x];
+      var chest = def.chests && def.chests[ch];
+      var npc = def.npcs && def.npcs[ch];
+      if (chest) { chestAt[x + ',' + y] = chest; out += 'T'; }
+      else if (npc) { npcAt[x + ',' + y] = npc.id; out += npc.king ? 'K' : 'N'; }
+      else { out += ch; }
     }
+    return out;
   });
-  var lastIdx = corridorRows.length - 1;
-  var lastRy = corridorRows[lastIdx];
-  var endX = (lastIdx % 2 === 0) ? cols - 2 : 1;
-  grid[lastRy][endX] = 'B';
-
-  // 宝箱は通路の途中に置く。ボス部屋と入口には重ねない。
-  var chestAt = {};
-  (def.chests || []).forEach(function (c) {
-    if (grid[c.y][c.x] !== 'D') return;
-    grid[c.y][c.x] = 'T';
-    chestAt[c.x + ',' + c.y] = c.id;
-  });
-
-  return {
-    id: def.id, name: def.name, kind: 'dungeon',
+  var map = {
+    id: def.id, name: def.name, kind: def.kind,
     startX: def.startX, startY: def.startY,
-    encounterTable: def.encounterTable, bossId: def.bossId,
-    tiles: grid.map(function (row) { return row.join(''); }),
-    chestAt: chestAt,
+    tiles: tiles,
   };
-}
-
-// ---- 街:安全な広場 + 施設 + 人 + 出口 ----
-// npcs は [{x, y, id}] の形。id は js/data/npcs.js の会話データを指す。
-// 誰がどこに立っているかは npcAt("x,y" -> id) に持たせ、話しかけたときに引く。
-function buildTown(def) {
-  var cols = def.cols || 16, rows = def.rows || 10;
-  var grid = [];
-  for (var y = 0; y < rows; y++) {
-    var row = [];
-    for (var x = 0; x < cols; x++) {
-      row.push((y === 0 || y === rows - 1 || x === 0 || x === cols - 1) ? '#' : 'F');
-    }
-    grid.push(row);
-  }
-  grid[rows - 2][Math.floor(cols / 2)] = 'C';
-  (def.facilities || []).forEach(function (p) { grid[p.y][p.x] = p.ch; });
-
-  var npcAt = {};
-  (def.npcs || []).forEach(function (p) {
-    grid[p.y][p.x] = p.king ? 'K' : 'N';
-    npcAt[p.x + ',' + p.y] = p.id;
-  });
-
-  return {
-    id: def.id, name: def.name, kind: 'town',
-    startX: def.startX, startY: def.startY,
-    tiles: grid.map(function (row) { return row.join(''); }),
-    npcAt: npcAt,
-  };
-}
-
-// 街の標準的な施設配置(道具屋・武器防具屋・宿屋・教会)
-function townFacilities(hasChurch) {
-  var f = [
-    { ch: 'S', x: 3, y: 2 },
-    { ch: 'W', x: 6, y: 2 },
-    { ch: 'I', x: 9, y: 2 },
-  ];
-  if (hasChurch) f.push({ ch: 'H', x: 12, y: 2 });
-  return f;
+  if (def.encounterTable) map.encounterTable = def.encounterTable;
+  if (def.bossId) map.bossId = def.bossId;
+  if (def.chests) map.chestAt = chestAt;
+  if (def.npcs) map.npcAt = npcAt;
+  return map;
 }
 
 Game.Data.Maps = {
-  // 街
-  // 街の開始位置は出口(下段中央)から離しておく。隣接していると、一歩動いただけで
-  // 店に寄る間もなく街を出てしまうため。
-  // 王・重臣は広間の奥(上段)に、町の人は広場に立たせている。
-  radatome: buildTown({
-    id: 'radatome', name: 'ラダトーム', startX: 8, startY: 5,
-    facilities: townFacilities(false),
-    npcs: [
-      { x: 12, y: 2, id: 'radatome_king', king: true },
-      { x: 4, y: 6, id: 'radatome_soldier' },
-      { x: 11, y: 6, id: 'radatome_oldwoman' },
-    ],
-  }),
-  loureshia_town: buildTown({
-    id: 'loureshia_town', name: 'ローレシア城下', startX: 8, startY: 5,
-    facilities: townFacilities(true),
-    npcs: [
-      { x: 6, y: 4, id: 'loureshia_roula' },
-      { x: 4, y: 6, id: 'loureshia_smith' },
-      { x: 11, y: 6, id: 'loureshia_noble' },
-      { x: 10, y: 4, id: 'loureshia_garai' },
-    ],
-  }),
-  samaltria_town: buildTown({
-    id: 'samaltria_town', name: '学院都市サマルトリア', startX: 8, startY: 5,
-    facilities: townFacilities(true),
-    npcs: [
-      { x: 6, y: 4, id: 'samaltria_elrode' },
-      { x: 4, y: 6, id: 'samaltria_vance' },
-      { x: 11, y: 6, id: 'samaltria_librarian' },
-    ],
-  }),
-  moonbrook_town: buildTown({
-    id: 'moonbrook_town', name: 'ムーンブルク', startX: 8, startY: 5,
-    facilities: townFacilities(true),
-    npcs: [
-      { x: 6, y: 4, id: 'moonbrook_celestia' },
-      { x: 4, y: 6, id: 'moonbrook_knight' },
-      { x: 11, y: 6, id: 'moonbrook_priestess' },
-    ],
-  }),
-  cliff_village: buildTown({
-    id: 'cliff_village', name: '断崖の氏族村', cols: 14, rows: 9, startX: 7, startY: 4,
-    facilities: townFacilities(false),
-    npcs: [
-      { x: 4, y: 6, id: 'cliff_elder' },
-      { x: 9, y: 6, id: 'cliff_fisher' },
+  // ============ 街 ============
+  // 城。奥の玉座の間と城下の広場を大扉で仕切っている
+  radatome: buildMap({
+    id: 'radatome', name: 'ラダトーム', kind: 'town', startX: 9, startY: 8,
+    npcs: {
+          '1': { id: 'radatome_soldier' },
+          '2': { id: 'radatome_oldwoman' },
+          'K': { id: 'radatome_king', king: true },
+        },
+    art: [
+      'YYYYYYYYYYYYYYYYYYYY',
+      'YFYYYFFFFFFFFFFYYYFY',
+      'YFYYYFFFFKFFFFFYYYFY',
+      'YFFFFFFFFFFFFFFFFFFY',
+      'YYYYYYYYYFFYYYYYYYYY',
+      'YFFFFFFFFFFFFFFFFFFY',
+      'YFFFSFFFWFFFIFFFFFFY',
+      'YFFYYFFFFFFFFFFYYFFY',
+      'YFFYYFFFFFFFFFFYYFFY',
+      'YFFFFFFFYYYYFFFFFFFY',
+      'YFFFFFFFYYYYFFFFFFFY',
+      'YF1FFFFFFFFFFFFF2FFY',
+      'YFFFFFFFFCFFFFFFFFFY',
+      'YYYYYYYYYYYYYYYYYYYY',
     ],
   }),
 
-  // フィールド
-  east_road: { id: 'east_road', name: '東方街道', kind: 'field', tiles: fieldGrid(), startX: 2, startY: 4, encounterTable: 'east_road' },
-  azure_plain: { id: 'azure_plain', name: '蒼穹平原', kind: 'field', tiles: fieldGrid(), startX: 2, startY: 4, encounterTable: 'azure_plain' },
-  cliff_road: { id: 'cliff_road', name: '断崖の道', kind: 'field', tiles: fieldGrid(), startX: 2, startY: 4, encounterTable: 'cliff_road' },
+  // 十字の大通りが四つの街区を分ける城塞都市
+  loureshia_town: buildMap({
+    id: 'loureshia_town', name: 'ローレシア城下', kind: 'town', startX: 10, startY: 9,
+    npcs: {
+          '1': { id: 'loureshia_roula' },
+          '2': { id: 'loureshia_garai' },
+          '3': { id: 'loureshia_smith' },
+          '4': { id: 'loureshia_noble' },
+        },
+    art: [
+      'YYYYYYYYYYYYYYYYYYYYYY',
+      'YYYYYYYYYYFYYYYYYYYYYY',
+      'YYF1FFFFFYFYFFFFFF2YYY',
+      'YYFFYYFFFYFYFFFYYFFYYY',
+      'YYFFFFFFFYFYFFFFFFFYYY',
+      'YYYYFYYYYYFYYYYYFYYYYY',
+      'YFFSFFFWFFFFFFIFFFHFFY',
+      'YYYYFYYYYYFYYYYYFYYYYY',
+      'YYFFFFFFFYFYFFFFFFFYYY',
+      'YYFFYYFFFYFYFFFYYFFYYY',
+      'YYFFYYFFFYFYFFFYYFFYYY',
+      'YYF3FFFFFYFYFFFFFF4YYY',
+      'YYYYYYYYYYCYYYYYYYYYYY',
+      'YYYYYYYYYYYYYYYYYYYYYY',
+    ],
+  }),
 
-  // ダンジョン(宝箱は通路の途中に置き、奥へ行くほど中身が良くなる)
-  ogre_camp: buildDungeon({
-    id: 'ogre_camp', name: 'はぐれオーガの野営地', startX: 1, startY: 1,
+  // 中庭の泉を回廊がぐるりと囲む学院都市
+  samaltria_town: buildMap({
+    id: 'samaltria_town', name: '学院都市サマルトリア', kind: 'town', startX: 10, startY: 11,
+    npcs: {
+          '1': { id: 'samaltria_elrode' },
+          '2': { id: 'samaltria_vance' },
+          '3': { id: 'samaltria_librarian' },
+        },
+    art: [
+      'YYYYYYYYYYYYYYYYYYYY',
+      'YFFFFFFFFFFFFFFFFFFY',
+      'YFYYFFFF1FFFFFFFYYFY',
+      'YFYYFFFFFFFFFFFFYYFY',
+      'YFFFFFYYYYYYYYFFFFFY',
+      'YFFFFFY~~~~~~YFFFFFY',
+      'YFFSFFY~~~~~~YFFIFFY',
+      'YFFFFFY~~~~~~YFFFFFY',
+      'YFFWFFY~~~~~~YFFHFFY',
+      'YFFFFFYYYYYYYYFFFFFY',
+      'YFYYYFFFFFFFFFFYYYFY',
+      'YFYYY3FFFFFF2FFYYYFY',
+      'YFFFFFFFFFCFFFFFFFFY',
+      'YYYYYYYYYYYYYYYYYYYY',
+    ],
+  }),
+
+  // 円形の広場から街道が放射状に伸びる月の都
+  moonbrook_town: buildMap({
+    id: 'moonbrook_town', name: 'ムーンブルク', kind: 'town', startX: 9, startY: 6,
+    npcs: {
+          '1': { id: 'moonbrook_celestia' },
+          '2': { id: 'moonbrook_knight' },
+          '3': { id: 'moonbrook_priestess' },
+        },
+    art: [
+      'YYYYYYYYYYYYYYYYYYYY',
+      'YYYYYYYYYFYYYYYYYYYY',
+      'YYFYYYYYY1YYYYYYFYYY',
+      'YYFYYYFFFFFFFYYYFYYY',
+      'YYFYYSFFFFFFFWYYFYYY',
+      'YYFYFFFFFFFFFFFYFYYY',
+      'YYFFFFFFFFFFFFFFFYYY',
+      'YYFYFFFFFFFFFFFYFYYY',
+      'YYFYYFFFFFFFFFYYFYYY',
+      'YYFYYIFFFFFFFHYYFYYY',
+      'YYF2YYYYYFYYYYYY3YYY',
+      'YYYYYYYYYFYYYYYYYYYY',
+      'YYYYYYYYYCYYYYYYYYYY',
+      'YYYYYYYYYYYYYYYYYYYY',
+    ],
+  }),
+
+  // 海へ張り出した岩棚の上の小さな集落
+  cliff_village: buildMap({
+    id: 'cliff_village', name: '断崖の氏族村', kind: 'town', startX: 8, startY: 6,
+    npcs: {
+          '1': { id: 'cliff_elder' },
+          '2': { id: 'cliff_fisher' },
+        },
+    art: [
+      'YYYYYYYYYYYYYYYYYY',
+      'YFFFFFYYYFFF~~~~~Y',
+      'YFYYFFYYYFFF~~~~~Y',
+      'YFYYFFFFFFFF~~~~~Y',
+      'YFFFFFFFFFFF~~~~~Y',
+      'YFF1FSFFFIFFFF~~~Y',
+      'YFFFFFFFFFFFFF~~~Y',
+      'YFYYYFFFFFF2FF~~~Y',
+      'YFYYYFFFYYYFFFFFFY',
+      'YFFFFFFFYYYFFFFFFY',
+      'YFFFFFFFCFFFFFFFFY',
+      'YYYYYYYYYYYYYYYYYY',
+    ],
+  }),
+
+  // ============ フィールド ============
+  // 森を縫う街道。北へ抜ける枝道と、南の行き止まりがある
+  east_road: buildMap({
+    id: 'east_road', name: '東方街道', kind: 'field', startX: 1, startY: 4,
+    encounterTable: 'east_road',
+    art: [
+      '########################',
+      '#..###........####.....#',
+      '#..###..##....####.....#',
+      '#.......##..=======.##.#',
+      '#=====..##..=.....=.##.#',
+      '#....=.~~~~.=.....=....#',
+      '#.##.=.~~~~.=...##=....#',
+      '#.##.=.~~~~#=...##=....#',
+      '#.##.===========##=....#',
+      '#.##..###......=##=.##.#',
+      '#.....###......=..====C#',
+      '#..............=....##.#',
+      '#.......~~~.###........#',
+      '#...####~~~.###...###..#',
+      '#...####....###...###..#',
+      '########################',
+    ],
+  }),
+
+  // 大きな湖を抱く平原。街道は湖の北岸と南岸に分かれる
+  azure_plain: buildMap({
+    id: 'azure_plain', name: '蒼穹平原', kind: 'field', startX: 1, startY: 7,
+    encounterTable: 'azure_plain',
+    art: [
+      '##########################',
+      '#...........###..........#',
+      '#..##.......###.....##...#',
+      '#..##.==================C#',
+      '#.....=~~.........=.##...#',
+      '#.....=~~~~~~~~~~.=......#',
+      '#.....=.~~~~~~~~~.=......#',
+      '#======.~~~~~~~~~.=......#',
+      '#.....=.~~~~~=~~~.=......#',
+      '#.....=.~~~~~=~~~~=......#',
+      '#.....=......=..~~=......#',
+      '#...##========....=......#',
+      '#...###......======###...#',
+      '#..........##......###...#',
+      '#..........##............#',
+      '##########################',
+    ],
+  }),
+
+  // 左手は海。細い桟道が崖を折り返しながら上っていく
+  cliff_road: buildMap({
+    id: 'cliff_road', name: '断崖の道', kind: 'field', startX: 7, startY: 16,
+    encounterTable: 'cliff_road',
+    art: [
+      'XXXXXXXXXXXXXXXXXXXXXX',
+      'X~~~~~~XXXXXXXCXXXXXXX',
+      'X~~~~~~XXXXXXX=XXXXXXX',
+      'X~~~~~~XXXXXXX=XXXXXXX',
+      'X~=============XXXXXXX',
+      'X~~~=~~XXXXXXXXXXXXXXX',
+      'X~~~...XXXXXXXXXXXXXXX',
+      'X~~~...XXXXXXXXXXXXXXX',
+      'X~~===============XXXX',
+      'X~~=~~~XXXXXXXX...XXXX',
+      'X~~=~~~XXXXXXXX...XXXX',
+      'X~~=~~~XXXXXXXXXXXXXXX',
+      'X~~=========X=XXXXXXXX',
+      'X~~~~~~=XXXXX=XXXXXXXX',
+      'X~~~~~~=....X=XXXXXXXX',
+      'X~~~~~~=XXXXX=XXXXXXXX',
+      'X~~~~~~=======XXXXXXXX',
+      'XXXXXXXXXXXXXXXXXXXXXX',
+    ],
+  }),
+
+  // ============ ダンジョン(宝箱は奥へ行くほど中身が良い)============
+  // 柵と天幕で見通しの悪い屋外の陣。奥の天幕に首領がいる
+  ogre_camp: buildMap({
+    id: 'ogre_camp', name: 'はぐれオーガの野営地', kind: 'dungeon', startX: 1, startY: 14,
     encounterTable: 'ogre_camp', bossId: 'galoz',
-    chests: [
-      { x: 14, y: 1, id: 'ogre_gold_s' },
-      { x: 5, y: 5, id: 'ogre_yakusou' },
-      { x: 15, y: 7, id: 'ogre_shield' },
-      { x: 6, y: 11, id: 'ogre_gold_l' },
+    chests: { '1': 'ogre_gold_s', '2': 'ogre_yakusou', '3': 'ogre_shield', '4': 'ogre_gold_l' },
+    art: [
+      'XXXXXXXXXXXXXXXXXXXXXXXX',
+      'XD1DDDDDDXDDDDDDDXXXXXXX',
+      'XDDDDDDXXXDDDDD2DXDDDBXX',
+      'XDDXXDDXXXDDDDDDDXDDDDXX',
+      'XDDXXDDDDDDDXXDDDDDDDDXX',
+      'XDDDDDDDDXDDXXDDDXDDDDXX',
+      'XDDDDDDDDXDDXXDDDXXXXXXX',
+      'XDDDDDDDDDDDDDDDDDDDDDDX',
+      'XDDDDXXXDDDDDDDDDDDDDDDX',
+      'XDDDDXXXDDXXXXDDDXDDDDDX',
+      'XDDDDDDDDDXXXXDDDXDDXXDX',
+      'XDDDDDDDDDDDDDDDDXDDXXDX',
+      'XDDXXDDDDDDDDDXXXDDDXXDX',
+      'XDDXXD3DDDDDDDXXXXD4DDDX',
+      'XDDDDDDDDDDDDDDDDXDDDDDX',
+      'XXXXXXXXXXXXXXXXXXXXXXXX',
     ],
   }),
-  azure_tower: buildDungeon({
-    id: 'azure_tower', name: '蒼穹の塔', startX: 1, startY: 1,
+
+  // 柱の並ぶ大広間を、左右交互の階段で四層のぼる
+  azure_tower: buildMap({
+    id: 'azure_tower', name: '蒼穹の塔', kind: 'dungeon', startX: 4, startY: 15,
     encounterTable: 'azure_tower', bossId: 'astro_guardian',
-    chests: [
-      { x: 11, y: 1, id: 'tower_mahou' },
-      { x: 4, y: 5, id: 'tower_gofu' },
-      { x: 16, y: 7, id: 'tower_gold' },
-      { x: 8, y: 11, id: 'tower_staff' },
+    chests: { '1': 'tower_mahou', '2': 'tower_gofu', '3': 'tower_gold', '4': 'tower_staff' },
+    art: [
+      'XXXXXXXXXXXXXXXXXXXX',
+      'XXXXXXXXXXXXXXXXXXXX',
+      'XXDDDDDDDDBDDDDDDDXX',
+      'XXDDDDXXDDDDXXDDDDXX',
+      'XXDDDDDDDDDDDDDD4DXX',
+      'XXXXXXXXXXXXXXXXXDXX',
+      'XXDDDDDDDDDDDDDDDDXX',
+      'XXDDDDXXDDDDXXDDDDXX',
+      'XXD3DDDDDDDDDDDDDDXX',
+      'XXDXXXXXXXXXXXXXXXXX',
+      'XXDDDDDDDDDDDDDDDDXX',
+      'XXDDDDXXDDDDXXDDDDXX',
+      'XXDDDDDDDDDDDDDDD2XX',
+      'XXXXXXXXXXXXXXXXXDXX',
+      'XXDDDDDDDDDDDDDDDDXX',
+      'XXDDDDXXDDDDXXDDDDXX',
+      'XX1DDDDDDDDDDDDDDDXX',
+      'XXXXXXXXXXXXXXXXXXXX',
     ],
   }),
-  academy_altar: buildDungeon({
-    id: 'academy_altar', name: '学院地下祭壇', startX: 1, startY: 1,
+
+  // 小部屋が格子状に並ぶ納骨堂。扉の無い袋小路が多い
+  academy_altar: buildMap({
+    id: 'academy_altar', name: '学院地下祭壇', kind: 'dungeon', startX: 2, startY: 2,
     encounterTable: 'academy_altar', bossId: 'magatsuki',
-    chests: [
-      { x: 9, y: 3, id: 'altar_seisui' },
-      { x: 14, y: 7, id: 'altar_gold' },
-      { x: 5, y: 11, id: 'altar_earring' },
+    chests: { '1': 'altar_seisui', '2': 'altar_gold', '3': 'altar_earring' },
+    art: [
+      'XXXXXXXXXXXXXXXXXXXXXXXXXX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XDDDDDDDDDDDDDDDDDD2DDDDDX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XXDXXXXXXXXXDXXXXXXXXXDXXX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XDDDDDDDDDXDDDDXDDDDDDBDDX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XXXXXXXDXXXXXXXXXDXXXXXXXX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'X1DDDDDDDDDDD3DDDDDDDDDDDX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XXXXXXXXXXXXXXXXXXXXXXXXXX',
     ],
   }),
-  abyss_depth: buildDungeon({
-    id: 'abyss_depth', name: '業の底', startX: 1, startY: 1,
+
+  // 地底湖を抱く洞窟。うねる回廊が水際を回り込む
+  abyss_depth: buildMap({
+    id: 'abyss_depth', name: '業の底', kind: 'dungeon', startX: 1, startY: 16,
     encounterTable: 'abyss_depth', bossId: 'abyss_matriarch',
-    chests: [
-      { x: 12, y: 1, id: 'abyss_jokyu' },
-      { x: 6, y: 5, id: 'abyss_phoenix' },
-      { x: 15, y: 9, id: 'abyss_gold' },
-      { x: 4, y: 11, id: 'abyss_brooch' },
+    chests: { '1': 'abyss_jokyu', '2': 'abyss_phoenix', '3': 'abyss_gold', '4': 'abyss_brooch' },
+    art: [
+      'XXXXXXXXXXXXXXXXXXXXXXXXXX',
+      'XXXXXXXXXXXXXXXXXXXXXXXXXX',
+      'XXXXXXXXDDDXXXXDDDXXXXXXXX',
+      'XXXXXXXXDDDDDDDDDDXXXXXXXX',
+      'XXXXXXXXDDDXXXXDD3XXXXXXXX',
+      'XXXXXXXXXDXXXXXXDXXXXXXXXX',
+      'XXX2DDXXDDDX~~~~DDXXDDDXXX',
+      'XXXDDDDDDDDX~~~~DDDDDDDXXX',
+      'XXXDDDXXDDDX~~~~DDXXDDDXXX',
+      'XXXXDXXXXXXX~~~~XXXXXDXXXX',
+      'XXXDDDXXXXDDDXXXXXXXXDXXXX',
+      'XDDDDDDDDDDDDXDDDXXXDDDXXX',
+      'XDDDDDDDXXDDDXDDDDDDDDDBDX',
+      'XDDXXDDDXXXDXXDDDXXXDDDDDX',
+      'XDXXXDDDXXDDDXXDXX~~~XDDDX',
+      'XD1XXDDDDDDDDXDDDX~~~XDDDX',
+      'XDDXXDDDXXDDDXDDDD4DDDDDDX',
+      'XXXXXXXXXXXXXXXXXXXXXXXXXX',
     ],
   }),
-  forbidden_ritual_chamber: buildDungeon({
-    id: 'forbidden_ritual_chamber', name: '禁呪暴走空間', startX: 1, startY: 1,
+
+  // 中心へ向かって渦を巻く同心の回廊。最奥に禍の核がある
+  forbidden_ritual_chamber: buildMap({
+    id: 'forbidden_ritual_chamber', name: '禁呪暴走空間', kind: 'dungeon', startX: 1, startY: 1,
     encounterTable: 'forbidden_ritual_chamber', bossId: 'genso_no_katsubo',
-    chests: [
-      { x: 13, y: 3, id: 'ritual_phoenix' },
-      { x: 7, y: 5, id: 'ritual_ring' },
-      { x: 16, y: 9, id: 'ritual_armor' },
-      { x: 5, y: 11, id: 'ritual_gold' },
+    chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold' },
+    art: [
+      'XXXXXXXXXXXXXXXXXXXXXX',
+      'XDDDDDDDDDDDDDDDDDDD2X',
+      'XDXXXXXXXXXDXXXXXXXXDX',
+      'XDXXDDDDDDDDDDDDD4XXDX',
+      'XDXXDXXXXXXXXXXXXDXXDX',
+      'XDXXDXXDDDDDDDDXXDXXDX',
+      'XDXXDXXDXXDXXXDXXDXXDX',
+      'XDXXDXXDXDDDDXDXXDXXDX',
+      'XDXXDXXDXDBDDXDXXDXXDX',
+      'XDXXDXXDXDDDDXDXXDXXDX',
+      'XDXXDXXDXDDDDXDXXDXXDX',
+      'XDXXDXXDXXXXXXDXXDXXDX',
+      'XDXXDXXDDDDDDDDXXDXXDX',
+      'XDXXDXXXXXXDXXXXXDXXDX',
+      'XDXX3DDDDDDDDDDDDDXXDX',
+      'XDXXXXXXXXXXXXXXXXXXDX',
+      'X1DDDDDDDDDDDDDDDDDDDX',
+      'XXXXXXXXXXXXXXXXXXXXXX',
     ],
   }),
+
 };

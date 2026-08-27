@@ -194,10 +194,11 @@ Game.Shop = (function () {
     // 選択中の装備の性能を出しておくと、買い替えの判断がしやすい
     var sel = list[state.cursor];
     if (sel && sel.def && sel.gear) {
+      var LONG = { atk: 'こうげき', def: 'しゅび', spd: 'すばやさ', mag: 'まりょく', luck: 'うんのよさ' };
       var parts = [];
-      if (sel.def.atk) parts.push('こうげき +' + sel.def.atk);
-      if (sel.def.def) parts.push('しゅび +' + sel.def.def);
-      if (sel.def.spd) parts.push('すばやさ +' + sel.def.spd);
+      Game.Data.GEAR_STATS.forEach(function (st) {
+        if (sel.def[st.key]) parts.push(LONG[st.key] + ' +' + sel.def[st.key]);
+      });
       Game.Renderer.drawText(ctx, Game.Data.SLOT_LABELS[sel.def.slot] + ' / ' + parts.join('  '),
         x + 16, y + h - 16, { size: 12, color: '#a49b86' });
     } else if (state.view !== 'root') {

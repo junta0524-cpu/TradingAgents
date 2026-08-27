@@ -1,5 +1,6 @@
 // パーティ状態管理 ― 実行時ステータス(HP/MP・経験値)、所持品、装備、所持金をまとめて扱う。
-// atk/def/spd は「素の値(base*) + 装備の補正」で、装備を変えるたびに recalc() で組み直す。
+// こうげき/しゅび/すばやさ/まりょく/うんのよさ は「素の値(base*) + 装備の補正」で、
+// 装備を変えるたびに recalc() で組み直す。
 var Game = window.Game || {};
 Game.Party = (function () {
   var members = {};
@@ -10,23 +11,37 @@ Game.Party = (function () {
 
   function equipDef(id) { return id ? Game.Data.Equipment[id] : null; }
 
+  // 素の値を持つステータス。base* に装備の補正を足したものが実効値になる。
+  var STATS = ['atk', 'def', 'spd', 'mag', 'luck'];
+  function baseKey(stat) { return 'base' + stat.charAt(0).toUpperCase() + stat.slice(1); }
+
   // 装備込みの実効ステータスを組み直す
   function recalc(m) {
-    var atk = m.baseAtk, def = m.baseDef, spd = m.baseSpd;
+    var totals = {};
+    STATS.forEach(function (stat) { totals[stat] = m[baseKey(stat)] || 0; });
     Game.Data.EQUIP_SLOTS.forEach(function (slot) {
       var e = equipDef(m.equip[slot]);
       if (!e) return;
-      atk += e.atk || 0;
-      def += e.def || 0;
-      spd += e.spd || 0;
+      STATS.forEach(function (stat) { totals[stat] += e[stat] || 0; });
     });
-    m.atk = atk; m.def = def; m.spd = spd;
+    STATS.forEach(function (stat) { m[stat] = totals[stat]; });
+  }
+
+  // レベルアップの伸び。キャラごとの growth が無ければ標準の伸びを使う。
+  var DEFAULT_GROWTH = { hp: 6, mp: 2, atk: 2, def: 1, spd: 1, mag: 1, luck: 1 };
+  function growthOf(m) {
+    var g = (Game.Data.Characters[m.id] || {}).growth || {};
+    var out = {};
+    Object.keys(DEFAULT_GROWTH).forEach(function (k) {
+      out[k] = g[k] === undefined ? DEFAULT_GROWTH[k] : g[k];
+    });
+    return out;
   }
 
   function spawn(id) {
     var base = Game.Data.Characters[id];
     var m = JSON.parse(JSON.stringify(base));
-    m.baseAtk = base.atk; m.baseDef = base.def; m.baseSpd = base.spd;
+    STATS.forEach(function (stat) { m[baseKey(stat)] = base[stat] || 0; });
     m.equip = m.equip || {};
     recalc(m);
     return m;
@@ -77,6 +92,10 @@ Game.Party = (function () {
       m.ward = false;
       return m.name + 'は 加護に まもられた!';
     }
+    // うんのよさが高いほど、状態異常そのものを弾きやすい(上限3割)
+    if (Math.random() < Math.min(0.3, (m.luck || 0) * 0.01)) {
+      return m.name + 'は 運よく 踏みとどまった!';
+    }
     m.status = statusId;
     return m.name + def.onInflict;
   }
@@ -122,9 +141,11 @@ Game.Party = (function () {
         m.exp -= m.expToNext;
         var before = m.level;
         m.level += 1;
-        m.maxHp += 6; m.hp = m.maxHp;
-        if (m.maxMp > 0) { m.maxMp += 2; m.mp = m.maxMp; }
-        m.baseAtk += 2; m.baseDef += 1; m.baseSpd += 1;
+        var g = growthOf(m);
+        m.maxHp += g.hp; m.hp = m.maxHp;
+        if (m.maxMp > 0) { m.maxMp += g.mp; m.mp = m.maxMp; }
+        m.baseAtk += g.atk; m.baseDef += g.def; m.baseSpd += g.spd;
+        m.baseMag += g.mag; m.baseLuck += g.luck;
         recalc(m);
         m.expToNext = Math.round(m.expToNext * 1.35);
         messages.push(m.name + 'は レベル' + m.level + 'に あがった!');
@@ -270,9 +291,10 @@ Game.Party = (function () {
       var m = JSON.parse(JSON.stringify(data.members[id]));
       // 古いセーブや欠けた項目があっても壊れないよう、足りない値は今の定義から補う
       var base = Game.Data.Characters[id] || {};
-      if (m.baseAtk === undefined) m.baseAtk = base.atk;
-      if (m.baseDef === undefined) m.baseDef = base.def;
-      if (m.baseSpd === undefined) m.baseSpd = base.spd;
+      STATS.forEach(function (stat) {
+        var key = baseKey(stat);
+        if (m[key] === undefined) m[key] = base[stat] || 0;
+      });
       m.equip = m.equip || {};
       m.guarding = false;
       members[id] = m;
@@ -293,6 +315,8 @@ Game.Party = (function () {
     inventory: function () { return inventory; },
     gearBag: function () { return gear; },
     useItem: useItem,
+    // 相手を取らない道具(帰還の羽根など)を消費するだけの入り口
+    consumeItem: function (id) { return stackRemove(inventory, id, 1); },
     gold: function () { return gold; },
     addGold: function (n) { gold += n; },
     spend: function (n) { if (gold < n) return false; gold -= n; return true; },

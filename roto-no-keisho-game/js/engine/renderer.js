@@ -3,18 +3,40 @@ var Game = window.Game || {};
 Game.Renderer = (function () {
   var TILE = 32;
 
-  // キャンバスより小さいマップ(街など)が左上に寄って見えないよう、横方向は中央に寄せる。
-  // 縦は下部の会話ウィンドウと干渉しないよう、上寄せのまま少しだけ余白を取る。
-  function mapOffset(map, canvasW) {
+  var MARGIN = 8;
+
+  // キャンバスより小さいマップ(街など)は中央に寄せ、大きいマップは主人公を追って
+  // スクロールさせる。端まで来たらそれ以上は流さず、マップの外側を映さない。
+  function mapOffset(map, canvasW, canvasH, focus) {
     var mapW = map.tiles[0].length * TILE;
-    return { x: Math.max(0, Math.round((canvasW - mapW) / 2)), y: 8 };
+    var mapH = map.tiles.length * TILE;
+    var viewH = (canvasH || 480) - MARGIN * 2;
+    var ox, oy;
+    if (mapW <= canvasW) {
+      ox = Math.round((canvasW - mapW) / 2);
+    } else {
+      ox = Math.round(canvasW / 2 - ((focus ? focus.x : 0) * TILE + TILE / 2));
+      ox = Math.min(0, Math.max(canvasW - mapW, ox));
+    }
+    if (mapH <= viewH) {
+      oy = MARGIN;
+    } else {
+      oy = Math.round(viewH / 2 - ((focus ? focus.y : 0) * TILE + TILE / 2)) + MARGIN;
+      oy = Math.min(MARGIN, Math.max(viewH - mapH + MARGIN, oy));
+    }
+    return { x: ox, y: oy };
   }
 
   function drawMap(ctx, map, off) {
     off = off || { x: 0, y: 0 };
-    for (var y = 0; y < map.tiles.length; y++) {
+    // 画面の外まで描いても見えないので、映る範囲のタイルだけ描く
+    var x0 = Math.max(0, Math.floor(-off.x / TILE));
+    var x1 = Math.min(map.tiles[0].length, Math.ceil((ctx.canvas.width - off.x) / TILE));
+    var y0 = Math.max(0, Math.floor(-off.y / TILE));
+    var y1 = Math.min(map.tiles.length, Math.ceil((ctx.canvas.height - off.y) / TILE));
+    for (var y = y0; y < y1; y++) {
       var row = map.tiles[y];
-      for (var x = 0; x < row.length; x++) {
+      for (var x = x0; x < x1; x++) {
         var def = Game.Data.TileDefs[row[x]] || Game.Data.TileDefs['.'];
         var px = off.x + x * TILE, py = off.y + y * TILE;
         ctx.fillStyle = def.color;

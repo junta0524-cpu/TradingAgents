@@ -108,6 +108,18 @@ Game.Battle = (function () {
     return base + Math.floor(Math.random() * (variance * 2 + 1)) - variance;
   }
 
+  // 技の威力のもとになる値。呪文(stat: 'mag')はまりょく、武技はこうげき力。
+  // 魔物はまりょくを持たないので、その場合はこうげき力で代用する。
+  function powerStat(actor, skill) {
+    if (skill && skill.stat === 'mag') return actor.mag || actor.atk;
+    return actor.atk;
+  }
+
+  // かいしんの一撃。うんのよさが高いほど出やすい(上限12%)。守備を無視して大きく入る。
+  function isCritical(actor) {
+    return Math.random() < Math.min(0.12, (actor.luck || 0) * 0.004);
+  }
+
   function flushLog(next) {
     if (state.log.length === 0) { next(); return; }
     var msg = state.log.shift();
@@ -277,8 +289,11 @@ Game.Battle = (function () {
 
   function doAttack(target) {
     var actor = currentActor();
-    var dmg = damageOf(actor.atk, target.def);
+    var crit = isCritical(actor);
+    // かいしんの一撃は守備力を無視するので、damageOf に def:0 を渡す
+    var dmg = crit ? Math.round(damageOf(actor.atk, 0) * 1.4) : damageOf(actor.atk, target.def);
     target.curHp = Math.max(0, target.curHp - dmg);
+    if (crit) state.log.push('かいしんの いちげき!!');
     state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
     if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
     state.phase = 'resolving';
@@ -292,12 +307,14 @@ Game.Battle = (function () {
       actor.guarding = skill.reduction || 0.5;
       state.log.push(actor.name + 'は ' + skill.name + 'の かまえを とった!');
     } else if (skill.kind === 'heal') {
-      target.hp = Math.min(target.maxHp, target.hp + skill.power);
+      // 回復量もまりょくで伸びる(唱え手が育つほど大きく戻る)
+      var heal = skill.power + Math.floor(powerStat(actor, skill) * 0.5);
+      target.hp = Math.min(target.maxHp, target.hp + heal);
       state.log.push(actor.name + 'は ' + skill.name + 'を となえた! ' + target.name + 'の HPが かいふくした');
     } else if (skill.kind === 'attack') {
       var targets = skill.target === 'all_enemies' ? aliveEnemies() : [target];
       targets.forEach(function (t) {
-        var dmg = Math.round(damageOf(actor.atk, t.def) * (skill.power || 1));
+        var dmg = Math.round(damageOf(powerStat(actor, skill), t.def) * (skill.power || 1));
         t.curHp = Math.max(0, t.curHp - dmg);
         state.log.push(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + dmg + ' の ダメージ');
         if (t.curHp <= 0) state.log.push(t.label + 'を たおした!');
