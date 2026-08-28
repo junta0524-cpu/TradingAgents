@@ -4,10 +4,13 @@
 var Game = window.Game || {};
 Game.Data = Game.Data || {};
 
+// 通しプレイで手に入る金が1550Gしかなく、店の主力(鋼の剣1200G・鋼の鎧2200G)に
+// まったく届いていなかったので、取り分を約2.5倍に引き上げてある。
+// 経験値も同じ比率で上げ、レベルの伸びが装備更新に追いつくようにした。
 function tierBase(tier) {
-  if (tier === 'early') return { hp: 9, atk: 4, def: 2, spd: 4, exp: 2, gold: 4 };
-  if (tier === 'mid') return { hp: 20, atk: 9, def: 5, spd: 6, exp: 6, gold: 12 };
-  return { hp: 34, atk: 17, def: 9, spd: 8, exp: 13, gold: 28 }; // late
+  if (tier === 'early') return { hp: 9, atk: 4, def: 2, spd: 4, exp: 5, gold: 15 };
+  if (tier === 'mid') return { hp: 20, atk: 9, def: 5, spd: 6, exp: 15, gold: 45 };
+  return { hp: 34, atk: 17, def: 9, spd: 8, exp: 32, gold: 100 }; // late
 }
 function mon(id, name, tier, loc, over) {
   var b = tierBase(tier);
@@ -25,7 +28,7 @@ add('chibi_slime', 'ちびスライム', 'early', ['east_road', 'azure_plain', '
 add('aka_slime', 'あかスライム', 'early', ['east_road'], { hp: 8, atk: 5, inflict: { status: 'confuse', chance: 0.12 } });
 add('hagure_slime', 'はぐれスライム', 'early', ['ogre_camp'], { hp: 10, atk: 6 });
 add('king_slime_kakera', 'キングスライムの欠片', 'mid', ['cliff_road'], { hp: 24 });
-add('hane_slime', 'はねスライム', 'mid', ['east_road', 'azure_plain', 'cliff_road'], { hp: 10, exp: 12, gold: 20 });
+add('hane_slime', 'はねスライム', 'mid', ['east_road', 'azure_plain', 'cliff_road'], { hp: 10, exp: 30, gold: 50 });
 add('hedoro_slime', 'ヘドロスライム', 'mid', ['abyss_depth'], { inflict: { status: 'poison', chance: 0.3 } });
 
 // ---- 竜王軍残党系 ----
@@ -50,7 +53,7 @@ add('toge_no_mandrake', '棘のマンドレイク', 'mid', ['azure_plain'], { in
 add('dokugiri_kinoko', '毒霧茸', 'mid', ['cliff_road'], { inflict: { status: 'poison', chance: 0.35 } });
 add('karamitsuki_tsuta', '絡みつき蔦', 'mid', ['azure_tower'], { inflict: { status: 'sleep', chance: 0.22 } });
 add('tanemaki_poppy', '種撒きポピー', 'early', ['azure_plain'], { inflict: { status: 'sleep', chance: 0.3 } });
-add('kobokuno_bannin', '古木の番人', 'mid', ['azure_plain'], { hp: 40, exp: 14, gold: 24 });
+add('kobokuno_bannin', '古木の番人', 'mid', ['azure_plain'], { hp: 40, exp: 35, gold: 60 });
 
 // ---- 空中系 ----
 add('koumori', 'こうもり', 'early', ['azure_tower'], { hp: 6, spd: 7 });
@@ -90,7 +93,7 @@ add('sabita_golem', '錆びたゴーレム', 'mid', ['azure_tower'], { def: 11 }
 add('madou_ningyou', '魔導人形', 'mid', ['azure_tower']);
 add('tenkyugi_no_shugoju', '天球儀の守護獣', 'late', ['azure_tower']);
 add('kuzureshi_kenja_no_genei', '崩れし賢者の幻影', 'late', ['azure_tower']);
-add('fuuin_no_shugosekizou', '封印の守護石像', 'late', ['azure_tower'], { hp: 44, exp: 16, gold: 30 });
+add('fuuin_no_shugosekizou', '封印の守護石像', 'late', ['azure_tower'], { hp: 44, exp: 40, gold: 75 });
 
 Game.Data.Monsters = M;
 
@@ -99,27 +102,27 @@ Game.Data.Monsters = M;
 // 想定して調整している。第二章のみエルロードが戦闘直前に合流するので2人想定。
 Game.Data.Monsters.galoz = {
   id: 'galoz', name: '牙のオーガ将軍ガロズ', boss: true, loc: ['ogre_camp'],
-  hp: 90, atk: 13, def: 7, spd: 5, exp: 80, gold: 150,
+  hp: 90, atk: 13, def: 7, spd: 5, exp: 200, gold: 375,
   bossSkills: [{ name: '咆哮', power: 1.3, target: 'all_party' }],
 };
 Game.Data.Monsters.astro_guardian = {
   id: 'astro_guardian', name: '星読みの巨像アストロガーディアン', boss: true, loc: ['azure_tower'],
-  hp: 70, atk: 11, def: 9, spd: 4, exp: 100, gold: 180,
+  hp: 70, atk: 11, def: 9, spd: 4, exp: 250, gold: 450,
   bossSkills: [{ name: '星導の光', power: 1.2, target: 'all_party' }],
 };
 Game.Data.Monsters.magatsuki = {
   id: 'magatsuki', name: '名もなき召魔「まがつき」', boss: true, loc: ['academy_altar'],
-  hp: 80, atk: 12, def: 6, spd: 9, exp: 70, gold: 120,
+  hp: 80, atk: 12, def: 6, spd: 9, exp: 175, gold: 300,
   bossSkills: [{ name: '禁呪の残滓', power: 1.2, target: 'all_party' }],
 };
 Game.Data.Monsters.abyss_matriarch = {
   id: 'abyss_matriarch', name: '深淵の巣母', boss: true, loc: ['abyss_depth'],
-  hp: 110, atk: 14, def: 8, spd: 5, exp: 130, gold: 220,
+  hp: 110, atk: 14, def: 8, spd: 5, exp: 325, gold: 550,
   bossSkills: [{ name: '深淵の波動', power: 1.3, target: 'all_party' }],
 };
 Game.Data.Monsters.genso_no_katsubo = {
   id: 'genso_no_katsubo', name: '原初の渇望', boss: true, loc: ['forbidden_ritual_chamber'],
-  hp: 150, atk: 16, def: 10, spd: 7, exp: 160, gold: 260,
+  hp: 150, atk: 16, def: 10, spd: 7, exp: 400, gold: 650,
   bossSkills: [{ name: '渇望の奔流', power: 1.4, target: 'all_party' }],
 };
 

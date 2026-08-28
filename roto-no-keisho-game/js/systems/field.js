@@ -47,9 +47,18 @@ Game.Field = (function () {
     return row[x];
   }
 
+  // トヘロスの効き目。残り歩数のあいだ、弱い魔物は寄ってこない。
+  var wardLeft = 0;
+  function wardSteps(n) { wardLeft = Math.max(wardLeft, n || 0); }
+
   function tryEncounter(tileChar) {
     var def = Game.Data.TileDefs[tileChar];
     if (!def || def.encounter <= 0) return false;
+    if (wardLeft > 0) {
+      wardLeft -= 1;
+      // 効いている間も、格上の魔物だけはまれに出る
+      return Math.random() < def.encounter * 0.15;
+    }
     return Math.random() < def.encounter;
   }
 
@@ -198,7 +207,7 @@ Game.Field = (function () {
 
   return {
     load: load, currentMap: currentMap, playerPos: playerPos,
-    resetToStart: resetToStart, setPosition: setPosition,
+    resetToStart: resetToStart, setPosition: setPosition, wardSteps: wardSteps,
     update: update, draw: draw,
     // 検証用: いま隊列がどのマスにいるか
     __actors: partyActors,

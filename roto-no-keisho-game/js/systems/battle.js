@@ -26,6 +26,7 @@ Game.Battle = (function () {
     };
     labelEnemies(state.enemies);
     clearGuards();
+    clearBattleMul();
     Game.Dialogue.show(encounterLine(state.enemies), function () { beginTurn(); });
   }
 
@@ -69,8 +70,12 @@ Game.Battle = (function () {
   }
 
   function usableSkills(actor) {
-    // 覚えている技のうち、いまのMPで唱えられるものだけ
-    return Game.Party.learnedSkills(actor).filter(function (s) { return s.mp <= actor.mp; });
+    // 覚えている技のうち、いまのMPで唱えられて、戦闘中に意味のあるものだけ
+    return Game.Party.learnedSkills(actor).filter(function (s) {
+      if (s.fieldOnly) return false;
+      if (s.kind === 'revive' && allyTargetsFor('revive').length === 0) return false;
+      return s.mp <= actor.mp;
+    });
   }
 
   function usableItems() {
@@ -90,6 +95,18 @@ Game.Battle = (function () {
       kind === 'cure' || kind === 'cure_undead' || kind === 'ward';
   }
 
+  // 味方に向ける技かどうか(呪文の kind で判断する)
+  function targetsAlly(skill) {
+    return skill.kind === 'heal' || skill.kind === 'cure' ||
+           skill.kind === 'revive' || skill.kind === 'buff';
+  }
+
+  // 対象を選ばずそのまま発動する技(全体がけ・自分がけ)
+  function needsNoTarget(skill) {
+    return skill.target === 'all_enemies' || skill.target === 'all_allies' ||
+           skill.target === 'self' || skill.kind === 'guard';
+  }
+
   // 自分にかける技(受け流しなど)は、味方も敵も選ばせずそのまま発動する
   function isSelfSkill(skill) { return skill.kind === 'guard' || skill.target === 'self'; }
 
@@ -104,6 +121,28 @@ Game.Battle = (function () {
     return list.filter(function (m) { return m.hp > 0; });
   }
 
+  // 補助・弱体は「戦闘のあいだだけ効く倍率」として持たせる。
+  // 味方も魔物も同じ形なので、実効値はこの3つを通して読む。
+  function mul(unit, key) {
+    var m = unit.battleMul && unit.battleMul[key];
+    return m ? m : 1;
+  }
+  function effAtk(u) { return Math.round((u.atk || 0) * mul(u, 'atk')); }
+  function effDef(u) { return Math.round((u.def || 0) * mul(u, 'def')); }
+  function effSpd(u) { return Math.round((u.spd || 0) * mul(u, 'spd')); }
+  function effMag(u) { return Math.round((u.mag || u.atk || 0) * mul(u, 'atk')); }
+
+  function applyMul(unit, key, factor) {
+    unit.battleMul = unit.battleMul || {};
+    // 重ねがけは効くが、際限なく伸びないよう上下に頭を打たせる
+    var next = mul(unit, key) * factor;
+    unit.battleMul[key] = Math.max(0.35, Math.min(2.5, next));
+  }
+  function clearBattleMul() {
+    Game.Party.list().forEach(function (m) { m.battleMul = null; });
+    state.enemies.forEach(function (e) { e.battleMul = null; e.status = null; });
+  }
+
   function damageOf(atk, def) {
     var base = Math.max(1, atk - Math.floor(def * 0.6));
     var variance = Math.floor(base * 0.2);
@@ -113,8 +152,8 @@ Game.Battle = (function () {
   // 技の威力のもとになる値。呪文(stat: 'mag')はまりょく、武技はこうげき力。
   // 魔物はまりょくを持たないので、その場合はこうげき力で代用する。
   function powerStat(actor, skill) {
-    if (skill && skill.stat === 'mag') return actor.mag || actor.atk;
-    return actor.atk;
+    if (skill && skill.stat === 'mag') return effMag(actor);
+    return effAtk(actor);
   }
 
   // かいしんの一撃。うんのよさが高いほど出やすい(上限12%)。守備を無視して大きく入る。
@@ -155,7 +194,7 @@ Game.Battle = (function () {
     state.log.push(actor.name + Game.Party.statusOf(actor).onTick);
     if (!target) { state.log.push(actor.name + 'は あたりを 殴りつけた!'); return; }
     var isEnemy = target.curHp !== undefined;
-    var dmg = damageOf(actor.atk, target.def);
+    var dmg = damageOf(effAtk(actor), effDef(target));
     if (isEnemy) {
       target.curHp = Math.max(0, target.curHp - dmg);
       state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
@@ -214,7 +253,7 @@ Game.Battle = (function () {
     aliveEnemies().forEach(function (e) { queue.push({ kind: 'enemy', enemy: e }); });
     queue.forEach(function (a) {
       var actor = a.kind === 'enemy' ? a.enemy : Game.Party.get(a.actorId);
-      a.order = initiative(actor && actor.spd);
+      a.order = initiative(actor && effSpd(actor));
     });
     queue.sort(function (a, b) { return b.order - a.order; });
     state.phase = 'resolving';
@@ -284,24 +323,54 @@ Game.Battle = (function () {
     return true;
   }
 
+  // 魔物にかかった状態異常を処理する。動けないなら false。
+  function enemyStatus(enemy) {
+    if (!enemy.status) return true;
+    if (enemy.status === 'sleep') {
+      if (Math.random() < 0.3) { enemy.status = null; state.log.push(enemy.label + 'は 目をさました!'); return true; }
+      state.log.push(enemy.label + 'は ねむっている。');
+      return false;
+    }
+    if (enemy.status === 'confuse') {
+      if (Math.random() < 0.25) { enemy.status = null; state.log.push(enemy.label + 'は 正気にもどった!'); return true; }
+      var others = aliveEnemies().filter(function (e) { return e !== enemy; });
+      if (others.length) {
+        var pal = others[Math.floor(Math.random() * others.length)];
+        var d = damageOf(effAtk(enemy), effDef(pal));
+        pal.curHp = Math.max(0, pal.curHp - d);
+        state.log.push(enemy.label + 'は こんらんして ' + pal.label + 'を 攻撃した! ' + d + ' の ダメージ');
+        if (pal.curHp <= 0) state.log.push(pal.label + 'は たおれた!');
+      } else {
+        state.log.push(enemy.label + 'は こんらんして あたりを 殴っている。');
+      }
+      return false;
+    }
+    return true;  // blind は行動はできる(命中が落ちる)
+  }
+
   function enemyAct(enemy) {
     var alive = Game.Party.aliveList();
     if (alive.length === 0) return;
     if (maybeFlee(enemy)) return;
+    if (!enemyStatus(enemy)) return;
 
     var useSkill = enemy.boss && enemy.bossSkills && Math.random() < 0.35;
     if (useSkill) {
       var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
       if (skill.target === 'all_party') {
         alive.forEach(function (member) {
-          var dmg = hurt(member, Math.round(damageOf(enemy.atk, member.def) * skill.power));
+          var dmg = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member)) * skill.power));
           state.log.push(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
         });
         return;
       }
     }
     var target = alive[Math.floor(Math.random() * alive.length)];
-    var dmg2 = hurt(target, damageOf(enemy.atk, target.def));
+    if (enemy.status === 'blind' && Math.random() < 0.6) {
+      state.log.push(enemy.label + 'の こうげき! しかし 攻撃は はずれた!');
+      return;
+    }
+    var dmg2 = hurt(target, damageOf(effAtk(enemy), effDef(target)));
     state.log.push(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
     if (target.hp <= 0) state.log.push(target.name + 'は たおれてしまった!');
     // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
@@ -390,7 +459,7 @@ Game.Battle = (function () {
     }
     var crit = isCritical(actor);
     // かいしんの一撃は守備力を無視するので、damageOf に def:0 を渡す
-    var dmg = crit ? Math.round(damageOf(actor.atk, 0) * 1.4) : damageOf(actor.atk, target.def);
+    var dmg = crit ? Math.round(damageOf(effAtk(actor), 0) * 1.4) : damageOf(effAtk(actor), effDef(target));
     target.curHp = Math.max(0, target.curHp - dmg);
     if (crit) state.log.push('かいしんの いちげき!!');
     state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
@@ -422,24 +491,92 @@ Game.Battle = (function () {
   function resolveSkill(actor, skill, target) {
     if (actor.mp < skill.mp) { state.log.push(actor.name + 'は MPが たりない!'); return; }
     actor.mp -= skill.mp;
+    var say = actor.name + 'は ' + skill.name + 'を となえた!';
+
     if (skill.kind === 'heal') {
-      // 回復量もまりょくで伸びる(唱え手が育つほど大きく戻る)
-      var heal = skill.power + Math.floor(powerStat(actor, skill) * 0.5);
-      var before = target.hp;
-      target.hp = Math.min(target.maxHp, target.hp + heal);
-      state.log.push(actor.name + 'は ' + skill.name + 'を となえた! ' +
-        target.name + 'の HPが ' + (target.hp - before) + ' かいふくした');
-    } else if (skill.kind === 'attack') {
-      var targets = skill.target === 'all_enemies' ? aliveEnemies() : [target];
-      if (skill.target !== 'all_enemies' && (!target || target.curHp <= 0)) targets = aliveEnemies().slice(0, 1);
+      var targets = skill.target === 'all_allies' ? Game.Party.aliveList() : [target];
+      state.log.push(say);
       targets.forEach(function (t) {
-        var dmg = Math.round(damageOf(powerStat(actor, skill), t.def) * (skill.power || 1));
+        if (!t || t.hp <= 0) return;
+        var heal = skill.power + Math.floor(powerStat(actor, skill) * 0.5);
+        var before = t.hp;
+        t.hp = Math.min(t.maxHp, t.hp + heal);
+        state.log.push(t.name + 'の HPが ' + (t.hp - before) + ' かいふくした');
+      });
+      return;
+    }
+
+    if (skill.kind === 'cure') {
+      state.log.push(say);
+      var msg = Game.Party.cure(target, skill.cures || []);
+      state.log.push(msg || 'しかし なにも おこらなかった');
+      return;
+    }
+
+    if (skill.kind === 'revive') {
+      state.log.push(say);
+      if (!target || target.hp > 0) { state.log.push('しかし なにも おこらなかった'); return; }
+      if (Math.random() > (skill.chance || 0.5)) { state.log.push('しかし ' + target.name + 'は 生きかえらなかった'); return; }
+      target.hp = Math.max(1, Math.round(target.maxHp * (skill.power || 0.5)));
+      target.status = null;
+      state.log.push(target.name + 'は 生きかえった!');
+      return;
+    }
+
+    if (skill.kind === 'buff') {
+      var allies = skill.target === 'all_allies' ? Game.Party.aliveList() : [target];
+      state.log.push(say);
+      allies.forEach(function (t) {
+        if (!t || t.hp <= 0) return;
+        applyMul(t, skill.stat_key, skill.mul);
+        state.log.push(t.name + 'の ' + STAT_LABEL[skill.stat_key] + 'が あがった!');
+      });
+      return;
+    }
+
+    if (skill.kind === 'debuff') {
+      var foes = skill.target === 'all_enemies' ? aliveEnemies() : [target];
+      state.log.push(say);
+      foes.forEach(function (t) {
+        if (!t || t.curHp <= 0) return;
+        applyMul(t, skill.stat_key, skill.mul);
+        state.log.push(t.label + 'の ' + STAT_LABEL[skill.stat_key] + 'が さがった!');
+      });
+      return;
+    }
+
+    if (skill.kind === 'ailment') {
+      state.log.push(say);
+      if (!target || target.curHp <= 0) { state.log.push('しかし なにも おこらなかった'); return; }
+      if (target.boss) {
+        // ボスには効きにくい。まったく効かないと弱体呪文が死に技になるので、確率を下げるだけ
+        if (Math.random() > (skill.chance || 0.5) * 0.35) { state.log.push(target.label + 'には きかなかった!'); return; }
+      } else if (Math.random() > (skill.chance || 0.5)) {
+        state.log.push(target.label + 'には きかなかった!'); return;
+      }
+      target.status = skill.ailment;
+      state.log.push(target.label + AILMENT_LINE[skill.ailment]);
+      return;
+    }
+
+    if (skill.kind === 'attack') {
+      var list = skill.target === 'all_enemies' ? aliveEnemies() : [target];
+      if (skill.target !== 'all_enemies' && (!target || target.curHp <= 0)) list = aliveEnemies().slice(0, 1);
+      list.forEach(function (t) {
+        var dmg = Math.round(damageOf(powerStat(actor, skill), effDef(t)) * (skill.power || 1));
         t.curHp = Math.max(0, t.curHp - dmg);
         state.log.push(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + dmg + ' の ダメージ');
         if (t.curHp <= 0) state.log.push(t.label + 'を たおした!');
       });
     }
   }
+
+  var STAT_LABEL = { atk: 'こうげき力', def: 'しゅび力', spd: 'すばやさ' };
+  var AILMENT_LINE = {
+    sleep: 'は ねむってしまった!',
+    blind: 'は まわりが 見えなくなった!',
+    confuse: 'は こんらんした!',
+  };
 
   function currentMenuList() {
     var actor = currentActor();
@@ -448,7 +585,9 @@ Game.Battle = (function () {
     if (state.menu === 'item') return usableItems();
     if (state.menu === 'target') return aliveEnemies();
     if (state.menu === 'allytarget') {
-      if (state.pendingSkill) return allyTargetsFor('heal');
+      if (state.pendingSkill) {
+        return allyTargetsFor(state.pendingSkill.kind === 'revive' ? 'revive' : 'heal');
+      }
       if (state.pendingItem) return allyTargetsFor(Game.Data.Items[state.pendingItem.id].kind);
       return []; // 対象が確定していない状態で来ることは本来ないが、落ちないようにしておく
     }
@@ -487,14 +626,14 @@ Game.Battle = (function () {
       else if (cmd === 'flee') { doFlee(); }
     } else if (state.menu === 'skill') {
       var chosen = list[state.cursor];
-      if (isSelfSkill(chosen)) {
-        // 自分にかける技は対象選択を挟まず即発動する
+      if (needsNoTarget(chosen)) {
+        // 全体がけ・自分がけは対象選択を挟まず即発動する
         state.pendingSkill = null;
         doSkill(chosen, currentActor());
         return;
       }
       state.pendingSkill = chosen;
-      state.menu = isHealKind(chosen.kind) ? 'allytarget' : 'target';
+      state.menu = targetsAlly(chosen) ? 'allytarget' : 'target';
       state.cursor = 0;
     } else if (state.menu === 'item') {
       state.pendingItem = list[state.cursor];
