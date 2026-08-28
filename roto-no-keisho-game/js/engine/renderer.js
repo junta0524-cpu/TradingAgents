@@ -68,23 +68,48 @@ Game.Renderer = (function () {
     }
   }
 
-  // 立ち絵を、足元をマスの下端に合わせて描く(マスより背が高い分は上へはみ出す)
-  function drawSprite(ctx, img, gridX, gridY, off) {
+  // 立ち絵を、足元をマスの下端に合わせて描く(マスより背が高い分は上へはみ出す)。
+  // opts で歩行シートの何コマ目か、左右反転するかを指定できる。
+  function drawSprite(ctx, img, gridX, gridY, off, opts) {
     off = off || { x: 0, y: 0 };
+    opts = opts || {};
     var w = Game.Assets.SPRITE_W, h = Game.Assets.SPRITE_H;
     var px = off.x + gridX * TILE + (TILE - w) / 2;
     var py = off.y + (gridY + 1) * TILE - h;
-    ctx.drawImage(img, px, py, w, h);
+    var frames = opts.frames || 1;
+    var sw = img.width / frames;
+    var sx = (opts.frame || 0) * sw;
+
+    if (!opts.flip) {
+      ctx.drawImage(img, sx, 0, sw, img.height, px, py, w, h);
+      return;
+    }
+    // 左向きは右向きの絵を反転して使う
+    ctx.save();
+    ctx.translate(px + w, py);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, sx, 0, sw, img.height, 0, 0, w, h);
+    ctx.restore();
   }
 
-  // マップ上に立つ人物(まだ絵の無い相手は、これまでどおり色の丸で示す)
-  function drawMapActors(ctx, map, off) {
-    if (!map.npcAt) return;
-    Object.keys(map.npcAt).forEach(function (pos) {
+  // マップに立つ人物をまとめて描く。
+  // 手前(下)の人ほど後に描いて重なりを正しくする。
+  function drawActors(ctx, actors, off) {
+    actors.slice().sort(function (a, b) { return (a.y - b.y) || (a.x - b.x); })
+      .forEach(function (a) {
+        if (a.img) drawSprite(ctx, a.img, a.x, a.y, off, a);
+        else drawToken(ctx, a.x, a.y, a.color, off);
+      });
+  }
+
+  // マップに配置された町の人を、描画用の並びとして取り出す
+  function npcActors(map) {
+    if (!map.npcAt) return [];
+    return Object.keys(map.npcAt).map(function (pos) {
       var xy = pos.split(',');
       var img = Game.Assets.spriteForNpc(map.npcAt[pos]);
-      if (img) drawSprite(ctx, img, +xy[0], +xy[1], off);
-    });
+      return img ? { x: +xy[0], y: +xy[1], img: img } : null;
+    }).filter(Boolean);
   }
 
   function drawToken(ctx, gridX, gridY, color, off) {
@@ -128,5 +153,5 @@ Game.Renderer = (function () {
   }
 
   return { TILE: TILE, mapOffset: mapOffset, drawMap: drawMap, drawToken: drawToken,
-    drawSprite: drawSprite, drawMapActors: drawMapActors, drawPanel: drawPanel, drawText: drawText, drawBar: drawBar };
+    drawSprite: drawSprite, drawActors: drawActors, npcActors: npcActors, drawPanel: drawPanel, drawText: drawText, drawBar: drawBar };
 })();

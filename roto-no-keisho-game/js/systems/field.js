@@ -7,22 +7,38 @@ Game.Field = (function () {
   var MOVE_DELAY = 9; // フレーム数(約60fpsで0.15秒間隔)
   var callbacks = {};
 
+  // ---- 隊列 ----
+  // trail は先頭が通ったマスの履歴。trail[0] に2人目、trail[1] に3人目…が立つ。
+  // 先頭の足跡をそのまま辿るので、通れない場所に入り込むことがない。
+  var trail = [];
+  var facing = 'down';   // 先頭が向いている方向
+  var steps = 0;         // 歩数。歩行アニメのコマ送りに使う
+  var TRAIL_MAX = 5;
+
+  function resetTrail() {
+    trail = [];
+    for (var i = 0; i < TRAIL_MAX; i++) trail.push({ x: px, y: py });
+    facing = 'down';
+    steps = 0;
+  }
+
   function load(mapId, cbs) {
     map = Game.Data.Maps[mapId];
     px = map.startX; py = map.startY;
     callbacks = cbs || {};
+    resetTrail();
   }
 
   function currentMap() { return map; }
   function playerPos() { return { x: px, y: py }; }
   // 全滅から復帰した際など、現在のマップの入り口へ戻す
-  function resetToStart() { if (map) { px = map.startX; py = map.startY; } }
+  function resetToStart() { if (map) { px = map.startX; py = map.startY; resetTrail(); } }
 
   // セーブから復帰したときに、記録されていた立ち位置へ戻す
   function setPosition(x, y) {
     if (!map) return;
     var def = Game.Data.TileDefs[tileAt(x, y)];
-    if (def && def.walkable) { px = x; py = y; }
+    if (def && def.walkable) { px = x; py = y; resetTrail(); }
   }
 
   function tileAt(x, y) {
@@ -106,6 +122,11 @@ Game.Field = (function () {
     var def = tile && Game.Data.TileDefs[tile];
     if (!def || !def.walkable) return;
 
+    // 先頭が動く前にいたマスを履歴の先頭へ。仲間はこれを順に辿る
+    trail.unshift({ x: px, y: py });
+    if (trail.length > TRAIL_MAX) trail.length = TRAIL_MAX;
+    facing = dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : 'right';
+    steps += 1;
     px = nx; py = ny;
     moveCooldown = MOVE_DELAY;
     if (tickFieldPoison()) return; // 毒で誰かが倒れたら、その報告を優先する
@@ -130,21 +151,56 @@ Game.Field = (function () {
     }
   }
 
+  // 歩行アニメのコマ。立ち→右足→立ち→左足 の4拍で回す。
+  // シートが3コマ(左足/立ち/右足)なので、その並びを指す。
+  var FRAME_CYCLE = [1, 0, 1, 2];
+
+  // 一人ぶんの描画情報を作る。歩行シートがあれば動き、無ければ立ち絵、
+  // それも無ければ色の丸になる。
+  function actorFor(member, x, y, dir) {
+    var walk = Game.Assets.walkSheet(member.id, dir);
+    if (walk) {
+      return {
+        x: x, y: y, img: walk.img, frames: walk.frames, flip: walk.flip,
+        frame: FRAME_CYCLE[steps % FRAME_CYCLE.length],
+      };
+    }
+    return {
+      x: x, y: y, img: Game.Assets.sprite(member.id) || null,
+      color: member.tokenColor || '#d4af5a',
+    };
+  }
+
+  // 隊列。先頭は自分の位置、以降は足跡を順に辿る。
+  // 向きは「一つ前の仲間がどちらにいるか」から決める。
+  function partyActors() {
+    var members = Game.Party.list();
+    var out = [];
+    var aheadX = px, aheadY = py;
+    members.forEach(function (m, i) {
+      if (i === 0) { out.push(actorFor(m, px, py, facing)); return; }
+      var spot = trail[i - 1] || { x: px, y: py };
+      var dx = aheadX - spot.x, dy = aheadY - spot.y;
+      var dir = dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : dx > 0 ? 'right' : facing;
+      out.push(actorFor(m, spot.x, spot.y, dir));
+      aheadX = spot.x; aheadY = spot.y;
+    });
+    return out;
+  }
+
   function draw(ctx) {
     if (!map) return;
     var off = Game.Renderer.mapOffset(map, ctx.canvas.width, ctx.canvas.height, { x: px, y: py });
     Game.Renderer.drawMap(ctx, map, off);
-    Game.Renderer.drawMapActors(ctx, map, off);
-    // 先頭の仲間の立ち絵で歩く。まだ絵が無ければ今までどおりの丸で示す
-    var lead = Game.Party.list()[0];
-    var img = lead && Game.Assets.sprite(lead.id);
-    if (img) Game.Renderer.drawSprite(ctx, img, px, py, off);
-    else Game.Renderer.drawToken(ctx, px, py, '#d4af5a', off);
+    // 町の人と隊列をまとめて、手前の者ほど後に描く
+    Game.Renderer.drawActors(ctx, Game.Renderer.npcActors(map).concat(partyActors()), off);
   }
 
   return {
     load: load, currentMap: currentMap, playerPos: playerPos,
     resetToStart: resetToStart, setPosition: setPosition,
     update: update, draw: draw,
+    // 検証用: いま隊列がどのマスにいるか
+    __actors: partyActors,
   };
 })();

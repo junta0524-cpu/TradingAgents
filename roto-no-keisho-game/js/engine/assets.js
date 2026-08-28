@@ -62,9 +62,25 @@ Game.Assets = (function () {
     img.src = inline || (BASE + path);
   }
 
+  // 歩行アニメのシート。1枚に3コマ(横に並べる)で、向きごとに1枚。
+  // 左右は同じ絵を左右反転して使うので "side" の1枚で足りる。
+  var WALK_DIRS = ['down', 'up', 'side'];
+  var WALK_FRAMES = 3;
+
   function load() {
     Object.keys(TILE_FILES).forEach(function (ch) { tryLoad(TILE_FILES[ch]); });
-    CHAR_IDS.forEach(function (id) { tryLoad('chars/' + id + '.png'); });
+    CHAR_IDS.forEach(function (id) {
+      tryLoad('chars/' + id + '.png');
+      WALK_DIRS.forEach(function (d) { tryLoad('chars/' + id + '_walk_' + d + '.png'); });
+    });
+  }
+
+  // その向きの歩行シートを返す。まだ無ければ null(立ち絵1枚で代用される)
+  function walkSheet(id, dir) {
+    var key = (dir === 'left' || dir === 'right') ? 'side' : dir;
+    var img = images['chars/' + id + '_walk_' + key + '.png'];
+    if (!img) return null;
+    return { img: img, frames: WALK_FRAMES, flip: dir === 'left' };
   }
 
   function tile(ch) {
@@ -76,6 +92,7 @@ Game.Assets = (function () {
 
   return {
     load: load, tile: tile, sprite: sprite, spriteForNpc: spriteForNpc,
+    walkSheet: walkSheet, WALK_FRAMES: WALK_FRAMES,
     SPRITE_W: SPRITE_W, SPRITE_H: SPRITE_H,
     isLoading: function () { return pending > 0; },
   };

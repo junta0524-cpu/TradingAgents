@@ -30,7 +30,7 @@ Game.Data.Skills = {
 
 Game.Data.Characters = {
   rota: {
-    id: 'rota', name: 'ロト', title: '流浪の王',
+    id: 'rota', tokenColor: '#d4af5a', name: 'ロト', title: '流浪の王',
     level: 1, exp: 0, expToNext: 12,
     hp: 28, maxHp: 28, mp: 4, maxMp: 4,
     atk: 12, def: 8, spd: 9, mag: 6, luck: 8,
@@ -45,7 +45,7 @@ Game.Data.Characters = {
     ],
   },
   elrode: {
-    id: 'elrode', name: 'エルロード', title: '蒼穹の賢者',
+    id: 'elrode', tokenColor: '#7fb0c2', name: 'エルロード', title: '蒼穹の賢者',
     level: 3, exp: 0, expToNext: 22,
     hp: 20, maxHp: 20, mp: 12, maxMp: 12,
     atk: 8, def: 5, spd: 7, mag: 16, luck: 6,
@@ -58,7 +58,7 @@ Game.Data.Characters = {
     ],
   },
   celestia: {
-    id: 'celestia', name: 'セレスティア', title: '月衆の乙女',
+    id: 'celestia', tokenColor: '#cfd6e6', name: 'セレスティア', title: '月衆の乙女',
     level: 3, exp: 0, expToNext: 22,
     hp: 24, maxHp: 24, mp: 8, maxMp: 8,
     atk: 12, def: 6, spd: 12, mag: 10, luck: 12,
@@ -71,7 +71,7 @@ Game.Data.Characters = {
     ],
   },
   garai: {
-    id: 'garai', name: 'ガライ将軍', title: '牙を折った将',
+    id: 'garai', tokenColor: '#b08d6a', name: 'ガライ将軍', title: '牙を折った将',
     level: 5, exp: 0, expToNext: 41,
     hp: 46, maxHp: 46, mp: 12, maxMp: 12,
     atk: 15, def: 13, spd: 5, mag: 4, luck: 5,
