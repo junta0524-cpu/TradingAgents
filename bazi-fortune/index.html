@@ -112,6 +112,15 @@
   .gender-toggle{display:flex;gap:16px;}
   .gender-opt{display:flex;align-items:center;gap:8px;font-size:.92rem;color:var(--text-1);font-weight:400;cursor:pointer;}
   .gender-opt input{accent-color:var(--gold);}
+
+  .mbti-field{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .mbti-field select{
+    flex:1 1 260px;padding:12px 14px;border-radius:10px;
+    border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
+    color:var(--text-0);font-size:.95rem;font-family:inherit;color-scheme:dark;
+  }
+  .mbti-field select:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .mbti-test-link{font-size:.82rem;color:var(--gold-soft);text-decoration:underline;white-space:nowrap;}
   .submit-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
   button.submit{
     appearance:none;border:none;cursor:pointer;
@@ -279,6 +288,21 @@
   .compat-tg-row .tg-box strong{color:var(--gold-soft);}
   .compat-empty{color:var(--text-2);font-size:.88rem;text-align:center;padding:8px 0;}
 
+  .mbti-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px clamp(18px,4vw,30px);}
+  .mbti-head{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:22px;flex-wrap:wrap;text-align:center;}
+  .mbti-head .mb-tag{font-family:'Noto Serif JP',serif;font-size:1.3rem;font-weight:700;color:var(--text-0);border:1px solid var(--border);border-radius:12px;padding:8px 16px;}
+  .mbti-head .mb-link{font-family:'Noto Serif JP',serif;color:var(--gold);font-size:1.1rem;}
+  .mbti-sub{margin:0 0 22px;}
+  .mbti-sub h4{font-size:.9rem;color:var(--text-0);font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .mbti-sub .tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .mbti-sub .tags span{font-size:.78rem;padding:.25em .7em;border-radius:7px;border:1px solid rgba(255,255,255,0.12);color:var(--text-1);}
+  .mbti-sub ul{margin:0;padding-left:1.3em;color:var(--text-1);font-size:.9rem;}
+  .mbti-sub ul li{margin-bottom:8px;}
+  .mbti-sub ul li:last-child{margin-bottom:0;}
+  .mbti-verdict{border-top:1px dashed var(--border);padding-top:20px;margin-top:4px;}
+  .mbti-verdict .tier{display:inline-block;font-family:'Noto Serif JP',serif;font-weight:700;font-size:.95rem;color:var(--gold-soft);border:1px solid var(--gold);border-radius:999px;padding:.4em 1.1em;background:rgba(212,175,55,0.08);margin-bottom:12px;}
+  .mbti-verdict p{margin:0;color:var(--text-1);font-size:.9rem;}
+
   .reset-row{text-align:center;margin-top:44px;}
   .reset-btn{
     background:none;border:1px solid var(--border);color:var(--text-1);
@@ -304,7 +328,7 @@
     <div class="wrap">
       <span class="eyebrow">東洋占術 &middot; 四柱推命</span>
       <h1 class="hero-title">生年月日が語る、<br>あなただけの運命の設計図</h1>
-      <p class="hero-sub">生まれた年・月・日・時刻から「四柱」を割り出し、五行・十神・蔵干をもとに、あなたの性格と運勢を詳しく読み解きます。</p>
+      <p class="hero-sub">生まれた年・月・日・時刻から「四柱」を割り出し、五行・十神・蔵干をもとに、あなたの性格と運勢を詳しく読み解きます。MBTIタイプを入力すれば、東洋占術×性格診断の掛け合わせ分析も。</p>
       <div class="pillar-glyphs">
         <div class="g">年</div><div class="g">月</div><div class="g">日</div><div class="g">時</div>
       </div>
@@ -340,6 +364,33 @@
               <div class="gender-toggle">
                 <label class="gender-opt"><input type="radio" name="gender" value="male" required> 男性</label>
                 <label class="gender-opt"><input type="radio" name="gender" value="female" required> 女性</label>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-bottom:24px;">
+            <div style="grid-column:1/-1;">
+              <label for="mbti-select">MBTIタイプ（分かる場合。四柱推命との掛け合わせ診断に使用・任意）</label>
+              <div class="mbti-field">
+                <select id="mbti-select">
+                  <option value="">わからない・入力しない</option>
+                  <option value="INTJ">INTJ - 建築家タイプ</option>
+                  <option value="INTP">INTP - 論理学者タイプ</option>
+                  <option value="ENTJ">ENTJ - 指揮官タイプ</option>
+                  <option value="ENTP">ENTP - 討論者タイプ</option>
+                  <option value="INFJ">INFJ - 提唱者タイプ</option>
+                  <option value="INFP">INFP - 仲介者タイプ</option>
+                  <option value="ENFJ">ENFJ - 主人公タイプ</option>
+                  <option value="ENFP">ENFP - 広報運動家タイプ</option>
+                  <option value="ISTJ">ISTJ - 管理者タイプ</option>
+                  <option value="ISFJ">ISFJ - 擁護者タイプ</option>
+                  <option value="ESTJ">ESTJ - 幹部タイプ</option>
+                  <option value="ESFJ">ESFJ - 領事官タイプ</option>
+                  <option value="ISTP">ISTP - 巨匠タイプ</option>
+                  <option value="ISFP">ISFP - 冒険家タイプ</option>
+                  <option value="ESTP">ESTP - 起業家タイプ</option>
+                  <option value="ESFP">ESFP - エンターテイナータイプ</option>
+                </select>
+                <a class="mbti-test-link" href="https://www.16personalities.com/ja" target="_blank" rel="noopener noreferrer">MBTIが分からない方はこちら（診断サイトへ）↗</a>
               </div>
             </div>
           </div>
@@ -398,6 +449,12 @@
         <h3><span class="ico">◆</span>今年の運勢（流年）</h3>
         <p class="subdesc">現在の年の干支が命式にどう作用するかを示します。</p>
         <div class="liunian-box" id="liunian-box"></div>
+      </div>
+
+      <div class="section-block" id="mbti-section" hidden>
+        <h3><span class="ico">◆</span>四柱推命 × MBTI</h3>
+        <p class="subdesc">日主（四柱推命）とMBTIタイプ、二つの診断を掛け合わせた分析です。</p>
+        <div class="mbti-box" id="mbti-box"></div>
       </div>
 
       <div class="section-block">
@@ -890,6 +947,135 @@
     '</div>';
   }
 
+  // ---------- 四柱推命 × MBTI ----------
+  var DAYMASTER_KEYWORDS = {
+    甲:['リーダーシップ','向上心','行動力'],
+    乙:['協調性','柔軟性','適応力'],
+    丙:['明るさ','情熱','カリスマ性'],
+    丁:['気配り','温かさ','継続力'],
+    戊:['安定感','包容力','信頼感'],
+    己:['面倒見の良さ','堅実さ','育成力'],
+    庚:['決断力','正義感','行動力'],
+    辛:['美意識','繊細さ','こだわり'],
+    壬:['スケールの大きさ','知性','柔軟な発想'],
+    癸:['直感力','思慮深さ','慈愛']
+  };
+  var DAYMASTER_CAUTION = {
+    甲:'意志を通しすぎて、周囲と衝突しやすい面があります。',
+    乙:'周囲に合わせすぎて、自分を後回しにしがちです。',
+    丙:'勢いで動きすぎて、詰めが甘くなることがあります。',
+    丁:'一人で抱え込みすぎてしまうことがあります。',
+    戊:'慎重すぎて、動き出すまでに時間がかかることがあります。',
+    己:'人のために動きすぎて、自分のことが後回しになりがちです。',
+    庚:'白黒つけたがるあまり、柔軟さに欠けることがあります。',
+    辛:'完璧を求めすぎて、自分にも他人にも厳しくなりがちです。',
+    壬:'発想が大きすぎて、現実的な着地が苦手なことがあります。',
+    癸:'思慮深さが慎重になりすぎ、行動に移すまで時間がかかることがあります。'
+  };
+  var DAYMASTER_ADVICE = {
+    甲:'たまには周囲の意見にも耳を傾けると、より物事がスムーズに進むでしょう。',
+    乙:'自分の希望も遠慮せずに伝えると、無理のない関係を築けるでしょう。',
+    丙:'勢いだけで進めず、一呼吸おいて確認する習慣を持つと安心です。',
+    丁:'一人で抱え込まず、周囲に頼ることも意識してみましょう。',
+    戊:'完璧に準備が整うのを待ちすぎず、小さく動き出してみましょう。',
+    己:'自分自身をケアする時間も、意識して確保しましょう。',
+    庚:'白黒つけがたい場面では、あえて余白を残す柔軟さも大切です。',
+    辛:'自分にも他人にも、少し力を抜くゆとりを持ちましょう。',
+    壬:'大きな構想を、小さな一歩に分けて着実に進めてみましょう。',
+    癸:'考えすぎず、まず行動してみることも意識してみましょう。'
+  };
+
+  var MBTI_TYPES = ['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'];
+  var MBTI_DATA = {
+    INTJ:{keywords:['戦略的思考','独立心','向上心'], strength:'将来を見据えた計画力と、目標に向かってぶれない意志の強さを持っています。', caution:'効率や合理性を優先しすぎて、周囲の感情への配慮が後回しになることがあります。'},
+    INTP:{keywords:['論理的思考','探究心','独創性'], strength:'物事の本質を見抜く分析力と、独自の視点で発想する創造力があります。', caution:'興味のあることに没頭しすぎて、実行や締め切りが後回しになりがちです。'},
+    ENTJ:{keywords:['統率力','決断力','目標達成力'], strength:'大きな目標を描き、周囲を巻き込みながら着実に進める推進力があります。', caution:'効率を重視するあまり、周囲のペースを置き去りにしてしまうことがあります。'},
+    ENTP:{keywords:['発想力','行動力','柔軟性'], strength:'新しい可能性を次々と見つけ、変化を楽しみながら前進する力があります。', caution:'興味が移りやすく、一つのことをやり切る前に次に目が向いてしまうことがあります。'},
+    INFJ:{keywords:['洞察力','理想主義','共感力'], strength:'物事の本質を見抜く洞察力と、人の気持ちに寄り添う深い共感力を持っています。', caution:'理想と現実のギャップに悩みやすく、一人で抱え込みすぎることがあります。'},
+    INFP:{keywords:['価値観の強さ','優しさ','創造性'], strength:'自分の価値観に忠実で、豊かな感性と創造力を発揮できます。', caution:'現実的な調整が苦手で、理想と現実の間で迷いやすいことがあります。'},
+    ENFJ:{keywords:['共感力','統率力','面倒見の良さ'], strength:'周囲の気持ちを汲み取りながら、人をまとめ、励ます力があります。', caution:'人のために尽くしすぎて、自分自身のケアが後回しになりがちです。'},
+    ENFP:{keywords:['好奇心','社交性','発想力'], strength:'新しいことへの好奇心と、人を惹きつける明るいエネルギーを持っています。', caution:'興味が広がりすぎて、一つのことに集中し続けるのが苦手なことがあります。'},
+    ISTJ:{keywords:['責任感','堅実さ','几帳面さ'], strength:'決めたことをコツコツ積み上げる堅実さと、揺るがない責任感があります。', caution:'変化への対応が苦手で、想定外の事態に柔軟に動きにくいことがあります。'},
+    ISFJ:{keywords:['気配り','献身性','安定感'], strength:'周囲をよく観察し、必要なサポートを静かに差し出せる気配りがあります。', caution:'自分の希望を後回しにしすぎて、我慢を重ねてしまうことがあります。'},
+    ESTJ:{keywords:['組織力','実行力','責任感'], strength:'物事を計画的に管理し、着実に実行へ移す力に長けています。', caution:'効率を重視するあまり、他者のやり方を受け入れにくいことがあります。'},
+    ESFJ:{keywords:['社交性','面倒見の良さ','協調性'], strength:'周囲との調和を大切にしながら、あたたかく人を支える力があります。', caution:'周囲の評価を気にしすぎて、自分の本音を抑えてしまうことがあります。'},
+    ISTP:{keywords:['冷静さ','実践力','問題解決力'], strength:'状況を冷静に分析し、実践的に問題を解決する力があります。', caution:'感情表現が控えめで、周囲に真意が伝わりにくいことがあります。'},
+    ISFP:{keywords:['感性の豊かさ','柔軟性','マイペースさ'], strength:'豊かな感性を持ち、自分の心地よいペースで物事に向き合えます。', caution:'自己主張が控えめで、思いを言葉にするまで時間がかかることがあります。'},
+    ESTP:{keywords:['行動力','決断の速さ','現実対応力'], strength:'状況に合わせて素早く動き、今を楽しみながら結果を出す力があります。', caution:'勢いを優先しすぎて、先々の計画が後回しになりがちです。'},
+    ESFP:{keywords:['明るさ','社交性','行動力'], strength:'その場を明るく盛り上げ、周囲を自然と楽しませる力があります。', caution:'目の前の楽しさを優先しすぎて、計画性が後回しになることがあります。'}
+  };
+  var MBTI_ADVICE = {
+    INTJ:'計画通りに進まないときこそ、周囲の感情に目を向けてみましょう。',
+    INTP:'興味のあることほど、締め切りや実行の期限を先に決めておきましょう。',
+    ENTJ:'結果を急ぐ前に、周囲のペースにも耳を傾けてみましょう。',
+    ENTP:'一つのことをやり切る達成感も、意識して味わってみましょう。',
+    INFJ:'一人で抱え込む前に、信頼できる人に相談してみましょう。',
+    INFP:'理想を大切にしつつ、現実的な一歩も具体的に決めてみましょう。',
+    ENFJ:'人を支える前に、自分自身をケアする日も作りましょう。',
+    ENFP:'気になることが増えたときほど、優先順位を一度整理してみましょう。',
+    ISTJ:'想定外のことが起きても、まずは受け入れる柔らかさを持ちましょう。',
+    ISFJ:'自分の希望も、遠慮せず言葉にしてみましょう。',
+    ESTJ:'自分のやり方だけでなく、他者のやり方を受け入れる余白を持ちましょう。',
+    ESFJ:'周囲の評価より、自分の本音を優先する場面があっても良いでしょう。',
+    ISTP:'感じていることを、意識して言葉にして伝えてみましょう。',
+    ISFP:'思いを言葉にするタイミングを、少し早めてみましょう。',
+    ESTP:'動き出す前に、先の見通しを少しだけ立ててみましょう。',
+    ESFP:'楽しさの先にある計画にも、意識を向けてみましょう。'
+  };
+
+  function computeMbtiAlignment(dayStem, mbtiType){
+    var dayIsYang = STEMS.indexOf(dayStem)%2===0;
+    var mbtiIsE = mbtiType.charAt(0)==='E';
+    var match = dayIsYang===mbtiIsE;
+    if (match){
+      return {
+        tier: '相性◎ 一致度が高いタイプ',
+        text: '四柱推命の「'+(dayIsYang?'陽':'陰')+'」の気質と、MBTIの「'+(mbtiIsE?'外向型(E)':'内向型(I)')+'」が同じ方向を示しています。内に持つ気質と、外に見せる振る舞いに一貫性があり、周囲から見ても分かりやすいタイプと言えるでしょう。'
+      };
+    }
+    return {
+      tier: '相性△ 二面性のあるタイプ',
+      text: '四柱推命では「'+(dayIsYang?'陽':'陰')+'」の気質を持ちながら、MBTIでは「'+(mbtiIsE?'外向型(E)':'内向型(I)')+'」という組み合わせです。表に見せる顔と内に秘めた気質にギャップがあり、状況によって違う一面を見せる、意外性のあるタイプと言えるでしょう。'
+    };
+  }
+
+  function renderMbtiSection(bz, mbtiType){
+    var section = document.getElementById('mbti-section');
+    if (!mbtiType){
+      section.hidden = true;
+      return;
+    }
+    var dmStem = bz.day.stem;
+    var dmData = MBTI_DATA[mbtiType];
+    var alignment = computeMbtiAlignment(dmStem, mbtiType);
+
+    var html = '<div class="mbti-head">'+
+        '<div class="mb-tag">日主：'+dmStem+'（'+STEM_ELEMENT[dmStem]+'）</div>'+
+        '<div class="mb-link">×</div>'+
+        '<div class="mb-tag">'+mbtiType+'</div>'+
+      '</div>'+
+      '<div class="mbti-sub">'+
+        '<h4>強み（メリット）</h4>'+
+        '<div class="tags">'+DAYMASTER_KEYWORDS[dmStem].concat(dmData.keywords).map(function(k){ return '<span>'+k+'</span>'; }).join('')+'</div>'+
+        '<ul><li>'+DAYMASTER_TEXT[dmStem]+'</li><li>'+dmData.strength+'</li></ul>'+
+      '</div>'+
+      '<div class="mbti-sub">'+
+        '<h4>注意したい点（デメリット）</h4>'+
+        '<ul><li>'+DAYMASTER_CAUTION[dmStem]+'</li><li>'+dmData.caution+'</li></ul>'+
+      '</div>'+
+      '<div class="mbti-sub">'+
+        '<h4>心がけたいこと</h4>'+
+        '<ul><li>'+DAYMASTER_ADVICE[dmStem]+'</li><li>'+MBTI_ADVICE[mbtiType]+'</li></ul>'+
+      '</div>'+
+      '<div class="mbti-verdict">'+
+        '<div class="tier">'+alignment.tier+'</div>'+
+        '<p>'+alignment.text+'</p>'+
+      '</div>';
+
+    document.getElementById('mbti-box').innerHTML = html;
+    section.hidden = false;
+  }
+
   // ---------- 表示 ----------
   var PILLAR_LABELS = {year:'年柱',month:'月柱',day:'日柱',hour:'時柱'};
 
@@ -1139,6 +1325,7 @@
     renderDayun(dayun, bz.day.stem, currentAge);
     renderLiunian(liunian, bz.day.stem, favorable);
     renderNarrative(bz, strength, favorable);
+    renderMbtiSection(bz, document.getElementById('mbti-select').value);
 
     resultSection.hidden = false;
     resultSection.scrollIntoView({behavior:'smooth', block:'start'});
