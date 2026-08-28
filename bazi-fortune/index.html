@@ -100,7 +100,8 @@
   @media(max-width:560px){form.bazi-form .row{grid-template-columns:1fr;}}
   form.bazi-form label{display:block;font-size:.85rem;color:var(--text-1);margin-bottom:8px;font-weight:500;}
   form.bazi-form input[type="date"],
-  form.bazi-form input[type="time"]{
+  form.bazi-form input[type="time"],
+  form.bazi-form input[type="text"]{
     width:100%;padding:12px 14px;border-radius:10px;
     border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
     color:var(--text-0);font-size:1rem;font-family:inherit;
@@ -195,6 +196,27 @@
   .daymaster-box .dm-title{color:var(--text-0);font-weight:700;margin-bottom:6px;font-size:1.02rem;}
 
   .elements-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;}
+  .radar-wrap{max-width:280px;margin:0 auto 20px;}
+  .radar-svg{width:100%;height:auto;display:block;}
+  .radar-label{font-size:12px;font-family:'Noto Sans JP',sans-serif;font-weight:700;}
+
+  .share-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;}
+  .share-preview{
+    margin:0 0 16px;padding:14px 16px;border-radius:10px;
+    background:rgba(255,255,255,0.03);border:1px dashed var(--border);
+    color:var(--text-1);font-size:.88rem;line-height:1.6;white-space:pre-wrap;
+  }
+  .share-buttons{display:flex;gap:12px;flex-wrap:wrap;}
+  .share-btn{
+    appearance:none;cursor:pointer;text-decoration:none;text-align:center;
+    padding:.7em 1.4em;border-radius:999px;font-size:.88rem;font-weight:700;
+    border:1px solid var(--border);color:var(--text-0);background:rgba(255,255,255,0.03);
+    transition:transform .15s ease,border-color .15s ease;
+  }
+  .share-btn:hover{transform:translateY(-2px);border-color:var(--gold);}
+  .share-btn.share-x{border-color:#fff;color:#fff;}
+  .share-btn.share-line{border-color:#06c755;color:#06c755;}
+  .share-btn.share-copy.copied{border-color:var(--gold);color:var(--gold-soft);}
   .el-row{display:grid;grid-template-columns:64px 1fr 40px;align-items:center;gap:12px;margin-bottom:12px;font-size:.86rem;}
   .el-row:last-child{margin-bottom:0;}
   .el-track{height:10px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden;}
@@ -391,6 +413,12 @@
         <h2>生年月日を入力してください</h2>
         <p class="desc">正確な鑑定のため、できるだけ出生時刻まで入力してください。時刻が分からない場合はチェックを入れることで年柱・月柱・日柱のみで鑑定します。</p>
         <form class="bazi-form" id="bazi-form" novalidate>
+          <div class="row" style="margin-bottom:24px;">
+            <div style="grid-column:1/-1;">
+              <label for="user-name">お名前・ニックネーム（任意）</label>
+              <input type="text" id="user-name" name="user-name" maxlength="20" placeholder="例：はなこ">
+            </div>
+          </div>
           <div class="row">
             <div>
               <label for="birth-date">生年月日</label>
@@ -524,6 +552,19 @@
       <div class="section-block">
         <h3><span class="ico">◆</span>鑑定コメント</h3>
         <div class="narrative-box" id="narrative-box"></div>
+      </div>
+
+      <div class="section-block">
+        <h3><span class="ico">◆</span>結果をシェアする</h3>
+        <p class="subdesc">診断結果をSNSでシェアできます。</p>
+        <div class="share-box">
+          <p class="share-preview" id="share-preview"></p>
+          <div class="share-buttons">
+            <a class="share-btn share-x" id="share-x" href="#" target="_blank" rel="noopener noreferrer">Xでシェア</a>
+            <a class="share-btn share-line" id="share-line" href="#" target="_blank" rel="noopener noreferrer">LINEでシェア</a>
+            <button type="button" class="share-btn share-copy" id="share-copy">コピーする</button>
+          </div>
+        </div>
       </div>
 
       <div class="reset-row">
@@ -1278,7 +1319,7 @@
     var topMatches = topMatchingMbtiTypes(mbtiType, 4);
 
     var html =
-      '<div class="mbti-combo-name">あなたは「<span>'+comboName+'</span>」</div>'+
+      '<div class="mbti-combo-name">'+escapeHtml(selfLabel)+'は「<span>'+comboName+'</span>」</div>'+
       '<div class="mbti-head">'+
         '<div class="mb-tag">日主：'+dmStem+'（'+STEM_ELEMENT[dmStem]+'）</div>'+
         '<div class="mb-link">×</div>'+
@@ -1314,6 +1355,50 @@
     document.getElementById('mbti-box').innerHTML = html;
     section.hidden = false;
   }
+
+  // ---------- 結果のシェア ----------
+  function buildShareLabel(bz, mbtiType){
+    var dmStem = bz.day.stem;
+    if (mbtiType) return DAYMASTER_ADJ[dmStem]+MBTI_LABELS[mbtiType]+'タイプ';
+    return DAYMASTER_SIMPLE[dmStem];
+  }
+
+  function renderShare(bz, mbtiType){
+    var label = buildShareLabel(bz, mbtiType);
+    var namePrefix = (selfLabel && selfLabel!=='あなた') ? selfLabel+'は' : '私は';
+    var text = namePrefix+'「'+label+'」でした🔮\n#四柱推命 #占い診断'+(mbtiType?' #MBTI':'');
+    var url = location.href;
+
+    document.getElementById('share-preview').textContent = text;
+    document.getElementById('share-x').href = 'https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(url);
+    document.getElementById('share-line').href = 'https://social-plugins.line.me/lineit/share?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(text);
+  }
+
+  function fallbackCopyText(text){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* clipboard unavailable */ }
+    document.body.removeChild(ta);
+  }
+
+  document.getElementById('share-copy').addEventListener('click', function(){
+    var btn = this;
+    var text = document.getElementById('share-preview').textContent + '\n' + location.href;
+    function showCopied(){
+      var original = btn.textContent;
+      btn.textContent = 'コピーしました！';
+      btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = original; btn.classList.remove('copied'); }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(showCopied).catch(function(){ fallbackCopyText(text); showCopied(); });
+    } else {
+      fallbackCopyText(text);
+      showCopied();
+    }
+  });
 
   // ---------- ざっくり早わかり(かんたん解説) ----------
   var DAYMASTER_SIMPLE = {
@@ -1360,7 +1445,7 @@
     else liunianText = 'バランス重視で過ごしたい一年';
 
     var rows = [
-      ['あなたは', DAYMASTER_SIMPLE[dmStem]],
+      [escapeHtml(selfLabel)+'は', DAYMASTER_SIMPLE[dmStem]],
       ['得意なこと', DAYMASTER_KEYWORDS[dmStem].join('・')],
       ['ふだんの傾向', SIMPLE_STRENGTH[strength.level]],
       ['気の傾向', '今のあなたは'+ELEMENT_SIMPLE[maxEl]+'です。'],
@@ -1430,12 +1515,50 @@
     return counts;
   }
 
+  var RADAR_COLOR = {木:'var(--wood)',火:'var(--fire)',土:'var(--earth)',金:'var(--metal)',水:'var(--water)'};
+
+  function renderRadarSVG(counts){
+    var order = ['木','火','土','金','水'];
+    var max = Math.max(3, Math.max.apply(null, order.map(function(el){ return counts[el]; })));
+    var cx=120, cy=120, R=84;
+    var angleStep = (Math.PI*2)/5;
+    function pointFor(i, value){
+      var angle = -Math.PI/2 + i*angleStep;
+      var r = (value/max)*R;
+      return [cx + r*Math.cos(angle), cy + r*Math.sin(angle)];
+    }
+    var rings = [0.25,0.5,0.75,1].map(function(frac){
+      var pts = order.map(function(_,i){ return pointFor(i, max*frac).join(','); }).join(' ');
+      return '<polygon points="'+pts+'" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>';
+    }).join('');
+    var axes = order.map(function(_,i){
+      var p = pointFor(i, max);
+      return '<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>';
+    }).join('');
+    var dataPts = order.map(function(el,i){ return pointFor(i, counts[el]).join(','); }).join(' ');
+    var dots = order.map(function(el,i){
+      var p = pointFor(i, counts[el]);
+      return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" style="fill:'+RADAR_COLOR[el]+'"/>';
+    }).join('');
+    var labelR = R + 26;
+    var labels = order.map(function(el,i){
+      var angle = -Math.PI/2 + i*angleStep;
+      var lx = cx + labelR*Math.cos(angle), ly = cy + labelR*Math.sin(angle);
+      return '<text x="'+lx+'" y="'+ly+'" text-anchor="middle" dominant-baseline="middle" class="radar-label" style="fill:'+RADAR_COLOR[el]+'">'+el+' '+counts[el]+'</text>';
+    }).join('');
+    return '<svg viewBox="0 0 240 240" class="radar-svg" role="img" aria-label="五行バランスのレーダーチャート">'+
+      rings + axes +
+      '<polygon points="'+dataPts+'" fill="rgba(212,175,55,0.28)" stroke="var(--gold)" stroke-width="2"/>'+
+      dots + labels +
+    '</svg>';
+  }
+
   function renderElements(bz){
     var counts = computeElementCounts(bz);
     var total = 0;
     Object.keys(counts).forEach(function(k){ total += counts[k]; });
     var order = ['木','火','土','金','水'];
-    var html = '';
+    var html = '<div class="radar-wrap">'+renderRadarSVG(counts)+'</div>';
     order.forEach(function(el){
       var c = counts[el];
       var pct = total>0 ? Math.round(c/total*100) : 0;
@@ -1630,6 +1753,8 @@
     }
     errorMsg.style.display = 'none';
     var gender = genderInput.value;
+    var userName = document.getElementById('user-name').value.trim();
+    selfLabel = userName || 'あなた';
 
     var dateParts = dateVal.split('-').map(Number);
     var y = dateParts[0], m = dateParts[1], d = dateParts[2];
@@ -1647,7 +1772,7 @@
     var liunian = computeLiunian();
 
     document.getElementById('result-name-date').textContent =
-      formatDateLabel(y,m,d,hour,minute,timeUnknown) + 'の命式';
+      (userName ? userName+'さん（'+formatDateLabel(y,m,d,hour,minute,timeUnknown)+'）' : formatDateLabel(y,m,d,hour,minute,timeUnknown)) + 'の命式';
     renderPillars(bz);
     renderQuickSummary(bz, strength, favorable, liunian, document.getElementById('mbti-select').value);
     renderDaymaster(bz);
@@ -1658,6 +1783,7 @@
     renderLiunian(liunian, bz.day.stem, favorable);
     renderNarrative(bz, strength, favorable);
     renderMbtiSection(bz, document.getElementById('mbti-select').value);
+    renderShare(bz, document.getElementById('mbti-select').value);
 
     resultSection.hidden = false;
     resultSection.scrollIntoView({behavior:'smooth', block:'start'});
