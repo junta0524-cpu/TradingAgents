@@ -37,12 +37,21 @@ Game.Renderer = (function () {
     for (var y = y0; y < y1; y++) {
       var row = map.tiles[y];
       for (var x = x0; x < x1; x++) {
-        var def = Game.Data.TileDefs[row[x]] || Game.Data.TileDefs['.'];
+        var ch = row[x];
+        var def = Game.Data.TileDefs[ch] || Game.Data.TileDefs['.'];
         var px = off.x + x * TILE, py = off.y + y * TILE;
-        ctx.fillStyle = def.color;
-        ctx.fillRect(px, py, TILE, TILE);
-        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-        ctx.strokeRect(px, py, TILE, TILE);
+        // 人が立つマスは、下に街の床を敷いてから人物を重ねる(人物は drawMapActors 側)
+        var img = Game.Assets.tile(def.isNpc ? 'F' : ch);
+        if (img) {
+          ctx.drawImage(img, px, py, TILE, TILE);
+        } else {
+          ctx.fillStyle = def.color;
+          ctx.fillRect(px, py, TILE, TILE);
+          ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+          ctx.strokeRect(px, py, TILE, TILE);
+        }
+        // 絵が入ったタイルは記号を重ねない(看板は絵の中に描かれている)
+        if (img && !def.isNpc) continue;
         if (def.isGate) {
           ctx.fillStyle = '#f7f3e9';
           ctx.font = '18px sans-serif';
@@ -57,6 +66,25 @@ Game.Renderer = (function () {
         }
       }
     }
+  }
+
+  // 立ち絵を、足元をマスの下端に合わせて描く(マスより背が高い分は上へはみ出す)
+  function drawSprite(ctx, img, gridX, gridY, off) {
+    off = off || { x: 0, y: 0 };
+    var w = Game.Assets.SPRITE_W, h = Game.Assets.SPRITE_H;
+    var px = off.x + gridX * TILE + (TILE - w) / 2;
+    var py = off.y + (gridY + 1) * TILE - h;
+    ctx.drawImage(img, px, py, w, h);
+  }
+
+  // マップ上に立つ人物(まだ絵の無い相手は、これまでどおり色の丸で示す)
+  function drawMapActors(ctx, map, off) {
+    if (!map.npcAt) return;
+    Object.keys(map.npcAt).forEach(function (pos) {
+      var xy = pos.split(',');
+      var img = Game.Assets.spriteForNpc(map.npcAt[pos]);
+      if (img) drawSprite(ctx, img, +xy[0], +xy[1], off);
+    });
   }
 
   function drawToken(ctx, gridX, gridY, color, off) {
@@ -99,5 +127,6 @@ Game.Renderer = (function () {
     ctx.strokeRect(x, y, w, h);
   }
 
-  return { TILE: TILE, mapOffset: mapOffset, drawMap: drawMap, drawToken: drawToken, drawPanel: drawPanel, drawText: drawText, drawBar: drawBar };
+  return { TILE: TILE, mapOffset: mapOffset, drawMap: drawMap, drawToken: drawToken,
+    drawSprite: drawSprite, drawMapActors: drawMapActors, drawPanel: drawPanel, drawText: drawText, drawBar: drawBar };
 })();

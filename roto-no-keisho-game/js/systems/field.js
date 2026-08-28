@@ -134,7 +134,12 @@ Game.Field = (function () {
     if (!map) return;
     var off = Game.Renderer.mapOffset(map, ctx.canvas.width, ctx.canvas.height, { x: px, y: py });
     Game.Renderer.drawMap(ctx, map, off);
-    Game.Renderer.drawToken(ctx, px, py, '#d4af5a', off);
+    Game.Renderer.drawMapActors(ctx, map, off);
+    // 先頭の仲間の立ち絵で歩く。まだ絵が無ければ今までどおりの丸で示す
+    var lead = Game.Party.list()[0];
+    var img = lead && Game.Assets.sprite(lead.id);
+    if (img) Game.Renderer.drawSprite(ctx, img, px, py, off);
+    else Game.Renderer.drawToken(ctx, px, py, '#d4af5a', off);
   }
 
   return {
