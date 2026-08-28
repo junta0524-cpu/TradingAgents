@@ -155,8 +155,11 @@ Game.Party = (function () {
         var before = m.level;
         m.level += 1;
         var g = growthOf(m);
-        m.maxHp += g.hp; m.hp = m.maxHp;
-        if (m.maxMp > 0) { m.maxMp += g.mp; m.mp = m.maxMp; }
+        // ドラクエと同じで、レベルアップは全快させない。
+        // 上がった最大値のぶんだけ、いまの値も一緒に増える。
+        // (全快させると消耗が一切たまらず、宿屋も道具も使う理由が無くなる)
+        m.maxHp += g.hp; m.hp = Math.min(m.maxHp, m.hp + g.hp);
+        if (m.maxMp > 0) { m.maxMp += g.mp; m.mp = Math.min(m.maxMp, m.mp + g.mp); }
         m.baseAtk += g.atk; m.baseDef += g.def; m.baseSpd += g.spd;
         m.baseMag += g.mag; m.baseLuck += g.luck;
         recalc(m);

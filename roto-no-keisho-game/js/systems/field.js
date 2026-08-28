@@ -25,7 +25,8 @@ Game.Field = (function () {
   function load(mapId, cbs) {
     map = Game.Data.Maps[mapId];
     px = map.startX; py = map.startY;
-    callbacks = cbs || {};
+    // 呼び出し側が省略したときは、直前のイベント一式をそのまま使う
+    callbacks = cbs && Object.keys(cbs).length ? cbs : callbacks;
     resetTrail();
   }
 
@@ -209,6 +210,8 @@ Game.Field = (function () {
     load: load, currentMap: currentMap, playerPos: playerPos,
     resetToStart: resetToStart, setPosition: setPosition, wardSteps: wardSteps,
     update: update, draw: draw,
+    // 検証用: いま使っているイベント一式
+    __cbs: null,
     // 検証用: いま隊列がどのマスにいるか
     __actors: partyActors,
   };
