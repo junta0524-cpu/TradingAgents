@@ -122,11 +122,10 @@
   .mbti-field select:focus{outline:2px solid var(--gold);outline-offset:1px;}
   .mbti-test-link{font-size:.82rem;color:var(--gold-soft);text-decoration:underline;white-space:nowrap;}
 
-  .simple-hint{
-    display:block;margin-top:8px;color:var(--gold-soft);font-size:.82rem;
-    background:rgba(212,175,55,0.07);border:1px dashed var(--border);
-    border-radius:8px;padding:.5em .8em;
-  }
+  .term-note{color:var(--text-2);font-size:.76rem;font-weight:400;}
+  .pillar-card .term-note{display:block;margin-top:4px;font-size:.66rem;}
+  .dayun-period .term-note{display:block;font-size:.66rem;}
+  .term-legend{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);color:var(--text-2);font-size:.8rem;line-height:1.8;}
   .submit-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
   button.submit{
     appearance:none;border:none;cursor:pointer;
@@ -438,45 +437,46 @@
 
       <div class="section-block">
         <h3><span class="ico">◆</span>日主(あなたの本質)</h3>
-        <p class="subdesc">日柱の天干は「日主」と呼ばれ、四柱推命においてあなた自身を象徴する最も重要な要素です。<span class="simple-hint">🔰 かんたんに言うと：あなたの"素の性格"を表す、命式の中心となる一文字です。</span></p>
+        <p class="subdesc">日柱の天干は「日主」と呼ばれ、四柱推命においてあなた自身を象徴する最も重要な要素です。</p>
         <div class="daymaster-box" id="daymaster-box"></div>
       </div>
 
       <div class="section-block">
         <h3><span class="ico">◆</span>五行バランス</h3>
-        <p class="subdesc">命式に含まれる天干・地支から、木・火・土・金・水の五つの気の分布を示します。<span class="simple-hint">🔰 かんたんに言うと：あなたの中にある5種類のエネルギーの配分表です。多い/少ないでクセがわかります。</span></p>
+        <p class="subdesc">命式に含まれる天干・地支から、木・火・土・金・水の五つの気の分布を示します。</p>
         <div class="elements-bar-wrap" id="elements-bar"></div>
       </div>
 
       <div class="section-block">
         <h3><span class="ico">◆</span>身強・身弱 と 用神</h3>
-        <p class="subdesc">日主が命式の中でどれだけ「強い」か「弱い」かを判定し、そこから運気を助ける五行（用神）を導きます。<span class="simple-hint">🔰 かんたんに言うと：自分の意志を貫くタイプか、周りに合わせるタイプかの診断です。</span></p>
+        <p class="subdesc">日主が命式の中でどれだけ「強い」か「弱い」かを判定し、そこから運気を助ける五行（用神）を導きます。</p>
         <div class="strength-box" id="strength-box"></div>
       </div>
 
       <div class="section-block">
         <h3><span class="ico">◆</span>十神・蔵干 詳細</h3>
-        <p class="subdesc">十神は日主から見た他の柱との関係性を表し、蔵干は地支の内部に隠れた天干です。<span class="simple-hint">🔰 かんたんに言うと：あなたと周りとの関わり方のクセや、表には出ていない隠れた一面がわかる表です。</span></p>
+        <p class="subdesc">十神は日主から見た他の柱との関係性を表し、蔵干は地支の内部に隠れた天干です。</p>
         <div class="detail-table-wrap">
           <table class="detail-table" id="detail-table"></table>
         </div>
+        <p class="term-legend" id="detail-table-legend"></p>
       </div>
 
       <div class="section-block">
         <h3><span class="ico">◆</span>大運（10年ごとの運気の流れ）</h3>
-        <p class="subdesc" id="dayun-subdesc">生年の陰陽と性別によって運気が巡る向きが決まり、生まれてから最初の大運が始まるまでの年齢（起運）も算出されます。<span class="simple-hint">🔰 かんたんに言うと：人生を10年ごとの「運気の章」に分けた、大きな流れの地図です。</span></p>
+        <p class="subdesc" id="dayun-subdesc">生年の陰陽と性別によって運気が巡る向きが決まり、生まれてから最初の大運が始まるまでの年齢（起運）も算出されます。</p>
         <div class="dayun-wrap" id="dayun-wrap"></div>
       </div>
 
       <div class="section-block">
         <h3><span class="ico">◆</span>今年の運勢（流年）</h3>
-        <p class="subdesc">現在の年の干支が命式にどう作用するかを示します。<span class="simple-hint">🔰 かんたんに言うと：今年一年の運気の「天気予報」のようなものです。</span></p>
+        <p class="subdesc">現在の年の干支が命式にどう作用するかを示します。</p>
         <div class="liunian-box" id="liunian-box"></div>
       </div>
 
       <div class="section-block" id="mbti-section" hidden>
         <h3><span class="ico">◆</span>四柱推命 × MBTI</h3>
-        <p class="subdesc">日主（四柱推命）とMBTIタイプ、二つの診断を掛け合わせた分析です。<span class="simple-hint">🔰 かんたんに言うと：生まれ持った気質(四柱推命)と、性格診断(MBTI)という2つの物差しを重ねて見てみようという診断です。</span></p>
+        <p class="subdesc">日主（四柱推命）とMBTIタイプ、二つの診断を掛け合わせた分析です。</p>
         <div class="mbti-box" id="mbti-box"></div>
       </div>
 
@@ -496,7 +496,7 @@
       <div class="section-head">
         <span class="eyebrow">相性診断</span>
         <h2>パートナーとの相性</h2>
-        <p>あなたとお相手、二人の命式を照らし合わせて相性を診断します。<span class="simple-hint">🔰 かんたんに言うと：生まれた日や年から出る「気」の組み合わせで、相性の傾向を占うコーナーです。</span></p>
+        <p>あなたとお相手、二人の命式を照らし合わせて相性を診断します。</p>
       </div>
       <div class="card">
         <p class="desc" id="partner-gate-msg">まずはページ上部で、あなた自身の命式を鑑定してください。鑑定が終わると、この下の入力欄が使えるようになります。</p>
@@ -539,7 +539,7 @@
       <div class="section-head">
         <span class="eyebrow">相性診断</span>
         <h2>家族の相性</h2>
-        <p>家族それぞれの生年月日を登録すると、全員分の組み合わせ（父と息子、母と息子…）で相性を診断します。<span class="simple-hint">🔰 かんたんに言うと：家族それぞれの生まれ持った相性の傾向を占うコーナーです。</span></p>
+        <p>家族それぞれの生年月日を登録すると、全員分の組み合わせ（父と息子、母と息子…）で相性を診断します。</p>
       </div>
       <div class="card">
         <p class="desc">名前や続柄（父・母・長男など）と生年月日を入力してください。出生時刻が分からない場合は空欄のままで構いません。2人以上を登録すると診断できます。</p>
@@ -869,11 +869,23 @@
     偏印:'独創性と直感力を表します。',
     正印:'知性と包容力、学びの心を表します。'
   };
+  var TENGOD_SHORT = {
+    比肩:'自立心', 劫財:'社交性', 食神:'表現力', 傷官:'感性',
+    偏財:'行動力', 正財:'堅実さ', 偏官:'統率力', 正官:'責任感',
+    偏印:'独創性', 正印:'知性'
+  };
 
   // ---------- 相性診断 ----------
   var SIX_HE = {子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
   var SIX_CHONG = {子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
   var SANHE_GROUPS = [['申','子','辰'],['亥','卯','未'],['寅','午','戌'],['巳','酉','丑']];
+
+  var BRANCHREL_SHORT = {
+    '六合':'仲良くなりやすい組み合わせ',
+    '六冲':'ぶつかりやすい組み合わせ',
+    '三合(部分)':'相性の良い組み合わせ',
+    '同じ地支':'同じ生まれ年月日タイプ'
+  };
 
   function branchRelation(b1, b2){
     if (b1===b2) return {type:'比和', score:1, label:'同じ地支'};
@@ -891,6 +903,11 @@
     return {type:'相克', score:-2};
   }
 
+  var DMREL_SHORT = {
+    相生:'高め合える相性',
+    比和:'似た者同士の相性',
+    相克:'刺激し合う相性'
+  };
   var DMREL_TEXT = {
     相生:'五行の面では、お互いを生かし合う「相生」の関係。自然に支え合え、一緒にいると力が湧きやすい相性です。',
     比和:'五行の面では、同じ気質を持つ「比和」の関係。似た者同士で分かり合いやすい一方、張り合う場面も出てきそうです。',
@@ -954,10 +971,10 @@
     var notes = [];
     notes.push('<p>'+DMREL_TEXT[c.dmRel.type]+'</p>');
     if (c.dayRel.type!=='なし'){
-      notes.push('<p>日支同士は「'+c.dayRel.label+'」の関係。'+(c.dayRel.score>0 ? '身近な相性の良さを感じやすい組み合わせです。' : '距離感の取り方に一工夫あると、より良い関係になります。')+'</p>');
+      notes.push('<p>日支同士は「'+c.dayRel.label+'」<span class="term-note">（※'+BRANCHREL_SHORT[c.dayRel.label]+'）</span>の関係。'+(c.dayRel.score>0 ? '身近な相性の良さを感じやすい組み合わせです。' : '距離感の取り方に一工夫あると、より良い関係になります。')+'</p>');
     }
     if (c.yearRel.type!=='なし'){
-      notes.push('<p>年支同士は「'+c.yearRel.label+'」の関係。'+(c.yearRel.score>0 ? '世代を超えて自然と結びつきやすい相性です。' : '世代の感覚の違いを、思いやりで補うと良いでしょう。')+'</p>');
+      notes.push('<p>年支同士は「'+c.yearRel.label+'」<span class="term-note">（※'+BRANCHREL_SHORT[c.yearRel.label]+'）</span>の関係。'+(c.yearRel.score>0 ? '世代を超えて自然と結びつきやすい相性です。' : '世代の感覚の違いを、思いやりで補うと良いでしょう。')+'</p>');
     }
     notes.push('<p>'+TIER_TEXT[c.tier]+'</p>');
 
@@ -982,7 +999,7 @@
         '<div class="compat-link">×</div>'+
         '<div class="compat-person"><div class="p-name">'+escapeHtml(nameB)+(profB.mbti?'　'+profB.mbti:'')+'</div><div class="p-kanji">'+profB.stem+profB.dayBranch+'</div></div>'+
       '</div>'+
-      '<div class="compat-tier"><span>'+c.tier+'　'+c.dmRel.type+'</span></div>'+
+      '<div class="compat-tier"><span>'+c.tier+'　'+c.dmRel.type+'<span class="term-note">（※'+DMREL_SHORT[c.dmRel.type]+'）</span></span></div>'+
       '<div class="compat-notes">'+notes.join('')+'</div>'+
       tgBox+
       mbtiBlock+
@@ -1169,6 +1186,11 @@
     身弱:'周りに合わせたり、人に頼るのが得意な「協調タイプ」。無理しすぎないことが大事です。',
     中和:'状況に応じて自分を調整できる「バランスタイプ」です。'
   };
+  var SIMPLE_STRENGTH_SHORT = {
+    身強:'自分を貫くタイプ',
+    身弱:'周りに合わせるタイプ',
+    中和:'バランス型'
+  };
   var ELEMENT_SIMPLE = {
     木:'行動力・やる気の気が多め',
     火:'情熱・明るさの気が多め',
@@ -1234,7 +1256,7 @@
         '<div class="label">'+PILLAR_LABELS[key]+'</div>'+
         '<div class="kanji"><span class="stem">'+p.stem+'</span><span class="branch">'+p.branch+'</span></div>'+
         '<div class="elements">'+elBadge(STEM_ELEMENT[p.stem])+elBadge(BRANCH_ELEMENT[p.branch])+'</div>'+
-        '<div class="tengod">'+tg+'</div>'+
+        '<div class="tengod">'+tg+(isDay?'':'<span class="term-note">※'+TENGOD_SHORT[tg]+'</span>')+'</div>'+
       '</div>';
     });
     document.getElementById('pillars-grid').innerHTML = html;
@@ -1306,19 +1328,25 @@
       var p = bz[k]; return '<td>'+(p? HIDDEN_STEMS[p.branch].join('・') : '－')+'</td>';
     }).join('') + '</tr>';
 
+    var seenTg = [];
     var tgRow = '<tr><th>十神</th>' + order.map(function(k){
       if (k==='day') return '<td>日主</td>';
       var p = bz[k];
-      return '<td>'+(p? tenGod(STEMS.indexOf(bz.day.stem), STEMS.indexOf(p.stem)) : '－')+'</td>';
+      if (!p) return '<td>－</td>';
+      var tg = tenGod(STEMS.indexOf(bz.day.stem), STEMS.indexOf(p.stem));
+      if (seenTg.indexOf(tg)===-1) seenTg.push(tg);
+      return '<td>'+tg+'</td>';
     }).join('') + '</tr>';
 
     document.getElementById('detail-table').innerHTML = head+stemRow+branchRow+hiddenRow+tgRow;
+    document.getElementById('detail-table-legend').textContent =
+      '※十神の意味：'+seenTg.map(function(t){ return t+'＝'+TENGOD_SHORT[t]; }).join('、');
   }
 
   function renderStrength(strength, favorable){
     var scoreSign = function(n){ return (n>=0?'+':'')+n; };
     var html = '<div class="strength-verdict">'+
-      '<span class="verdict-badge">'+strength.level+'</span>'+
+      '<span class="verdict-badge">'+strength.level+'<span class="term-note">※'+SIMPLE_STRENGTH_SHORT[strength.level]+'</span></span>'+
       '<span class="score-note">総合スコア '+scoreSign(strength.total)+'（季節 '+scoreSign(strength.seasonScore*2)+' ／ 他の柱 '+scoreSign(strength.groupScore)+'）</span>'+
     '</div>';
     html += '<p class="strength-detail">'+STRENGTH_DESC[strength.level]+'</p>';
@@ -1334,9 +1362,11 @@
   function renderDayun(dayun, dmStem, currentAge){
     var html = '<p class="dayun-meta">運気が巡る向きは<strong>'+dayun.direction+'</strong>。最初の大運が始まるのは、生まれてからおよそ<strong>'+formatAge(dayun.startAgeYears)+'</strong>のときです。</p>';
     html += '<div class="dayun-timeline">';
+    var seenTg = [];
     dayun.periods.forEach(function(p){
       var stem = STEMS[p.stemIdx], branch = BRANCHES[p.branchIdx];
       var tg = tenGod(STEMS.indexOf(dmStem), p.stemIdx);
+      if (seenTg.indexOf(tg)===-1) seenTg.push(tg);
       var floorAge = Math.floor(p.startAge);
       var isCurrent = (currentAge!=null && currentAge>=p.startAge && currentAge<p.startAge+10);
       html += '<div class="dayun-period'+(isCurrent?' current':'')+'">'+
@@ -1346,6 +1376,7 @@
       '</div>';
     });
     html += '</div>';
+    html += '<p class="term-legend">※十神の意味：'+seenTg.map(function(t){ return t+'＝'+TENGOD_SHORT[t]; }).join('、')+'</p>';
     document.getElementById('dayun-wrap').innerHTML = html;
   }
 
@@ -1362,7 +1393,7 @@
       comment = '今年は「'+el+'」の気が巡る年。バランスを大切にしながら過ごすと良いでしょう。';
     }
     var html = '<div class="ln-kanji">'+stem+branch+'</div>'+
-      '<div><div class="ln-title">'+liunian.year+'年（'+stem+branch+'年） ・ 十神：'+tg+'</div><p>'+comment+'</p></div>';
+      '<div><div class="ln-title">'+liunian.year+'年（'+stem+branch+'年） ・ 十神：'+tg+'<span class="term-note">（※'+TENGOD_SHORT[tg]+'）</span></div><p>'+comment+'</p></div>';
     document.getElementById('liunian-box').innerHTML = html;
   }
 
