@@ -65,6 +65,12 @@ Game.Core = (function () {
       if (Game.Story.isFinished()) { mode = 'ending'; Game.Input.endFrame(); return; }
       var dialogueWasActive = Game.Dialogue.isActive();
       Game.Dialogue.update();
+      // 分かれ道を出しているあいだは、選び終わるまで他の操作を受け付けない
+      if (!Game.Dialogue.isActive() && Game.Choice.isOpen()) {
+        if (!dialogueWasActive) Game.Choice.update();
+        Game.Input.endFrame();
+        return;
+      }
       // ダイアログを閉じたのと同じフレームの confirm 入力を、
       // メニュー開閉やフィールド操作へ二重に使ってしまわないようにする
       if (dialogueWasActive) {
@@ -94,6 +100,7 @@ Game.Core = (function () {
       Game.Field.draw(ctx);
       drawChapterBanner();
       Game.Menu.draw(ctx, W, H);
+      Game.Choice.draw(ctx, W, H);
       Game.Dialogue.draw(ctx, W, H);
     } else if (mode === 'battle') {
       Game.Battle.draw(ctx, W, H);
@@ -105,8 +112,13 @@ Game.Core = (function () {
     }
   }
 
+  // 章のタイトルと、いま何をすべきかを画面の隅に出しておく。
+  // 「どこへ行けばいいのか分からない」が、遊び始めで最初に詰まる場所なので。
   function drawChapterBanner() {
     Game.Renderer.drawText(ctx, Game.Story.currentTitle(), 12, 20, { size: 12, color: '#d4af5a' });
+    var goal = Game.Story.currentGoal();
+    if (!goal) return;
+    Game.Renderer.drawText(ctx, '▶ ' + goal, 12, 38, { size: 12, color: '#ece7da' });
   }
 
   function drawTitle() {

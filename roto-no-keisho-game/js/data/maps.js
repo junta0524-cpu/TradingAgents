@@ -14,7 +14,7 @@ Game.Data.TileDefs = {
   'X': { walkable: false, color: '#5a5348', encounter: 0 },
   'Y': { walkable: false, color: '#7a6248', encounter: 0 },
   '.': { walkable: true, color: '#6fa84a', encounter: 0.075 },
-  '=': { walkable: true, color: '#c9b27c', encounter: 0.03 },
+  '=': { walkable: true, color: '#c9b27c', encounter: 0.05 },
   '~': { walkable: false, color: '#3d6e86', encounter: 0 },
   'D': { walkable: true, color: '#4a4658', encounter: 0.12 },
   'F': { walkable: true, color: '#b7a888', encounter: 0 },
