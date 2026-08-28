@@ -111,6 +111,7 @@
   .unknown-row input{accent-color:var(--gold);}
   .gender-toggle{display:flex;gap:16px;}
   .gender-opt{display:flex;align-items:center;gap:8px;font-size:.92rem;color:var(--text-1);font-weight:400;cursor:pointer;}
+  .gender-opt:has(input:checked){color:var(--gold-soft);font-weight:700;}
   .gender-opt input{accent-color:var(--gold);}
 
   .mbti-field{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
@@ -121,10 +122,10 @@
   }
   .mbti-field select:focus{outline:2px solid var(--gold);outline-offset:1px;}
   .mbti-test-link{font-size:.82rem;color:var(--gold-soft);text-decoration:underline;white-space:nowrap;}
+  .field-note{margin:8px 0 0;color:var(--text-2);font-size:.78rem;}
 
   .term-note{color:var(--text-2);font-size:.76rem;font-weight:400;}
-  .pillar-card .term-note{display:block;margin-top:4px;font-size:.66rem;}
-  .dayun-period .term-note{display:block;font-size:.66rem;}
+  .pillar-card .term-note{display:block;margin-top:4px;font-size:.72rem;}
   .term-legend{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);color:var(--text-2);font-size:.8rem;line-height:1.8;}
 
   .table-guide{margin-top:16px;padding:16px 18px;border:1px dashed var(--border);border-radius:12px;background:rgba(255,255,255,0.02);}
@@ -142,6 +143,8 @@
     transition:transform .15s ease;
   }
   button.submit:hover{transform:translateY(-2px);}
+  button.submit:disabled{filter:grayscale(.5);opacity:.5;cursor:not-allowed;box-shadow:none;}
+  button.submit:disabled:hover{transform:none;}
   .error-msg{color:#ff9a9a;font-size:.85rem;display:none;}
   .note-jst{color:var(--text-2);font-size:.78rem;margin-top:14px;}
 
@@ -234,8 +237,12 @@
   .god-group .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
   .god-group .badges span{font-size:.9rem;padding:.2em .65em;border-radius:7px;border:1px solid rgba(255,255,255,0.12);}
   .god-group p{margin:0;color:var(--text-2);font-size:.82rem;}
+  .strength-note{margin:16px 0 0;padding-top:14px;border-top:1px dashed var(--border);color:var(--text-2);font-size:.78rem;line-height:1.7;}
 
-  .dayun-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;overflow-x:auto;}
+  .dayun-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;}
+  .dayun-scroll{overflow-x:auto;}
+  .dayun-scroll-hint{display:none;margin:0 0 10px;color:var(--text-2);font-size:.76rem;}
+  @media(max-width:700px){.dayun-scroll-hint{display:block;}}
   .dayun-meta{color:var(--text-1);font-size:.88rem;margin:0 0 18px;}
   .dayun-timeline{display:flex;gap:10px;min-width:640px;}
   .dayun-period{
@@ -261,8 +268,6 @@
   .section-head h2{font-family:'Noto Serif JP',serif;font-size:1.6rem;margin:10px 0 8px;}
   .section-head p{color:var(--text-2);font-size:.9rem;margin:0;}
 
-  #partner-form.is-disabled{opacity:.45;pointer-events:none;}
-
   .family-row{
     display:grid;grid-template-columns:1.1fr 1fr 1fr 1.3fr auto;gap:12px;align-items:end;
     margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--border);
@@ -272,18 +277,21 @@
   .family-row label{display:block;font-size:.78rem;color:var(--text-2);margin-bottom:8px;font-weight:500;}
   .family-row input[type="text"],
   .family-row input[type="date"],
-  .family-row input[type="time"]{
-    width:100%;padding:11px 12px;border-radius:10px;
+  .family-row input[type="time"],
+  .family-row select{
+    width:100%;min-width:0;padding:11px 12px;border-radius:10px;
     border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);
     color:var(--text-0);font-size:.92rem;font-family:inherit;color-scheme:dark;
   }
-  .family-row input:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .family-row input:focus,
+  .family-row select:focus{outline:2px solid var(--gold);outline-offset:1px;}
   .family-row .remove-row{
     background:none;border:1px solid var(--border);color:var(--text-2);
     border-radius:9px;padding:11px 14px;cursor:pointer;font-size:.85rem;white-space:nowrap;
   }
   .family-row .remove-row:hover{border-color:#ff9a9a;color:#ff9a9a;}
   .family-row .remove-row:disabled{opacity:.3;cursor:not-allowed;}
+  @media(max-width:900px){.family-row .remove-row{grid-column:span 2;text-align:center;}}
 
   .compat-result{display:flex;flex-direction:column;gap:18px;margin-top:26px;}
   .compat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px clamp(18px,4vw,30px);}
@@ -291,12 +299,15 @@
   .compat-person .p-name{color:var(--text-2);font-size:.8rem;margin-bottom:8px;}
   .compat-person .p-kanji{font-family:'Noto Serif JP',serif;font-size:1.6rem;font-weight:700;color:var(--text-0);}
   .compat-link{font-family:'Noto Serif JP',serif;color:var(--gold);font-size:1.2rem;}
+  .compat-headline{text-align:center;font-family:'Noto Serif JP',serif;font-size:1.05rem;color:var(--text-0);margin:0 0 14px;}
   .compat-tier{display:flex;justify-content:center;margin-bottom:18px;}
-  .compat-tier span{
+  .compat-tier > span{
     font-family:'Noto Serif JP',serif;font-weight:700;font-size:1.05rem;
     padding:.5em 1.4em;border-radius:999px;border:1px solid var(--gold);
     color:var(--gold-soft);background:rgba(212,175,55,0.08);
+    display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.3em;text-align:center;
   }
+  @media(max-width:480px){.compat-tier > span{border-radius:16px;}}
   .compat-notes{color:var(--text-1);font-size:.9rem;}
   .compat-notes p{margin:0 0 12px;}
   .compat-notes p:last-child{margin-bottom:0;}
@@ -337,7 +348,9 @@
   .mbti-matches .tags span{border-color:var(--gold);color:var(--gold-soft);}
   .mbti-matches .match-note{margin:10px 0 0;color:var(--text-2);font-size:.8rem;line-height:1.7;}
 
-  .reset-row{text-align:center;margin-top:44px;}
+  .reset-row{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:44px;}
+  .next-cta{color:var(--gold-soft);font-size:.92rem;font-weight:700;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;}
+  .next-cta:hover{color:var(--gold);}
   .reset-btn{
     background:none;border:1px solid var(--border);color:var(--text-1);
     padding:10px 26px;border-radius:999px;cursor:pointer;font-size:.88rem;
@@ -394,7 +407,7 @@
           </div>
           <div class="row" style="margin-bottom:24px;">
             <div>
-              <label>性別（大運の算出に使用）</label>
+              <label>性別（運気の流れ「大運」の計算に使用）</label>
               <div class="gender-toggle">
                 <label class="gender-opt"><input type="radio" name="gender" value="male" required> 男性</label>
                 <label class="gender-opt"><input type="radio" name="gender" value="female" required> 女性</label>
@@ -403,7 +416,7 @@
           </div>
           <div class="row" style="margin-bottom:24px;">
             <div style="grid-column:1/-1;">
-              <label for="mbti-select">MBTIタイプ（分かる場合。四柱推命との掛け合わせ診断に使用・任意）</label>
+              <label for="mbti-select">MBTIタイプ（任意）</label>
               <div class="mbti-field">
                 <select id="mbti-select">
                   <option value="">わからない・入力しない</option>
@@ -426,10 +439,11 @@
                 </select>
                 <a class="mbti-test-link" href="https://www.16personalities.com/ja" target="_blank" rel="noopener noreferrer">MBTIが分からない方はこちら（診断サイトへ）↗</a>
               </div>
+              <p class="field-note">入力すると、四柱推命との掛け合わせ診断もあわせて見られます。</p>
             </div>
           </div>
           <div class="submit-row">
-            <button type="submit" class="submit">鑑定する</button>
+            <button type="submit" class="submit">無料で結果を見る</button>
             <span class="error-msg" id="error-msg">生年月日を入力してください。</span>
           </div>
           <p class="note-jst">※ 入力された日時は日本標準時(JST)として計算されます。節気(月柱・年柱の境目)は天文計算により算出しているため、境界付近の生まれの方はごく僅かに誤差が生じる場合があります。</p>
@@ -448,7 +462,7 @@
       <div class="pillars-grid" id="pillars-grid"></div>
 
       <div class="section-block">
-        <h3><span class="ico">🐵</span>ざっくり早わかり</h3>
+        <h3><span class="ico">💡</span>ざっくり早わかり</h3>
         <p class="subdesc">専門用語ぬきで、今回の結果を一言ずつまとめました。詳しい内容はこの下で解説しています。</p>
         <div class="quick-box" id="quick-box"></div>
       </div>
@@ -513,6 +527,7 @@
       </div>
 
       <div class="reset-row">
+        <a class="next-cta" href="#partner-section">→ パートナー・家族との相性も見る</a>
         <button class="reset-btn" id="reset-btn">もう一度鑑定する</button>
       </div>
     </div>
@@ -526,8 +541,8 @@
         <p>あなたとお相手、二人の命式を照らし合わせて相性を診断します。</p>
       </div>
       <div class="card">
-        <p class="desc" id="partner-gate-msg">まずはページ上部で、あなた自身の命式を鑑定してください。鑑定が終わると、この下の入力欄が使えるようになります。</p>
-        <form class="bazi-form is-disabled" id="partner-form">
+        <p class="desc" id="partner-gate-msg">まずはページ上部で、あなた自身の命式を鑑定してください。鑑定が終わると、ここにお相手の入力欄が表示されます。</p>
+        <form class="bazi-form" id="partner-form" hidden>
           <div class="row">
             <div>
               <label for="partner-date">お相手の生年月日</label>
@@ -600,12 +615,19 @@
   var BRANCH_ELEMENT = {子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
   var HIDDEN_STEMS = {
     子:['癸'], 丑:['己','癸','辛'], 寅:['甲','丙','戊'], 卯:['乙'],
-    辰:['戊','乙','癸'], 巳:['丙','戊','庚'], 午:['丁','己'], 未:['己','丁','乙'],
+    辰:['戊','乙','癸'], 巳:['丙','庚','戊'], 午:['丁','己'], 未:['己','丁','乙'],
     申:['庚','壬','戊'], 酉:['辛'], 戌:['戊','辛','丁'], 亥:['壬','甲']
   };
   var ELEMENT_CLASS = {木:'el-wood',火:'el-fire',土:'el-earth',金:'el-metal',水:'el-water'};
   var ELEMENT_FILL = {木:'fill-wood',火:'fill-fire',土:'fill-earth',金:'fill-metal',水:'fill-water'};
   var ELEMENT_ORDER = ['木','火','土','金','水'];
+  var ELEMENT_TIP = {
+    木:'グリーン系の色や観葉植物、朝の光を取り入れると◎',
+    火:'レッド・オレンジ系の色や、日光浴・運動の習慣と好相性',
+    土:'イエロー・ブラウン系の色や、器・陶器、安定した生活リズムと好相性',
+    金:'ホワイト・シルバー系の色や、貴金属・アクセサリーと好相性',
+    水:'ブラック・ネイビー系の色や、水回りの整理・入浴の習慣と好相性'
+  };
   var GENERATED_BY = {火:'木',土:'火',金:'土',水:'金',木:'水'};
   var SEASON_ELEMENT = {
     寅:'木', 卯:'木', 巳:'火', 午:'火', 申:'金', 酉:'金', 亥:'水', 子:'水',
@@ -751,8 +773,8 @@
     if (seasonEl===dm) seasonScore = 3;
     else if (GENERATES[seasonEl]===dm) seasonScore = 2;
     else if (GENERATES[dm]===seasonEl) seasonScore = 0;
-    else if (CONTROLS[seasonEl]===dm) seasonScore = -2;
-    else seasonScore = -3;
+    else if (CONTROLS[seasonEl]===dm) seasonScore = -3; // 季節の気に直接抑え込まれる「死」＝最弱
+    else seasonScore = -2; // 日主が季節の気を剋しにいく「囚」
 
     var others = [];
     others.push(STEM_ELEMENT[bz.year.stem]);
@@ -813,6 +835,11 @@
       });
     }
     return {direction: forward?'順行':'逆行', startAgeYears:startAgeYears, periods:periods};
+  }
+
+  var MIN_BIRTH_YEAR = 1900, MAX_BIRTH_YEAR = 2026;
+  function isValidBirthYear(y){
+    return y>=MIN_BIRTH_YEAR && y<=MAX_BIRTH_YEAR;
   }
 
   function calcCurrentAge(y,m,d){
@@ -878,26 +905,26 @@
     水:'水の気が豊かで、知性的で柔軟な発想力を持っています。物事の本質を見抜く洞察力があるでしょう。'
   };
   var ELEMENT_LOW = {
-    木:'木の気がやや控えめです。新しいことへの一歩や成長の機会を、意識的に取り入れると運気が動きやすくなるでしょう。',
-    火:'火の気がやや控えめです。情熱や表現力を意識的に発揮することで、運気にさらなる勢いが生まれるでしょう。',
-    土:'土の気がやや控えめです。安定や継続を意識することで、運気がより落ち着いていくでしょう。',
-    金:'金の気がやや控えめです。決断力やけじめを意識することで、運気がより磨かれていくでしょう。',
-    水:'水の気がやや控えめです。柔軟さや学びの姿勢を意識することで、運気がより深まっていくでしょう。'
+    木:'木の気はやや控えめ。新しいことへの一歩や成長の機会を、意識的に取り入れてみましょう。',
+    火:'火の気はやや控えめです。情熱や表現力を意識的に発揮すると、運気に勢いがついていきます。',
+    土:'土の気がやや控えめな様子。安定や継続を意識することで、運気が落ち着いていくでしょう。',
+    金:'金の気はやや控えめ。決断力やけじめを意識するほど、運気が磨かれていきます。',
+    水:'水の気がやや控えめです。柔軟さや学びの姿勢を大切にすると、運気に深みが増していくでしょう。'
   };
   var TENGOD_MEANING = {
-    比肩:'自立心と自我の強さを表します。',
-    劫財:'社交性と積極性を表します。',
-    食神:'表現力・才能・楽天性を表します。',
-    傷官:'感性や批判精神、芸術性を表します。',
-    偏財:'行動力とチャンスをつかむ力を表します。',
-    正財:'堅実さと計画性、安定志向を表します。',
-    偏官:'統率力と挑戦心を表します。',
-    正官:'責任感・規律・信頼を表します。',
-    偏印:'独創性と直感力を表します。',
-    正印:'知性と包容力、学びの心を表します。'
+    比肩:'自立心と、自分の軸を持つ強さのあらわれです。',
+    劫財:'負けず嫌いな競争心と、社交性・積極性を表します。',
+    食神:'表現力・才能・楽天性が持ち味です。',
+    傷官:'鋭い感性や批判精神、芸術性を持っています。',
+    偏財:'行動力とチャンスをつかむ力があります。',
+    正財:'堅実さと計画性、安定志向のあらわれです。',
+    偏官:'統率力と挑戦心が持ち味です。',
+    正官:'責任感・規律・信頼を大切にします。',
+    偏印:'独創性と直感力のあらわれです。',
+    正印:'知性と包容力、学びの心を持っています。'
   };
   var TENGOD_SHORT = {
-    比肩:'自立心', 劫財:'社交性', 食神:'表現力', 傷官:'感性',
+    比肩:'自立心', 劫財:'競争心', 食神:'表現力', 傷官:'感性',
     偏財:'行動力', 正財:'堅実さ', 偏官:'統率力', 正官:'責任感',
     偏印:'独創性', 正印:'知性'
   };
@@ -946,17 +973,23 @@
     '△':'個性の違いが目立つ相性ですが、違いを面白がる気持ちがあれば良い関係になります。',
     '▲':'刺激の多い相性です。ぶつかることもありますが、それだけ強く影響し合える相手ともいえます。'
   };
+  var TIER_HEADLINE = {
+    '◎':'高め合える、頼もしいコンビ',
+    '○':'安心して長く付き合える関係',
+    '△':'刺激と発見の多い、伸びしろのある関係',
+    '▲':'ぶつかりながらも強く影響し合う関係'
+  };
   var COMPAT_TENGOD_TEXT = {
-    比肩:'対等な仲間のような関係。気が合いやすい反面、主導権をめぐって張り合うことも。',
-    劫財:'良きライバルのような関係。刺激し合えますが、価値観の違いには配慮が必要です。',
-    食神:'一緒にいて自然体でいられる、癒やしのような関係。',
-    傷官:'刺激的で会話が弾む関係。ただし言葉がぶつかりやすい面もあります。',
-    偏財:'気楽に楽しめる関係。フットワーク軽く一緒に行動できる相手です。',
-    正財:'大切に守り、支えたくなる関係。安定した信頼関係を築きやすいです。',
-    偏官:'緊張感と刺激のある関係。惹かれ合う反面、衝突も起きやすいでしょう。',
-    正官:'頼れる存在として尊敬・信頼できる関係。ただし窮屈に感じることもあります。',
-    偏印:'静かに支え合う、独特の理解が生まれる関係。',
-    正印:'包み込むように支えてくれる、安心できる関係。'
+    比肩:'対等な仲間のような関係です。気が合いやすい反面、主導権をめぐって張り合うこともあります。',
+    劫財:'良きライバルのような関係です。刺激し合えますが、価値観の違いには配慮が必要です。',
+    食神:'一緒にいて自然体でいられる、癒やしのような関係です。',
+    傷官:'刺激的で会話が弾む関係です。ただし言葉がぶつかりやすい面もあります。',
+    偏財:'気楽に楽しめる関係です。フットワーク軽く一緒に行動できる相手といえます。',
+    正財:'大切に守り、支えたくなる関係です。安定した信頼関係を築きやすいでしょう。',
+    偏官:'緊張感と刺激のある関係です。惹かれ合う反面、衝突も起きやすいでしょう。',
+    正官:'頼れる存在として尊敬・信頼できる関係です。ただし窮屈に感じることもあります。',
+    偏印:'静かに支え合う、独特の理解が生まれる関係です。',
+    正印:'包み込むように支えてくれる、安心できる関係です。'
   };
 
   function compatTier(total){
@@ -1026,6 +1059,7 @@
         '<div class="compat-link">×</div>'+
         '<div class="compat-person"><div class="p-name">'+escapeHtml(nameB)+(profB.mbti?'　'+profB.mbti:'')+'</div><div class="p-kanji">'+profB.stem+profB.dayBranch+'</div></div>'+
       '</div>'+
+      '<p class="compat-headline">ふたりの結論：'+TIER_HEADLINE[c.tier]+'</p>'+
       '<div class="compat-tier"><span>'+c.tier+'　'+c.dmRel.type+'<span class="term-note">（※'+DMREL_SHORT[c.dmRel.type]+'）</span></span></div>'+
       '<div class="compat-notes">'+notes.join('')+'</div>'+
       tgBox+
@@ -1086,20 +1120,20 @@
   var MBTI_DATA = {
     INTJ:{keywords:['戦略的思考','独立心','向上心'], strength:'将来を見据えた計画力と、目標に向かってぶれない意志の強さを持っています。', caution:'効率や合理性を優先しすぎて、周囲の感情への配慮が後回しになることがあります。'},
     INTP:{keywords:['論理的思考','探究心','独創性'], strength:'物事の本質を見抜く分析力と、独自の視点で発想する創造力があります。', caution:'興味のあることに没頭しすぎて、実行や締め切りが後回しになりがちです。'},
-    ENTJ:{keywords:['統率力','決断力','目標達成力'], strength:'大きな目標を描き、周囲を巻き込みながら着実に進める推進力があります。', caution:'効率を重視するあまり、周囲のペースを置き去りにしてしまうことがあります。'},
-    ENTP:{keywords:['発想力','行動力','柔軟性'], strength:'新しい可能性を次々と見つけ、変化を楽しみながら前進する力があります。', caution:'興味が移りやすく、一つのことをやり切る前に次に目が向いてしまうことがあります。'},
-    INFJ:{keywords:['洞察力','理想主義','共感力'], strength:'物事の本質を見抜く洞察力と、人の気持ちに寄り添う深い共感力を持っています。', caution:'理想と現実のギャップに悩みやすく、一人で抱え込みすぎることがあります。'},
-    INFP:{keywords:['価値観の強さ','優しさ','創造性'], strength:'自分の価値観に忠実で、豊かな感性と創造力を発揮できます。', caution:'現実的な調整が苦手で、理想と現実の間で迷いやすいことがあります。'},
-    ENFJ:{keywords:['共感力','統率力','面倒見の良さ'], strength:'周囲の気持ちを汲み取りながら、人をまとめ、励ます力があります。', caution:'人のために尽くしすぎて、自分自身のケアが後回しになりがちです。'},
-    ENFP:{keywords:['好奇心','社交性','発想力'], strength:'新しいことへの好奇心と、人を惹きつける明るいエネルギーを持っています。', caution:'興味が広がりすぎて、一つのことに集中し続けるのが苦手なことがあります。'},
-    ISTJ:{keywords:['責任感','堅実さ','几帳面さ'], strength:'決めたことをコツコツ積み上げる堅実さと、揺るがない責任感があります。', caution:'変化への対応が苦手で、想定外の事態に柔軟に動きにくいことがあります。'},
-    ISFJ:{keywords:['気配り','献身性','安定感'], strength:'周囲をよく観察し、必要なサポートを静かに差し出せる気配りがあります。', caution:'自分の希望を後回しにしすぎて、我慢を重ねてしまうことがあります。'},
+    ENTJ:{keywords:['統率力','決断力','目標達成力'], strength:'大きな目標を描き、周囲を巻き込みながら着実に進める推進力に長けています。', caution:'効率を重視するあまり、周囲のペースを置き去りにしてしまう面があります。'},
+    ENTP:{keywords:['発想力','行動力','柔軟性'], strength:'新しい可能性を次々と見つけ、変化を楽しみながら前進する力を持っています。', caution:'興味が移りやすく、一つのことをやり切る前に次へ目が向いてしまいます。'},
+    INFJ:{keywords:['洞察力','理想主義','共感力'], strength:'物事の本質を見抜く洞察力と、人の気持ちに寄り添う深い共感力が魅力です。', caution:'理想と現実のギャップに悩みやすく、一人で抱え込みすぎることがあります。'},
+    INFP:{keywords:['価値観の強さ','優しさ','創造性'], strength:'自分の価値観に忠実で、豊かな感性と創造力を発揮できます。', caution:'現実的な調整が苦手で、理想と現実の間で迷いやすい面があります。'},
+    ENFJ:{keywords:['共感力','統率力','面倒見の良さ'], strength:'周囲の気持ちを汲み取りながら、人をまとめ、励ます力に長けています。', caution:'人のために尽くしすぎて、自分自身のケアが後回しになりがちです。'},
+    ENFP:{keywords:['好奇心','社交性','発想力'], strength:'新しいことへの好奇心と、人を惹きつける明るいエネルギーが魅力です。', caution:'興味が広がりすぎて、一つのことに集中し続けるのが苦手なことがあります。'},
+    ISTJ:{keywords:['責任感','堅実さ','几帳面さ'], strength:'決めたことをコツコツ積み上げる堅実さと、揺るがない責任感が持ち味です。', caution:'変化への対応が苦手で、想定外の事態に柔軟に動きにくい面があります。'},
+    ISFJ:{keywords:['気配り','献身性','安定感'], strength:'周囲をよく観察し、必要なサポートを静かに差し出せる気配りがあります。', caution:'自分の希望を後回しにしすぎて、我慢を重ねてしまいがちです。'},
     ESTJ:{keywords:['組織力','実行力','責任感'], strength:'物事を計画的に管理し、着実に実行へ移す力に長けています。', caution:'効率を重視するあまり、他者のやり方を受け入れにくいことがあります。'},
-    ESFJ:{keywords:['社交性','面倒見の良さ','協調性'], strength:'周囲との調和を大切にしながら、あたたかく人を支える力があります。', caution:'周囲の評価を気にしすぎて、自分の本音を抑えてしまうことがあります。'},
-    ISTP:{keywords:['冷静さ','実践力','問題解決力'], strength:'状況を冷静に分析し、実践的に問題を解決する力があります。', caution:'感情表現が控えめで、周囲に真意が伝わりにくいことがあります。'},
-    ISFP:{keywords:['感性の豊かさ','柔軟性','マイペースさ'], strength:'豊かな感性を持ち、自分の心地よいペースで物事に向き合えます。', caution:'自己主張が控えめで、思いを言葉にするまで時間がかかることがあります。'},
-    ESTP:{keywords:['行動力','決断の速さ','現実対応力'], strength:'状況に合わせて素早く動き、今を楽しみながら結果を出す力があります。', caution:'勢いを優先しすぎて、先々の計画が後回しになりがちです。'},
-    ESFP:{keywords:['明るさ','社交性','行動力'], strength:'その場を明るく盛り上げ、周囲を自然と楽しませる力があります。', caution:'目の前の楽しさを優先しすぎて、計画性が後回しになることがあります。'}
+    ESFJ:{keywords:['社交性','面倒見の良さ','協調性'], strength:'周囲との調和を大切にしながら、あたたかく人を支える力が持ち味です。', caution:'周囲の評価を気にしすぎて、自分の本音を抑えてしまう面があります。'},
+    ISTP:{keywords:['冷静さ','実践力','問題解決力'], strength:'状況を冷静に分析し、実践的に問題を解決する力を発揮します。', caution:'感情表現が控えめで、周囲に真意が伝わりにくいことがあります。'},
+    ISFP:{keywords:['感性の豊かさ','柔軟性','マイペースさ'], strength:'豊かな感性を持ち、自分の心地よいペースで物事に向き合えます。', caution:'自己主張が控えめで、思いを言葉にするまで時間がかかりがちです。'},
+    ESTP:{keywords:['行動力','決断の速さ','現実対応力'], strength:'状況に合わせて素早く動き、今を楽しみながら結果を出す行動力が持ち味です。', caution:'勢いを優先しすぎて、先々の計画が後回しになることがあります。'},
+    ESFP:{keywords:['明るさ','社交性','行動力'], strength:'その場を明るく盛り上げ、周囲を自然と楽しませる力が魅力です。', caution:'目の前の楽しさを優先しすぎて、計画性が後回しになりがちです。'}
   };
   var MBTI_ADVICE = {
     INTJ:'計画通りに進まないときこそ、周囲の感情に目を向けてみましょう。',
@@ -1137,51 +1171,51 @@
     癸:'静かに深く想うタイプ。言葉より態度で愛情を伝えることが多いです。'
   };
   var DAYMASTER_WORK = {
-    甲:'リーダーやパイオニアとして力を発揮しやすく、目標に向かって突き進むタイプです。',
-    乙:'サポート役や調整役として力を発揮。周囲と協調しながら成果を出すタイプです。',
+    甲:'リーダーやパイオニアとして、目標に向かって突き進む役回りが似合います。',
+    乙:'サポート役や調整役として、周囲と協調しながら成果を出すタイプです。',
     丙:'人前に立つ仕事や、周囲を巻き込むムードメーカー的な役回りが向いています。',
     丁:'縁の下の力持ちとして、専門性を磨きながらコツコツ実力をつけるタイプです。',
-    戊:'組織の土台を支える、安定感のあるポジションで力を発揮するタイプです。',
-    己:'人を育てたりサポートしたりする仕事で、真価を発揮するタイプです。',
-    庚:'決断力を活かし、白黒はっきりさせる仕事や交渉ごとで力を発揮します。',
+    戊:'組織の土台を支える、安定感のあるポジションで頼りにされます。',
+    己:'人を育てたりサポートしたりする仕事で、真価を発揮します。',
+    庚:'決断力を活かし、白黒はっきりさせる仕事や交渉ごとが得意分野です。',
     辛:'専門性やこだわりを活かせる、クオリティ重視の仕事に向いています。',
-    壬:'大きな構想を描く仕事や、自由度の高い働き方で力を発揮するタイプです。',
-    癸:'リサーチや分析など、静かにじっくり取り組む仕事で力を発揮するタイプです。'
+    壬:'大きな構想を描く仕事や、自由度の高い働き方が性に合っています。',
+    癸:'リサーチや分析など、静かにじっくり取り組む仕事で力を発揮します。'
   };
   var MBTI_LOVE = {
-    INTJ:'恋愛でも将来設計を大事にする、誠実で計画的なパートナー像を描くタイプ。',
-    INTP:'恋愛にもマイペース。知的な会話で通じ合える相手に惹かれるタイプ。',
-    ENTJ:'恋愛にも計画性を持ち込む、頼れるリーダー気質のパートナータイプ。',
-    ENTP:'会話や刺激を楽しむ恋愛が好きな、飽きさせないタイプ。',
-    INFJ:'深い精神的なつながりを求める、一途で誠実なタイプ。',
-    INFP:'理想の恋愛観を大切にする、ロマンチストなタイプ。',
-    ENFJ:'相手を献身的に支える、面倒見の良いパートナータイプ。',
-    ENFP:'情熱的でオープン。楽しさを分かち合える関係を求めるタイプ。',
-    ISTJ:'誠実で一途。時間をかけて信頼関係を築く安定志向のタイプ。',
-    ISFJ:'さりげない気配りで相手を支える、献身的なタイプ。',
-    ESTJ:'はっきりした意思表示で関係をリードする、頼れるタイプ。',
-    ESFJ:'相手を大切にし、周囲からも祝福される関係を築きたいタイプ。',
-    ISTP:'干渉されない距離感を好む、クールだけど一途なタイプ。',
-    ISFP:'穏やかに寄り添う、感受性豊かなロマンチストタイプ。',
-    ESTP:'今この瞬間を楽しむ、情熱的でアクティブなタイプ。',
-    ESFP:'明るく盛り上げる、一緒にいて楽しいパートナータイプ。'
+    INTJ:'恋愛でも将来設計を大事にし、誠実で計画的なパートナー像を描くタイプです。',
+    INTP:'恋愛にもマイペースで、知的な会話で通じ合える相手に惹かれるタイプです。',
+    ENTJ:'恋愛にも計画性を持ち込む、頼れるリーダー気質のパートナーです。',
+    ENTP:'会話や刺激を楽しむ恋愛が好きで、相手を飽きさせないタイプです。',
+    INFJ:'深い精神的なつながりを求める、一途で誠実なタイプです。',
+    INFP:'理想の恋愛観を大切にする、ロマンチストなタイプです。',
+    ENFJ:'相手を献身的に支える、面倒見の良いパートナーです。',
+    ENFP:'情熱的でオープンに、楽しさを分かち合える関係を求めるタイプです。',
+    ISTJ:'誠実で一途、時間をかけて信頼関係を築く安定志向のタイプです。',
+    ISFJ:'さりげない気配りで相手を支える、献身的なタイプです。',
+    ESTJ:'はっきりした意思表示で関係をリードする、頼れる存在です。',
+    ESFJ:'相手を大切にし、周囲からも祝福される関係を築きたいタイプです。',
+    ISTP:'干渉されない距離感を好む、クールだけど一途なタイプです。',
+    ISFP:'穏やかに寄り添う、感受性豊かなロマンチストです。',
+    ESTP:'今この瞬間を楽しむ、情熱的でアクティブなタイプです。',
+    ESFP:'明るく盛り上げる、一緒にいて楽しいパートナーです。'
   };
   var MBTI_WORK = {
-    INTJ:'長期戦略を描く仕事や、専門性を極める仕事で力を発揮します。',
-    INTP:'研究や分析など、じっくり考える仕事で本領を発揮します。',
+    INTJ:'長期戦略を描く仕事や、専門性を極める仕事で本領を発揮します。',
+    INTP:'研究や分析など、じっくり考える仕事が性に合っています。',
     ENTJ:'組織を率いるマネジメントやリーダーポジションで力を発揮します。',
-    ENTP:'新規事業やアイデア出しなど、変化の多い仕事で力を発揮します。',
+    ENTP:'新規事業やアイデア出しなど、変化の多い仕事で輝けるタイプです。',
     INFJ:'人の成長支援や、価値観を活かせるビジョン重視の仕事が向いています。',
-    INFP:'自分の価値観を活かせる、クリエイティブな仕事で力を発揮します。',
-    ENFJ:'人材育成やチームをまとめる、対人支援の仕事で力を発揮します。',
+    INFP:'自分の価値観を活かせる、クリエイティブな仕事が似合います。',
+    ENFJ:'人材育成やチームをまとめる、対人支援の仕事で真価を発揮します。',
     ENFP:'アイデアと人を巻き込む力を活かせる、企画系の仕事が向いています。',
-    ISTJ:'正確さと継続力が求められる、管理・運用系の仕事で力を発揮します。',
+    ISTJ:'正確さと継続力が求められる、管理・運用系の仕事で頼りにされます。',
     ISFJ:'周囲を支えるサポート業務や、丁寧さが求められる仕事が向いています。',
-    ESTJ:'計画的にチームを動かす、マネジメント業務で力を発揮します。',
+    ESTJ:'計画的にチームを動かす、マネジメント業務が得意分野です。',
     ESFJ:'チームの調和を保ちながら進める、対人系の仕事が向いています。',
     ISTP:'手を動かして解決する、実践的な仕事で力を発揮します。',
-    ISFP:'感性を活かせる、クリエイティブな仕事が向いています。',
-    ESTP:'素早い判断が求められる、現場対応系の仕事で力を発揮します。',
+    ISFP:'感性を活かせる、クリエイティブな仕事が似合います。',
+    ESTP:'素早い判断が求められる、現場対応系の仕事で頼りにされます。',
     ESFP:'人と関わりながら場を盛り上げる、接客・エンタメ系の仕事が向いています。'
   };
 
@@ -1260,8 +1294,8 @@
         '<ul><li>'+DAYMASTER_CAUTION[dmStem]+'</li><li>'+dmData.caution+'</li></ul>'+
       '</div>'+
       '<div class="mbti-sub-grid">'+
-        '<div class="mbti-sub"><h4>💗 恋愛面の傾向</h4><ul><li>'+DAYMASTER_LOVE[dmStem]+'</li><li>'+MBTI_LOVE[mbtiType]+'</li></ul></div>'+
-        '<div class="mbti-sub"><h4>💼 仕事面の傾向</h4><ul><li>'+DAYMASTER_WORK[dmStem]+'</li><li>'+MBTI_WORK[mbtiType]+'</li></ul></div>'+
+        '<div class="mbti-sub"><h4>恋愛面の傾向</h4><ul><li>'+DAYMASTER_LOVE[dmStem]+'</li><li>'+MBTI_LOVE[mbtiType]+'</li></ul></div>'+
+        '<div class="mbti-sub"><h4>仕事面の傾向</h4><ul><li>'+DAYMASTER_WORK[dmStem]+'</li><li>'+MBTI_WORK[mbtiType]+'</li></ul></div>'+
       '</div>'+
       '<div class="mbti-sub">'+
         '<h4>心がけたいこと</h4>'+
@@ -1272,7 +1306,7 @@
         '<p>'+alignment.text+'</p>'+
       '</div>'+
       '<div class="mbti-sub mbti-matches">'+
-        '<h4>🤝 気が合いやすいMBTIタイプ例</h4>'+
+        '<h4>気が合いやすいMBTIタイプ例</h4>'+
         '<div class="tags">'+topMatches.map(function(m){ return '<span>'+m.type+'（'+MBTI_LABELS[m.type]+'）</span>'; }).join('')+'</div>'+
         '<p class="match-note">四本のものさし（外向/内向・現実/直感・論理/感情・計画/柔軟）のうち、多くが共通するタイプほど自然と気が合いやすい傾向があります。パートナーや家族の相性診断でMBTIも入力すると、実際の相手との相性も見られます。</p>'+
       '</div>';
@@ -1321,9 +1355,9 @@
 
     var liunianEl = STEM_ELEMENT[STEMS[liunian.stemIdx]];
     var liunianText;
-    if (favorable.favorable.indexOf(liunianEl)!==-1) liunianText = '追い風が吹きやすい、動くと良い一年になりそうです。';
-    else if (favorable.caution.indexOf(liunianEl)!==-1) liunianText = '頑張りすぎ注意。ペース配分を意識したい一年です。';
-    else liunianText = 'バランスを大事にしたい一年です。';
+    if (favorable.favorable.indexOf(liunianEl)!==-1) liunianText = '追い風が吹きやすい、動くと吉な一年';
+    else if (favorable.caution.indexOf(liunianEl)!==-1) liunianText = '頑張りすぎ注意、ペース配分がカギの一年';
+    else liunianText = 'バランス重視で過ごしたい一年';
 
     var rows = [
       ['あなたは', DAYMASTER_SIMPLE[dmStem]],
@@ -1460,21 +1494,28 @@
     var scoreSign = function(n){ return (n>=0?'+':'')+n; };
     var html = '<div class="strength-verdict">'+
       '<span class="verdict-badge">'+strength.level+'<span class="term-note">※'+SIMPLE_STRENGTH_SHORT[strength.level]+'</span></span>'+
-      '<span class="score-note">総合スコア '+scoreSign(strength.total)+'（季節 '+scoreSign(strength.seasonScore*2)+' ／ 他の柱 '+scoreSign(strength.groupScore)+'）</span>'+
+      '<span class="score-note">総合スコア '+scoreSign(strength.total)+'（季節 '+scoreSign(strength.seasonScore*2)+' ／ 他の柱 '+scoreSign(strength.groupScore)+'）'+
+        '<br>※マイナスは「弱い」を表す指標であり、悪い結果という意味ではありません</span>'+
     '</div>';
     html += '<p class="strength-detail">'+STRENGTH_DESC[strength.level]+'</p>';
     if (strength.level!=='中和'){
       html += '<div class="god-groups">'+
-        '<div class="god-group"><h4>用神（運気を助けやすい五行）</h4><div class="badges">'+favorable.favorable.map(elBadge).join('')+'</div><p>意識して取り入れると運気の味方になりやすい五行です。</p></div>'+
+        '<div class="god-group"><h4>用神（運気を助けやすい五行）</h4><div class="badges">'+favorable.favorable.map(elBadge).join('')+'</div>'+
+          '<p>意識して取り入れると運気の味方になりやすい五行です。'+favorable.favorable.map(function(el){ return ELEMENT_TIP[el]; }).join('。')+'。</p>'+
+        '</div>'+
         '<div class="god-group"><h4>忌神（やや控えめが吉な五行）</h4><div class="badges">'+favorable.caution.map(elBadge).join('')+'</div><p>偏りすぎると負担になりやすい五行です。</p></div>'+
-      '</div>';
+      '</div>'+
+      '<p class="strength-note">※ここでの用神・忌神は、日主の強弱バランスだけを見た簡易的な目安です。実際の鑑定では季節や巡り合わせなど、より多くの要素を加味して判断します。</p>';
+    } else {
+      html += '<p class="strength-note">※中和タイプは五行の偏りが少ないため、特定の用神・忌神を強く示さない命式です。状況に応じて必要な五行を柔軟に取り入れられるのが強みです。</p>';
     }
     document.getElementById('strength-box').innerHTML = html;
   }
 
   function renderDayun(dayun, dmStem, currentAge){
     var html = '<p class="dayun-meta">運気が巡る向きは<strong>'+dayun.direction+'</strong>。最初の大運が始まるのは、生まれてからおよそ<strong>'+formatAge(dayun.startAgeYears)+'</strong>のときです。</p>';
-    html += '<div class="dayun-timeline">';
+    html += '<p class="dayun-scroll-hint">← 横にスクロールすると80歳分までの大運が見られます →</p>';
+    html += '<div class="dayun-scroll"><div class="dayun-timeline">';
     var seenTg = [];
     dayun.periods.forEach(function(p){
       var stem = STEMS[p.stemIdx], branch = BRANCHES[p.branchIdx];
@@ -1488,7 +1529,7 @@
         '<div class="tg">'+tg+'</div>'+
       '</div>';
     });
-    html += '</div>';
+    html += '</div></div>';
     html += '<p class="term-legend">※十神の意味：'+seenTg.map(function(t){ return t+'＝'+TENGOD_SHORT[t]; }).join('、')+'</p>';
     document.getElementById('dayun-wrap').innerHTML = html;
   }
@@ -1572,6 +1613,11 @@
       errorMsg.style.display = 'inline';
       return;
     }
+    if (!isValidBirthYear(Number(dateVal.split('-')[0]))){
+      errorMsg.textContent = '生年月日は'+MIN_BIRTH_YEAR+'年〜'+MAX_BIRTH_YEAR+'年の範囲で入力してください。';
+      errorMsg.style.display = 'inline';
+      return;
+    }
     if (!timeUnknown && !timeVal){
       errorMsg.textContent = '出生時刻を入力するか、「出生時刻が分からない」にチェックを入れてください。';
       errorMsg.style.display = 'inline';
@@ -1619,6 +1665,14 @@
     selfBazi = bz;
     selfMbti = document.getElementById('mbti-select').value;
     enablePartnerForm();
+    // 自分の命式が変わったので、古い自分の命式に基づくパートナー相性結果は無効。再診断を促す。
+    var partnerResultEl = document.getElementById('partner-result');
+    if (!partnerResultEl.hidden){
+      partnerResultEl.hidden = true;
+      var partnerErrEl = document.getElementById('partner-error');
+      partnerErrEl.textContent = '命式が更新されました。相性を見るには、もう一度「相性を診断する」を押してください。';
+      partnerErrEl.style.display = 'inline';
+    }
   });
 
   document.getElementById('reset-btn').addEventListener('click', function(){
@@ -1630,9 +1684,9 @@
   document.getElementById('partner-mbti-select').innerHTML = mbtiOptionsHtml();
 
   function enablePartnerForm(){
-    document.getElementById('partner-form').classList.remove('is-disabled');
+    document.getElementById('partner-form').hidden = false;
     document.getElementById('partner-submit').disabled = false;
-    document.getElementById('partner-gate-msg').textContent = 'お相手の生年月日を入力してください。時刻が分からない場合は空欄のままで構いません。';
+    document.getElementById('partner-gate-msg').hidden = true;
   }
 
   var partnerTimeUnknown = document.getElementById('partner-time-unknown');
@@ -1655,6 +1709,11 @@
     var timeUnknown = partnerTimeUnknown.checked || !timeVal;
     if (!dateVal){
       errEl.textContent = 'お相手の生年月日を入力してください。';
+      errEl.style.display = 'inline';
+      return;
+    }
+    if (!isValidBirthYear(Number(dateVal.split('-')[0]))){
+      errEl.textContent = '生年月日は'+MIN_BIRTH_YEAR+'年〜'+MAX_BIRTH_YEAR+'年の範囲で入力してください。';
       errEl.style.display = 'inline';
       return;
     }
@@ -1682,13 +1741,14 @@
 
   function addFamilyRow(presetLabel){
     familyRowCount++;
+    var uid = 'fam-row-'+familyRowCount;
     var row = document.createElement('div');
     row.className = 'family-row';
     row.innerHTML =
-      '<div><label>名前・続柄</label><input type="text" class="fam-label" placeholder="例：父" value="'+(presetLabel?escapeHtml(presetLabel):'')+'"></div>'+
-      '<div><label>生年月日</label><input type="date" class="fam-date" min="1900-01-01" max="2026-12-31"></div>'+
-      '<div><label>出生時刻（任意）</label><input type="time" class="fam-time"></div>'+
-      '<div><label>MBTI（任意）</label><select class="fam-mbti">'+mbtiOptionsHtml()+'</select></div>'+
+      '<div><label for="'+uid+'-label">名前・続柄</label><input type="text" id="'+uid+'-label" class="fam-label" placeholder="例：父" value="'+(presetLabel?escapeHtml(presetLabel):'')+'"></div>'+
+      '<div><label for="'+uid+'-date">生年月日</label><input type="date" id="'+uid+'-date" class="fam-date" min="1900-01-01" max="2026-12-31"></div>'+
+      '<div><label for="'+uid+'-time">出生時刻（任意）</label><input type="time" id="'+uid+'-time" class="fam-time"></div>'+
+      '<div><label for="'+uid+'-mbti">MBTI（任意）</label><select id="'+uid+'-mbti" class="fam-mbti">'+mbtiOptionsHtml()+'</select></div>'+
       '<button type="button" class="remove-row">削除</button>';
     familyRowsEl.appendChild(row);
     row.querySelector('.remove-row').addEventListener('click', function(){
@@ -1717,6 +1777,7 @@
     var rows = familyRowsEl.querySelectorAll('.family-row');
     var people = [];
     var hasIncomplete = false;
+    var hasInvalidYear = false;
 
     rows.forEach(function(r){
       var label = r.querySelector('.fam-label').value.trim();
@@ -1724,6 +1785,7 @@
       var timeVal = r.querySelector('.fam-time').value;
       var mbtiVal = r.querySelector('.fam-mbti').value;
       if (!dateVal) return;
+      if (!isValidBirthYear(Number(dateVal.split('-')[0]))){ hasInvalidYear = true; return; }
       if (!label) hasIncomplete = true;
       var dp = dateVal.split('-').map(Number);
       var hour=0, minute=0, timeUnknown=true;
@@ -1736,11 +1798,18 @@
     });
 
     if (people.length < 2){
-      errEl.textContent = '生年月日を入力した家族を2人以上登録してください。';
+      errEl.textContent = hasInvalidYear
+        ? '生年月日は'+MIN_BIRTH_YEAR+'年〜'+MAX_BIRTH_YEAR+'年の範囲で入力してください。'
+        : '生年月日を入力した家族を2人以上登録してください。';
       errEl.style.display = 'inline';
       return;
     }
-    errEl.style.display = 'none';
+    if (hasInvalidYear){
+      errEl.textContent = '※'+MIN_BIRTH_YEAR+'年〜'+MAX_BIRTH_YEAR+'年の範囲外の生年月日は診断から除外されています。';
+      errEl.style.display = 'inline';
+    } else {
+      errEl.style.display = 'none';
+    }
 
     var cards = [];
     for (var i=0;i<people.length;i++){
