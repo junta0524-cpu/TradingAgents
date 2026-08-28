@@ -197,6 +197,8 @@
 
   .elements-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;}
   .radar-wrap{max-width:280px;margin:0 auto 20px;}
+  @media(min-width:640px){.radar-wrap{max-width:360px;}}
+  @media(min-width:960px){.radar-wrap{max-width:420px;}}
   .radar-svg{width:100%;height:auto;display:block;}
   .radar-label{font-size:12px;font-family:'Noto Sans JP',sans-serif;font-weight:700;}
 
@@ -212,6 +214,7 @@
     padding:.7em 1.4em;border-radius:999px;font-size:.88rem;font-weight:700;
     border:1px solid var(--border);color:var(--text-0);background:rgba(255,255,255,0.03);
     transition:transform .15s ease,border-color .15s ease;
+    min-width:11.5em;display:inline-flex;align-items:center;justify-content:center;
   }
   .share-btn:hover{transform:translateY(-2px);border-color:var(--gold);}
   .share-btn.share-x{border-color:#fff;color:#fff;}
@@ -416,7 +419,7 @@
           <div class="row" style="margin-bottom:24px;">
             <div style="grid-column:1/-1;">
               <label for="user-name">お名前・ニックネーム（任意）</label>
-              <input type="text" id="user-name" name="user-name" maxlength="20" placeholder="例：はなこ">
+              <input type="text" id="user-name" name="user-name" maxlength="20" placeholder="例：はなこ" style="max-width:420px;">
             </div>
           </div>
           <div class="row">
@@ -1383,14 +1386,21 @@
     document.body.removeChild(ta);
   }
 
-  document.getElementById('share-copy').addEventListener('click', function(){
+  var shareCopyBtn = document.getElementById('share-copy');
+  var shareCopyOriginalText = shareCopyBtn.textContent;
+  var shareCopyResetTimer = null;
+  shareCopyBtn.addEventListener('click', function(){
     var btn = this;
     var text = document.getElementById('share-preview').textContent + '\n' + location.href;
     function showCopied(){
-      var original = btn.textContent;
+      if (shareCopyResetTimer) clearTimeout(shareCopyResetTimer);
       btn.textContent = 'コピーしました！';
       btn.classList.add('copied');
-      setTimeout(function(){ btn.textContent = original; btn.classList.remove('copied'); }, 2000);
+      shareCopyResetTimer = setTimeout(function(){
+        btn.textContent = shareCopyOriginalText;
+        btn.classList.remove('copied');
+        shareCopyResetTimer = null;
+      }, 2000);
     }
     if (navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(text).then(showCopied).catch(function(){ fallbackCopyText(text); showCopied(); });
@@ -1520,7 +1530,7 @@
   function renderRadarSVG(counts){
     var order = ['木','火','土','金','水'];
     var max = Math.max(3, Math.max.apply(null, order.map(function(el){ return counts[el]; })));
-    var cx=120, cy=120, R=84;
+    var cx=140, cy=140, R=84;
     var angleStep = (Math.PI*2)/5;
     function pointFor(i, value){
       var angle = -Math.PI/2 + i*angleStep;
@@ -1540,13 +1550,13 @@
       var p = pointFor(i, counts[el]);
       return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" style="fill:'+RADAR_COLOR[el]+'"/>';
     }).join('');
-    var labelR = R + 26;
+    var labelR = R + 24;
     var labels = order.map(function(el,i){
       var angle = -Math.PI/2 + i*angleStep;
       var lx = cx + labelR*Math.cos(angle), ly = cy + labelR*Math.sin(angle);
       return '<text x="'+lx+'" y="'+ly+'" text-anchor="middle" dominant-baseline="middle" class="radar-label" style="fill:'+RADAR_COLOR[el]+'">'+el+' '+counts[el]+'</text>';
     }).join('');
-    return '<svg viewBox="0 0 240 240" class="radar-svg" role="img" aria-label="五行バランスのレーダーチャート">'+
+    return '<svg viewBox="0 0 280 280" class="radar-svg" role="img" aria-label="五行バランスのレーダーチャート">'+
       rings + axes +
       '<polygon points="'+dataPts+'" fill="rgba(212,175,55,0.28)" stroke="var(--gold)" stroke-width="2"/>'+
       dots + labels +
