@@ -29,23 +29,23 @@ Game.Data.Skills = {
   zaoral: { id: 'zaoral', name: 'ザオラル', mp: 10, kind: 'revive', power: 0.5, chance: 0.55, target: 'dead_ally', field: true },
 
   // ---- 攻撃呪文(エルロード) ----
-  mera: { id: 'mera', name: 'メラ', mp: 3, kind: 'attack', power: 1.1, stat: 'mag', target: 'one_enemy' },
-  merami: { id: 'merami', name: 'メラミ', mp: 6, kind: 'attack', power: 1.7, stat: 'mag', target: 'one_enemy' },
-  merazoma: { id: 'merazoma', name: 'メラゾーマ', mp: 10, kind: 'attack', power: 2.4, stat: 'mag', target: 'one_enemy' },
-  gira: { id: 'gira', name: 'ギラ', mp: 4, kind: 'attack', power: 0.8, stat: 'mag', target: 'all_enemies' },
-  begiramaa: { id: 'begiramaa', name: 'ベギラマ', mp: 9, kind: 'attack', power: 1.3, stat: 'mag', target: 'all_enemies' },
-  hyado: { id: 'hyado', name: 'ヒャド', mp: 3, kind: 'attack', power: 1.2, stat: 'mag', target: 'one_enemy' },
-  hyadaruko: { id: 'hyadaruko', name: 'ヒャダルコ', mp: 8, kind: 'attack', power: 1.1, stat: 'mag', target: 'all_enemies' },
-  io: { id: 'io', name: 'イオ', mp: 6, kind: 'attack', power: 1.0, stat: 'mag', target: 'all_enemies' },
-  iora: { id: 'iora', name: 'イオラ', mp: 12, kind: 'attack', power: 1.6, stat: 'mag', target: 'all_enemies' },
+  mera: { id: 'mera', name: 'メラ', mp: 3, kind: 'attack', power: 1.1, stat: 'mag', target: 'one_enemy', element: 'fire' },
+  merami: { id: 'merami', name: 'メラミ', mp: 6, kind: 'attack', power: 1.7, stat: 'mag', target: 'one_enemy', element: 'fire' },
+  merazoma: { id: 'merazoma', name: 'メラゾーマ', mp: 10, kind: 'attack', power: 2.4, stat: 'mag', target: 'one_enemy', element: 'fire' },
+  gira: { id: 'gira', name: 'ギラ', mp: 4, kind: 'attack', power: 0.8, stat: 'mag', target: 'all_enemies', element: 'fire' },
+  begiramaa: { id: 'begiramaa', name: 'ベギラマ', mp: 9, kind: 'attack', power: 1.3, stat: 'mag', target: 'all_enemies', element: 'fire' },
+  hyado: { id: 'hyado', name: 'ヒャド', mp: 3, kind: 'attack', power: 1.2, stat: 'mag', target: 'one_enemy', element: 'ice' },
+  hyadaruko: { id: 'hyadaruko', name: 'ヒャダルコ', mp: 8, kind: 'attack', power: 1.1, stat: 'mag', target: 'all_enemies', element: 'ice' },
+  io: { id: 'io', name: 'イオ', mp: 6, kind: 'attack', power: 1.0, stat: 'mag', target: 'all_enemies', element: 'blast' },
+  iora: { id: 'iora', name: 'イオラ', mp: 12, kind: 'attack', power: 1.6, stat: 'mag', target: 'all_enemies', element: 'blast' },
 
   // ---- 攻撃呪文(セレスティア・風と月) ----
-  bagi: { id: 'bagi', name: 'バギ', mp: 4, kind: 'attack', power: 0.9, stat: 'mag', target: 'all_enemies' },
-  bagima: { id: 'bagima', name: 'バギマ', mp: 9, kind: 'attack', power: 1.4, stat: 'mag', target: 'all_enemies' },
+  bagi: { id: 'bagi', name: 'バギ', mp: 4, kind: 'attack', power: 0.9, stat: 'mag', target: 'all_enemies', element: 'wind' },
+  bagima: { id: 'bagima', name: 'バギマ', mp: 9, kind: 'attack', power: 1.4, stat: 'mag', target: 'all_enemies', element: 'wind' },
 
   // ---- 攻撃呪文(ロト・光) ----
-  dein: { id: 'dein', name: 'デイン', mp: 8, kind: 'attack', power: 1.8, stat: 'mag', target: 'one_enemy' },
-  raidein: { id: 'raidein', name: 'ライデイン', mp: 15, kind: 'attack', power: 2.2, stat: 'mag', target: 'all_enemies' },
+  dein: { id: 'dein', name: 'デイン', mp: 8, kind: 'attack', power: 1.8, stat: 'mag', target: 'one_enemy', element: 'light' },
+  raidein: { id: 'raidein', name: 'ライデイン', mp: 15, kind: 'attack', power: 2.2, stat: 'mag', target: 'all_enemies', element: 'light' },
 
   // ---- 補助 ----
   sukara: { id: 'sukara', name: 'スカラ', mp: 3, kind: 'buff', stat_key: 'def', mul: 1.6, target: 'one_ally' },
@@ -66,8 +66,8 @@ Game.Data.Skills = {
   // ---- 武技(呪文ではないので まりょく を使わない) ----
   nagiharai: { id: 'nagiharai', name: 'なぎ払い', mp: 3, kind: 'attack', power: 1.3, target: 'all_enemies' },
   ukenagashi: { id: 'ukenagashi', name: '受け流し', mp: 0, kind: 'guard', target: 'self', reduction: 0.5 },
-  getsuko_no_ya: { id: 'getsuko_no_ya', name: '月光の矢', mp: 4, kind: 'attack', power: 1.3, target: 'one_enemy' },
-  mangetsu_no_ichiya: { id: 'mangetsu_no_ichiya', name: '満月の一矢', mp: 10, kind: 'attack', power: 2.0, target: 'one_enemy' },
+  getsuko_no_ya: { id: 'getsuko_no_ya', name: '月光の矢', mp: 4, kind: 'attack', power: 1.3, target: 'one_enemy', element: 'light' },
+  mangetsu_no_ichiya: { id: 'mangetsu_no_ichiya', name: '満月の一矢', mp: 10, kind: 'attack', power: 2.0, target: 'one_enemy', element: 'light' },
   garai_nagiharai: { id: 'garai_nagiharai', name: 'なぎ払い斬り', mp: 0, kind: 'attack', power: 0.9, target: 'all_enemies' },
   chikai_no_ichigeki: { id: 'chikai_no_ichigeki', name: '誓約の一撃', mp: 8, kind: 'attack', power: 1.6, target: 'one_enemy' },
 };

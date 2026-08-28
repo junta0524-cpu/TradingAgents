@@ -156,6 +156,18 @@ Game.Battle = (function () {
     return effAtk(actor);
   }
 
+  // 種族ごとの効き方をダメージに乗せ、手応えを一言で添える。
+  // 弱点を突けているかどうかが、遊んでいて分かるようにしておく。
+  function applyResistance(target, element, dmg) {
+    var r = Game.Data.resistanceOf(target, element);
+    var out = Math.max(0, Math.round(dmg * r));
+    var note = '';
+    if (r === 0) { note = ' ' + target.label + 'には きかない!'; }
+    else if (r >= 1.4) { note = ' 弱点を ついた!'; }
+    else if (r <= 0.7) { note = ' しかし 効果は うすい……'; }
+    return { dmg: out, note: note };
+  }
+
   // かいしんの一撃。うんのよさが高いほど出やすい(上限12%)。守備を無視して大きく入る。
   function isCritical(actor) {
     return Math.random() < Math.min(0.12, (actor.luck || 0) * 0.004);
@@ -459,10 +471,12 @@ Game.Battle = (function () {
     }
     var crit = isCritical(actor);
     // かいしんの一撃は守備力を無視するので、damageOf に def:0 を渡す
-    var dmg = crit ? Math.round(damageOf(effAtk(actor), 0) * 1.4) : damageOf(effAtk(actor), effDef(target));
+    var raw = crit ? Math.round(damageOf(effAtk(actor), 0) * 1.4) : damageOf(effAtk(actor), effDef(target));
+    var hit = applyResistance(target, 'physical', raw);
+    var dmg = hit.dmg;
     target.curHp = Math.max(0, target.curHp - dmg);
     if (crit) state.log.push('かいしんの いちげき!!');
-    state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
+    state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ' + hit.note);
     if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
   }
 
@@ -548,12 +562,10 @@ Game.Battle = (function () {
     if (skill.kind === 'ailment') {
       state.log.push(say);
       if (!target || target.curHp <= 0) { state.log.push('しかし なにも おこらなかった'); return; }
-      if (target.boss) {
-        // ボスには効きにくい。まったく効かないと弱体呪文が死に技になるので、確率を下げるだけ
-        if (Math.random() > (skill.chance || 0.5) * 0.35) { state.log.push(target.label + 'には きかなかった!'); return; }
-      } else if (Math.random() > (skill.chance || 0.5)) {
-        state.log.push(target.label + 'には きかなかった!'); return;
-      }
+      // 種族ごとの強さを掛ける。アンデッドは眠らず、石像はほとんど効かない。
+      var odds = (skill.chance || 0.5) * Game.Data.resistanceOf(target, 'ailment');
+      if (target.boss) odds *= 0.35;   // ボスは効きにくいが、無効ではない
+      if (Math.random() > odds) { state.log.push(target.label + 'には きかなかった!'); return; }
       target.status = skill.ailment;
       state.log.push(target.label + AILMENT_LINE[skill.ailment]);
       return;
@@ -563,9 +575,10 @@ Game.Battle = (function () {
       var list = skill.target === 'all_enemies' ? aliveEnemies() : [target];
       if (skill.target !== 'all_enemies' && (!target || target.curHp <= 0)) list = aliveEnemies().slice(0, 1);
       list.forEach(function (t) {
-        var dmg = Math.round(damageOf(powerStat(actor, skill), effDef(t)) * (skill.power || 1));
-        t.curHp = Math.max(0, t.curHp - dmg);
-        state.log.push(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + dmg + ' の ダメージ');
+        var raw2 = Math.round(damageOf(powerStat(actor, skill), effDef(t)) * (skill.power || 1));
+        var hit2 = applyResistance(t, skill.element || 'physical', raw2);
+        t.curHp = Math.max(0, t.curHp - hit2.dmg);
+        state.log.push(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + hit2.dmg + ' の ダメージ' + hit2.note);
         if (t.curHp <= 0) state.log.push(t.label + 'を たおした!');
       });
     }

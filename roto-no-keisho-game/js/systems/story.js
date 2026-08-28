@@ -12,8 +12,13 @@ Game.Story = (function () {
   // 分かれ道で選んだ結果。章をまたいで持ち回り、終章の描写に効く。
   var flags = {};
 
-  function chapter() { return Game.Data.Chapters[chapterIndex]; }
-  function stage() { return chapter().stages[stageIndex]; }
+  // 物語を終えたあとは章もステージも存在しない。null を返して、
+  // 呼ぶ側が「もう進行は無い」と分かるようにしておく。
+  function chapter() { return Game.Data.Chapters[chapterIndex] || null; }
+  function stage() {
+    var ch = chapter();
+    return ch ? ch.stages[stageIndex] || null : null;
+  }
   function hasFlag(name) { return !!flags[name]; }
 
   // ---- ステージの達成条件 ----
@@ -44,7 +49,10 @@ Game.Story = (function () {
     return parts.length ? base + '  (' + parts.join(' / ') + ')' : base;
   }
   function isFinished() { return finished; }
-  function currentTitle() { return finished ? '― ロトの継承 完 ―' : chapter().title; }
+  function currentTitle() {
+    var ch = chapter();
+    return (finished || !ch) ? '― ロトの継承 完 ―' : ch.title;
+  }
 
   function begin(modeChangeCb) {
     onModeChange = modeChangeCb;
@@ -73,17 +81,20 @@ Game.Story = (function () {
     progress = data.progress || { talked: {}, defeated: 0 };
     progress.talked = progress.talked || {};
     flags = data.flags || {};
-    var stages = chapter().stages;
-    stageIndex = Math.min(data.stageIndex || 0, stages.length - 1);
+    var ch = chapter();
+    if (!ch) { finished = true; return null; }
+    stageIndex = Math.min(data.stageIndex || 0, ch.stages.length - 1);
     var st = stage();
-    Game.Field.load(st.map, fieldCallbacksFor(st));
+    if (st) Game.Field.load(st.map, fieldCallbacksFor(st));
     return st;
   }
 
   function enterChapter() {
     var ch = chapter();
-    // 章の切り替わりは旅の区切り。ここで全員を休ませる(倒れた仲間もここで復帰する)
-    Game.Party.restAll();
+    // 章の切り替わりでも全快はさせない。全回復してしまうと、宿屋も道具も
+    // 使う理由が一度も来なくなるため(通しプレイでHPの減りが中央値0%だった)。
+    // 倒れた仲間だけは、物語が続かなくなるので立ち上がってもらう。
+    Game.Party.reviveFallen();
     // 章タイトルと導入を読んでいる間、背後にこれから進む舞台を映しておく
     // (先にマップを読み込まないと、導入の間ずっと真っ暗な画面になってしまう)
     Game.Field.load(ch.stages[0].map, fieldCallbacksFor(ch.stages[0]));
@@ -153,6 +164,7 @@ Game.Story = (function () {
   // 話しかけられた相手の、いまの章に合った台詞を流す。
   // その章専用の台詞が無ければ default に落ちる。
   function talkTo(npcId, map) {
+    if (!stage()) return;
     var npc = npcId && Game.Data.Npcs[npcId];
     if (!npc) {
       Game.Dialogue.show(map.name + 'の 住人「ロトさま、道中お気をつけて」');
@@ -284,7 +296,7 @@ Game.Story = (function () {
     isFinished: isFinished, currentTitle: currentTitle,
     currentGoal: currentGoal, hasFlag: hasFlag,
     // 検証用
-    __state: function () { return { progress: progress, flags: flags, stage: stage() }; },
+    __state: function () { return { progress: progress, flags: flags, stage: stage(), finished: finished }; },
     __needTalk: function () { return finished ? [] : talkLeft(stage()); },
     __needDefeat: function () { return finished ? 0 : defeatLeft(stage()); },
   };

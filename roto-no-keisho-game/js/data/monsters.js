@@ -20,80 +20,105 @@ function mon(id, name, tier, loc, over) {
   return m;
 }
 
+
+// ---- 種族ごとの効き方 ----
+// 魔物図鑑の9系統に、属性の通り方と状態異常への強さを持たせる。
+// 1.0 が等倍。1.5 で弱点、0.5 で耐性、0 なら効かない。
+// physical は 通常攻撃と武技(属性を持たない技)にかかる。
+Game.Data.Families = {
+  slime:    { name: 'スライム系',   physical: 1.0, fire: 1.2, ice: 1.0, blast: 1.3, wind: 1.0, light: 1.0, ailment: 1.2 },
+  remnant:  { name: '竜王軍残党系', physical: 1.0, fire: 1.0, ice: 1.0, blast: 1.0, wind: 1.2, light: 1.2, ailment: 1.0 },
+  beast:    { name: '魔獣系',       physical: 1.0, fire: 1.3, ice: 1.0, blast: 1.0, wind: 1.0, light: 1.0, ailment: 1.1 },
+  plant:    { name: '植物系',       physical: 0.8, fire: 1.8, ice: 1.2, blast: 1.0, wind: 0.6, light: 1.0, ailment: 1.3 },
+  sky:      { name: '空中系',       physical: 0.9, fire: 1.0, ice: 1.2, blast: 1.0, wind: 1.6, light: 1.0, ailment: 1.0 },
+  undead:   { name: 'アンデッド系', physical: 1.0, fire: 1.2, ice: 0.7, blast: 1.0, wind: 1.0, light: 1.8, ailment: 0.4 },
+  demon:    { name: '悪魔系',       physical: 1.0, fire: 0.8, ice: 1.0, blast: 1.0, wind: 1.0, light: 1.7, ailment: 0.7 },
+  deep:     { name: '深海系',       physical: 1.0, fire: 0.5, ice: 1.5, blast: 1.2, wind: 1.0, light: 1.0, ailment: 1.0 },
+  ancient:  { name: '古代文明系',   physical: 0.6, fire: 0.8, ice: 0.8, blast: 1.4, wind: 0.8, light: 1.0, ailment: 0.3 },
+};
+
+// 属性と種族から倍率を引く。分からない組み合わせは等倍にしておく。
+Game.Data.resistanceOf = function (monster, element) {
+  var fam = Game.Data.Families[monster && monster.family];
+  if (!fam) return 1;
+  var key = element || 'physical';
+  return fam[key] === undefined ? 1 : fam[key];
+};
+
 var M = {};
 function add(id, name, tier, loc, over) { M[id] = mon(id, name, tier, loc, over); }
 
 // ---- スライム系 ----
-add('chibi_slime', 'ちびスライム', 'early', ['east_road', 'azure_plain', 'cliff_road'], { hp: 5, atk: 3 });
-add('aka_slime', 'あかスライム', 'early', ['east_road'], { hp: 8, atk: 5, inflict: { status: 'confuse', chance: 0.12 } });
-add('hagure_slime', 'はぐれスライム', 'early', ['ogre_camp'], { hp: 10, atk: 6 });
-add('king_slime_kakera', 'キングスライムの欠片', 'mid', ['cliff_road'], { hp: 24 });
-add('hane_slime', 'はねスライム', 'mid', ['east_road', 'azure_plain', 'cliff_road'], { hp: 10, exp: 30, gold: 50 });
-add('hedoro_slime', 'ヘドロスライム', 'mid', ['abyss_depth'], { inflict: { status: 'poison', chance: 0.3 } });
+add('chibi_slime', 'ちびスライム', 'early', ['east_road', 'azure_plain', 'cliff_road'], { hp: 5, atk: 3, family: 'slime' });
+add('aka_slime', 'あかスライム', 'early', ['east_road'], { hp: 8, atk: 5, inflict: { status: 'confuse', chance: 0.12 }, family: 'slime' });
+add('hagure_slime', 'はぐれスライム', 'early', ['ogre_camp'], { hp: 10, atk: 6, family: 'slime' });
+add('king_slime_kakera', 'キングスライムの欠片', 'mid', ['cliff_road'], { hp: 24, family: 'slime' });
+add('hane_slime', 'はねスライム', 'mid', ['east_road', 'azure_plain', 'cliff_road'], { hp: 10, exp: 30, gold: 50, family: 'slime' });
+add('hedoro_slime', 'ヘドロスライム', 'mid', ['abyss_depth'], { inflict: { status: 'poison', chance: 0.3 }, family: 'slime' });
 
 // ---- 竜王軍残党系 ----
-add('nora_goblin', '野良ゴブリン', 'early', ['east_road'], { hp: 12, atk: 6, spd: 6 });
-add('araukure_orc', '荒くれオーク', 'early', ['ogre_camp'], { hp: 20, atk: 10, def: 5 });
-add('sekigan_ogre', '隻眼オーガ兵', 'early', ['ogre_camp'], { hp: 22, atk: 11 });
-add('ryuuga_kyousenshi', '竜牙の狂戦士', 'mid', ['east_road']);
-add('kuzureta_gunba', '崩れた軍馬', 'mid', ['east_road']);
-add('zantou_kyuuhei', '残党の弓兵', 'mid', ['east_road']);
+add('nora_goblin', '野良ゴブリン', 'early', ['east_road'], { hp: 12, atk: 6, spd: 6, family: 'remnant' });
+add('araukure_orc', '荒くれオーク', 'early', ['ogre_camp'], { hp: 20, atk: 10, def: 5, family: 'remnant' });
+add('sekigan_ogre', '隻眼オーガ兵', 'early', ['ogre_camp'], { hp: 22, atk: 11, family: 'remnant' });
+add('ryuuga_kyousenshi', '竜牙の狂戦士', 'mid', ['east_road'], { family: 'remnant' });
+add('kuzureta_gunba', '崩れた軍馬', 'mid', ['east_road'], { family: 'remnant' });
+add('zantou_kyuuhei', '残党の弓兵', 'mid', ['east_road'], { family: 'remnant' });
 
 // ---- 魔獣系 ----
-add('magarou', '牙狼(まがろう)', 'early', ['east_road', 'azure_plain'], { spd: 8 });
-add('magatsu_shika', 'まがつ鹿', 'early', ['azure_plain']);
-add('anaguma_modoki', '穴熊もどき', 'early', ['east_road'], { def: 4 });
-add('kagizume_taka', 'かぎづめ鷹', 'mid', ['cliff_road'], { spd: 10 });
-add('dokuo_no_sasori', '毒尾のさそり', 'mid', ['azure_plain'], { inflict: { status: 'poison', chance: 0.35 } });
-add('hagure_inoshishi', '平原のはぐれ猪', 'early', ['east_road']);
+add('magarou', '牙狼(まがろう)', 'early', ['east_road', 'azure_plain'], { spd: 8, family: 'beast' });
+add('magatsu_shika', 'まがつ鹿', 'early', ['azure_plain'], { family: 'beast' });
+add('anaguma_modoki', '穴熊もどき', 'early', ['east_road'], { def: 4, family: 'beast' });
+add('kagizume_taka', 'かぎづめ鷹', 'mid', ['cliff_road'], { spd: 10, family: 'beast' });
+add('dokuo_no_sasori', '毒尾のさそり', 'mid', ['azure_plain'], { inflict: { status: 'poison', chance: 0.35 }, family: 'beast' });
+add('hagure_inoshishi', '平原のはぐれ猪', 'early', ['east_road'], { family: 'beast' });
 
 // ---- 植物系 ----
-add('hamigusa', '喰み草', 'early', ['east_road'], { def: 4, spd: 2, inflict: { status: 'sleep', chance: 0.18 } });
-add('toge_no_mandrake', '棘のマンドレイク', 'mid', ['azure_plain'], { inflict: { status: 'confuse', chance: 0.3 } });
-add('dokugiri_kinoko', '毒霧茸', 'mid', ['cliff_road'], { inflict: { status: 'poison', chance: 0.35 } });
-add('karamitsuki_tsuta', '絡みつき蔦', 'mid', ['azure_tower'], { inflict: { status: 'sleep', chance: 0.22 } });
-add('tanemaki_poppy', '種撒きポピー', 'early', ['azure_plain'], { inflict: { status: 'sleep', chance: 0.3 } });
-add('kobokuno_bannin', '古木の番人', 'mid', ['azure_plain'], { hp: 40, exp: 35, gold: 60 });
+add('hamigusa', '喰み草', 'early', ['east_road'], { def: 4, spd: 2, inflict: { status: 'sleep', chance: 0.18 }, family: 'plant' });
+add('toge_no_mandrake', '棘のマンドレイク', 'mid', ['azure_plain'], { inflict: { status: 'confuse', chance: 0.3 }, family: 'plant' });
+add('dokugiri_kinoko', '毒霧茸', 'mid', ['cliff_road'], { inflict: { status: 'poison', chance: 0.35 }, family: 'plant' });
+add('karamitsuki_tsuta', '絡みつき蔦', 'mid', ['azure_tower'], { inflict: { status: 'sleep', chance: 0.22 }, family: 'plant' });
+add('tanemaki_poppy', '種撒きポピー', 'early', ['azure_plain'], { inflict: { status: 'sleep', chance: 0.3 }, family: 'plant' });
+add('kobokuno_bannin', '古木の番人', 'mid', ['azure_plain'], { hp: 40, exp: 35, gold: 60, family: 'plant' });
 
 // ---- 空中系 ----
-add('koumori', 'こうもり', 'early', ['azure_tower'], { hp: 6, spd: 7 });
-add('yogiri_no_fukurou', '夜霧のフクロウ', 'early', ['cliff_road']);
-add('dangai_no_harpy', '断崖のハーピー', 'mid', ['cliff_road'], { inflict: { status: 'confuse', chance: 0.28 } });
-add('soukyu_wyvern_ko', '蒼穹のワイバーン子', 'mid', ['azure_tower']);
-add('arane_griffin_youju', '嵐羽のグリフィン幼獣', 'late', ['azure_tower']);
-add('kagewatari_bat_gun', '影渡りのバット群', 'mid', ['academy_altar']);
+add('koumori', 'こうもり', 'early', ['azure_tower'], { hp: 6, spd: 7, family: 'sky' });
+add('yogiri_no_fukurou', '夜霧のフクロウ', 'early', ['cliff_road'], { family: 'sky' });
+add('dangai_no_harpy', '断崖のハーピー', 'mid', ['cliff_road'], { inflict: { status: 'confuse', chance: 0.28 }, family: 'sky' });
+add('soukyu_wyvern_ko', '蒼穹のワイバーン子', 'mid', ['azure_tower'], { family: 'sky' });
+add('arane_griffin_youju', '嵐羽のグリフィン幼獣', 'late', ['azure_tower'], { family: 'sky' });
+add('kagewatari_bat_gun', '影渡りのバット群', 'mid', ['academy_altar'], { family: 'sky' });
 
 // ---- アンデッド系 ----
-add('samayou_yoroi', 'さまよう鎧', 'mid', ['azure_tower'], { def: 8 });
-add('kodai_no_bourei', '古代の亡霊', 'mid', ['azure_tower']);
-add('hone_no_banpei', '骨の番兵', 'mid', ['azure_tower']);
-add('norowareta_gakuto', '呪われた学徒の霊', 'mid', ['academy_altar']);
-add('souhaku_no_moja', '蒼白の亡者', 'late', ['forbidden_ritual_chamber'], { inflict: { status: 'poison', chance: 0.3 } });
-add('dokuro_no_eishousha', '髑髏の詠唱者', 'late', ['forbidden_ritual_chamber']);
+add('samayou_yoroi', 'さまよう鎧', 'mid', ['azure_tower'], { def: 8, family: 'undead' });
+add('kodai_no_bourei', '古代の亡霊', 'mid', ['azure_tower'], { family: 'undead' });
+add('hone_no_banpei', '骨の番兵', 'mid', ['azure_tower'], { family: 'undead' });
+add('norowareta_gakuto', '呪われた学徒の霊', 'mid', ['academy_altar'], { family: 'undead' });
+add('souhaku_no_moja', '蒼白の亡者', 'late', ['forbidden_ritual_chamber'], { inflict: { status: 'poison', chance: 0.3 }, family: 'undead' });
+add('dokuro_no_eishousha', '髑髏の詠唱者', 'late', ['forbidden_ritual_chamber'], { family: 'undead' });
 
 // ---- 悪魔系 ----
-add('warau_kage', '嗤う影', 'mid', ['azure_plain']);
-add('jujutsushi_modoki', '呪術師もどき', 'mid', ['cliff_road']);
-add('keiyaku_no_akuma_inu', '契約の悪魔犬', 'late', ['east_road'], { spd: 12 });
-add('genwaku_no_imp', '幻惑のインプ', 'mid', ['azure_tower'], { inflict: { status: 'confuse', chance: 0.3 } });
-add('chi_no_daikousha', '血の代行者', 'late', ['east_road']);
-add('nanamonaki_shito', '名もなき使徒', 'late', ['forbidden_ritual_chamber']);
+add('warau_kage', '嗤う影', 'mid', ['azure_plain'], { family: 'demon' });
+add('jujutsushi_modoki', '呪術師もどき', 'mid', ['cliff_road'], { family: 'demon' });
+add('keiyaku_no_akuma_inu', '契約の悪魔犬', 'late', ['east_road'], { spd: 12, family: 'demon' });
+add('genwaku_no_imp', '幻惑のインプ', 'mid', ['azure_tower'], { inflict: { status: 'confuse', chance: 0.3 }, family: 'demon' });
+add('chi_no_daikousha', '血の代行者', 'late', ['east_road'], { family: 'demon' });
+add('nanamonaki_shito', '名もなき使徒', 'late', ['forbidden_ritual_chamber'], { family: 'demon' });
 
 // ---- 深海系 ----
-add('hakkou_kurage', '発光クラゲ', 'mid', ['abyss_depth'], { inflict: { status: 'sleep', chance: 0.25 } });
-add('koukaku_kani', '甲殻の蟹型魔物', 'mid', ['abyss_depth'], { def: 9 });
-add('shokushu_uo', '触手魚', 'mid', ['abyss_depth']);
-add('shinkai_lobster', '深海のロブスター', 'mid', ['abyss_depth'], { def: 10 });
-add('subo_no_youtai', '巣母の幼体', 'mid', ['abyss_depth']);
-add('shinen_no_ankou', '深淵のアンコウ', 'mid', ['abyss_depth'], { inflict: { status: 'confuse', chance: 0.25 } });
+add('hakkou_kurage', '発光クラゲ', 'mid', ['abyss_depth'], { inflict: { status: 'sleep', chance: 0.25 }, family: 'deep' });
+add('koukaku_kani', '甲殻の蟹型魔物', 'mid', ['abyss_depth'], { def: 9, family: 'deep' });
+add('shokushu_uo', '触手魚', 'mid', ['abyss_depth'], { family: 'deep' });
+add('shinkai_lobster', '深海のロブスター', 'mid', ['abyss_depth'], { def: 10, family: 'deep' });
+add('subo_no_youtai', '巣母の幼体', 'mid', ['abyss_depth'], { family: 'deep' });
+add('shinen_no_ankou', '深淵のアンコウ', 'mid', ['abyss_depth'], { inflict: { status: 'confuse', chance: 0.25 }, family: 'deep' });
 
 // ---- 古代文明系 ----
-add('ishi_no_bannin', '石の番人', 'mid', ['azure_tower'], { def: 10, spd: 3 });
-add('sabita_golem', '錆びたゴーレム', 'mid', ['azure_tower'], { def: 11 });
-add('madou_ningyou', '魔導人形', 'mid', ['azure_tower']);
-add('tenkyugi_no_shugoju', '天球儀の守護獣', 'late', ['azure_tower']);
-add('kuzureshi_kenja_no_genei', '崩れし賢者の幻影', 'late', ['azure_tower']);
-add('fuuin_no_shugosekizou', '封印の守護石像', 'late', ['azure_tower'], { hp: 44, exp: 40, gold: 75 });
+add('ishi_no_bannin', '石の番人', 'mid', ['azure_tower'], { def: 10, spd: 3, family: 'ancient' });
+add('sabita_golem', '錆びたゴーレム', 'mid', ['azure_tower'], { def: 11, family: 'ancient' });
+add('madou_ningyou', '魔導人形', 'mid', ['azure_tower'], { family: 'ancient' });
+add('tenkyugi_no_shugoju', '天球儀の守護獣', 'late', ['azure_tower'], { family: 'ancient' });
+add('kuzureshi_kenja_no_genei', '崩れし賢者の幻影', 'late', ['azure_tower'], { family: 'ancient' });
+add('fuuin_no_shugosekizou', '封印の守護石像', 'late', ['azure_tower'], { hp: 44, exp: 40, gold: 75, family: 'ancient' });
 
 Game.Data.Monsters = M;
 

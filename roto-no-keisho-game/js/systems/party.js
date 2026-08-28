@@ -68,7 +68,20 @@ Game.Party = (function () {
   function get(id) { return members[id]; }
   function isWiped() { return list().every(function (m) { return m.hp <= 0; }); }
 
-  // 章の区切りや宿屋での休息。HP/MPを全快させ、状態異常も解け、倒れた仲間も立ち上がる。
+  // 章の区切り。倒れている仲間だけを、最低限の状態で立たせる。
+  // 元気な者はそのまま ― 消耗は次の章へ持ち越し、宿屋で直してもらう。
+  function reviveFallen() {
+    list().forEach(function (m) {
+      m.guarding = false;
+      if (m.hp > 0) return;
+      m.hp = Math.max(1, Math.floor(m.maxHp * 0.25));
+      m.mp = Math.max(m.mp, Math.floor(m.maxMp * 0.25));
+      m.status = null;
+      m.ward = false;
+    });
+  }
+
+  // 宿屋での休息。HP/MPを全快させ、状態異常も解け、倒れた仲間も立ち上がる。
   function restAll() {
     list().forEach(function (m) {
       m.hp = m.maxHp;
@@ -314,7 +327,7 @@ Game.Party = (function () {
   }
 
   return {
-    init: init, recruit: recruit, restAll: restAll, revive: revive,
+    init: init, recruit: recruit, restAll: restAll, reviveFallen: reviveFallen, revive: revive,
     list: list, aliveList: aliveList, deadList: deadList, get: get,
     isWiped: isWiped, addExp: addExp, learnedSkills: learnedSkills,
     statusOf: statusOf, inflict: inflict, cure: cure, cureAll: cureAll,
