@@ -126,6 +126,13 @@
   .pillar-card .term-note{display:block;margin-top:4px;font-size:.66rem;}
   .dayun-period .term-note{display:block;font-size:.66rem;}
   .term-legend{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);color:var(--text-2);font-size:.8rem;line-height:1.8;}
+
+  .table-guide{margin-top:16px;padding:16px 18px;border:1px dashed var(--border);border-radius:12px;background:rgba(255,255,255,0.02);}
+  .table-guide .guide-title{margin:0 0 10px;font-size:.85rem;color:var(--gold-soft);font-weight:700;}
+  .table-guide ul{margin:0;padding-left:1.2em;color:var(--text-1);font-size:.85rem;}
+  .table-guide ul li{margin-bottom:6px;}
+  .table-guide ul li:last-child{margin-bottom:0;}
+  .table-guide .term-legend{margin-top:12px;padding-top:12px;}
   .submit-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
   button.submit{
     appearance:none;border:none;cursor:pointer;
@@ -305,6 +312,11 @@
   .compat-mbti ul li:last-child{margin-bottom:0;}
 
   .mbti-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px clamp(18px,4vw,30px);}
+  .mbti-combo-name{
+    text-align:center;font-family:'Noto Serif JP',serif;font-size:1.15rem;color:var(--text-1);
+    margin-bottom:18px;
+  }
+  .mbti-combo-name span{color:var(--gold-soft);font-weight:700;font-size:1.3rem;}
   .mbti-head{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:22px;flex-wrap:wrap;text-align:center;}
   .mbti-head .mb-tag{font-family:'Noto Serif JP',serif;font-size:1.3rem;font-weight:700;color:var(--text-0);border:1px solid var(--border);border-radius:12px;padding:8px 16px;}
   .mbti-head .mb-link{font-family:'Noto Serif JP',serif;color:var(--gold);font-size:1.1rem;}
@@ -315,9 +327,15 @@
   .mbti-sub ul{margin:0;padding-left:1.3em;color:var(--text-1);font-size:.9rem;}
   .mbti-sub ul li{margin-bottom:8px;}
   .mbti-sub ul li:last-child{margin-bottom:0;}
-  .mbti-verdict{border-top:1px dashed var(--border);padding-top:20px;margin-top:4px;}
+  .mbti-verdict{border-top:1px dashed var(--border);padding-top:20px;margin-top:4px;margin-bottom:22px;}
   .mbti-verdict .tier{display:inline-block;font-family:'Noto Serif JP',serif;font-weight:700;font-size:.95rem;color:var(--gold-soft);border:1px solid var(--gold);border-radius:999px;padding:.4em 1.1em;background:rgba(212,175,55,0.08);margin-bottom:12px;}
   .mbti-verdict p{margin:0;color:var(--text-1);font-size:.9rem;}
+
+  .mbti-sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media(max-width:640px){.mbti-sub-grid{grid-template-columns:1fr;}}
+  .mbti-matches{border-top:1px dashed var(--border);padding-top:20px;}
+  .mbti-matches .tags span{border-color:var(--gold);color:var(--gold-soft);}
+  .mbti-matches .match-note{margin:10px 0 0;color:var(--text-2);font-size:.8rem;line-height:1.7;}
 
   .reset-row{text-align:center;margin-top:44px;}
   .reset-btn{
@@ -459,7 +477,16 @@
         <div class="detail-table-wrap">
           <table class="detail-table" id="detail-table"></table>
         </div>
-        <p class="term-legend" id="detail-table-legend"></p>
+        <div class="table-guide">
+          <p class="guide-title">📖 この表の見方</p>
+          <ul>
+            <li><strong>天干（てんかん）</strong>：その柱の"表の顔"。10種類ある基本の性質です。</li>
+            <li><strong>地支（ちし）</strong>：その柱の"土台"。干支の「支」にあたる12種類の要素です。</li>
+            <li><strong>蔵干（ぞうかん）</strong>：地支の中に隠れている天干。表には出ない"本音"のような存在です。</li>
+            <li><strong>十神（じゅっしん）</strong>：日主（あなた自身）から見た、その柱との関わり方のタイプです。</li>
+          </ul>
+          <p class="term-legend" id="detail-table-legend"></p>
+        </div>
       </div>
 
       <div class="section-block">
@@ -1093,6 +1120,71 @@
     ESFP:'楽しさの先にある計画にも、意識を向けてみましょう。'
   };
 
+  var DAYMASTER_ADJ = {
+    甲:'まっすぐな', 乙:'しなやかな', 丙:'情熱的な', 丁:'物静かな', 戊:'どっしりした',
+    己:'面倒見のいい', 庚:'白黒はっきりした', 辛:'こだわりの強い', 壬:'スケールの大きな', 癸:'思慮深い'
+  };
+  var DAYMASTER_LOVE = {
+    甲:'好きになったらまっすぐ。リードしたい気持ちが強く、頼れる存在でいたいタイプです。',
+    乙:'相手に合わせるのが得意で、そっと寄り添う恋愛が心地よいタイプです。',
+    丙:'情熱的でストレート。好意を隠さず、明るく相手を照らすタイプです。',
+    丁:'控えめだけど一途。じっくり時間をかけて距離を縮めるタイプです。',
+    戊:'安定感を大切にし、じっくり信頼を築いてから深まる恋愛をするタイプです。',
+    己:'相手に尽くして支えるタイプ。世話を焼きすぎないバランスも大切です。',
+    庚:'はっきり白黒つけたいタイプ。好き嫌いを態度で示す潔さがあります。',
+    辛:'理想が高くこだわりが強め。心を許すまでに時間がかかるタイプです。',
+    壬:'束縛を嫌い、自由な関係を好むタイプ。スケールの大きな愛情表現をします。',
+    癸:'静かに深く想うタイプ。言葉より態度で愛情を伝えることが多いです。'
+  };
+  var DAYMASTER_WORK = {
+    甲:'リーダーやパイオニアとして力を発揮しやすく、目標に向かって突き進むタイプです。',
+    乙:'サポート役や調整役として力を発揮。周囲と協調しながら成果を出すタイプです。',
+    丙:'人前に立つ仕事や、周囲を巻き込むムードメーカー的な役回りが向いています。',
+    丁:'縁の下の力持ちとして、専門性を磨きながらコツコツ実力をつけるタイプです。',
+    戊:'組織の土台を支える、安定感のあるポジションで力を発揮するタイプです。',
+    己:'人を育てたりサポートしたりする仕事で、真価を発揮するタイプです。',
+    庚:'決断力を活かし、白黒はっきりさせる仕事や交渉ごとで力を発揮します。',
+    辛:'専門性やこだわりを活かせる、クオリティ重視の仕事に向いています。',
+    壬:'大きな構想を描く仕事や、自由度の高い働き方で力を発揮するタイプです。',
+    癸:'リサーチや分析など、静かにじっくり取り組む仕事で力を発揮するタイプです。'
+  };
+  var MBTI_LOVE = {
+    INTJ:'恋愛でも将来設計を大事にする、誠実で計画的なパートナー像を描くタイプ。',
+    INTP:'恋愛にもマイペース。知的な会話で通じ合える相手に惹かれるタイプ。',
+    ENTJ:'恋愛にも計画性を持ち込む、頼れるリーダー気質のパートナータイプ。',
+    ENTP:'会話や刺激を楽しむ恋愛が好きな、飽きさせないタイプ。',
+    INFJ:'深い精神的なつながりを求める、一途で誠実なタイプ。',
+    INFP:'理想の恋愛観を大切にする、ロマンチストなタイプ。',
+    ENFJ:'相手を献身的に支える、面倒見の良いパートナータイプ。',
+    ENFP:'情熱的でオープン。楽しさを分かち合える関係を求めるタイプ。',
+    ISTJ:'誠実で一途。時間をかけて信頼関係を築く安定志向のタイプ。',
+    ISFJ:'さりげない気配りで相手を支える、献身的なタイプ。',
+    ESTJ:'はっきりした意思表示で関係をリードする、頼れるタイプ。',
+    ESFJ:'相手を大切にし、周囲からも祝福される関係を築きたいタイプ。',
+    ISTP:'干渉されない距離感を好む、クールだけど一途なタイプ。',
+    ISFP:'穏やかに寄り添う、感受性豊かなロマンチストタイプ。',
+    ESTP:'今この瞬間を楽しむ、情熱的でアクティブなタイプ。',
+    ESFP:'明るく盛り上げる、一緒にいて楽しいパートナータイプ。'
+  };
+  var MBTI_WORK = {
+    INTJ:'長期戦略を描く仕事や、専門性を極める仕事で力を発揮します。',
+    INTP:'研究や分析など、じっくり考える仕事で本領を発揮します。',
+    ENTJ:'組織を率いるマネジメントやリーダーポジションで力を発揮します。',
+    ENTP:'新規事業やアイデア出しなど、変化の多い仕事で力を発揮します。',
+    INFJ:'人の成長支援や、価値観を活かせるビジョン重視の仕事が向いています。',
+    INFP:'自分の価値観を活かせる、クリエイティブな仕事で力を発揮します。',
+    ENFJ:'人材育成やチームをまとめる、対人支援の仕事で力を発揮します。',
+    ENFP:'アイデアと人を巻き込む力を活かせる、企画系の仕事が向いています。',
+    ISTJ:'正確さと継続力が求められる、管理・運用系の仕事で力を発揮します。',
+    ISFJ:'周囲を支えるサポート業務や、丁寧さが求められる仕事が向いています。',
+    ESTJ:'計画的にチームを動かす、マネジメント業務で力を発揮します。',
+    ESFJ:'チームの調和を保ちながら進める、対人系の仕事が向いています。',
+    ISTP:'手を動かして解決する、実践的な仕事で力を発揮します。',
+    ISFP:'感性を活かせる、クリエイティブな仕事が向いています。',
+    ESTP:'素早い判断が求められる、現場対応系の仕事で力を発揮します。',
+    ESFP:'人と関わりながら場を盛り上げる、接客・エンタメ系の仕事が向いています。'
+  };
+
   function computeMbtiAlignment(dayStem, mbtiType){
     var dayIsYang = STEMS.indexOf(dayStem)%2===0;
     var mbtiIsE = mbtiType.charAt(0)==='E';
@@ -1131,6 +1223,14 @@
     return {matches:matches, tier:MBTI_PAIR_TIER[matches], notes:notes};
   }
 
+  function topMatchingMbtiTypes(selfType, count){
+    var results = MBTI_TYPES.filter(function(t){ return t!==selfType; }).map(function(t){
+      return {type:t, matches: mbtiPairCompat(selfType, t).matches};
+    });
+    results.sort(function(a,b){ return b.matches-a.matches; });
+    return results.slice(0, count);
+  }
+
   function renderMbtiSection(bz, mbtiType){
     var section = document.getElementById('mbti-section');
     if (!mbtiType){
@@ -1140,11 +1240,15 @@
     var dmStem = bz.day.stem;
     var dmData = MBTI_DATA[mbtiType];
     var alignment = computeMbtiAlignment(dmStem, mbtiType);
+    var comboName = DAYMASTER_ADJ[dmStem]+MBTI_LABELS[mbtiType]+'タイプ';
+    var topMatches = topMatchingMbtiTypes(mbtiType, 4);
 
-    var html = '<div class="mbti-head">'+
+    var html =
+      '<div class="mbti-combo-name">あなたは「<span>'+comboName+'</span>」</div>'+
+      '<div class="mbti-head">'+
         '<div class="mb-tag">日主：'+dmStem+'（'+STEM_ELEMENT[dmStem]+'）</div>'+
         '<div class="mb-link">×</div>'+
-        '<div class="mb-tag">'+mbtiType+'</div>'+
+        '<div class="mb-tag">'+mbtiType+'（'+MBTI_LABELS[mbtiType]+'）</div>'+
       '</div>'+
       '<div class="mbti-sub">'+
         '<h4>強み（メリット）</h4>'+
@@ -1155,6 +1259,10 @@
         '<h4>注意したい点（デメリット）</h4>'+
         '<ul><li>'+DAYMASTER_CAUTION[dmStem]+'</li><li>'+dmData.caution+'</li></ul>'+
       '</div>'+
+      '<div class="mbti-sub-grid">'+
+        '<div class="mbti-sub"><h4>💗 恋愛面の傾向</h4><ul><li>'+DAYMASTER_LOVE[dmStem]+'</li><li>'+MBTI_LOVE[mbtiType]+'</li></ul></div>'+
+        '<div class="mbti-sub"><h4>💼 仕事面の傾向</h4><ul><li>'+DAYMASTER_WORK[dmStem]+'</li><li>'+MBTI_WORK[mbtiType]+'</li></ul></div>'+
+      '</div>'+
       '<div class="mbti-sub">'+
         '<h4>心がけたいこと</h4>'+
         '<ul><li>'+DAYMASTER_ADVICE[dmStem]+'</li><li>'+MBTI_ADVICE[mbtiType]+'</li></ul>'+
@@ -1162,6 +1270,11 @@
       '<div class="mbti-verdict">'+
         '<div class="tier">'+alignment.tier+'</div>'+
         '<p>'+alignment.text+'</p>'+
+      '</div>'+
+      '<div class="mbti-sub mbti-matches">'+
+        '<h4>🤝 気が合いやすいMBTIタイプ例</h4>'+
+        '<div class="tags">'+topMatches.map(function(m){ return '<span>'+m.type+'（'+MBTI_LABELS[m.type]+'）</span>'; }).join('')+'</div>'+
+        '<p class="match-note">四本のものさし（外向/内向・現実/直感・論理/感情・計画/柔軟）のうち、多くが共通するタイプほど自然と気が合いやすい傾向があります。パートナーや家族の相性診断でMBTIも入力すると、実際の相手との相性も見られます。</p>'+
       '</div>';
 
     document.getElementById('mbti-box').innerHTML = html;
