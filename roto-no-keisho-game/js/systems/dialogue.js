@@ -85,5 +85,9 @@ Game.Dialogue = (function () {
       { size: 12, align: 'right', color: '#a49b86' });
   }
 
-  return { show: show, isActive: isActive, update: update, draw: draw, setWidth: setWidth };
+  return {
+    show: show, isActive: isActive, update: update, draw: draw, setWidth: setWidth,
+    // 検証用: いま出ている文面
+    current: function () { return queue.length ? queue[0].lines.join('') : ''; },
+  };
 })();

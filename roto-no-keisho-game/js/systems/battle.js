@@ -20,6 +20,7 @@ Game.Battle = (function () {
       cursor: 0,
       pendingSkill: null,
       pendingItem: null,
+      actions: [],   // このラウンドに予約された味方の行動
       onEnd: onEnd,
       log: [],
     };
@@ -61,6 +62,7 @@ Game.Battle = (function () {
     return [
       { id: 'attack', label: 'たたかう' },
       { id: 'skill', label: 'じゅもん' },
+      { id: 'guard', label: 'ぼうぎょ' },
       { id: 'item', label: 'どうぐ' },
       { id: 'flee', label: 'にげる' },
     ];
@@ -168,17 +170,17 @@ Game.Battle = (function () {
   function beginTurn() {
     var actor = currentActor();
     if (!actor || actor.hp <= 0) { advanceTurn(); return; }
+    var pre = state.log.length;
     var canAct = resolveTurnStatus(actor);
     var statusDef = Game.Party.statusOf(actor);
     if (!canAct) {
-      state.phase = 'resolving';
-      flushLog(advanceTurn);
+      // 眠っているなどで動けない。その旨だけをこのラウンドの解決に載せる
+      var msg = state.log.splice(pre).join(' ');
+      queueAction({ kind: 'skip', message: msg });
       return;
     }
     if (statusDef && statusDef.randomTarget) {
-      actConfused(actor);
-      state.phase = 'resolving';
-      flushLog(advanceTurn);
+      queueAction({ kind: 'confused' });
       return;
     }
     state.phase = 'command';
@@ -186,33 +188,71 @@ Game.Battle = (function () {
     state.cursor = 0;
   }
 
+  // 選んだ行動をこのラウンドの予約に積み、次の仲間へ回す。
+  // ドラクエと同じで、全員のコマンドを決めてからまとめて解決する。
+  function queueAction(action) {
+    var actor = currentActor();
+    action.actorId = actor.id;
+    state.actions.push(action);
+    advanceTurn();
+  }
+
   function advanceTurn() {
     state.turnIndex += 1;
     // 敵が全滅していたら、残りの行動者の手番は飛ばして即ラウンドを終える
-    // (放っておくと「たたかう」を選んでも対象がいない target メニューで入力を待ち続けてしまう)
-    if (aliveEnemies().length === 0) { endPlayerPhase(); return; }
+    if (aliveEnemies().length === 0) { resolveRound(); return; }
     if (state.turnIndex < state.turnOrder.length) beginTurn();
-    else endPlayerPhase();
+    else resolveRound();
   }
 
-  function endPlayerPhase() {
-    checkEnemiesDefeated(function (over) {
-      if (over) return;
-      queueEnemyTurns();
-      flushLog(function () {
-        if (Game.Party.isWiped()) {
-          endBattle('lost');
-        } else {
-          clearGuards(); // 防御の効果はこのラウンドの敵の攻撃までで切れる
-          tickPoison();
-          flushLog(function () {
-            if (Game.Party.isWiped()) { endBattle('lost'); return; }
-            state.turnOrder = Game.Party.aliveList().map(function (m) { return m.id; });
-            state.turnIndex = 0;
-            beginTurn();
-          });
-        }
-      });
+  // すばやさの高い者から動く。同じ値でも毎回きっちり同じ順にならないよう揺らす。
+  function initiative(spd) { return (spd || 1) * (0.75 + Math.random() * 0.5); }
+
+  function resolveRound() {
+    var queue = state.actions.slice();
+    state.actions = [];
+    aliveEnemies().forEach(function (e) { queue.push({ kind: 'enemy', enemy: e }); });
+    queue.forEach(function (a) {
+      var actor = a.kind === 'enemy' ? a.enemy : Game.Party.get(a.actorId);
+      a.order = initiative(actor && actor.spd);
+    });
+    queue.sort(function (a, b) { return b.order - a.order; });
+    state.phase = 'resolving';
+    // 「かまえをとった」などの、行動前に出ている文を先に流す
+    flushLog(function () { runQueue(queue, 0); });
+  }
+
+  function runQueue(queue, i) {
+    if (!state) return;
+    if (Game.Party.isWiped()) { endBattle('lost'); return; }
+    if (aliveEnemies().length === 0) { checkEnemiesDefeated(function () {}); return; }
+    if (i >= queue.length) { endRound(); return; }
+
+    var a = queue[i];
+    var next = function () { runQueue(queue, i + 1); };
+    if (a.kind === 'enemy') {
+      // 逃げたり倒れたりした魔物は飛ばす
+      if (a.enemy.curHp <= 0 || state.enemies.indexOf(a.enemy) < 0) { next(); return; }
+      enemyAct(a.enemy);
+    } else {
+      var actor = Game.Party.get(a.actorId);
+      if (!actor || actor.hp <= 0) { next(); return; }  // 先に倒された仲間の行動は消える
+      performAction(a, actor);
+      if (!state) return;               // にげるが成功して戦闘が終わった場合
+      if (a.kind === 'flee' && a.fled) return;
+    }
+    flushLog(next);
+  }
+
+  function endRound() {
+    clearGuards(); // 防御のかまえはこのラウンドまで
+    tickPoison();
+    flushLog(function () {
+      if (Game.Party.isWiped()) { endBattle('lost'); return; }
+      if (aliveEnemies().length === 0) { checkEnemiesDefeated(function () {}); return; }
+      state.turnOrder = Game.Party.aliveList().map(function (m) { return m.id; });
+      state.turnIndex = 0;
+      beginTurn();
     });
   }
 
@@ -233,34 +273,52 @@ Game.Battle = (function () {
     });
   }
 
-  function queueEnemyTurns() {
-    aliveEnemies().forEach(function (enemy) {
-      var alive = Game.Party.aliveList();
-      if (alive.length === 0) return;
-      var useSkill = enemy.boss && enemy.bossSkills && Math.random() < 0.35;
-      if (useSkill) {
-        var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
-        if (skill.target === 'all_party') {
-          alive.forEach(function (member) {
-            var dmg = hurt(member, Math.round(damageOf(enemy.atk, member.def) * skill.power));
-            state.log.push(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
-          });
-          return;
-        }
+  // 手負いの雑魚は逃げ出すことがある。最後の1匹は逃げない(戦闘が空振りに終わるため)
+  function maybeFlee(enemy) {
+    if (enemy.boss || aliveEnemies().length <= 1) return false;
+    if (enemy.curHp > enemy.hp * 0.3) return false;
+    if (Math.random() > 0.3) return false;
+    state.log.push(enemy.label + 'は にげだした!');
+    var i = state.enemies.indexOf(enemy);
+    if (i >= 0) state.enemies.splice(i, 1);
+    return true;
+  }
+
+  function enemyAct(enemy) {
+    var alive = Game.Party.aliveList();
+    if (alive.length === 0) return;
+    if (maybeFlee(enemy)) return;
+
+    var useSkill = enemy.boss && enemy.bossSkills && Math.random() < 0.35;
+    if (useSkill) {
+      var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
+      if (skill.target === 'all_party') {
+        alive.forEach(function (member) {
+          var dmg = hurt(member, Math.round(damageOf(enemy.atk, member.def) * skill.power));
+          state.log.push(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
+        });
+        return;
       }
-      var target = alive[Math.floor(Math.random() * alive.length)];
-      var dmg2 = hurt(target, damageOf(enemy.atk, target.def));
-      state.log.push(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
-      // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
-      if (enemy.inflict && target.hp > 0 && Math.random() < enemy.inflict.chance) {
-        var msg = Game.Party.inflict(target, enemy.inflict.status);
-        if (msg) state.log.push(msg);
-      }
-    });
+    }
+    var target = alive[Math.floor(Math.random() * alive.length)];
+    var dmg2 = hurt(target, damageOf(enemy.atk, target.def));
+    state.log.push(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
+    if (target.hp <= 0) state.log.push(target.name + 'は たおれてしまった!');
+    // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
+    if (enemy.inflict && target.hp > 0 && Math.random() < enemy.inflict.chance) {
+      var msg = Game.Party.inflict(target, enemy.inflict.status);
+      if (msg) state.log.push(msg);
+    }
   }
 
   function checkEnemiesDefeated(cb) {
     if (aliveEnemies().length > 0) { cb(false); return; }
+    if (state.enemies.length === 0) {
+      // 全部逃げていった。取り分は無し
+      Game.Dialogue.show('魔物たちは にげさっていった。', function () { endBattle('won'); });
+      cb(true);
+      return;
+    }
     var exp = state.enemies.reduce(function (s, e) { return s + e.exp; }, 0);
     var gold = state.enemies.reduce(function (s, e) { return s + e.gold; }, 0);
     Game.Party.addGold(gold);
@@ -287,8 +345,49 @@ Game.Battle = (function () {
     if (cb) cb(result, defeatedIds);
   }
 
-  function doAttack(target) {
+  // ---- 予約(コマンドを選んだ瞬間に呼ばれる) ----
+  function doAttack(target) { queueAction({ kind: 'attack', target: target }); }
+  function doItem(itemEntry, target) { queueAction({ kind: 'item', item: itemEntry, target: target }); }
+
+  // ぼうぎょ と 受け流し は「かまえ」なので、選んだ時点で効き始める。
+  // 順番が回ってくる前に殴られても守れるようにしておく。
+  function doGuard() {
     var actor = currentActor();
+    actor.guarding = 0.5;
+    state.log.push(actor.name + 'は みをまもっている。');
+    queueAction({ kind: 'guarded' });
+  }
+
+  function doSkill(skill, target) {
+    var actor = currentActor();
+    if (skill.kind === 'guard') {
+      actor.mp -= skill.mp;
+      actor.guarding = skill.reduction || 0.5;
+      state.log.push(actor.name + 'は ' + skill.name + 'の かまえを とった!');
+      queueAction({ kind: 'guarded' });
+      return;
+    }
+    queueAction({ kind: 'skill', skill: skill, target: target });
+  }
+
+  function doFlee() { queueAction({ kind: 'flee' }); }
+
+  // ---- 解決(すばやさ順に呼ばれる) ----
+  function performAction(a, actor) {
+    if (a.kind === 'attack') return resolveAttack(actor, a.target);
+    if (a.kind === 'skill') return resolveSkill(actor, a.skill, a.target);
+    if (a.kind === 'item') return resolveItem(actor, a.item, a.target);
+    if (a.kind === 'flee') return resolveFlee(a, actor);
+    if (a.kind === 'skip') { state.log.push(a.message); return; }
+    if (a.kind === 'confused') return actConfused(actor);
+    // 'guarded' は選んだ時点で効いているので、ここでは何もしない
+  }
+
+  function resolveAttack(actor, target) {
+    if (!target || target.curHp <= 0 || state.enemies.indexOf(target) < 0) {
+      target = aliveEnemies()[0];   // 狙っていた相手が先に倒れていたら、残りへ振り替える
+      if (!target) return;
+    }
     var crit = isCritical(actor);
     // かいしんの一撃は守備力を無視するので、damageOf に def:0 を渡す
     var dmg = crit ? Math.round(damageOf(actor.atk, 0) * 1.4) : damageOf(actor.atk, target.def);
@@ -296,53 +395,49 @@ Game.Battle = (function () {
     if (crit) state.log.push('かいしんの いちげき!!');
     state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
     if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
-    state.phase = 'resolving';
-    flushLog(advanceTurn);
   }
 
-  function doSkill(skill, target) {
-    var actor = currentActor();
+  function resolveItem(actor, itemEntry, target) {
+    var def = Game.Data.Items[itemEntry.id];
+    var resultMsg = Game.Party.useItem(itemEntry.id, target.id);
+    if (resultMsg === null) {
+      state.log.push(actor.name + 'は ' + def.name + 'を つかおうとしたが、もう もっていない!');
+      return;
+    }
+    state.log.push(actor.name + 'は ' + def.name + 'を つかった! ' + (resultMsg || ''));
+  }
+
+  function resolveFlee(a, actor) {
+    var alive = aliveEnemies();
+    var avgEnemySpd = alive.reduce(function (s, e) { return s + e.spd; }, 0) / Math.max(1, alive.length);
+    var success = Math.random() < (0.5 + (actor.spd - avgEnemySpd) * 0.03);
+    if (success) {
+      a.fled = true;
+      Game.Dialogue.show(actor.name + 'たちは にげだした!', function () { endBattle('fled'); });
+      return;
+    }
+    state.log.push('しかし まわりこまれてしまった!');
+  }
+
+  function resolveSkill(actor, skill, target) {
+    if (actor.mp < skill.mp) { state.log.push(actor.name + 'は MPが たりない!'); return; }
     actor.mp -= skill.mp;
-    if (skill.kind === 'guard') {
-      actor.guarding = skill.reduction || 0.5;
-      state.log.push(actor.name + 'は ' + skill.name + 'の かまえを とった!');
-    } else if (skill.kind === 'heal') {
+    if (skill.kind === 'heal') {
       // 回復量もまりょくで伸びる(唱え手が育つほど大きく戻る)
       var heal = skill.power + Math.floor(powerStat(actor, skill) * 0.5);
+      var before = target.hp;
       target.hp = Math.min(target.maxHp, target.hp + heal);
-      state.log.push(actor.name + 'は ' + skill.name + 'を となえた! ' + target.name + 'の HPが かいふくした');
+      state.log.push(actor.name + 'は ' + skill.name + 'を となえた! ' +
+        target.name + 'の HPが ' + (target.hp - before) + ' かいふくした');
     } else if (skill.kind === 'attack') {
       var targets = skill.target === 'all_enemies' ? aliveEnemies() : [target];
+      if (skill.target !== 'all_enemies' && (!target || target.curHp <= 0)) targets = aliveEnemies().slice(0, 1);
       targets.forEach(function (t) {
         var dmg = Math.round(damageOf(powerStat(actor, skill), t.def) * (skill.power || 1));
         t.curHp = Math.max(0, t.curHp - dmg);
         state.log.push(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + dmg + ' の ダメージ');
         if (t.curHp <= 0) state.log.push(t.label + 'を たおした!');
       });
-    }
-    state.phase = 'resolving';
-    flushLog(advanceTurn);
-  }
-
-  function doItem(itemEntry, target) {
-    var actor = currentActor();
-    var def = Game.Data.Items[itemEntry.id];
-    var resultMsg = Game.Party.useItem(itemEntry.id, target.id);
-    state.log.push(actor.name + 'は ' + def.name + 'を つかった! ' + (resultMsg || ''));
-    state.phase = 'resolving';
-    flushLog(advanceTurn);
-  }
-
-  function doFlee() {
-    var actor = currentActor();
-    var avgEnemySpd = state.enemies.reduce(function (s, e) { return s + e.spd; }, 0) / state.enemies.length;
-    var success = Math.random() < (0.5 + (actor.spd - avgEnemySpd) * 0.03);
-    if (success) {
-      Game.Dialogue.show('うまく にげきれた!', function () { endBattle('fled'); });
-    } else {
-      state.log.push('にげられなかった!');
-      state.phase = 'resolving';
-      flushLog(endPlayerPhase);
     }
   }
 
@@ -388,6 +483,7 @@ Game.Battle = (function () {
       if (cmd === 'attack') { state.menu = 'target'; state.cursor = 0; }
       else if (cmd === 'skill') { state.menu = 'skill'; state.cursor = 0; }
       else if (cmd === 'item') { state.menu = 'item'; state.cursor = 0; }
+      else if (cmd === 'guard') { doGuard(); }
       else if (cmd === 'flee') { doFlee(); }
     } else if (state.menu === 'skill') {
       var chosen = list[state.cursor];
@@ -484,5 +580,5 @@ Game.Battle = (function () {
     Game.Dialogue.draw(ctx, W, H);
   }
 
-  return { start: start, isActive: isActive, update: update, draw: draw };
+  return { __commands: commandList, start: start, isActive: isActive, update: update, draw: draw };
 })();

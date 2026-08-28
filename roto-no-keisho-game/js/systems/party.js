@@ -149,6 +149,13 @@ Game.Party = (function () {
         recalc(m);
         m.expToNext = Math.round(m.expToNext * 1.35);
         messages.push(m.name + 'は レベル' + m.level + 'に あがった!');
+        // ドラクエのように、何がいくつ上がったのかを1行で告げる
+        var gains = [['さいだいHP', g.hp], ['さいだいMP', m.maxMp > 0 ? g.mp : 0],
+                     ['ちから', g.atk], ['みのまもり', g.def], ['すばやさ', g.spd],
+                     ['まりょく', g.mag], ['うんのよさ', g.luck]]
+          .filter(function (p) { return p[1] > 0; })
+          .map(function (p) { return p[0] + 'が ' + p[1] + ' あがった'; });
+        if (gains.length) messages.push(gains.join('。 ') + '!');
         // このレベルで新しく覚えた技を告げる
         (m.skills || []).forEach(function (s) {
           if (s.level > before && s.level <= m.level) {
