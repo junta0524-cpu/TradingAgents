@@ -525,22 +525,48 @@ Game.Battle = (function () {
     return alive[alive.length - 1];
   }
 
+  // ボスの大技。全体攻撃だけでなく、痛恨の一撃と 状態異常も持てるようにする。
+  // 「まだ余裕がある」と思っていたところへ痛恨が入る ―― あの怖さが山場を作る。
+  function useBossSkill(enemy, alive) {
+    var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
+
+    if (skill.kind === 'crit') {
+      // 痛恨は守備を通さない。堅い者を前に置いていても、これだけは効く
+      var t = pickPartyTarget(alive);
+      var raw = Math.round(damageOf(effAtk(enemy), 0) * (skill.power || 1.5));
+      var dmg = hurt(t, raw);
+      say(enemy.label + 'の ' + skill.name + '!', function () { Game.Fx.critical(); });
+      say(t.name + 'に ' + dmg + ' の ダメージ!', fxPartyHurt(t, dmg));
+      if (t.hp <= 0) say(t.name + 'は たおれてしまった!', function () { Game.Audio.play('downed'); });
+      return true;
+    }
+
+    if (skill.kind === 'ailment') {
+      var victim = pickPartyTarget(alive);
+      say(enemy.label + 'の ' + skill.name + '!', function () { Game.Audio.play('spell'); });
+      var msg = Game.Party.inflict(victim, skill.ailment);
+      state.log.push(msg || victim.name + 'には 効かなかった。');
+      return true;
+    }
+
+    if (skill.target === 'all_party') {
+      alive.forEach(function (member) {
+        var d = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member)) * skill.power));
+        say(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + d + ' の ダメージ', fxPartyHurt(member, d));
+      });
+      return true;
+    }
+    return false;
+  }
+
   function enemyAct(enemy) {
     var alive = Game.Party.aliveList();
     if (alive.length === 0) return;
     if (maybeFlee(enemy)) return;
     if (!enemyStatus(enemy)) return;
 
-    var useSkill = enemy.boss && enemy.bossSkills && Math.random() < 0.35;
-    if (useSkill) {
-      var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
-      if (skill.target === 'all_party') {
-        alive.forEach(function (member) {
-          var dmg = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member)) * skill.power));
-          say(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ', fxPartyHurt(member, dmg));
-        });
-        return;
-      }
+    if (enemy.boss && enemy.bossSkills && Math.random() < 0.4) {
+      if (useBossSkill(enemy, alive)) return;
     }
     var target = pickPartyTarget(alive);
     if (enemy.status === 'blind' && Math.random() < 0.6) {

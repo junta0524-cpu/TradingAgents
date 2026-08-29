@@ -11,7 +11,7 @@ Game.Shop = (function () {
       kind: kind,
       mapId: mapId,
       stock: stock,
-      view: (kind === 'inn' || kind === 'church' || kind === 'medal') ? kind : 'root',
+      view: (kind === 'inn' || kind === 'medal') ? kind : 'root',
       cursor: 0,
       onClose: onClose,
     };
@@ -19,7 +19,7 @@ Game.Shop = (function () {
       var price = Game.Data.innPrice(Game.Party.list());
       Game.Dialogue.show('宿屋「ひと晩 ' + price + 'ゴールドだよ。泊まっていくかい?」');
     } else if (kind === 'church') {
-      Game.Dialogue.show('教会「倒れた仲間に 祈りを捧げましょうか」');
+      Game.Dialogue.show('神官「ようこそ。旅の記録も、倒れた方への祈りも、ここで承ります」');
     } else if (kind === 'medal') {
       var n = Game.Data.medalCount();
       Game.Dialogue.show(n
@@ -65,6 +65,15 @@ Game.Shop = (function () {
   }
 
   function rootList() {
+    // 教会は 売り買いではなく「記録」と「祈り」。
+    // ぼうけんのしょがメニューの奥にしか無いと、はじめての人は見つけられない。
+    if (state.kind === 'church') {
+      return [
+        { id: 'save',   label: 'ぼうけんのしょに きろくする' },
+        { id: 'church', label: 'たおれた仲間に いのる' },
+        { id: 'leave',  label: 'でていく' },
+      ];
+    }
     return [{ id: 'buy', label: 'かう' }, { id: 'sell', label: 'うる' }, { id: 'leave', label: 'でていく' }];
   }
 
@@ -101,6 +110,7 @@ Game.Shop = (function () {
     if (state.view === 'root') {
       var cmd = list[state.cursor].id;
       if (cmd === 'leave') { close(); return; }
+      if (cmd === 'save') { doChurchSave(); return; }
       state.view = cmd; state.cursor = 0;
       return;
     }
@@ -160,6 +170,17 @@ Game.Shop = (function () {
     if (!got) { Game.Dialogue.show('それは 売れないようだ'); return; }
     Game.Dialogue.show(entry.def.name + 'を ' + got + 'ゴールドで 売った');
     if (state.cursor >= sellList().length) state.cursor = Math.max(0, sellList().length - 1);
+  }
+
+  // 教会での記録。ドラクエで最初に覚える手続きなので、いちばん上に置いてある。
+  function doChurchSave() {
+    if (Game.Save.save()) {
+      Game.Dialogue.show('神官「ここまでの旅を 書き留めました」', function () {
+        Game.Dialogue.show('ぼうけんのしょに きろくした。');
+      });
+    } else {
+      Game.Dialogue.show('神官「……筆が 走りません。この地では 書き留められぬようです」');
+    }
   }
 
   function doRevive(member) {
