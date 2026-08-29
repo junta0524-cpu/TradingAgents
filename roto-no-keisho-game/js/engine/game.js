@@ -34,22 +34,25 @@ Game.Core = (function () {
     Game.Dialogue.show('ぼうけんのしょから 旅を再開した。');
   }
 
+  // 全滅したときの扱い。DQ にならって、いちばん近い町の教会で目を覚ます。
+  // 傷は神官がすべて癒してくれるが、そのぶん所持金の半分を置いていくことになる。
+  // 罰はHPではなく金で受ける ―― これがドラクエの死の重さの付け方で、
+  // 稼いだ金がそのまま「失いたくないもの」として効いてくる。
   function onPartyWiped() {
-    // DQ 式の温情リスポーン: HP/MPが少し残った状態で、そのマップの入り口からやり直す
-    // (MPも戻さないと、立て直す手段が無いまま同じ場所で詰んでしまう)
-    Game.Party.list().forEach(function (m) {
-      m.hp = Math.max(1, Math.floor(m.maxHp * 0.3));
-      m.mp = Math.max(m.mp, Math.floor(m.maxMp * 0.3));
-      m.guarding = false;
-    });
-    // DQ の慣例にならい、全滅すると所持金の半分を落とす
+    var map = Game.Field.currentMap();
+    var church = (map && map.church) || 'ちかくの 教会';
+    Game.Party.restAll();
     var lost = Math.floor(Game.Party.gold() / 2);
     Game.Party.spend(lost);
+    // 世界はまだ地続きに歩けないので、目を覚ましたあとは
+    // その舞台の入り口へ送り返す(章の進行を止めないため)
     Game.Field.resetToStart();
     Game.Dialogue.show('目の前が まっくらに なった……。', function () {
-      Game.Dialogue.show(lost > 0
-        ? '気がつくと 入り口に 倒れていた。' + lost + 'ゴールドを 失ってしまった……'
-        : '気がつくと 入り口に 倒れていた。');
+      Game.Dialogue.show('気がつくと ' + church + 'で 寝かされていた。', function () {
+        Game.Dialogue.show(lost > 0
+          ? '神官「傷は 癒しておいた。……だが お布施として ' + lost + 'ゴールド いただいたよ」'
+          : '神官「傷は 癒しておいた。もう 無茶を なさるな」');
+      });
     });
   }
 

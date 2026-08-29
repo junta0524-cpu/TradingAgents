@@ -53,6 +53,7 @@ function buildMap(def) {
     tiles: tiles,
   };
   if (def.encounterTable) map.encounterTable = def.encounterTable;
+  if (def.church) map.church = def.church;
   if (def.bossId) map.bossId = def.bossId;
   if (def.chests) map.chestAt = chestAt;
   if (def.npcs) map.npcAt = npcAt;
@@ -193,7 +194,7 @@ Game.Data.Maps = {
   // 森を縫う街道。北へ抜ける枝道と、南の行き止まりがある
   east_road: buildMap({
     id: 'east_road', name: '東方街道', kind: 'field', startX: 1, startY: 4,
-    encounterTable: 'east_road',
+    encounterTable: 'east_road', church: 'ラダトームの 教会',
     art: [
       '########################',
       '#..###........####.....#',
@@ -217,7 +218,7 @@ Game.Data.Maps = {
   // 大きな湖を抱く平原。街道は湖の北岸と南岸に分かれる
   azure_plain: buildMap({
     id: 'azure_plain', name: '蒼穹平原', kind: 'field', startX: 1, startY: 7,
-    encounterTable: 'azure_plain',
+    encounterTable: 'azure_plain', church: 'ラダトームの 教会',
     art: [
       '##########################',
       '#...........###..........#',
@@ -241,7 +242,7 @@ Game.Data.Maps = {
   // 左手は海。細い桟道が崖を折り返しながら上っていく
   cliff_road: buildMap({
     id: 'cliff_road', name: '断崖の道', kind: 'field', startX: 7, startY: 16,
-    encounterTable: 'cliff_road',
+    encounterTable: 'cliff_road', church: '断崖の氏族村の 祠',
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',
       'X~~~~~~XXXXXXXCXXXXXXX',
@@ -268,7 +269,7 @@ Game.Data.Maps = {
   // 柵と天幕で見通しの悪い屋外の陣。奥の天幕に首領がいる
   ogre_camp: buildMap({
     id: 'ogre_camp', name: 'はぐれオーガの野営地', kind: 'dungeon', startX: 1, startY: 14,
-    encounterTable: 'ogre_camp', bossId: 'galoz',
+    encounterTable: 'ogre_camp', church: 'ローレシア城下の 教会', bossId: 'galoz',
     chests: { '1': 'ogre_gold_s', '2': 'ogre_yakusou', '3': 'ogre_shield', '4': 'ogre_gold_l' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXX',
@@ -293,7 +294,7 @@ Game.Data.Maps = {
   // 柱の並ぶ大広間を、左右交互の階段で四層のぼる
   azure_tower: buildMap({
     id: 'azure_tower', name: '蒼穹の塔', kind: 'dungeon', startX: 4, startY: 15,
-    encounterTable: 'azure_tower', bossId: 'astro_guardian',
+    encounterTable: 'azure_tower', church: 'ラダトームの 教会', bossId: 'astro_guardian',
     chests: { '1': 'tower_mahou', '2': 'tower_gofu', '3': 'tower_gold', '4': 'tower_staff' },
     art: [
       'XXXXXXXXXXXXXXXXXXXX',
@@ -320,7 +321,7 @@ Game.Data.Maps = {
   // 小部屋が格子状に並ぶ納骨堂。扉の無い袋小路が多い
   academy_altar: buildMap({
     id: 'academy_altar', name: '学院地下祭壇', kind: 'dungeon', startX: 2, startY: 2,
-    encounterTable: 'academy_altar', bossId: 'magatsuki',
+    encounterTable: 'academy_altar', church: '学院都市サマルトリアの 礼拝堂', bossId: 'magatsuki',
     chests: { '1': 'altar_seisui', '2': 'altar_gold', '3': 'altar_earring' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -345,7 +346,7 @@ Game.Data.Maps = {
   // 地底湖を抱く洞窟。うねる回廊が水際を回り込む
   abyss_depth: buildMap({
     id: 'abyss_depth', name: '業の底', kind: 'dungeon', startX: 1, startY: 16,
-    encounterTable: 'abyss_depth', bossId: 'abyss_matriarch',
+    encounterTable: 'abyss_depth', church: 'ムーンブルクの 月の神殿', bossId: 'abyss_matriarch',
     chests: { '1': 'abyss_jokyu', '2': 'abyss_phoenix', '3': 'abyss_gold', '4': 'abyss_brooch' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -372,7 +373,7 @@ Game.Data.Maps = {
   // 中心へ向かって渦を巻く同心の回廊。最奥に禍の核がある
   forbidden_ritual_chamber: buildMap({
     id: 'forbidden_ritual_chamber', name: '禁呪暴走空間', kind: 'dungeon', startX: 1, startY: 1,
-    encounterTable: 'forbidden_ritual_chamber', bossId: 'genso_no_katsubo',
+    encounterTable: 'forbidden_ritual_chamber', church: '学院都市サマルトリアの 礼拝堂', bossId: 'genso_no_katsubo',
     chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',

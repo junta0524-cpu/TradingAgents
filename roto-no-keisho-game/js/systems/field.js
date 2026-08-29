@@ -81,8 +81,7 @@ Game.Field = (function () {
     var lead = pickEncounter();
     if (!lead) return [];
     var def = Game.Data.Monsters[lead];
-    var maxCount = def.tier === 'early' ? 3 : def.tier === 'mid' ? 2 : 1;
-    var count = 1 + Math.floor(Math.random() * maxCount);
+    var count = 1 + Math.floor(Math.random() * Game.Data.groupLimitOf(def));
     var group = [lead];
     for (var i = 1; i < count; i++) {
       // ときどき違う魔物が混ざる
