@@ -28,15 +28,17 @@ Game.Fx = (function () {
     var r = Math.max(0.05, Math.min(1, ratio || 0.1));
     shake(3 + Math.round(r * 9));
     veil('#8a3230', 10 + Math.round(r * 10));
+    Game.Audio.play('hit');
   }
 
   // 魔物が殴られた。key はその戦闘での並び順
   function enemyHurt(key, big) {
     flashes[key] = FLASH_SPAN;
     if (big) shake(4, 8);
+    Game.Audio.play('attack');
   }
 
-  function critical() { shake(13, 14); veil('#d4af5a', 12); }
+  function critical() { shake(13, 14); veil('#d4af5a', 12); Game.Audio.play('critical'); }
 
   function clear() { shakeLeft = 0; veilLeft = 0; flashes = {}; }
 

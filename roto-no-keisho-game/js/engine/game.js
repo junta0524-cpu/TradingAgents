@@ -19,7 +19,30 @@ Game.Core = (function () {
     requestAnimationFrame(loop);
   }
 
-  function onModeChange(nextMode) { mode = nextMode; }
+  function onModeChange(nextMode) {
+    mode = nextMode;
+    updateBgm();
+  }
+
+  // 場面に合った曲へ。町と野外は同じ「フィールド」扱いにせず、
+  // 町に入ったら落ち着いた曲に変える(ドラクエで街に着いたときのあの感じ)。
+  function updateBgm() {
+    if (mode === 'title') { Game.Audio.bgm('title'); return; }
+    if (mode === 'ending') { Game.Audio.bgm('ending'); return; }
+    if (mode === 'battle') {
+      var map = Game.Field.currentMap();
+      // ボス床のあるダンジョンで戦っていても、雑魚戦は通常の戦闘曲のまま。
+      // ボス曲は Story がボス戦を始めるときに指定する
+      Game.Audio.bgm(bossFight ? 'boss' : 'battle');
+      return;
+    }
+    var m = Game.Field.currentMap();
+    Game.Audio.bgm(m && m.kind === 'town' ? 'town' : 'field');
+  }
+
+  // いまボスと戦っているか。Story から知らせてもらう
+  var bossFight = false;
+  function setBossFight(on) { bossFight = !!on; }
 
   function startNewGame() {
     Game.Save.clear();
@@ -47,6 +70,7 @@ Game.Core = (function () {
     // 世界はまだ地続きに歩けないので、目を覚ましたあとは
     // その舞台の入り口へ送り返す(章の進行を止めないため)
     Game.Field.resetToStart();
+    Game.Audio.play('wipe');
     Game.Dialogue.show('目の前が まっくらに なった……。', function () {
       Game.Dialogue.show('気がつくと ' + church + 'で 寝かされていた。', function () {
         Game.Dialogue.show(lost > 0
@@ -56,7 +80,33 @@ Game.Core = (function () {
     });
   }
 
+  // 最初の操作があるまで音は鳴らせない。鳴らせるようになったら、
+  // その場面の曲を改めて頼み直す(題名画面で無音のまま止まらないように)
+  var audioWoken = false;
+  function wakeAudio() {
+    if (audioWoken) return;
+    if (!Game.Input.anyPressed()) return;
+    audioWoken = true;
+    Game.Audio.init();
+    var keep = mode;
+    mode = null; onModeChange(keep);   // 同じ曲でも鳴らし直させる
+  }
+
+  // 入力の音は一か所でまとめて鳴らす。どの画面でも同じ手触りになるように
+  function playInputSound() {
+    if (Game.Input.wasPressed('up') || Game.Input.wasPressed('down')) Game.Audio.play('cursor');
+    else if (Game.Input.wasPressed('confirm')) Game.Audio.play('confirm');
+    else if (Game.Input.wasPressed('cancel')) Game.Audio.play('cancel');
+  }
+
   function update() {
+    wakeAudio();
+    playInputSound();
+    // M キーで音を消す/戻す
+    if (Game.Input.wasPressed('mute')) {
+      var m = Game.Audio.toggleMute();
+      if (!m) updateBgm();
+    }
     if (mode === 'title') {
       var opts = titleOptions();
       if (Game.Input.wasPressed('down')) titleCursor = (titleCursor + 1) % opts.length;
@@ -178,5 +228,5 @@ Game.Core = (function () {
     requestAnimationFrame(loop);
   }
 
-  return { init: init, onPartyWiped: onPartyWiped };
+  return { init: init, onPartyWiped: onPartyWiped, setBossFight: setBossFight, updateBgm: updateBgm };
 })();

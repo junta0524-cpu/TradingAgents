@@ -403,7 +403,7 @@ Game.Battle = (function () {
     }
     var dmg2 = hurt(target, damageOf(effAtk(enemy), effDef(target)));
     say(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ', fxPartyHurt(target, dmg2));
-    if (target.hp <= 0) state.log.push(target.name + 'は たおれてしまった!');
+    if (target.hp <= 0) say(target.name + 'は たおれてしまった!', function () { Game.Audio.play('downed'); });
     // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
     if (enemy.inflict && target.hp > 0 && Math.random() < enemy.inflict.chance) {
       var msg = Game.Party.inflict(target, enemy.inflict.status);
@@ -424,7 +424,10 @@ Game.Battle = (function () {
     Game.Party.addGold(gold);
     var levelMsgs = Game.Party.addExp(exp);
     var msg = 'せんとうに かちどきをあげた! ' + exp + 'の けいけんちと ' + gold + 'ゴールドを てにいれた';
+    Game.Audio.play('victory');
     Game.Dialogue.show(msg, function () {
+      // レベルが上がったなら、勝利のジングルのあとに上昇の音を重ねる
+      if (levelMsgs && levelMsgs.length) Game.Audio.play('levelup');
       flushArray(levelMsgs, function () { endBattle('won'); });
     });
     cb(true);
@@ -464,7 +467,7 @@ Game.Battle = (function () {
     if (skill.kind === 'guard') {
       actor.mp -= skill.mp;
       actor.guarding = skill.reduction || 0.5;
-      state.log.push(actor.name + 'は ' + skill.name + 'の かまえを とった!');
+      say(actor.name + 'は ' + skill.name + 'の かまえを とった!', function () { Game.Audio.play('spell'); });
       queueAction({ kind: 'guarded' });
       return;
     }

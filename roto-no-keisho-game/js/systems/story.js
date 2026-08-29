@@ -113,6 +113,7 @@ Game.Story = (function () {
   function fieldCallbacksFor(st) {
     return {
       onEncounter: function (monsterIds) {
+        Game.Core.setBossFight(false);
         onModeChange && onModeChange('battle');
         Game.Battle.start(monsterIds, handleRandomBattleEnd);
       },
@@ -124,6 +125,7 @@ Game.Story = (function () {
       onBoss: function (bossId) {
         if (st.type !== 'boss' || bossId !== st.bossId) return;
         if (!requirementsMet(st)) { sayBlocked(st); return; }
+        Game.Core.setBossFight(true);
         onModeChange && onModeChange('battle');
         Game.Battle.start([bossId], handleBossBattleEnd);
       },
@@ -156,6 +158,7 @@ Game.Story = (function () {
       return;
     }
     openedChests[key] = true;
+    Game.Audio.play('chest');
     Game.Dialogue.show('宝箱を 開けた!', function () {
       Game.Dialogue.show(Game.Data.openTreasure(chestId));
     });
@@ -195,6 +198,7 @@ Game.Story = (function () {
     applyOnComplete(st.onEnter);
     var proceed = function () {
       Game.Field.load(st.map, fieldCallbacksFor(st));
+      Game.Core.updateBgm();   // 町に入ったのか、野へ出たのかで曲を変える
       // 節目ごとに自動で記録しておく(長丁場なので、事故で最初からになるのを防ぐ)
       Game.Save.save();
     };
@@ -220,6 +224,7 @@ Game.Story = (function () {
   }
 
   function handleBossBattleEnd(result) {
+    Game.Core.setBossFight(false);
     onModeChange && onModeChange('field');
     if (result === 'lost') { Game.Core.onPartyWiped(); return; }
     if (result === 'won') handleStageClear();

@@ -11,6 +11,7 @@ Game.Input = (function () {
     ArrowRight: 'right', KeyD: 'right',
     Enter: 'confirm', KeyZ: 'confirm', Space: 'confirm',
     Escape: 'cancel', KeyX: 'cancel',
+    KeyM: 'mute',
   };
 
   window.addEventListener('keydown', function (e) {
@@ -37,6 +38,8 @@ Game.Input = (function () {
   return {
     isDown: function (action) { return !!down[action]; },
     wasPressed: function (action) { return !!pressedThisFrame[action]; },
+    // 何かしら押されたか。音を鳴らしてよいか(ブラウザは操作を待つ)の判定に使う
+    anyPressed: function () { for (var k in pressedThisFrame) { if (pressedThisFrame[k]) return true; } return false; },
     press: press, release: release,
     // 各フレームの終わりに呼び、「今フレームで押された」を消費する
     endFrame: function () { pressedThisFrame = {}; },
