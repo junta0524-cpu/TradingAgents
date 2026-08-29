@@ -55,6 +55,21 @@ Game.Data.Equipment = {
   spirit_earring: { id: 'spirit_earring', name: '精神の耳飾り', slot: 'accessory', kind: 'accessory', def: 6, mag: 8, price: 1100 },
   moonlight_brooch: { id: 'moonlight_brooch', name: '月光のブローチ', slot: 'accessory', kind: 'accessory', def: 8, luck: 10, price: 1400 },
   sage_glasses: { id: 'sage_glasses', name: '賢者のメガネ', slot: 'accessory', kind: 'accessory', def: 3, mag: 12, price: 1300 },
+
+  // ---- 呪われた品 ----
+  // どれも同じ格の装備より強い。そのかわり、身につけたら自分では外せない。
+  // 解けるのは教会だけで、解いた品は そのまま朽ちて消える。
+  // 「強いが、代償がある」を装備選びの中に置くためのもの。
+  cursed_blade: {
+    id: 'cursed_blade', name: '呪われた剣', slot: 'weapon', kind: 'sword',
+    atk: 62, def: -12, luck: -12, price: 0, cursed: true,
+    curse: '柄を握った瞬間、手が離れなくなった!',
+  },
+  shinigami_ring: {
+    id: 'shinigami_ring', name: '死神の指輪', slot: 'accessory', kind: 'accessory',
+    atk: 14, mag: 16, spd: 8, def: -10, luck: -20, price: 0, cursed: true,
+    curse: '指輪が 骨まで 食い込んでくる!',
+  },
 };
 
 // 装備が伸ばせるステータスと、画面に出すときの短い表記

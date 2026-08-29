@@ -51,6 +51,11 @@ Game.Data.Treasures.medal_cliff   = { kind: 'item', id: 'chiisana_medal', count:
 Game.Data.Treasures.medal_road    = { kind: 'item', id: 'chiisana_medal', count: 1 };
 Game.Data.Treasures.medal_plain   = { kind: 'item', id: 'chiisana_medal', count: 1 };
 
+// ---- 呪われた品 ----
+// 見た目には ただの上物。着けるまで 呪いだとは分からない。
+Game.Data.Treasures.abyss_cursed  = { kind: 'gear', id: 'cursed_blade' };
+Game.Data.Treasures.ritual_cursed = { kind: 'gear', id: 'shinigami_ring' };
+
 // 中身を受け取ったときの一言と、実際の付与処理
 Game.Data.openTreasure = function (id) {
   var t = Game.Data.Treasures[id];

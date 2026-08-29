@@ -376,7 +376,7 @@ Game.Data.Maps = {
   abyss_depth: buildMap({
     id: 'abyss_depth', name: '業の底', kind: 'dungeon', startX: 1, startY: 16,
     encounterTable: 'abyss_depth', church: 'ムーンブルクの 月の神殿', bossId: 'abyss_matriarch',
-    chests: { '1': 'abyss_jokyu', '2': 'abyss_phoenix', '3': 'abyss_gold', '4': 'abyss_brooch', '5': 'medal_abyss' },
+    chests: { '1': 'abyss_jokyu', '2': 'abyss_phoenix', '3': 'abyss_gold', '4': 'abyss_brooch', '5': 'medal_abyss', '6': 'abyss_cursed' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -392,7 +392,7 @@ Game.Data.Maps = {
       'XDDDDDDDDDDDDXDDDXXXDDDXXX',
       'XDDDDDDDXXDDDXDDDDDDDDDBDX',
       'XDDXXDDDXXXDXXDDDXXXDDDDDX',
-      'XDXXXDDDXXDDDXXDXX~~~XDDDX',
+      'XDXXXDDDXXDDDXXDXX~~~XDD6X',
       'XD1XXDDDDDDDDXDDDX~~~XDDDX',
       'XDDXXDDDXXDDDXDDDD4DDDDDDX',
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -403,7 +403,7 @@ Game.Data.Maps = {
   forbidden_ritual_chamber: buildMap({
     id: 'forbidden_ritual_chamber', name: '禁呪暴走空間', kind: 'dungeon', startX: 1, startY: 1,
     encounterTable: 'forbidden_ritual_chamber', church: '学院都市サマルトリアの 礼拝堂', bossId: 'genso_no_katsubo',
-    chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold', '5': 'medal_ritual' },
+    chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold', '5': 'medal_ritual', '6': 'ritual_cursed' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',
       'XDDDDLDDDDDDDDDDDDDD2X',
@@ -417,7 +417,7 @@ Game.Data.Maps = {
       'XDXXDXXDXDDDDXDXXDXXDX',
       'XDXXDXXDXDDDDXDXXDXXDX',
       'XDXXDXXDXXXXXXDXXDXXDX',
-      'XDXXDXXDDDDDDDDXXDXXDX',
+      'XDXXDXXDDDDDDD6XXDXXDX',
       'XDXXDXXXXXXDXXXXXDXXDX',
       'XDXX3DDDDDLDDDDDDDXXDX',
       'XDXXXXXXXXXXXXXXXXXXDX',

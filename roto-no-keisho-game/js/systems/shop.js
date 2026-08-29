@@ -68,11 +68,14 @@ Game.Shop = (function () {
     // 教会は 売り買いではなく「記録」と「祈り」。
     // ぼうけんのしょがメニューの奥にしか無いと、はじめての人は見つけられない。
     if (state.kind === 'church') {
-      return [
+      var rows = [
         { id: 'save',   label: 'ぼうけんのしょに きろくする' },
         { id: 'church', label: 'たおれた仲間に いのる' },
-        { id: 'leave',  label: 'でていく' },
       ];
+      // 呪われている者がいるときだけ、この一行が増える
+      if (Game.Party.cursedList().length) rows.push({ id: 'curse', label: 'のろいを といてもらう' });
+      rows.push({ id: 'leave', label: 'でていく' });
+      return rows;
     }
     return [{ id: 'buy', label: 'かう' }, { id: 'sell', label: 'うる' }, { id: 'leave', label: 'でていく' }];
   }
@@ -82,6 +85,7 @@ Game.Shop = (function () {
     if (state.view === 'buy') return goodsList();
     if (state.view === 'sell') return sellList();
     if (state.view === 'church') return Game.Party.deadList();
+    if (state.view === 'curse') return Game.Party.cursedList();
     if (state.view === 'medal') return Game.Data.MedalPrizes;
     return [];
   }
@@ -101,7 +105,8 @@ Game.Shop = (function () {
     if (Game.Input.wasPressed('up')) state.cursor = list.length ? (state.cursor - 1 + list.length) % list.length : 0;
 
     if (Game.Input.wasPressed('cancel')) {
-      if (state.view === 'root' || state.view === 'church' || state.view === 'medal') close();
+      if (state.view === 'root' || state.view === 'medal') close();
+      else if (state.view === 'church' || state.view === 'curse') { state.view = 'root'; state.cursor = 0; }
       else { state.view = 'root'; state.cursor = 0; }
       return;
     }
@@ -118,6 +123,7 @@ Game.Shop = (function () {
     if (state.view === 'buy') { doBuy(list[state.cursor]); return; }
     if (state.view === 'sell') { doSell(list[state.cursor]); return; }
     if (state.view === 'church') { doRevive(list[state.cursor]); return; }
+    if (state.view === 'curse') { doLiftCurse(list[state.cursor]); return; }
   }
 
   function updateInn() {
@@ -173,6 +179,26 @@ Game.Shop = (function () {
   }
 
   // 教会での記録。ドラクエで最初に覚える手続きなので、いちばん上に置いてある。
+  // 呪いを解く値段。強い品ほど 高くつく
+  function cursePrice(entry) {
+    return 120 + entry.member.level * 20;
+  }
+
+  function doLiftCurse(entry) {
+    if (!entry) { close(); return; }
+    var price = cursePrice(entry);
+    if (!Game.Party.spend(price)) {
+      Game.Dialogue.show('神官「' + price + 'ゴールドが 必要なのです……」');
+      return;
+    }
+    Game.Party.liftCurse(entry.member.id, entry.slot);
+    Game.Dialogue.show('神官の祈りが 響きわたる……', function () {
+      Game.Dialogue.show(entry.def.name + 'は 砂のように 崩れて 消えた。');
+    });
+    state.cursor = 0;
+    if (Game.Party.cursedList().length === 0) { state.view = 'root'; }
+  }
+
   function doChurchSave() {
     if (Game.Save.save()) {
       Game.Dialogue.show('神官「ここまでの旅を 書き留めました」', function () {
@@ -221,7 +247,8 @@ Game.Shop = (function () {
 
     var list = currentList();
     if (list.length === 0) {
-      var empty = state.view === 'church' ? '倒れている仲間は いません' : 'ならんでいる品は ありません';
+      var empty = state.view === 'church' ? '倒れている仲間は いません'
+        : state.view === 'curse' ? '呪われている者は いません' : 'ならんでいる品は ありません';
       Game.Renderer.drawText(ctx, empty, x + 16, y + 70, { size: 14, color: '#a49b86' });
     }
 
@@ -235,6 +262,13 @@ Game.Shop = (function () {
       if (state.view === 'church') {
         Game.Renderer.drawText(ctx, prefix + entry.name + '  Lv' + entry.level, x + 16, ly, { size: 14 });
         Game.Renderer.drawText(ctx, Game.Data.revivePrice(entry) + 'G', x + w - 16, ly,
+          { size: 13, align: 'right', color: '#a49b86' });
+        return;
+      }
+      if (state.view === 'curse') {
+        Game.Renderer.drawText(ctx, prefix + entry.member.name + '  † ' + entry.def.name, x + 16, ly,
+          { size: 14, color: '#d3807d' });
+        Game.Renderer.drawText(ctx, cursePrice(entry) + 'G', x + w - 16, ly,
           { size: 13, align: 'right', color: '#a49b86' });
         return;
       }

@@ -204,11 +204,35 @@ Game.Menu = (function () {
       state.cursor = 0;
     } else if (state.view === 'gear') {
       var slot = Game.Data.EQUIP_SLOTS[state.slotIndex];
-      var choices = gearChoicesFor(currentMember(), slot);
+      var m2 = currentMember();
+      // 呪われた品は自分では外せない。何が起きているのかを その場で伝える
+      var stuck = Game.Party.cursedAt(m2, slot);
+      if (stuck) {
+        close();
+        Game.Dialogue.show(m2.name + 'の ' + stuck.name + 'は 手から 離れない!', function () {
+          Game.Dialogue.show('教会で 呪いを といてもらうしかない。');
+        });
+        return;
+      }
+      var choices = gearChoicesFor(m2, slot);
       var pick = choices[state.cursor];
       if (pick) {
-        if (pick.id === null) Game.Party.unequipSlot(currentMember().id, slot);
-        else Game.Party.equipGear(currentMember().id, pick.id);
+        if (pick.id === null) Game.Party.unequipSlot(m2.id, slot);
+        else {
+          var newDef = Game.Data.Equipment[pick.id];
+          Game.Party.equipGear(m2.id, pick.id);
+          // 呪われた品だと、着けた瞬間に分かる
+          if (newDef.cursed) {
+            close();
+            Game.Dialogue.show(m2.name + 'は ' + newDef.name + 'を 身につけた。', function () {
+              Game.Dialogue.show(newDef.curse || '……呪われている!', function () {
+                Game.Audio.play('wipe');
+                Game.Dialogue.show('もう 自分では 外せない。');
+              });
+            });
+            return;
+          }
+        }
       }
       state.view = 'member';
       state.cursor = state.slotIndex;
@@ -505,11 +529,14 @@ Game.Menu = (function () {
     Game.Data.EQUIP_SLOTS.forEach(function (slot, i) {
       var ly = y + 80 + i * 26;
       var prefix = i === state.cursor ? '▶ ' : '　';
+      var cursed = Game.Party.cursedAt(m, slot);
       var equipped = m.equip[slot] ? Game.Data.Equipment[m.equip[slot]].name : '―';
+      if (cursed) equipped = '† ' + equipped;
       var wearable = slotIsWearable(m, slot);
       Game.Renderer.drawText(ctx, prefix + Game.Data.SLOT_LABELS[slot], x + 16, ly,
         { size: 13, color: wearable ? '#ece7da' : '#6b6354' });
-      Game.Renderer.drawText(ctx, equipped, x + 200, ly, { size: 13, color: wearable ? '#ece7da' : '#6b6354' });
+      Game.Renderer.drawText(ctx, equipped, x + 200, ly,
+        { size: 13, color: cursed ? '#d3807d' : (wearable ? '#ece7da' : '#6b6354') });
     });
     Game.Renderer.drawText(ctx, 'Z: つけかえる    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }

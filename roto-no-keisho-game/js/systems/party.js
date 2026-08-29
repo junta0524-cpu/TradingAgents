@@ -289,10 +289,36 @@ Game.Party = (function () {
   }
 
   // 手持ちの装備を身につける。今つけていたものは手持ちに戻る。
+  // その部位が呪われていないか。呪われた品は自分では外せない。
+  function cursedAt(m, slot) {
+    var def = m && m.equip[slot] ? Game.Data.Equipment[m.equip[slot]] : null;
+    return def && def.cursed ? def : null;
+  }
+  // 呪われている者と、その部位を並べる(教会が使う)
+  function cursedList() {
+    var out = [];
+    list().forEach(function (m) {
+      Game.Data.EQUIP_SLOTS.forEach(function (slot) {
+        var def = cursedAt(m, slot);
+        if (def) out.push({ member: m, slot: slot, def: def });
+      });
+    });
+    return out;
+  }
+  // 教会で呪いを解く。解いた品は朽ちて消える(手元には残らない)
+  function liftCurse(memberId, slot) {
+    var m = members[memberId];
+    if (!cursedAt(m, slot)) return false;
+    m.equip[slot] = null;
+    recalc(m);
+    return true;
+  }
+
   function equipGear(memberId, gearId) {
     var m = members[memberId];
     var def = Game.Data.Equipment[gearId];
     if (!m || !def || !canEquip(m, gearId)) return false;
+    if (cursedAt(m, def.slot)) return false;   // 呪われた品の上には着けられない
     if (!stackRemove(gear, gearId, 1)) return false;
     var prev = m.equip[def.slot];
     if (prev) stackAdd(gear, prev, 1);
@@ -304,6 +330,7 @@ Game.Party = (function () {
   function unequipSlot(memberId, slot) {
     var m = members[memberId];
     if (!m || !m.equip[slot]) return false;
+    if (cursedAt(m, slot)) return false;   // 自分では外せない
     stackAdd(gear, m.equip[slot], 1);
     m.equip[slot] = null;
     recalc(m);
@@ -362,6 +389,7 @@ Game.Party = (function () {
     buyItem: buyItem, buyGear: buyGear,
     sellItem: sellItem, sellGear: sellGear, sellPriceOf: sellPriceOf,
     canEquip: canEquip, equipGear: equipGear, unequipSlot: unequipSlot,
+    cursedAt: cursedAt, cursedList: cursedList, liftCurse: liftCurse,
     grantGear: grantGear, grantItem: grantItem,
     moveMember: moveMember,
     tactic: function () { return tactic; },
