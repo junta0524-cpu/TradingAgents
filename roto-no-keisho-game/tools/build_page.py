@@ -6,10 +6,32 @@ TIER = {'early':'序盤','mid':'中盤','late':'終盤'}
 
 def esc(s): return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
+# assets/ を実際に見て、もう届いている素材に印を付ける。
+# 納品が進むたび、build_page.py を回し直すだけで一覧が最新になる。
+import os
+ASSETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets')
+def _delivered():
+    got = set()
+    for k, rel in PATH.items():
+        if os.path.exists(os.path.join(ASSETS, rel)): got.add(k)
+    return got
+DONE = _delivered()
+
+# 32×32で頼んでいた頃の絵。process_art.py が縦に1.5倍伸ばしていたので、
+# ファイルはあるが 3頭身に潰れている。新しい 32×48 のプロンプトで描き直したい。
+REDO = {'rota', 'elrode', 'celestia', 'garai', 'npc_king'}
+
 def row(key, cells):
-    """最後の列に必ずコピーボタンを置く"""
+    """最後の列に必ずコピーボタンを置く。素材の状態も印で出す"""
     tds = ''.join(cells)
-    return ('<tr>' + tds + '<td class="act"><button type="button" class="cbtn" '
+    if key in REDO:
+        cls, mark = 'redo', '<span class="redo">描き直し</span>'
+    elif key in DONE:
+        cls, mark = 'has', '<span class="got">届いた</span>'
+    else:
+        cls, mark = '', ''
+    return ('<tr class="%s">' % cls + tds
+            + '<td class="act">' + mark + '<button type="button" class="cbtn" '
             'data-k="%s">コピー</button></td></tr>' % key)
 
 def bulk(keys, label):
@@ -206,6 +228,13 @@ html = """<title>画素譜</title>
   .bulk{font-size:.76rem;padding:.35rem .9rem;}
   .cbtn:hover,.bulk:hover,.cbtn:focus-visible,.bulk:focus-visible{border-color:var(--gold);color:var(--gold);}
   .cbtn.done,.bulk.done{border-color:var(--gold);color:var(--gold);}
+  tr.has td{opacity:.62;}
+  tr.has td.act{opacity:1;}
+  .got,.redo{display:inline-block;margin-right:.5rem;padding:.05rem .45rem;border-radius:3px;
+    font-family:"Zen Kaku Gothic New",sans-serif;font-size:.68rem;letter-spacing:.04em;
+    vertical-align:middle;}
+  .got{background:var(--gold);color:var(--parchment);}
+  .redo{background:var(--crimson);color:var(--parchment);}
   .bulkbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:1rem 0 .2rem;}
   .bulkbar .hint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.74rem;color:var(--text-muted);}
 
@@ -276,7 +305,7 @@ html = """<title>画素譜</title>
       <tr><td>ボス</td><td>5</td><td>160×160</td><td>A</td><td>いまは赤い丸。章の山場なので優先</td></tr>
       <tr><td>その他の人物</td><td>12</td><td>32×32</td><td>B</td><td>町の人は紫の四角と字だけ</td></tr>
       <tr><td>雑魚モンスター</td><td>54</td><td>96×96</td><td>B</td><td>いまは茶色の丸。種族代表9体だけでも可</td></tr>
-      <tr><td>背景・タイトル</td><td>6</td><td>320×240</td><td>―</td><td><strong>5枚 到着済み。残り1枚</strong></td></tr>
+      <tr><td>背景・タイトル</td><td>6</td><td>320×240</td><td>―</td><td><strong>6枚すべて到着</strong></td></tr>
     </tbody>
   </table>
   </div>
@@ -356,16 +385,15 @@ html = """<title>画素譜</title>
   </table>
   </div>
 
-  <h2 id="bg"><span class="n">09</span>背景 ― 6枚のうち<strong>5枚 到着済み</strong></h2>
+  <h2 id="bg"><span class="n">09</span>背景 ― <strong>6枚すべて到着</strong></h2>
   <div class="callout">
-    <h3>届いた5枚は組み込み済みです</h3>
-    <p><strong>タイトル / 断崖の道 / 地下(野営地・祭壇) / 洞窟(業の底) / 渦(塔・禁呪空間)</strong> の5枚は、
-    すでにゲームに入って動いています。タイトル画面にも戦闘画面にも出ます。
-    残るは <code>battle_field</code>(東方街道・蒼穹平原)の<strong>1枚だけ</strong>です。</p>
-    <p>届いた絵はいずれも<strong>320×240ドット</strong>で描かれていました。キャンバスが640×480なので、
-    320×240まで落としてから2倍に伸ばすと、1ドットがちょうど2×2ピクセルに乗って格子が一切崩れません。
-    残り1枚も<strong>同じ320×240</strong>で揃えたいので、プロンプトをその寸法に直してあります
-    (1200pxのような半端な幅で描くと、縮小の段でドット絵が溶けます)。</p>
+    <h3>13箇所ぜんぶが絵になりました</h3>
+    <p>タイトル / 平原 / 断崖 / 地下 / 洞窟 / 渦の6枚が入り、戦闘の起きる場所はすべて絵で埋まりました。</p>
+    <p><strong>ひとつだけ揃っていない点があります。</strong>先の5枚は<code>320×240</code>ドットで
+    描かれていたのに対し、平原(<code>battle_field</code>)だけ<code>160×120</code>ドットでした。
+    どちらも640×480へ整数倍で伸びるので絵は崩れませんが、
+    <strong>平原だけドットの粒が縦横2倍の大きさ</strong>になります。並べると質感が違って見えます。
+    気になるようなら、平原を320×240で描き直してもらうと揃います。</p>
   </div>
   <p class="lead">戦闘背景は画面下3分の1が窓で隠れること、中央上寄りに敵が立つことをプロンプトに入れてあります。
   どの場所でどの背景を敷くかは <code>js/engine/assets.js</code> の <code>BG_FOR_MAP</code> にあります。</p>
@@ -386,7 +414,7 @@ html = """<title>画素譜</title>
   chars/      rota.png  elrode.png  celestia.png  garai.png  npc_*.png  (16枚, 32×48)
               *_walk_down / _up / _side.png  (12枚, 96×48 ＝ 32×48が3コマ)
   monsters/   chibi_slime.png  …  galoz.png  …  (59枚, 96×96 / ボスのみ160×160)
-  bg/         battle_*.png  title.png  (6枚, 320×240で描いて640×480へ) ← 5枚 到着済み</pre></div>
+  bg/         battle_*.png  title.png  (6枚, 320×240で描いて640×480へ) ← すべて到着</pre></div>
   <p>用意できたものは絵に、まだのものは今の色面のまま ― という混在で動くようにします。順番も自由です。</p>
 
   <footer>

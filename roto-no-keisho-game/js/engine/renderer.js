@@ -40,12 +40,16 @@ Game.Renderer = (function () {
         var ch = row[x];
         var def = Game.Data.TileDefs[ch] || Game.Data.TileDefs['.'];
         var px = off.x + x * TILE, py = off.y + y * TILE;
-        // 人が立つマスは、下に街の床を敷いてから人物を重ねる(人物は drawMapActors 側)
-        var img = Game.Assets.tile(def.isNpc ? 'F' : ch);
+        // 人が立つマスは、下に床を敷いてから人物を重ねる(人物は drawMapActors 側)。
+        // 玉座のように、そのマス自身の絵があるものはそれを使い、無ければ街の床に落とす。
+        var img = Game.Assets.tile(ch);
+        if (!img && def.isNpc) img = Game.Assets.tile('F');
         if (img) {
           ctx.drawImage(img, px, py, TILE, TILE);
         } else {
-          ctx.fillStyle = def.color;
+          // 絵がまだ無いとき、人が立つマスを 'N' の紫で塗ると、
+          // 人物スプライトの足元に紫の敷物が出てしまう。床の色に合わせる。
+          ctx.fillStyle = def.isNpc ? Game.Data.TileDefs['F'].color : def.color;
           ctx.fillRect(px, py, TILE, TILE);
           ctx.strokeStyle = 'rgba(0,0,0,0.06)';
           ctx.strokeRect(px, py, TILE, TILE);

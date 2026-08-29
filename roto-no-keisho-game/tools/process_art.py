@@ -57,21 +57,21 @@ def make_sprite(path, w, h):
 
     以前は「不透明部分の外接矩形で切り出して、縦を h いっぱいに引き伸ばす」
     という処理だった。これだと 2頭身で描いてもらった絵が縦に1.5倍に伸びて
-    3頭身になり、しかも縮小の倍率が半端になってドットの格子が壊れていた
-    (assets/chars/rota.png がその状態)。
-    いまはプロンプト側で 32×48ドットの枠ごと描いてもらうので、
-    枠のまま w×h へ落とせば、1ドットがちょうど1ピクセルに乗る。
+    3頭身になり、しかも縮小の倍率が半端になってドットの格子が壊れていた。
+    いまはプロンプト側で 32×48ドットの枠ごと描いてもらうので、枠のまま落とす。
     """
     img, m = load_rgba(path)
     img = despill(img)
-    if img.width % w or img.height % h:
-        # 枠がずれている絵が来たときだけ、比率を保ったまま入れて下寄せする
-        s = min(img.width / w, img.height / h)
-        img = shrink(img, max(1, round(img.width / s)), max(1, round(img.height / s)))
-        canvas = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-        canvas.paste(img, ((w - img.width) // 2, h - img.height), img)
-        return quantize(canvas, 24)
-    return quantize(shrink(img, w, h), 24)
+    # 送られてきた絵がすでに w:h の枠で描かれていれば、そのまま縮めるのが正解。
+    # 頭上の余白も指示どおりの位置に残る。
+    if abs(img.width / img.height - w / h) < 0.02:
+        return quantize(shrink(img, w, h), 24)
+    # 枠がずれている絵だけ、比率を保ったまま入れて下寄せする
+    sc = min(img.width / w, img.height / h)
+    img = shrink(img, max(1, round(img.width / sc)), max(1, round(img.height / sc)))
+    canvas = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    canvas.paste(img, ((w - img.width) // 2, h - img.height), img)
+    return quantize(canvas, 24)
 
 def make_walk_sheet(path, frames=3, w=32, h=48):
     """歩行シート。3コマを横に並べたまま 96×48 に落とす。
