@@ -26,6 +26,23 @@ Game.Assets = (function () {
     'K': 'tiles/tile_throne.png',
   };
 
+  // 戦闘背景とタイトル画面。キャンバスと同じ 640×480 で持つ。
+  // 元絵は 320×240 で描かれているので、1ドット=2px にちょうど乗る。
+  var BG_FILES = ['title', 'battle_field', 'battle_cliff',
+                  'battle_dungeon', 'battle_cave', 'battle_ritual'];
+
+  // どの場所の戦いで、どの背景を敷くか。載っていない場所は今までどおり色面のまま。
+  var BG_FOR_MAP = {
+    east_road: 'battle_field',
+    azure_plain: 'battle_field',
+    cliff_road: 'battle_cliff',
+    ogre_camp: 'battle_dungeon',
+    academy_altar: 'battle_dungeon',
+    azure_tower: 'battle_ritual',
+    forbidden_ritual_chamber: 'battle_ritual',
+    abyss_depth: 'battle_cave',
+  };
+
   // 人物のスプライト。1マス(32px)より背が高く、足元をマスの下端に合わせて描く。
   var SPRITE_W = 32, SPRITE_H = 48;
   var CHAR_IDS = ['rota', 'elrode', 'celestia', 'garai',
@@ -74,7 +91,12 @@ Game.Assets = (function () {
       tryLoad('chars/' + id + '.png');
       WALK_DIRS.forEach(function (d) { tryLoad('chars/' + id + '_walk_' + d + '.png'); });
     });
+    BG_FILES.forEach(function (id) { tryLoad('bg/' + id + '.png'); });
   }
+
+  // 背景。まだ届いていないものは null を返し、呼び出し側が色面で描く。
+  function bg(id) { return id ? images['bg/' + id + '.png'] || null : null; }
+  function battleBg(mapId) { return bg(BG_FOR_MAP[mapId]); }
 
   // その向きの歩行シートを返す。まだ無ければ null(立ち絵1枚で代用される)
   function walkSheet(id, dir) {
@@ -94,6 +116,7 @@ Game.Assets = (function () {
   return {
     load: load, tile: tile, sprite: sprite, spriteForNpc: spriteForNpc,
     walkSheet: walkSheet, WALK_FRAMES: WALK_FRAMES,
+    bg: bg, battleBg: battleBg,
     SPRITE_W: SPRITE_W, SPRITE_H: SPRITE_H,
     isLoading: function () { return pending > 0; },
   };

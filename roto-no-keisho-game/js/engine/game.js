@@ -203,6 +203,27 @@ Game.Core = (function () {
   function drawTitle() {
     ctx.fillStyle = '#171b2b';
     ctx.fillRect(0, 0, W, H);
+
+    // 夜明け前の丘。絵が届いていなければ、いままでどおり無地のまま。
+    var art = Game.Assets.bg('title');
+    if (art) {
+      ctx.drawImage(art, 0, 0, W, H);
+      // 題字とメニューが乗る帯だけを沈めて、絵は端まで見せる
+      var veil = ctx.createLinearGradient(0, H * 0.18, 0, H * 0.82);
+      veil.addColorStop(0, 'rgba(15,18,30,0)');
+      veil.addColorStop(0.35, 'rgba(15,18,30,0.62)');
+      veil.addColorStop(0.75, 'rgba(15,18,30,0.55)');
+      veil.addColorStop(1, 'rgba(15,18,30,0)');
+      ctx.fillStyle = veil;
+      ctx.fillRect(0, H * 0.18, W, H * 0.64);
+      // 下端の操作説明は明るい草地に重なるので、そこだけもう一段沈める
+      var foot = ctx.createLinearGradient(0, H - 64, 0, H);
+      foot.addColorStop(0, 'rgba(15,18,30,0)');
+      foot.addColorStop(1, 'rgba(15,18,30,0.72)');
+      ctx.fillStyle = foot;
+      ctx.fillRect(0, H - 64, W, 64);
+    }
+
     Game.Renderer.drawText(ctx, 'ロトの継承', W / 2, H / 2 - 70, { align: 'center', size: 32, color: '#d4af5a' });
     Game.Renderer.drawText(ctx, '― 三国建国記 ―', W / 2, H / 2 - 40, { align: 'center', size: 14, color: '#a49b86' });
 

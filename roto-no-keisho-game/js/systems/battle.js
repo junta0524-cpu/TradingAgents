@@ -879,6 +879,19 @@ Game.Battle = (function () {
     ctx.fillStyle = '#171b2b';
     ctx.fillRect(0, 0, W, H);
 
+    // 戦っている場所の背景。まだ絵が無い場所は、いままでどおり色面のまま。
+    var map = Game.Field.currentMap();
+    var bg = map && Game.Assets.battleBg(map.id);
+    if (bg) {
+      ctx.drawImage(bg, 0, 0, W, H);
+      // 魔物の名前とHPバーが背景に埋もれないよう、上半分だけ薄く沈める
+      var veil = ctx.createLinearGradient(0, 0, 0, H * 0.55);
+      veil.addColorStop(0, 'rgba(23,27,43,0.42)');
+      veil.addColorStop(1, 'rgba(23,27,43,0.05)');
+      ctx.fillStyle = veil;
+      ctx.fillRect(0, 0, W, H * 0.55);
+    }
+
     var enemies = state.enemies;
     var startX = W / 2 - (enemies.length - 1) * 70;
     enemies.forEach(function (e, i) {

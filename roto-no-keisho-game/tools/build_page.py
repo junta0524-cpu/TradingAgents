@@ -276,7 +276,7 @@ html = """<title>画素譜</title>
       <tr><td>ボス</td><td>5</td><td>160×160</td><td>A</td><td>いまは赤い丸。章の山場なので優先</td></tr>
       <tr><td>その他の人物</td><td>12</td><td>32×32</td><td>B</td><td>町の人は紫の四角と字だけ</td></tr>
       <tr><td>雑魚モンスター</td><td>54</td><td>96×96</td><td>B</td><td>いまは茶色の丸。種族代表9体だけでも可</td></tr>
-      <tr><td>背景・タイトル</td><td>6</td><td>640×480</td><td>C</td><td>無くても成立する</td></tr>
+      <tr><td>背景・タイトル</td><td>6</td><td>320×240</td><td>―</td><td><strong>5枚 到着済み。残り1枚</strong></td></tr>
     </tbody>
   </table>
   </div>
@@ -356,8 +356,19 @@ html = """<title>画素譜</title>
   </table>
   </div>
 
-  <h2 id="bg"><span class="n">09</span>背景 ― 6枚</h2>
-  <p class="lead">640×480。戦闘背景は画面下3分の1が窓で隠れること、中央上寄りに敵が立つことをプロンプトに入れてあります。</p>
+  <h2 id="bg"><span class="n">09</span>背景 ― 6枚のうち<strong>5枚 到着済み</strong></h2>
+  <div class="callout">
+    <h3>届いた5枚は組み込み済みです</h3>
+    <p><strong>タイトル / 断崖の道 / 地下(野営地・祭壇) / 洞窟(業の底) / 渦(塔・禁呪空間)</strong> の5枚は、
+    すでにゲームに入って動いています。タイトル画面にも戦闘画面にも出ます。
+    残るは <code>battle_field</code>(東方街道・蒼穹平原)の<strong>1枚だけ</strong>です。</p>
+    <p>届いた絵はいずれも<strong>320×240ドット</strong>で描かれていました。キャンバスが640×480なので、
+    320×240まで落としてから2倍に伸ばすと、1ドットがちょうど2×2ピクセルに乗って格子が一切崩れません。
+    残り1枚も<strong>同じ320×240</strong>で揃えたいので、プロンプトをその寸法に直してあります
+    (1200pxのような半端な幅で描くと、縮小の段でドット絵が溶けます)。</p>
+  </div>
+  <p class="lead">戦闘背景は画面下3分の1が窓で隠れること、中央上寄りに敵が立つことをプロンプトに入れてあります。
+  どの場所でどの背景を敷くかは <code>js/engine/assets.js</code> の <code>BG_FOR_MAP</code> にあります。</p>
   <div class="bulkbar">""" + bulk(S['bgs'], '背景6枚をまとめて') + """</div>
   <div class="scroll">
   <table>
@@ -371,10 +382,11 @@ html = """<title>画素譜</title>
   <div class="prompt"><div class="prompt-head"><span class="pname">フォルダ構成</span>
     <button type="button" class="cbtn" data-k="__dir">コピー</button></div>
     <pre>roto-no-keisho-game/assets/
-  tiles/      tile_grass.png  tile_road.png  …  (17枚, 32×32)
-  chars/      rota.png  elrode.png  celestia.png  garai.png  npc_*.png  (16枚, 32×32)
+  tiles/      tile_grass.png  tile_road.png  …  (16枚, 32×32)
+  chars/      rota.png  elrode.png  celestia.png  garai.png  npc_*.png  (16枚, 32×48)
+              *_walk_down / _up / _side.png  (12枚, 96×48 ＝ 32×48が3コマ)
   monsters/   chibi_slime.png  …  galoz.png  …  (59枚, 96×96 / ボスのみ160×160)
-  bg/         battle_*.png  title.png  (6枚, 640×480)</pre></div>
+  bg/         battle_*.png  title.png  (6枚, 320×240で描いて640×480へ) ← 5枚 到着済み</pre></div>
   <p>用意できたものは絵に、まだのものは今の色面のまま ― という混在で動くようにします。順番も自由です。</p>
 
   <footer>
