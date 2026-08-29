@@ -42,6 +42,16 @@ Game.Field = (function () {
     if (def && def.walkable) { px = x; py = y; resetTrail(); }
   }
 
+  // 仕掛けを点ける。タイルの文字を 'L' から 'l' へ書き換えるだけで、
+  // 描画も歩ける判定も、ふつうのタイルとして扱われる
+  function lightSwitch(x, y) {
+    if (!map) return false;
+    var row = map.tiles[y];
+    if (!row || row[x] !== 'L') return false;
+    map.tiles[y] = row.substring(0, x) + 'l' + row.substring(x + 1);
+    return true;
+  }
+
   function tileAt(x, y) {
     var row = map.tiles[y];
     if (!row) return null;
@@ -152,6 +162,11 @@ Game.Field = (function () {
       callbacks.onChest && callbacks.onChest(chestId, map.id, nx + ',' + ny);
       return;
     }
+    if (def.isSwitch) {
+      // まだ点いていない仕掛けだけが反応する。踏み直しても数は増えない
+      if (!def.lit) callbacks.onSwitch && callbacks.onSwitch(nx, ny, map);
+      return;
+    }
     if (def.isNpc) {
       // 誰に話しかけたかは、立ち位置から引く
       var npcId = map.npcAt && map.npcAt[nx + ',' + ny];
@@ -211,7 +226,7 @@ Game.Field = (function () {
   }
 
   return {
-    load: load, currentMap: currentMap, playerPos: playerPos,
+    load: load, currentMap: currentMap, playerPos: playerPos, lightSwitch: lightSwitch,
     resetToStart: resetToStart, setPosition: setPosition, wardSteps: wardSteps,
     update: update, draw: draw,
     // 検証用: いま使っているイベント一式

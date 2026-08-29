@@ -8,7 +8,7 @@ Game.Story = (function () {
   var onModeChange = null; // 'field' | 'battle' への切り替えを Core に伝える
 
   // いまのステージの達成状況。ステージが変わるたびに作り直す。
-  var progress = { talked: {}, defeated: 0 };
+  var progress = { talked: {}, defeated: 0, lit: 0 };
   // 分かれ道で選んだ結果。章をまたいで持ち回り、終章の描写に効く。
   var flags = {};
 
@@ -31,8 +31,12 @@ Game.Story = (function () {
     var need = (st.require && st.require.defeat) || 0;
     return Math.max(0, need - progress.defeated);
   }
+  function litLeft(st) {
+    var need = (st.require && st.require.light) || 0;
+    return Math.max(0, need - progress.lit);
+  }
   function requirementsMet(st) {
-    return talkLeft(st).length === 0 && defeatLeft(st) === 0;
+    return talkLeft(st).length === 0 && defeatLeft(st) === 0 && litLeft(st) === 0;
   }
 
   // 画面の隅に出す「いま何をすべきか」。残りの数もここで見せる。
@@ -45,6 +49,8 @@ Game.Story = (function () {
     if (tl.length) parts.push('あと ' + tl.length + '人と 話す');
     var dl = defeatLeft(st);
     if (dl) parts.push('魔物を あと ' + dl + '体');
+    var ll = litLeft(st);
+    if (ll) parts.push((st.lightWord || '灯') + 'が あと ' + ll + 'つ');
     var base = st.goal || (st.type === 'boss' ? '最奥の敵を たおす' : '出口をめざす');
     return parts.length ? base + '  (' + parts.join(' / ') + ')' : base;
   }
@@ -58,7 +64,7 @@ Game.Story = (function () {
     onModeChange = modeChangeCb;
     chapterIndex = 0; stageIndex = 0; finished = false;
     openedChests = {};
-    progress = { talked: {}, defeated: 0 };
+    progress = { talked: {}, defeated: 0, lit: 0 };
     flags = {};
     enterChapter();
   }
@@ -78,7 +84,7 @@ Game.Story = (function () {
     chapterIndex = Math.min(data.chapterIndex || 0, Game.Data.Chapters.length - 1);
     finished = !!data.finished;
     openedChests = data.openedChests || {};
-    progress = data.progress || { talked: {}, defeated: 0 };
+    progress = data.progress || { talked: {}, defeated: 0, lit: 0 };
     progress.talked = progress.talked || {};
     flags = data.flags || {};
     var ch = chapter();
@@ -135,6 +141,7 @@ Game.Story = (function () {
       },
       onChest: function (chestId, mapId, pos) { openChest(chestId, mapId, pos); },
       onNpc: function (npcId, map) { talkTo(npcId, map); },
+      onSwitch: function (x, y) { lightUp(st, x, y); },
     };
   }
 
@@ -147,7 +154,8 @@ Game.Story = (function () {
       Game.Dialogue.show('まだ 話していない者が ' + tl.length + '人 いる。');
       return;
     }
-    Game.Dialogue.show('まだ 魔物が ' + dl + '体 残っている。');
+    if (dl) { Game.Dialogue.show('まだ 魔物が ' + dl + '体 残っている。'); return; }
+    Game.Dialogue.show('まだ ' + (st.lightWord || '灯') + 'が ' + litLeft(st) + 'つ 残っている。');
   }
 
   // 開けた宝箱は覚えておき、二度目からは空にする(セーブにも含める)
@@ -192,9 +200,29 @@ Game.Story = (function () {
     });
   }
 
+  // 仕掛けを踏んだ。点けて、残りを伝える。
+  // 数えるのは「その段が仕掛けを求めているとき」だけで、
+  // それ以外の階では ただの明かりとして点く。
+  function lightUp(st, x, y) {
+    if (!Game.Field.lightSwitch(x, y)) return;
+    Game.Audio.play('chest');
+    var word = (st && st.lightWord) || '灯';
+    if (!st || !st.require || !st.require.light) {
+      Game.Dialogue.show(word + 'に 火が ともった。');
+      return;
+    }
+    progress.lit += 1;
+    var left = litLeft(st);
+    Game.Dialogue.show(left
+      ? word + 'に 火が ともった。(あと ' + left + 'つ)'
+      : word + 'に 火が ともった。……最後の ひとつだ。');
+  }
+
   function loadStage() {
     var st = stage();
-    progress = { talked: {}, defeated: 0 };
+    progress = { talked: {}, defeated: 0, lit: 0 };
+    // 同じ階へ入り直したら、仕掛けは消えた状態からやり直す
+    Game.Data.resetSwitches(Game.Data.Maps[st.map]);
     applyOnComplete(st.onEnter);
     var proceed = function () {
       Game.Field.load(st.map, fieldCallbacksFor(st));
@@ -304,5 +332,6 @@ Game.Story = (function () {
     __state: function () { return { progress: progress, flags: flags, stage: stage(), finished: finished }; },
     __needTalk: function () { return finished ? [] : talkLeft(stage()); },
     __needDefeat: function () { return finished ? 0 : defeatLeft(stage()); },
+    __needLight: function () { return finished ? 0 : litLeft(stage()); },
   };
 })();

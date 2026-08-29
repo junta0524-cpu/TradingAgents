@@ -28,6 +28,28 @@ Game.Data.TileDefs = {
   'W': { walkable: true, color: '#8a6a3a', encounter: 0, shop: 'gear', glyph: '武' },
   'I': { walkable: true, color: '#5c6f9c', encounter: 0, shop: 'inn', glyph: '宿' },
   'H': { walkable: true, color: '#9c8f5c', encounter: 0, shop: 'church', glyph: '教' },
+  // 灯す仕掛け。踏むと点り、'L'(消えている)から 'l'(点いている)へ書き換わる。
+  // タイルの文字そのものを変えるので、描画側は何も知らなくてよい。
+  'L': { walkable: true, color: '#3a3450', encounter: 0, isSwitch: true, glyph: '灯' },
+  'l': { walkable: true, color: '#d4af5a', encounter: 0, isSwitch: true, lit: true, glyph: '灯' },
+};
+
+// 仕掛けを消えている状態に戻す。同じ階へ入り直すたびに呼ぶ
+Game.Data.resetSwitches = function (map) {
+  if (!map || !map.tiles) return;
+  map.tiles = map.tiles.map(function (row) { return row.replace(/l/g, 'L'); });
+};
+// 点いている仕掛けの数
+Game.Data.litCount = function (map) {
+  if (!map || !map.tiles) return 0;
+  return map.tiles.reduce(function (n, row) { return n + (row.split('l').length - 1); }, 0);
+};
+// その階にある仕掛けの総数
+Game.Data.switchCount = function (map) {
+  if (!map || !map.tiles) return 0;
+  return map.tiles.reduce(function (n, row) {
+    return n + (row.split('l').length - 1) + (row.split('L').length - 1);
+  }, 0);
 };
 
 // 各マップは art(タイルの絵)をそのまま持つ。
@@ -305,15 +327,15 @@ Game.Data.Maps = {
       'XXXXXXXXXXXXXXXXXDXX',
       'XXDDDDDDDDDDDDDDDDXX',
       'XXDDDDXXDDDDXXDDDDXX',
-      'XXD3DDDDDDDDDDDDDDXX',
+      'XXD3DDLDDDDDDDDDDDXX',
       'XXDXXXXXXXXXXXXXXXXX',
       'XXDDDDDDDDDDDDDDDDXX',
       'XXDDDDXXDDDDXXDDDDXX',
-      'XXDDDDDDDDDDDDDDD2XX',
+      'XXDDDLDDDDDDDDDDD2XX',
       'XXXXXXXXXXXXXXXXXDXX',
       'XXDDDDDDDDDDDDDDDDXX',
       'XXDDDDXXDDDDXXDDDDXX',
-      'XX1DDDDDDDDDDDDDDDXX',
+      'XX1DDLDDDDDDDDDDDDXX',
       'XXXXXXXXXXXXXXXXXXXX',
     ],
   }),
@@ -377,11 +399,11 @@ Game.Data.Maps = {
     chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',
-      'XDDDDDDDDDDDDDDDDDDD2X',
+      'XDDDDLDDDDDDDDDDDDDD2X',
       'XDXXXXXXXXXDXXXXXXXXDX',
-      'XDXXDDDDDDDDDDDDD4XXDX',
+      'XDXXDDDLDDDDDDDDD4XXDX',
       'XDXXDXXXXXXXXXXXXDXXDX',
-      'XDXXDXXDDDDDDDDXXDXXDX',
+      'XDXXDXXDDDLDDDDXXDXXDX',
       'XDXXDXXDXXDXXXDXXDXXDX',
       'XDXXDXXDXDDDDXDXXDXXDX',
       'XDXXDXXDXDBDDXDXXDXXDX',
@@ -390,7 +412,7 @@ Game.Data.Maps = {
       'XDXXDXXDXXXXXXDXXDXXDX',
       'XDXXDXXDDDDDDDDXXDXXDX',
       'XDXXDXXXXXXDXXXXXDXXDX',
-      'XDXX3DDDDDDDDDDDDDXXDX',
+      'XDXX3DDDDDLDDDDDDDXXDX',
       'XDXXXXXXXXXXXXXXXXXXDX',
       'X1DDDDDDDDDDDDDDDDDDDX',
       'XXXXXXXXXXXXXXXXXXXXXX',
