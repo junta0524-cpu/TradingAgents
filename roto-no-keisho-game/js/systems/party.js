@@ -8,6 +8,8 @@ Game.Party = (function () {
   var inventory = [];  // 消耗品 [{id, count}]
   var gear = [];       // 所持している装備 [{id, count}](装備中のものは含まない)
   var gold = 60;
+  // いまの さくせん。既定は「めいれいさせろ」(自分で指図する)
+  var tactic = 'manual';
 
   function equipDef(id) { return id ? Game.Data.Equipment[id] : null; }
 
@@ -54,6 +56,7 @@ Game.Party = (function () {
     inventory = Game.Data.START_INVENTORY.map(function (it) { return { id: it.id, count: it.count }; });
     gear = [];
     gold = 60;
+    tactic = 'manual';
   }
 
   function recruit(id) {
@@ -303,7 +306,7 @@ Game.Party = (function () {
 
   // ---- セーブ/ロード ----
   function serialize() {
-    return { order: order, members: members, inventory: inventory, gear: gear, gold: gold };
+    return { order: order, members: members, inventory: inventory, gear: gear, gold: gold, tactic: tactic };
   }
 
   function deserialize(data) {
@@ -326,6 +329,7 @@ Game.Party = (function () {
     inventory = (data.inventory || []).map(function (it) { return { id: it.id, count: it.count }; });
     gear = (data.gear || []).map(function (it) { return { id: it.id, count: it.count }; });
     gold = data.gold || 0;
+    tactic = data.tactic || 'manual';
     return true;
   }
 
@@ -348,6 +352,8 @@ Game.Party = (function () {
     sellItem: sellItem, sellGear: sellGear, sellPriceOf: sellPriceOf,
     canEquip: canEquip, equipGear: equipGear, unequipSlot: unequipSlot,
     grantGear: grantGear, grantItem: grantItem,
+    tactic: function () { return tactic; },
+    setTactic: function (id) { tactic = Game.Data.tacticOf(id).id; },
     serialize: serialize, deserialize: deserialize,
   };
 })();

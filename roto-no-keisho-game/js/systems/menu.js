@@ -32,7 +32,8 @@ Game.Menu = (function () {
   // 一覧の並びは「仲間… / じゅもん / どうぐ / ぼうけんのしょに きろくする」
   function SPELL_ROW() { return party().length; }
   function ITEM_ROW() { return party().length + 1; }
-  function SAVE_ROW() { return party().length + 2; }
+  function TACTIC_ROW() { return party().length + 2; }
+  function SAVE_ROW() { return party().length + 3; }
 
   function caster() { return party()[state.casterIndex]; }
 
@@ -88,7 +89,8 @@ Game.Menu = (function () {
   function needsTarget(def) { return def && def.kind !== 'return'; }
 
   function listLength() {
-    if (state.view === 'status') return party().length + 3;
+    if (state.view === 'status') return party().length + 4;
+    if (state.view === 'tactic') return Game.Data.Tactics.length;
     if (state.view === 'caster') return party().length;
     if (state.view === 'spell') return fieldSpells(caster()).length;
     if (state.view === 'spellTarget') return spellTargets(currentSpell()).length;
@@ -108,6 +110,7 @@ Game.Menu = (function () {
     if (Game.Input.wasPressed('cancel')) {
       if (state.view === 'status') close();
       else if (state.view === 'items') { state.view = 'status'; state.cursor = ITEM_ROW(); }
+      else if (state.view === 'tactic') { state.view = 'status'; state.cursor = TACTIC_ROW(); }
       else if (state.view === 'caster') { state.view = 'status'; state.cursor = SPELL_ROW(); }
       else if (state.view === 'spell') { state.view = 'caster'; state.cursor = state.casterIndex; }
       else if (state.view === 'spellTarget') { state.view = 'spell'; state.cursor = state.spellIndex; }
@@ -120,11 +123,16 @@ Game.Menu = (function () {
 
     if (state.view === 'status') {
       if (state.cursor === SAVE_ROW()) { doSave(); return; }
+      if (state.cursor === TACTIC_ROW()) { state.view = 'tactic'; state.cursor = 0; return; }
       if (state.cursor === ITEM_ROW()) { state.view = 'items'; state.cursor = 0; return; }
       if (state.cursor === SPELL_ROW()) { state.view = 'caster'; state.cursor = 0; return; }
       state.memberIndex = state.cursor;
       state.view = 'member';
       state.cursor = 0;
+    } else if (state.view === 'tactic') {
+      Game.Party.setTactic(Game.Data.Tactics[state.cursor].id);
+      state.view = 'status';
+      state.cursor = TACTIC_ROW();
     } else if (state.view === 'items') {
       if (bag().length === 0) return;
       state.itemIndex = state.cursor;
@@ -268,6 +276,7 @@ Game.Menu = (function () {
     Game.Renderer.drawPanel(ctx, x, y, w, h);
 
     if (state.view === 'status') drawStatus(ctx, x, y, w, h);
+    else if (state.view === 'tactic') drawTactics(ctx, x, y, w, h);
     else if (state.view === 'caster') drawCaster(ctx, x, y, w, h);
     else if (state.view === 'spell') drawSpells(ctx, x, y, w, h);
     else if (state.view === 'spellTarget') drawSpellTargets(ctx, x, y, w, h);
@@ -316,10 +325,31 @@ Game.Menu = (function () {
       { size: 14, color: itemSelected ? '#d4af5a' : '#ece7da' });
     Game.Renderer.drawText(ctx, bag().length + ' しゅるい', x + 190, rowY + 24, { size: 12, color: '#a49b86' });
 
+    var tacticSelected = state.cursor === TACTIC_ROW();
+    Game.Renderer.drawText(ctx, (tacticSelected ? '▶ ' : '　') + 'さくせん', x + 16, rowY + 48,
+      { size: 14, color: tacticSelected ? '#d4af5a' : '#ece7da' });
+    Game.Renderer.drawText(ctx, Game.Data.tacticOf(Game.Party.tactic()).name, x + 190, rowY + 48,
+      { size: 12, color: '#a49b86' });
+
     var saveSelected = state.cursor === SAVE_ROW();
-    Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'ぼうけんのしょに きろくする', x + 16, rowY + 48,
+    Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'ぼうけんのしょに きろくする', x + 16, rowY + 72,
       { size: 14, color: saveSelected ? '#d4af5a' : '#ece7da' });
     Game.Renderer.drawText(ctx, 'Z: えらぶ    X: とじる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
+  }
+
+  function drawTactics(ctx, x, y, w, h) {
+    Game.Renderer.drawText(ctx, 'さくせん', x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, '「めいれいさせろ」以外を選ぶと、戦闘では自分たちで動きます。',
+      x + 16, y + 46, { size: 12, color: '#a49b86' });
+    var now = Game.Party.tactic();
+    Game.Data.Tactics.forEach(function (t, i) {
+      var ly = y + 86 + i * 32;
+      var sel = i === state.cursor;
+      Game.Renderer.drawText(ctx, (sel ? '▶ ' : '　') + (t.id === now ? '● ' : '　') + t.name, x + 16, ly,
+        { size: 14, color: sel ? '#d4af5a' : '#ece7da' });
+      Game.Renderer.drawText(ctx, t.note, x + 260, ly, { size: 12, color: '#a49b86' });
+    });
+    Game.Renderer.drawText(ctx, 'Z: きめる    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 
   function drawCaster(ctx, x, y, w, h) {

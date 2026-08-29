@@ -24,11 +24,40 @@ Game.Battle = (function () {
       actions: [],   // このラウンドに予約された味方の行動
       onEnd: onEnd,
       log: [],
+      surprise: 0,   // 1=こちらの先制 / -1=不意打ちされた / 0=ふつう
+      // このラウンドで すでに手配ずみのもの。方針で動くとき、
+      // 1個しかない品を二人が同時に選ぶ「むだうち」を減らすために見る
+      booked: { items: {}, revive: {} },
     };
     labelEnemies(state.enemies);
     clearGuards();
     clearBattleMul();
-    Game.Dialogue.show(encounterLine(state.enemies), function () { beginTurn(); });
+    state.surprise = rollSurprise();
+    Game.Dialogue.show(encounterLine(state.enemies), function () {
+      if (state.surprise === 0) { beginTurn(); return; }
+      Game.Dialogue.show(state.surprise > 0
+        ? '魔物は こちらに 気づいていない!'
+        : '魔物に 先手を とられた!', function () {
+        if (state.surprise > 0) { beginTurn(); return; }
+        // 不意打ち。こちらのコマンドを飛ばして、魔物だけが動く一巡を先に置く
+        state.phase = 'resolving';
+        var q = aliveEnemies().map(function (e) { return { kind: 'enemy', enemy: e }; });
+        runQueue(q, 0);
+      });
+    });
+  }
+
+  // 先手をどちらが取るか。すばやさの差で決め、極端には振れないようにする。
+  // すばやいパーティは不意打ちを受けにくく、鈍いパーティは受けやすい。
+  function rollSurprise() {
+    var ours = Game.Party.aliveList().reduce(function (n, m) { return n + effSpd(m); }, 0) /
+               Math.max(1, Game.Party.aliveList().length);
+    var theirs = state.enemies.reduce(function (n, e) { return n + effSpd(e); }, 0) /
+                 Math.max(1, state.enemies.length);
+    var edge = (ours - theirs) / Math.max(4, ours + theirs);   // おおむね -0.5〜0.5
+    if (Math.random() < 0.16 + edge * 0.2) return 1;
+    if (Math.random() < 0.12 - edge * 0.2) return -1;
+    return 0;
   }
 
   // 「スライムが 2ひき あらわれた!」のように、同じ魔物はまとめて数える
@@ -67,6 +96,7 @@ Game.Battle = (function () {
       { id: 'guard', label: 'ぼうぎょ' },
       { id: 'item', label: 'どうぐ' },
       { id: 'flee', label: 'にげる' },
+      { id: 'tactic', label: 'さくせん' },
     ];
   }
 
@@ -253,9 +283,94 @@ Game.Battle = (function () {
       queueAction({ kind: 'confused' });
       return;
     }
+    // 方針が決まっているなら、コマンドを出さずに自分で動く
+    if (Game.Party.tactic() !== 'manual') { queueAction(aiAction(actor)); return; }
     state.phase = 'command';
     state.menu = 'main';
     state.cursor = 0;
+  }
+
+  // ---- さくせん ----
+  // 方針だけ決めてあるときは、コマンドを出さずに自分で選ぶ。
+  // どれを選んだかは、解決のときに文章として出るので、見ていれば分かる。
+
+  // いちばん傷ついている仲間。回復の相手を決めるのに使う
+  function weakestAlly() {
+    var list = Game.Party.aliveList();
+    if (list.length === 0) return null;
+    return list.slice().sort(function (a, b) {
+      return (a.hp / a.maxHp) - (b.hp / b.maxHp);
+    })[0];
+  }
+  function hurtRatio(m) { return m ? m.hp / m.maxHp : 1; }
+
+  // 唱えられる技のうち、条件に合うものから いちばん威力の高いものを選ぶ
+  function bestSkill(actor, pick) {
+    var found = null;
+    usableSkills(actor).forEach(function (sk) {
+      if (!pick(sk)) return;
+      if (!found || (sk.power || 0) > (found.power || 0)) found = sk;
+    });
+    return found;
+  }
+
+  // このラウンドで まだ手配されていない品を返す。
+  // 所持数から、すでに誰かが選んだ分を引いて考える。
+  function spareItem(kind) {
+    return usableItems().filter(function (it) {
+      if (Game.Data.Items[it.id].kind !== kind) return false;
+      return it.count - (state.booked.items[it.id] || 0) > 0;
+    })[0] || null;
+  }
+  function bookItem(entry, target) {
+    state.booked.items[entry.id] = (state.booked.items[entry.id] || 0) + 1;
+    return { kind: 'item', item: entry, target: target };
+  }
+
+  function aiAction(actor) {
+    var tactic = Game.Party.tactic();
+    var foes = aliveEnemies();
+    var mpLeft = actor.maxMp ? actor.mp / actor.maxMp : 0;
+
+    // どの方針でも、倒れた仲間がいるなら まず起こす。
+    // 呪文が無くても、フェニックスの雫のような品があればそれを使う。
+    var fallen = Game.Party.deadList().filter(function (m) { return !state.booked.revive[m.id]; })[0];
+    if (fallen) {
+      var revive = tactic === 'nomagic'
+        ? null : bestSkill(actor, function (sk) { return sk.kind === 'revive'; });
+      if (revive) { state.booked.revive[fallen.id] = true; return { kind: 'skill', skill: revive, target: fallen }; }
+      var elixir = spareItem('revive');
+      if (elixir) {
+        state.booked.revive[fallen.id] = true;
+        return bookItem(elixir, fallen);
+      }
+    }
+
+    // 手当て。「いのちだいじに」は早めに、「ガンガン」は瀕死のときだけ
+    var hurtLine = tactic === 'careful' ? 0.6 : 0.28;
+    var weak = weakestAlly();
+    if (tactic !== 'nomagic' && weak && hurtRatio(weak) <= hurtLine) {
+      var heal = bestSkill(actor, function (sk) { return sk.kind === 'heal'; });
+      if (heal) return { kind: 'skill', skill: heal, target: weak };
+      // 唱えられないなら薬草で
+      var potion = spareItem('heal_hp');
+      if (potion) return bookItem(potion, weak);
+    }
+
+    // 攻めの技。魔物が2体以上なら全体がけを優先する
+    if (tactic !== 'nomagic' && foes.length > 0) {
+      var wantAll = foes.length >= 2;
+      var atk = bestSkill(actor, function (sk) {
+        if (sk.kind !== 'attack') return false;
+        if (wantAll) return sk.target === 'all_enemies';
+        return sk.target !== 'all_enemies';
+      }) || bestSkill(actor, function (sk) { return sk.kind === 'attack'; });
+      // MPを使い切らないよう、「いのちだいじに」は残り半分を切ったら唱えない
+      var spare = tactic === 'careful' ? mpLeft > 0.5 : mpLeft > 0.15;
+      if (atk && spare) return { kind: 'skill', skill: atk, target: foes[0] };
+    }
+
+    return { kind: 'attack', target: foes[0] };
   }
 
   // 選んだ行動をこのラウンドの予約に積み、次の仲間へ回す。
@@ -281,7 +396,10 @@ Game.Battle = (function () {
   function resolveRound() {
     var queue = state.actions.slice();
     state.actions = [];
-    aliveEnemies().forEach(function (e) { queue.push({ kind: 'enemy', enemy: e }); });
+    state.booked = { items: {}, revive: {} };   // 次のラウンドのために手配を白紙に戻す
+    // 先制を取った最初のラウンドだけ、魔物は行動しない
+    if (state.surprise > 0) state.surprise = 0;
+    else aliveEnemies().forEach(function (e) { queue.push({ kind: 'enemy', enemy: e }); });
     queue.forEach(function (a) {
       var actor = a.kind === 'enemy' ? a.enemy : Game.Party.get(a.actorId);
       a.order = initiative(actor && effSpd(actor));
@@ -316,6 +434,7 @@ Game.Battle = (function () {
 
   function endRound() {
     clearGuards(); // 防御のかまえはこのラウンドまで
+    if (state.surprise < 0) state.surprise = 0;   // 不意打ちの一巡はここで終わり
     tickPoison();
     flushLog(function () {
       if (Game.Party.isWiped()) { endBattle('lost'); return; }
@@ -528,11 +647,12 @@ Game.Battle = (function () {
   function resolveSkill(actor, skill, target) {
     if (actor.mp < skill.mp) { state.log.push(actor.name + 'は MPが たりない!'); return; }
     actor.mp -= skill.mp;
-    var say = actor.name + 'は ' + skill.name + 'を となえた!';
+    // 唱えた、という宣言の一行。say() と紛らわしくならないよう名前を分ける
+    var chant = actor.name + 'は ' + skill.name + 'を となえた!';
 
     if (skill.kind === 'heal') {
       var targets = skill.target === 'all_allies' ? Game.Party.aliveList() : [target];
-      state.log.push(say);
+      state.log.push(chant);
       targets.forEach(function (t) {
         if (!t || t.hp <= 0) return;
         var heal = skill.power + Math.floor(powerStat(actor, skill) * 0.5);
@@ -544,14 +664,14 @@ Game.Battle = (function () {
     }
 
     if (skill.kind === 'cure') {
-      state.log.push(say);
+      state.log.push(chant);
       var msg = Game.Party.cure(target, skill.cures || []);
       state.log.push(msg || 'しかし なにも おこらなかった');
       return;
     }
 
     if (skill.kind === 'revive') {
-      state.log.push(say);
+      state.log.push(chant);
       if (!target || target.hp > 0) { state.log.push('しかし なにも おこらなかった'); return; }
       if (Math.random() > (skill.chance || 0.5)) { state.log.push('しかし ' + target.name + 'は 生きかえらなかった'); return; }
       target.hp = Math.max(1, Math.round(target.maxHp * (skill.power || 0.5)));
@@ -562,7 +682,7 @@ Game.Battle = (function () {
 
     if (skill.kind === 'buff') {
       var allies = skill.target === 'all_allies' ? Game.Party.aliveList() : [target];
-      state.log.push(say);
+      state.log.push(chant);
       allies.forEach(function (t) {
         if (!t || t.hp <= 0) return;
         applyMul(t, skill.stat_key, skill.mul);
@@ -573,7 +693,7 @@ Game.Battle = (function () {
 
     if (skill.kind === 'debuff') {
       var foes = skill.target === 'all_enemies' ? aliveEnemies() : [target];
-      state.log.push(say);
+      state.log.push(chant);
       foes.forEach(function (t) {
         if (!t || t.curHp <= 0) return;
         applyMul(t, skill.stat_key, skill.mul);
@@ -583,7 +703,7 @@ Game.Battle = (function () {
     }
 
     if (skill.kind === 'ailment') {
-      state.log.push(say);
+      state.log.push(chant);
       if (!target || target.curHp <= 0) { state.log.push('しかし なにも おこらなかった'); return; }
       // 種族ごとの強さを掛ける。アンデッドは眠らず、石像はほとんど効かない。
       var odds = (skill.chance || 0.5) * Game.Data.resistanceOf(target, 'ailment');
@@ -619,6 +739,7 @@ Game.Battle = (function () {
     if (state.menu === 'main') return commandList();
     if (state.menu === 'skill') return usableSkills(actor);
     if (state.menu === 'item') return usableItems();
+    if (state.menu === 'tactic') return Game.Data.Tactics;
     if (state.menu === 'target') return aliveEnemies();
     if (state.menu === 'allytarget') {
       if (state.pendingSkill) {
@@ -658,8 +779,18 @@ Game.Battle = (function () {
       if (cmd === 'attack') { state.menu = 'target'; state.cursor = 0; }
       else if (cmd === 'skill') { state.menu = 'skill'; state.cursor = 0; }
       else if (cmd === 'item') { state.menu = 'item'; state.cursor = 0; }
+      else if (cmd === 'tactic') { state.menu = 'tactic'; state.cursor = 0; }
       else if (cmd === 'guard') { doGuard(); }
       else if (cmd === 'flee') { doFlee(); }
+    } else if (state.menu === 'tactic') {
+      var t = list[state.cursor];
+      Game.Party.setTactic(t.id);
+      state.menu = 'main';
+      state.cursor = 0;
+      state.log.push('さくせんを 「' + t.name + '」に した。');
+      // 指図しない方針を選んだなら、この手番からもう自分で動いてもらう
+      if (t.id !== 'manual') { flushLog(function () { beginTurn(); }); }
+      return;
     } else if (state.menu === 'skill') {
       var chosen = list[state.cursor];
       if (needsNoTarget(chosen)) {
@@ -734,6 +865,12 @@ Game.Battle = (function () {
       }
     });
 
+    // いまの さくせん。方針で動いているときは、それが見えていないと
+    // 「なぜ勝手に動くのか」が分からなくなる
+    var tac = Game.Data.tacticOf(Game.Party.tactic());
+    Game.Renderer.drawText(ctx, 'さくせん ' + tac.name, W - 12, 20,
+      { size: 11, align: 'right', color: tac.id === 'manual' ? '#6b6354' : '#d4af5a' });
+
     // コマンドメニュー(下段・横いっぱい、現在の行動者ぶんのみ)
     var menuY = H - 84, menuH = 76;
     if (state.phase === 'command' && state.menu !== 'target' && state.menu !== 'allytarget') {
@@ -741,6 +878,18 @@ Game.Battle = (function () {
       Game.Renderer.drawPanel(ctx, 8, menuY, W - 16, menuH);
       if (list.length === 0) {
         Game.Renderer.drawText(ctx, '(つかえるものが ない)', 20, menuY + 24, { size: 12, color: '#a49b86' });
+      }
+      if (state.menu === 'tactic') {
+        var now = Game.Party.tactic();
+        list.forEach(function (t, i) {
+          var sel = i === state.cursor;
+          Game.Renderer.drawText(ctx, (sel ? '▶ ' : '　') + (t.id === now ? '● ' : '　') + t.name,
+            20, menuY + 20 + i * 18, { size: 12, color: sel ? '#d4af5a' : '#ece7da' });
+          Game.Renderer.drawText(ctx, t.note, W - 20, menuY + 20 + i * 18,
+            { size: 11, align: 'right', color: '#a49b86' });
+        });
+        Game.Dialogue.draw(ctx, W, H);
+        return;
       }
       var cols = list.length > 4 ? 2 : 1;
       var colW = (W - 32) / cols;
