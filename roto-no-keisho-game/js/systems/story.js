@@ -292,10 +292,19 @@ Game.Story = (function () {
     var st = stage();
     if (st && st.afterClear && !st.__asked) {
       st.__asked = true;   // 同じステージで二度は訊かない
-      askChoice(st.afterClear, function () { st.__asked = false; advanceStage(); });
+      // afterClear は一つでも、続けて訊く並びでもよい。
+      // 「三人の弟子に何を伝えるか」のように、選択が連なる章のために。
+      var defs = [].concat(st.afterClear);
+      askChoiceSeries(defs.slice(), function () { st.__asked = false; advanceStage(); });
       return;
     }
     advanceStage();
+  }
+
+  function askChoiceSeries(defs, done) {
+    if (defs.length === 0) { done(); return; }
+    var def = defs.shift();
+    askChoice(def, function () { askChoiceSeries(defs, done); });
   }
 
   // 分かれ道を出し、選ばれた枝の台詞と褒賞を適用してから先へ進む
@@ -346,6 +355,11 @@ Game.Story = (function () {
     (onComplete.gear || []).forEach(function (gearId) {
       Game.Party.grantGear(gearId);
       Game.Dialogue.show(Game.Data.Equipment[gearId].name + 'を 手に入れた! (メニューで そうびできる)');
+    });
+    // 道具での褒賞。「教えた側が受け取るもの」を表すのに使う
+    (onComplete.items || []).forEach(function (entry) {
+      Game.Party.grantItem(entry.id, entry.count || 1);
+      Game.Dialogue.show(Game.Data.Items[entry.id].name + 'を ' + (entry.count || 1) + 'つ 受け取った');
     });
     if (onComplete.gold) {
       Game.Party.addGold(onComplete.gold);

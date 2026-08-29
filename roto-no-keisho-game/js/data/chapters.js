@@ -306,8 +306,71 @@ Game.Data.Chapters = [
       goal: '後継者たちに 秘技を 伝える',
       require: { talk: ['moonbrook_celestia', 'moonbrook_knight', 'moonbrook_priestess'] },
       blocked: 'まだ 伝え終えていない者が いる。',
+      // 三人に何を伝えるか。伝えたものが百年後のムーンブルクの形になる。
+      // 選んだ技は形になって手元にも返る(教えた側が受け取るもの)。
+      afterClear: [
+        {
+          prompt: 'セレスティア「弓を引く者に、何を 伝えましょうか」',
+          options: [
+            { label: '射抜く技', note: '狩り、そして戦を', flag: 'moon_taught_bow',
+              lines: [
+                'セレスティア「風を読み、待ち、一度で射抜く。……戦のための技です」',
+                '若い射手は 眉ひとつ動かさず、うなずいた。',
+              ],
+              result: { gold: 260 } },
+            { label: '狙わぬ技', note: '構えて、抑えとする', flag: 'moon_taught_restraint',
+              lines: [
+                'セレスティア「引き絞ったまま、放たぬこと。……そのほうが 難しい」',
+                '若い射手は しばらく考え、それから 弓を下ろした。',
+              ],
+              result: { items: [{ id: 'jokyu_yakusou', count: 3 }] } },
+          ],
+        },
+        {
+          prompt: 'セレスティア「剣を持つ者には」',
+          options: [
+            { label: '常在戦場の心得', note: '備えを絶やさぬ国に', flag: 'moon_taught_vigil',
+              lines: [
+                'セレスティア「眠るときも 剣を離すな。ムーンブルクは 最も海に近い」',
+                '若い衛士は 目を伏せ、それから 深く 頭を下げた。',
+              ],
+              result: { gear: ['steel_shield'] } },
+            { label: '退くべき時の見極め', note: '民を先に逃がす国に', flag: 'moon_taught_retreat',
+              lines: [
+                'セレスティア「城は 建て直せます。人は 建て直せません」',
+                '若い衛士は 唇を噛み、しかし 頷いた。',
+              ],
+              result: { items: [{ id: 'phoenix_no_shizuku', count: 1 }] } },
+          ],
+        },
+        {
+          prompt: 'セレスティア「祈る者には、何を 遺しましょう」',
+          options: [
+            { label: '月を読む術', note: '空を見て備える', flag: 'moon_taught_reading',
+              lines: [
+                'セレスティア「月が細るほど、あれらは 濃くなります。空を 読みなさい」',
+                '若い巫女は 夜通し 空を見上げていたという。',
+              ],
+              result: { items: [{ id: 'seisui', count: 4 }] } },
+            { label: '人を癒す術', note: '傷ついた者を先に', flag: 'moon_taught_healing',
+              lines: [
+                'セレスティア「まず 手を当てなさい。恐れは 痛みから 生まれます」',
+                '若い巫女は その手を じっと 見つめていた。',
+              ],
+              result: { items: [{ id: 'jokyu_yakusou', count: 4 }] } },
+          ],
+        },
+      ],
     }],
-    outro: ['セレスティアはムーンブルク王家に「常在戦場」の国是を刻みつけた。'],
+    outro: ['セレスティアは、伝えるべきものを伝え終えた。あとは、受け取った者たちの百年である。'],
+    outroIf: [
+      { flag: 'moon_taught_vigil',
+        lines: ['ムーンブルク王家は「常在戦場」を国是に据えた。以後 百年、この国の兵は 鎧を脱がなかった。'] },
+      { flag: 'moon_taught_retreat',
+        lines: ['ムーンブルク王家は「民を先に」を国是に据えた。以後 百年、この国は 逃げ道を 絶やさなかった。'] },
+      { flag: 'moon_taught_reading',
+        lines: ['月を読む務めは 巫女から巫女へと 受け継がれ、この国は 空を見上げる 習わしを持った。'] },
+    ],
   },
   {
     title: '第十三章 ― 百年の平穏',
@@ -376,6 +439,11 @@ Game.Data.Chapters = [
       { flag: 'garai_exiled', lines: ['ローレシア軍の旗は 剣のみを描いている。折れた牙の意匠は、どこにも 残らなかった。'] },
       { flag: 'barrows_suspected', lines: ['見張りの記録は 百年ぶんの書庫に 眠っている。読む者さえ いれば、真相に たどり着けたはずだった。'] },
       { flag: 'barrows_trusted', lines: ['旅の聖職者の名は、感謝とともに 記録に残っていた。それが どれほど危ういことか、まだ 誰も知らない。'] },
+      // 月の巫女が三人の弟子に伝えたものが、百年後のムーンブルクの形になっている
+      { flag: 'moon_taught_vigil', lines: ['ムーンブルクの衛士だけが、式典のあいだも 鎧を 着けたままだった。三代前の巫女の 言いつけである。'] },
+      { flag: 'moon_taught_retreat', lines: ['ムーンブルクの城には、他の二国にはない 逃げ道が 幾重にも 掘られている。三代前の巫女の 言いつけである。'] },
+      { flag: 'moon_taught_reading', lines: ['ムーンブルクの巫女だけが、式典のあいだ ときおり 空を 見上げていた。細くなっていく月を 数えるように。'] },
+      { flag: 'moon_taught_healing', lines: ['ムーンブルクの巫女は 式典に出ず、港の病者のもとに いたという。それもまた、三代前から 変わらない。'] },
       { lines: ['式典の最後、ロトの子孫である若き王子が、宝物庫に眠るロトの剣に 静かに手を伸ばした。'] },
       { lines: ['― ロトの継承、完 ―'] },
       { lines: ['この物語は、百年後の「ムーンブルク王国陥落」へと続いていく。'] },
