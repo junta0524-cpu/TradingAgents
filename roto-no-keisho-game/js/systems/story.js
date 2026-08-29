@@ -248,13 +248,16 @@ Game.Story = (function () {
   function loadStage() {
     var st = stage();
     progress = { talked: {}, defeated: 0, lit: 0 };
-    stageStartStep = Game.Field.stepCount();
     overrunTold = false;
     // 同じ階へ入り直したら、仕掛けは消えた状態からやり直す
     Game.Data.resetSwitches(Game.Data.Maps[st.map]);
     applyOnComplete(st.onEnter);
     var proceed = function () {
       Game.Field.load(st.map, fieldCallbacksFor(st));
+      // 歩数の起点は、マップを読み込んだあとに取る。
+      // load は歩数を0に戻すので、先に取ると前の舞台の歩数が起点になり、
+      // 制限が実際より長くなってしまう(残り227歩/上限220歩 が出ていた)
+      stageStartStep = Game.Field.stepCount();
       Game.Core.updateBgm();   // 町に入ったのか、野へ出たのかで曲を変える
       // 節目ごとに自動で記録しておく(長丁場なので、事故で最初からになるのを防ぐ)
       Game.Save.save();

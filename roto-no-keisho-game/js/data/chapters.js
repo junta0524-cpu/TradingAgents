@@ -137,7 +137,7 @@ Game.Data.Chapters = [
       },
       { map: 'academy_altar', type: 'boss', bossId: 'magatsuki',
         goal: '召喚された魔物を 片づけ、祭壇の主を たおす',
-        require: { defeat: 5, withinSteps: 220 },
+        require: { defeat: 5, withinSteps: 90 },
         blocked: '召喚された魔物が まだ 暴れている。',
         overrunFlag: 'academy_burned',
         overrun: '地上から 悲鳴が 届いた。……祭壇の外へ 一体、逃がしてしまった。',
