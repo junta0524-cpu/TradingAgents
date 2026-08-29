@@ -53,17 +53,40 @@ def make_tile(path, size=32):
     return quantize(img.convert("RGBA"), 16)
 
 def make_sprite(path, w, h):
+    """枠ごと素直に縮小する。
+
+    以前は「不透明部分の外接矩形で切り出して、縦を h いっぱいに引き伸ばす」
+    という処理だった。これだと 2頭身で描いてもらった絵が縦に1.5倍に伸びて
+    3頭身になり、しかも縮小の倍率が半端になってドットの格子が壊れていた
+    (assets/chars/rota.png がその状態)。
+    いまはプロンプト側で 32×48ドットの枠ごと描いてもらうので、
+    枠のまま w×h へ落とせば、1ドットがちょうど1ピクセルに乗る。
+    """
     img, m = load_rgba(path)
     img = despill(img)
-    a = np.array(img)
-    ys, xs = np.where(a[:,:,3] > 0)
-    img = img.crop((int(xs.min()), int(ys.min()), int(xs.max())+1, int(ys.max())+1))
-    # 縦を基準に合わせ、横は比率を保って中央に置く
-    sw = max(1, round(img.width * h / img.height))
-    img = shrink(img, min(sw, w), h)
-    canvas = Image.new("RGBA", (w, h), (0,0,0,0))
-    canvas.paste(img, ((w - img.width)//2, h - img.height), img)
-    return quantize(canvas, 24)
+    if img.width % w or img.height % h:
+        # 枠がずれている絵が来たときだけ、比率を保ったまま入れて下寄せする
+        s = min(img.width / w, img.height / h)
+        img = shrink(img, max(1, round(img.width / s)), max(1, round(img.height / s)))
+        canvas = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        canvas.paste(img, ((w - img.width) // 2, h - img.height), img)
+        return quantize(canvas, 24)
+    return quantize(shrink(img, w, h), 24)
+
+def make_walk_sheet(path, frames=3, w=32, h=48):
+    """歩行シート。3コマを横に並べたまま 96×48 に落とす。
+
+    ゲーム側(renderer.js drawSprite)は img.width/frames で1コマを切り出し、
+    それを 32×48 に描くので、コマの縦横比を 2:3 に保ったまま渡す必要がある。
+    """
+    img, m = load_rgba(path)
+    img = despill(img)
+    fw = img.width // frames
+    out = Image.new("RGBA", (w * frames, h), (0, 0, 0, 0))
+    for i in range(frames):
+        cell = img.crop((i * fw, 0, (i + 1) * fw, img.height))
+        out.paste(shrink(cell, w, h), (i * w, 0))
+    return quantize(out, 24)
 
 def zoom(img, f=8):
     return img.resize((img.width*f, img.height*f), Image.NEAREST)

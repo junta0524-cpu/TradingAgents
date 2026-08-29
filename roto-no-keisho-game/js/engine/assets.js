@@ -23,6 +23,7 @@ Game.Assets = (function () {
     'W': 'tiles/tile_shop_gear.png',
     'I': 'tiles/tile_inn.png',
     'H': 'tiles/tile_church.png',
+    'K': 'tiles/tile_throne.png',
   };
 
   // 人物のスプライト。1マス(32px)より背が高く、足元をマスの下端に合わせて描く。

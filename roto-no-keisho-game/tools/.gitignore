@@ -1,0 +1,5 @@
+# build_page.py が書き出す画素譜のページ。中身は prompts.json から毎回作れるので追わない
+gaso-fu.html
+out32/
+out48/
+cmp*.png
