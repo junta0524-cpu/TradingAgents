@@ -31,6 +31,16 @@ Game.Story = (function () {
     var need = (st.require && st.require.defeat) || 0;
     return Math.max(0, need - progress.defeated);
   }
+  // 制限つきの段。決められた歩数のうちに片づけないと、被害が広がる。
+  // 歩数で数えるのは、この作品に「時間」が歩くこと以外に無いため。
+  var stageStartStep = 0;
+  var overrunTold = false;
+  function stepsLeft(st) {
+    var limit = st && st.require && st.require.withinSteps;
+    if (!limit) return null;
+    return Math.max(0, limit - (Game.Field.stepCount() - stageStartStep));
+  }
+
   function litLeft(st) {
     var need = (st.require && st.require.light) || 0;
     return Math.max(0, need - progress.lit);
@@ -51,6 +61,10 @@ Game.Story = (function () {
     if (dl) parts.push('魔物を あと ' + dl + '体');
     var ll = litLeft(st);
     if (ll) parts.push((st.lightWord || '灯') + 'が あと ' + ll + 'つ');
+    var sl = stepsLeft(st);
+    if (sl !== null && !requirementsMet(st)) {
+      parts.push(sl > 0 ? 'のこり ' + sl + '歩' : '手遅れ');
+    }
     var base = st.goal || (st.type === 'boss' ? '最奥の敵を たおす' : '出口をめざす');
     return parts.length ? base + '  (' + parts.join(' / ') + ')' : base;
   }
@@ -142,6 +156,7 @@ Game.Story = (function () {
       onChest: function (chestId, mapId, pos) { openChest(chestId, mapId, pos); },
       onNpc: function (npcId, map) { talkTo(npcId, map); },
       onSwitch: function (x, y) { lightUp(st, x, y); },
+      onStep: function () { checkOverrun(st); },
     };
   }
 
@@ -218,9 +233,23 @@ Game.Story = (function () {
       : word + 'に 火が ともった。……最後の ひとつだ。');
   }
 
+  // 制限を超えた瞬間に一度だけ告げる。そこで詰みにはせず、
+  // 「間に合わなかった」という事実だけを章に残す(旗は終章まで持ち回る)
+  function checkOverrun(st) {
+    if (overrunTold) return;
+    var sl = stepsLeft(st);
+    if (sl === null || sl > 0 || requirementsMet(st)) return;
+    overrunTold = true;
+    if (st.overrunFlag) flags[st.overrunFlag] = true;
+    Game.Audio.play('wipe');
+    Game.Dialogue.show(st.overrun || '……間に合わなかった。');
+  }
+
   function loadStage() {
     var st = stage();
     progress = { talked: {}, defeated: 0, lit: 0 };
+    stageStartStep = Game.Field.stepCount();
+    overrunTold = false;
     // 同じ階へ入り直したら、仕掛けは消えた状態からやり直す
     Game.Data.resetSwitches(Game.Data.Maps[st.map]);
     applyOnComplete(st.onEnter);

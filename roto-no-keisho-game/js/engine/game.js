@@ -47,6 +47,7 @@ Game.Core = (function () {
   function startNewGame() {
     Game.Save.clear();
     Game.Party.init();
+    Game.Moon.reset();
     mode = 'field';
     Game.Story.begin(onModeChange);
   }
@@ -188,6 +189,12 @@ Game.Core = (function () {
   // 「どこへ行けばいいのか分からない」が、遊び始めで最初に詰まる場所なので。
   function drawChapterBanner() {
     Game.Renderer.drawText(ctx, Game.Story.currentTitle(), 12, 20, { size: 12, color: '#d4af5a' });
+    // 月は世界の時計。いまどの相かで、魔物の出方も、開く道も変わる
+    var m = Game.Field.currentMap();
+    if (m && m.kind !== 'town') {
+      Game.Renderer.drawText(ctx, Game.Moon.label(), W - 12, 20,
+        { size: 12, align: 'right', color: Game.Moon.isFull() ? '#d4af5a' : '#a49b86' });
+    }
     var goal = Game.Story.currentGoal();
     if (!goal) return;
     Game.Renderer.drawText(ctx, '▶ ' + goal, 12, 38, { size: 12, color: '#ece7da' });

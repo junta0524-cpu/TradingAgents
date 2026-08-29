@@ -17,6 +17,10 @@ Game.Data.Treasures = {
   tower_gold:    { kind: 'gold', amount: 260 },
   tower_gofu:    { kind: 'item', id: 'kago_no_gofu', count: 2 },
 
+  // ---- 断崖の道(第三章)----
+  // 満月のあいだだけ開く入り江の奥。待って通った者だけが受け取る
+  cliff_moon_gold: { kind: 'gear', id: 'swift_necklace' },
+
   // ---- 学院地下祭壇(第六・十一章)----
   altar_seisui:  { kind: 'item', id: 'seisui', count: 3 },
   altar_earring: { kind: 'gear', id: 'spirit_earring' },

@@ -68,9 +68,10 @@ Game.Field = (function () {
     if (wardLeft > 0) {
       wardLeft -= 1;
       // 効いている間も、格上の魔物だけはまれに出る
-      return Math.random() < def.encounter * 0.15;
+      return Math.random() < def.encounter * 0.15 * Game.Moon.encounterScale();
     }
-    return Math.random() < def.encounter;
+    // 闇が濃いほど魔物は出る。満月の下ではおとなしい
+    return Math.random() < def.encounter * Game.Moon.encounterScale();
   }
 
   function pickEncounter() {
@@ -140,13 +141,22 @@ Game.Field = (function () {
     var tile = tileAt(nx, ny);
     var def = tile && Game.Data.TileDefs[tile];
     if (!def || !def.walkable) return;
+    // 月光の門は満月のあいだだけ開く。閉じているときは、いつ開くかを伝える
+    if (def.moonGate && !Game.Moon.isFull()) {
+      Game.Dialogue.show('月光の門は 固く閉じている。(満月まで あと ' +
+        Game.Moon.stepsToFull() + '歩  いまは ' + Game.Moon.label() + ')');
+      moveCooldown = MOVE_DELAY * 3;
+      return;
+    }
 
     // 先頭が動く前にいたマスを履歴の先頭へ。仲間はこれを順に辿る
     trail.unshift({ x: px, y: py });
     if (trail.length > TRAIL_MAX) trail.length = TRAIL_MAX;
     facing = dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : 'right';
     steps += 1;
+    Game.Moon.step();   // 世界の時計。歩くほどに月が満ち欠けする
     px = nx; py = ny;
+    callbacks.onStep && callbacks.onStep();
     moveCooldown = MOVE_DELAY;
     // 毒の報せは出すが、踏んだマスの出来事はそのまま起こす。
     // ここで打ち切ってしまうと、毒を受けている間だけ 門・ボス床・宝箱・店・
@@ -227,6 +237,7 @@ Game.Field = (function () {
 
   return {
     load: load, currentMap: currentMap, playerPos: playerPos, lightSwitch: lightSwitch,
+    stepCount: function () { return steps; },
     resetToStart: resetToStart, setPosition: setPosition, wardSteps: wardSteps,
     update: update, draw: draw,
     // 検証用: いま使っているイベント一式

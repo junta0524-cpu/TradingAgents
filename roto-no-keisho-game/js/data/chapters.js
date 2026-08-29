@@ -137,10 +137,20 @@ Game.Data.Chapters = [
       },
       { map: 'academy_altar', type: 'boss', bossId: 'magatsuki',
         goal: '召喚された魔物を 片づけ、祭壇の主を たおす',
-        require: { defeat: 5 },
-        blocked: '召喚された魔物が まだ 暴れている。', intro: ['地下祭壇で、名もなき召魔が姿を現した。'] },
+        require: { defeat: 5, withinSteps: 220 },
+        blocked: '召喚された魔物が まだ 暴れている。',
+        overrunFlag: 'academy_burned',
+        overrun: '地上から 悲鳴が 届いた。……祭壇の外へ 一体、逃がしてしまった。',
+        intro: [
+          '地下祭壇で、名もなき召魔が姿を現した。',
+          'エルロード「手早く。ここで食い止めないと、召喚されたものが 地上へ 出ます」',
+        ] },
     ],
     outro: ['エルロードは弟子ヴァンスの才を見出しつつも、力を扱う責任の重さを痛感するのだった。'],
+    outroIf: [
+      { flag: 'academy_burned',
+        lines: ['地上へ逃れた一体が 学院の東棟を 焼いた。創設の式典は、焼け跡の前で 執り行われた。'] },
+    ],
   },
   {
     title: '第七章 ― 断崖の防人',

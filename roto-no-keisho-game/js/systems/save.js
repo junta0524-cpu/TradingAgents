@@ -20,6 +20,7 @@ Game.Save = (function () {
       party: Game.Party.serialize(),
       story: Game.Story.serialize(),
       field: { mapId: map ? map.id : null, x: pos.x, y: pos.y },
+      moon: Game.Moon.serialize(),
     };
     try {
       s.setItem(KEY, JSON.stringify(data));
@@ -63,6 +64,7 @@ Game.Save = (function () {
     var data = read();
     if (!data) return false;
     if (!Game.Party.deserialize(data.party)) return false;
+    Game.Moon.restore(data.moon);
     Game.Story.resume(data.story, modeChangeCb);
     if (data.field && data.field.mapId) {
       var map = Game.Field.currentMap();

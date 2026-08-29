@@ -32,6 +32,8 @@ Game.Data.TileDefs = {
   // タイルの文字そのものを変えるので、描画側は何も知らなくてよい。
   'L': { walkable: true, color: '#3a3450', encounter: 0, isSwitch: true, glyph: '灯' },
   'l': { walkable: true, color: '#d4af5a', encounter: 0, isSwitch: true, lit: true, glyph: '灯' },
+  // 月光の門。満月のあいだだけ通れる
+  'O': { walkable: true, color: '#5c6f9c', encounter: 0, moonGate: true, glyph: '月' },
 };
 
 // 仕掛けを消えている状態に戻す。同じ階へ入り直すたびに呼ぶ
@@ -265,6 +267,7 @@ Game.Data.Maps = {
   cliff_road: buildMap({
     id: 'cliff_road', name: '断崖の道', kind: 'field', startX: 7, startY: 16,
     encounterTable: 'cliff_road', church: '断崖の氏族村の 祠',
+    chests: { '5': 'cliff_moon_gold' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',
       'X~~~~~~XXXXXXXCXXXXXXX',
@@ -275,8 +278,8 @@ Game.Data.Maps = {
       'X~~~...XXXXXXXXXXXXXXX',
       'X~~~...XXXXXXXXXXXXXXX',
       'X~~===============XXXX',
-      'X~~=~~~XXXXXXXX...XXXX',
-      'X~~=~~~XXXXXXXX...XXXX',
+      'X~~=~~~XXXXXXXXXOXXXXX',
+      'X~~=~~~XXXXXXXX.5.XXXX',
       'X~~=~~~XXXXXXXXXXXXXXX',
       'X~~=========X=XXXXXXXX',
       'X~~~~~~=XXXXX=XXXXXXXX',
