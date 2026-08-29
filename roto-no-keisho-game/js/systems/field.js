@@ -138,7 +138,11 @@ Game.Field = (function () {
     steps += 1;
     px = nx; py = ny;
     moveCooldown = MOVE_DELAY;
-    if (tickFieldPoison()) return; // 毒で誰かが倒れたら、その報告を優先する
+    // 毒の報せは出すが、踏んだマスの出来事はそのまま起こす。
+    // ここで打ち切ってしまうと、毒を受けている間だけ 門・ボス床・宝箱・店・
+    // 町の人 が反応しなくなり、その場に立ったまま先へ進めなくなる
+    // (踏み直さないと二度と反応しないので、詰みになる)。
+    var poisonTicked = tickFieldPoison();
 
     if (def.isGate) { callbacks.onGate && callbacks.onGate(); return; }
     if (def.isBoss) { callbacks.onBoss && callbacks.onBoss(map.bossId); return; }
@@ -154,7 +158,8 @@ Game.Field = (function () {
       callbacks.onNpc && callbacks.onNpc(npcId, map);
       return;
     }
-    if (tryEncounter(tile)) {
+    // 毒で削られた直後に不意打ちまで重ねない。そのぶんは一歩見逃す
+    if (!poisonTicked && tryEncounter(tile)) {
       var group = pickEncounterGroup();
       if (group.length) callbacks.onEncounter && callbacks.onEncounter(group);
     }
