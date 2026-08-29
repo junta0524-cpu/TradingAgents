@@ -19,7 +19,8 @@ DONE = _delivered()
 
 # 32×32で頼んでいた頃の絵。process_art.py が縦に1.5倍伸ばしていたので、
 # ファイルはあるが 3頭身に潰れている。新しい 32×48 のプロンプトで描き直したい。
-REDO = {'rota', 'elrode', 'celestia', 'garai', 'npc_king'}
+# パーティ4人は描き直しが届いたので、残るは王だけ。
+REDO = {'npc_king'}
 
 def row(key, cells):
     """最後の列に必ずコピーボタンを置く。素材の状態も印で出す"""
