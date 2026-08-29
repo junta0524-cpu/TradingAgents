@@ -168,37 +168,41 @@ add('fuuin_no_shugosekizou', '封印の守護石像', 3, ['azure_tower'], { hp: 
 Game.Data.Monsters = M;
 
 // ---- ボス(魔物図鑑「ボス」より) ----
-// 雑魚と同じ物差しで置いてある。おおよそ「その章のパーティが5〜7ターンかけて
-// 削りきり、そのあいだに総HPの半分以上を持っていかれる」重さ。
+// 雑魚と同じ物差しで置いてある。その章のパーティが 4〜6ターンかけて削りきり、
+// そのあいだに総HPの半分前後を持っていかれる重さ。
+// 目安は「一度も回復せず、ただ殴り合った場合」で立ててある(下は実測値)。
+//   アストロガーディアン 4ターン / 総HPの45%  ガロズ 4ターン / 57%
+//   まがつき 5ターン / 69%  深淵の巣母 5ターン / 59%  原初の渇望 6ターン / 70%
+// 実際には回復も ぼうぎょ も呪文も使えるので、ここが上限に当たる。
 // 第二章のみエルロードが戦闘直前に合流するので2人想定。
 Game.Data.Monsters.astro_guardian = {
   id: 'astro_guardian', name: '星読みの巨像アストロガーディアン', boss: true, rank: 2,
   loc: ['azure_tower'], family: 'ancient',
-  hp: 150, atk: 21, def: 10, spd: 10, exp: 250, gold: 450,
+  hp: 115, atk: 16, def: 10, spd: 10, exp: 250, gold: 450,
   bossSkills: [{ name: '星導の光', power: 1.2, target: 'all_party' }],
 };
 Game.Data.Monsters.galoz = {
   id: 'galoz', name: '牙のオーガ将軍ガロズ', boss: true, rank: 4,
   loc: ['ogre_camp'], family: 'remnant',
-  hp: 300, atk: 33, def: 14, spd: 16, exp: 400, gold: 700,
+  hp: 290, atk: 30, def: 14, spd: 16, exp: 400, gold: 700,
   bossSkills: [{ name: '咆哮', power: 1.3, target: 'all_party' }],
 };
 Game.Data.Monsters.magatsuki = {
   id: 'magatsuki', name: '名もなき召魔「まがつき」', boss: true, rank: 5,
   loc: ['academy_altar'], family: 'demon',
-  hp: 360, atk: 39, def: 16, spd: 21, exp: 560, gold: 900,
+  hp: 350, atk: 36, def: 16, spd: 21, exp: 560, gold: 900,
   bossSkills: [{ name: '禁呪の残滓', power: 1.2, target: 'all_party' }],
 };
 Game.Data.Monsters.abyss_matriarch = {
   id: 'abyss_matriarch', name: '深淵の巣母', boss: true, rank: 6,
   loc: ['abyss_depth'], family: 'deep',
-  hp: 520, atk: 45, def: 20, spd: 18, exp: 820, gold: 1300,
+  hp: 560, atk: 50, def: 20, spd: 18, exp: 820, gold: 1300,
   bossSkills: [{ name: '深淵の波動', power: 1.3, target: 'all_party' }],
 };
 Game.Data.Monsters.genso_no_katsubo = {
   id: 'genso_no_katsubo', name: '原初の渇望', boss: true, rank: 7,
   loc: ['forbidden_ritual_chamber'], family: 'demon',
-  hp: 640, atk: 50, def: 24, spd: 24, exp: 1100, gold: 1800,
+  hp: 680, atk: 54, def: 24, spd: 24, exp: 1100, gold: 1800,
   bossSkills: [{ name: '渇望の奔流', power: 1.4, target: 'all_party' }],
 };
 
