@@ -1,5 +1,6 @@
 // 店・宿屋・教会 ― 街の施設タイルを踏んだときに開く画面。
 // kind: 'item'(道具屋) / 'gear'(武器防具屋) / 'inn'(宿屋) / 'church'(教会)
+//       'medal'(ちいさなメダルの引き換え所)
 var Game = window.Game || {};
 Game.Shop = (function () {
   var state = null;
@@ -10,7 +11,7 @@ Game.Shop = (function () {
       kind: kind,
       mapId: mapId,
       stock: stock,
-      view: (kind === 'inn' || kind === 'church') ? kind : 'root',
+      view: (kind === 'inn' || kind === 'church' || kind === 'medal') ? kind : 'root',
       cursor: 0,
       onClose: onClose,
     };
@@ -19,6 +20,11 @@ Game.Shop = (function () {
       Game.Dialogue.show('宿屋「ひと晩 ' + price + 'ゴールドだよ。泊まっていくかい?」');
     } else if (kind === 'church') {
       Game.Dialogue.show('教会「倒れた仲間に 祈りを捧げましょうか」');
+    } else if (kind === 'medal') {
+      var n = Game.Data.medalCount();
+      Game.Dialogue.show(n
+        ? '好事家「ちいさなメダルを ' + n + 'まい お持ちですな。何と 換えましょう」'
+        : '好事家「わしは ちいさなメダルを 集めておってな。見つけたら 持ってきなされ」');
     }
   }
 
@@ -31,7 +37,8 @@ Game.Shop = (function () {
   }
 
   function title() {
-    return { item: 'どうぐや', gear: 'ぶきぼうぐや', inn: 'やどや', church: 'きょうかい' }[state.kind];
+    return { item: 'どうぐや', gear: 'ぶきぼうぐや', inn: 'やどや',
+             church: 'きょうかい', medal: 'メダルの ひきかえ所' }[state.kind];
   }
 
   // ---- 一覧の中身 ----
@@ -66,6 +73,7 @@ Game.Shop = (function () {
     if (state.view === 'buy') return goodsList();
     if (state.view === 'sell') return sellList();
     if (state.view === 'church') return Game.Party.deadList();
+    if (state.view === 'medal') return Game.Data.MedalPrizes;
     return [];
   }
 
@@ -84,7 +92,7 @@ Game.Shop = (function () {
     if (Game.Input.wasPressed('up')) state.cursor = list.length ? (state.cursor - 1 + list.length) % list.length : 0;
 
     if (Game.Input.wasPressed('cancel')) {
-      if (state.view === 'root' || state.view === 'church') close();
+      if (state.view === 'root' || state.view === 'church' || state.view === 'medal') close();
       else { state.view = 'root'; state.cursor = 0; }
       return;
     }
@@ -96,6 +104,7 @@ Game.Shop = (function () {
       state.view = cmd; state.cursor = 0;
       return;
     }
+    if (state.view === 'medal') { doTrade(list[state.cursor]); return; }
     if (state.view === 'buy') { doBuy(list[state.cursor]); return; }
     if (state.view === 'sell') { doSell(list[state.cursor]); return; }
     if (state.view === 'church') { doRevive(list[state.cursor]); return; }
@@ -111,6 +120,28 @@ Game.Shop = (function () {
     }
     Game.Party.restAll();
     Game.Dialogue.show('ぐっすり 眠った。パーティは 全回復した!', close);
+  }
+
+  // メダルを渡して品を受け取る。払うのは金ではなく枚数。
+  function doTrade(prize) {
+    if (!prize) return;
+    var have = Game.Data.medalCount();
+    if (have < prize.cost) {
+      Game.Dialogue.show('好事家「まだ ' + (prize.cost - have) + 'まい 足りませんな」');
+      return;
+    }
+    for (var i = 0; i < prize.cost; i++) Game.Party.consumeItem('chiisana_medal');
+    var name;
+    if (prize.kind === 'gear') {
+      Game.Party.grantGear(prize.id);
+      name = Game.Data.Equipment[prize.id].name;
+    } else {
+      Game.Party.grantItem(prize.id, prize.count || 1);
+      name = Game.Data.Items[prize.id].name + (prize.count > 1 ? ' ' + prize.count + 'つ' : '');
+    }
+    Game.Dialogue.show('好事家「では これを。……大事になされよ」', function () {
+      Game.Dialogue.show(name + 'を 手に入れた!');
+    });
   }
 
   function doBuy(entry) {
@@ -144,8 +175,10 @@ Game.Shop = (function () {
   }
 
   // ---- 描画 ----
+  var W_CACHE = 640, H_CACHE = 480;
   function draw(ctx, W, H) {
     if (!state) return;
+    W_CACHE = W; H_CACHE = H;
     // 背後の街を暗く落として、品名と値段を読みやすくする
     ctx.fillStyle = 'rgba(8,10,18,0.72)';
     ctx.fillRect(0, 0, W, H);
@@ -162,6 +195,8 @@ Game.Shop = (function () {
       Game.Dialogue.draw(ctx, W, H);
       return;
     }
+
+    if (state.view === 'medal') { drawMedals(ctx, x, y, w, h); return; }
 
     var list = currentList();
     if (list.length === 0) {
@@ -206,6 +241,29 @@ Game.Shop = (function () {
     }
 
     Game.Dialogue.draw(ctx, W, H);
+  }
+
+  function drawMedals(ctx, x, y, w, h) {
+    var have = Game.Data.medalCount();
+    Game.Renderer.drawText(ctx, 'ちいさなメダル ' + have + 'まい', x + 16, y + 50,
+      { size: 14, color: '#d4af5a' });
+    Game.Data.MedalPrizes.forEach(function (pz, i) {
+      var ly = y + 78 + i * 22;
+      var sel = i === state.cursor;
+      var name = pz.kind === 'gear'
+        ? Game.Data.Equipment[pz.id].name
+        : Game.Data.Items[pz.id].name + (pz.count > 1 ? ' x' + pz.count : '');
+      var ok = have >= pz.cost;
+      Game.Renderer.drawText(ctx, (sel ? '▶ ' : '　') + name, x + 16, ly,
+        { size: 13, color: ok ? '#ece7da' : '#6b6354' });
+      Game.Renderer.drawText(ctx, pz.note, x + 200, ly,
+        { size: 11, color: '#6b6354' });
+      Game.Renderer.drawText(ctx, pz.cost + 'まい', x + w - 16, ly,
+        { size: 12, align: 'right', color: ok ? '#a49b86' : '#6b6354' });
+    });
+    Game.Renderer.drawText(ctx, 'Z: ひきかえる    X: でる', x + 16, y + h - 16,
+      { size: 12, color: '#6b6354' });
+    Game.Dialogue.draw(ctx, W_CACHE, H_CACHE);
   }
 
   return { open: open, isOpen: isOpen, update: update, draw: draw };

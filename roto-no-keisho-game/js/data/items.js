@@ -14,6 +14,8 @@ Game.Data.Items = {
   kago_no_gofu: { id: 'kago_no_gofu', name: '加護の護符', kind: 'ward', price: 60 },
   kikan_no_hane: { id: 'kikan_no_hane', name: '帰還の羽根', kind: 'return', price: 30 },
   phoenix_no_shizuku: { id: 'phoenix_no_shizuku', name: 'フェニックスの雫', kind: 'revive', power: 0.5, price: 150 },
+  // 使い道は無い。集めて、集める人のところへ持っていくためのもの。
+  chiisana_medal: { id: 'chiisana_medal', name: 'ちいさなメダル', kind: 'keepsake', price: 0 },
 };
 
 // 初期所持品

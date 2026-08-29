@@ -66,6 +66,17 @@ Game.Party = (function () {
   }
 
   function list() { return order.map(function (id) { return members[id]; }); }
+
+  // 隊列の入れ替え。前に立つ者ほど狙われるので、並びは そのまま作戦になる。
+  // 歩くときの隊列も この順に従う。
+  function moveMember(index, delta) {
+    var to = index + delta;
+    if (index < 0 || index >= order.length || to < 0 || to >= order.length) return false;
+    var tmp = order[index];
+    order[index] = order[to];
+    order[to] = tmp;
+    return true;
+  }
   function aliveList() { return list().filter(function (m) { return m.hp > 0; }); }
   function deadList() { return list().filter(function (m) { return m.hp <= 0; }); }
   function get(id) { return members[id]; }
@@ -352,6 +363,7 @@ Game.Party = (function () {
     sellItem: sellItem, sellGear: sellGear, sellPriceOf: sellPriceOf,
     canEquip: canEquip, equipGear: equipGear, unequipSlot: unequipSlot,
     grantGear: grantGear, grantItem: grantItem,
+    moveMember: moveMember,
     tactic: function () { return tactic; },
     setTactic: function (id) { tactic = Game.Data.tacticOf(id).id; },
     serialize: serialize, deserialize: deserialize,

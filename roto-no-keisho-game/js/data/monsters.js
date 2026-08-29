@@ -76,6 +76,9 @@ Game.Data.Families = {
   demon:    { name: '悪魔系',       physical: 1.0, fire: 0.8, ice: 1.0, blast: 1.0, wind: 1.0, light: 1.7, ailment: 0.7 },
   deep:     { name: '深海系',       physical: 1.0, fire: 0.5, ice: 1.5, blast: 1.2, wind: 1.0, light: 1.0, ailment: 1.0 },
   ancient:  { name: '古代文明系',   physical: 0.6, fire: 0.8, ice: 0.8, blast: 1.4, wind: 0.8, light: 1.0, ailment: 0.3 },
+  // はぐれ者系。硬すぎて何を当てても ほとんど通らない。
+  // 倒しきる前に逃げるので、まともに削るより かいしんの一撃を待つほうが早い。
+  metal:    { name: 'はぐれ者系',   physical: 0.04, fire: 0.04, ice: 0.04, blast: 0.06, wind: 0.04, light: 0.06, ailment: 0.0 },
 };
 
 // 属性と種族から倍率を引く。分からない組み合わせは等倍にしておく。
@@ -92,9 +95,13 @@ function add(id, name, rank, loc, over) { M[id] = mon(id, name, rank, loc, over)
 // ---- スライム系 ----
 add('chibi_slime', 'ちびスライム', 1, ['east_road', 'azure_plain'], { hp: 10, atk: 7, family: 'slime' });
 add('aka_slime', 'あかスライム', 1, ['east_road'], { hp: 13, atk: 8, inflict: { status: 'confuse', chance: 0.12 }, family: 'slime' });
-// 逃げ足が速いかわりに、倒せば大きい。ドラクエでいうメタル枠。
-add('hane_slime', 'はねスライム', 1, ['east_road', 'azure_plain'], { hp: 8, spd: 14, exp: 40, gold: 70, family: 'slime' });
-add('hagure_slime', 'はぐれスライム', 4, ['ogre_camp'], { hp: 48, atk: 24, family: 'slime' });
+// ---- はぐれ者 ----
+// 硬く、すばやく、すぐ逃げる。そのかわり倒せば経験値が跳ねる。
+// まともに削ろうとしても通らないので、かいしんの一撃が出るかどうかの勝負になる。
+add('hane_slime', 'はねスライム', 1, ['east_road', 'azure_plain', 'cliff_road'],
+    { hp: 6, atk: 6, def: 40, spd: 30, exp: 120, gold: 90, family: 'metal', metal: true });
+add('hagure_slime', 'はぐれスライム', 4, ['ogre_camp', 'academy_altar', 'abyss_depth'],
+    { hp: 10, atk: 20, def: 90, spd: 42, exp: 900, gold: 500, family: 'metal', metal: true });
 add('king_slime_kakera', 'キングスライムの欠片', 3, ['cliff_road'], { hp: 72, atk: 19, family: 'slime' });
 add('hedoro_slime', 'ヘドロスライム', 6, ['abyss_depth'], { inflict: { status: 'poison', chance: 0.3 }, family: 'slime' });
 
@@ -220,6 +227,8 @@ Game.Data.EncounterTables = (function () {
       var areaRank = Game.Data.AreaRank[locId] || m.rank;
       var gap = m.rank - areaRank;
       var weight = gap > 0 ? 1 : gap < 0 ? 3 : 6;
+      // はぐれ者は滅多に出ない。出会えたこと自体が当たりであってほしい
+      if (m.metal) weight = 1;
       tables[locId].push({ id: id, weight: weight });
     });
   });

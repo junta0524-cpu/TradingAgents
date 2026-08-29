@@ -357,8 +357,12 @@ Game.Battle = (function () {
       if (potion) return bookItem(potion, weak);
     }
 
+    // 相手が はぐれ者ばかりなら、技も呪文も通らない。
+    // 硬い体を破れるのは かいしんの一撃だけなので、素直に殴りにいく。
+    var allMetal = foes.length > 0 && foes.every(function (e) { return e.metal; });
+
     // 攻めの技。魔物が2体以上なら全体がけを優先する
-    if (tactic !== 'nomagic' && foes.length > 0) {
+    if (!allMetal && tactic !== 'nomagic' && foes.length > 0) {
       var wantAll = foes.length >= 2;
       var atk = bestSkill(actor, function (sk) {
         if (sk.kind !== 'attack') return false;
@@ -464,7 +468,16 @@ Game.Battle = (function () {
 
   // 手負いの雑魚は逃げ出すことがある。最後の1匹は逃げない(戦闘が空振りに終わるため)
   function maybeFlee(enemy) {
-    if (enemy.boss || aliveEnemies().length <= 1) return false;
+    if (enemy.boss) return false;
+    // はぐれ者は無傷でも逃げる。最後の一匹でも逃げるので、取り逃がすことがある
+    if (enemy.metal) {
+      if (Math.random() > 0.45) return false;
+      state.log.push(enemy.label + 'は すばやく にげさった!');
+      var mi = state.enemies.indexOf(enemy);
+      if (mi >= 0) state.enemies.splice(mi, 1);
+      return true;
+    }
+    if (aliveEnemies().length <= 1) return false;
     if (enemy.curHp > enemy.hp * 0.3) return false;
     if (Math.random() > 0.3) return false;
     state.log.push(enemy.label + 'は にげだした!');
@@ -498,6 +511,20 @@ Game.Battle = (function () {
     return true;  // blind は行動はできる(命中が落ちる)
   }
 
+  // 前に立つ者ほど狙われる。ドラクエの隊列と同じで、
+  // 並び順そのものが「誰に矢面へ立ってもらうか」という判断になる。
+  var ROW_WEIGHT = [10, 6, 3, 2];
+  function pickPartyTarget(alive) {
+    var weights = alive.map(function (m, i) { return ROW_WEIGHT[i] || 1; });
+    var total = weights.reduce(function (a, b) { return a + b; }, 0);
+    var r = Math.random() * total;
+    for (var i = 0; i < alive.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return alive[i];
+    }
+    return alive[alive.length - 1];
+  }
+
   function enemyAct(enemy) {
     var alive = Game.Party.aliveList();
     if (alive.length === 0) return;
@@ -515,7 +542,7 @@ Game.Battle = (function () {
         return;
       }
     }
-    var target = alive[Math.floor(Math.random() * alive.length)];
+    var target = pickPartyTarget(alive);
     if (enemy.status === 'blind' && Math.random() < 0.6) {
       state.log.push(enemy.label + 'の こうげき! しかし 攻撃は はずれた!');
       return;
@@ -614,7 +641,11 @@ Game.Battle = (function () {
     var crit = isCritical(actor);
     // かいしんの一撃は守備力を無視するので、damageOf に def:0 を渡す
     var raw = crit ? Math.round(damageOf(effAtk(actor), 0) * 1.4) : damageOf(effAtk(actor), effDef(target));
-    var hit = applyResistance(target, 'physical', raw);
+    // はぐれ者は何を当てても通らないが、かいしんの一撃だけは別。
+    // ドラクエでメタルを狩るのが「会心待ち」になるのは、この一行のため。
+    var hit = (crit && target.metal)
+      ? { dmg: raw, note: ' 硬い体を 貫いた!' }
+      : applyResistance(target, 'physical', raw);
     var dmg = hit.dmg;
     target.curHp = Math.max(0, target.curHp - dmg);
     if (crit) say('かいしんの いちげき!!', function () { Game.Fx.critical(); });

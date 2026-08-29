@@ -34,6 +34,8 @@ Game.Data.TileDefs = {
   'l': { walkable: true, color: '#d4af5a', encounter: 0, isSwitch: true, lit: true, glyph: '灯' },
   // 月光の門。満月のあいだだけ通れる
   'O': { walkable: true, color: '#5c6f9c', encounter: 0, moonGate: true, glyph: '月' },
+  // ちいさなメダルを集めている好事家の家
+  'P': { walkable: true, color: '#8a6a9c', encounter: 0, shop: 'medal', glyph: '珍' },
 };
 
 // 仕掛けを消えている状態に戻す。同じ階へ入り直すたびに呼ぶ
@@ -128,7 +130,7 @@ Game.Data.Maps = {
       'YYFFYYFFFYFYFFFYYFFYYY',
       'YYFFFFFFFYFYFFFFFFFYYY',
       'YYYYFYYYYYFYYYYYFYYYYY',
-      'YFFSFFFWFFFFFFIFFFHFFY',
+      'YFFSFFFWFFFFFFIFFFHPFY',
       'YYYYFYYYYYFYYYYYFYYYYY',
       'YYFFFFFFFYFYFFFFFFFYYY',
       'YYFFYYFFFYFYFFFYYFFYYY',
@@ -219,6 +221,7 @@ Game.Data.Maps = {
   east_road: buildMap({
     id: 'east_road', name: '東方街道', kind: 'field', startX: 1, startY: 4,
     encounterTable: 'east_road', church: 'ラダトームの 教会',
+    chests: { '1': 'medal_road' },
     art: [
       '########################',
       '#..###........####.....#',
@@ -233,7 +236,7 @@ Game.Data.Maps = {
       '#.....###......=..====C#',
       '#..............=....##.#',
       '#.......~~~.###........#',
-      '#...####~~~.###...###..#',
+      '#...####~~~.###...###.1#',
       '#...####....###...###..#',
       '########################',
     ],
@@ -243,6 +246,7 @@ Game.Data.Maps = {
   azure_plain: buildMap({
     id: 'azure_plain', name: '蒼穹平原', kind: 'field', startX: 1, startY: 7,
     encounterTable: 'azure_plain', church: 'ラダトームの 教会',
+    chests: { '1': 'medal_plain' },
     art: [
       '##########################',
       '#...........###..........#',
@@ -257,7 +261,7 @@ Game.Data.Maps = {
       '#.....=......=..~~=......#',
       '#...##========....=......#',
       '#...###......======###...#',
-      '#..........##......###...#',
+      '#..........##......###..1#',
       '#..........##............#',
       '##########################',
     ],
@@ -267,7 +271,7 @@ Game.Data.Maps = {
   cliff_road: buildMap({
     id: 'cliff_road', name: '断崖の道', kind: 'field', startX: 7, startY: 16,
     encounterTable: 'cliff_road', church: '断崖の氏族村の 祠',
-    chests: { '5': 'cliff_moon_gold' },
+    chests: { '5': 'cliff_moon_gold', '6': 'medal_cliff' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',
       'X~~~~~~XXXXXXXCXXXXXXX',
@@ -283,7 +287,7 @@ Game.Data.Maps = {
       'X~~=~~~XXXXXXXXXXXXXXX',
       'X~~=========X=XXXXXXXX',
       'X~~~~~~=XXXXX=XXXXXXXX',
-      'X~~~~~~=....X=XXXXXXXX',
+      'X~~~~~~=...6X=XXXXXXXX',
       'X~~~~~~=XXXXX=XXXXXXXX',
       'X~~~~~~=======XXXXXXXX',
       'XXXXXXXXXXXXXXXXXXXXXX',
@@ -295,14 +299,14 @@ Game.Data.Maps = {
   ogre_camp: buildMap({
     id: 'ogre_camp', name: 'はぐれオーガの野営地', kind: 'dungeon', startX: 1, startY: 14,
     encounterTable: 'ogre_camp', church: 'ローレシア城下の 教会', bossId: 'galoz',
-    chests: { '1': 'ogre_gold_s', '2': 'ogre_yakusou', '3': 'ogre_shield', '4': 'ogre_gold_l' },
+    chests: { '1': 'ogre_gold_s', '2': 'ogre_yakusou', '3': 'ogre_shield', '4': 'ogre_gold_l', '5': 'medal_ogre' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXX',
       'XD1DDDDDDXDDDDDDDXXXXXXX',
       'XDDDDDDXXXDDDDD2DXDDDBXX',
       'XDDXXDDXXXDDDDDDDXDDDDXX',
       'XDDXXDDDDDDDXXDDDDDDDDXX',
-      'XDDDDDDDDXDDXXDDDXDDDDXX',
+      'XDDDDDDDDXDDXXDDDXDDD5XX',
       'XDDDDDDDDXDDXXDDDXXXXXXX',
       'XDDDDDDDDDDDDDDDDDDDDDDX',
       'XDDDDXXXDDDDDDDDDDDDDDDX',
@@ -320,7 +324,7 @@ Game.Data.Maps = {
   azure_tower: buildMap({
     id: 'azure_tower', name: '蒼穹の塔', kind: 'dungeon', startX: 4, startY: 15,
     encounterTable: 'azure_tower', church: 'ラダトームの 教会', bossId: 'astro_guardian',
-    chests: { '1': 'tower_mahou', '2': 'tower_gofu', '3': 'tower_gold', '4': 'tower_staff' },
+    chests: { '1': 'tower_mahou', '2': 'tower_gofu', '3': 'tower_gold', '4': 'tower_staff', '5': 'medal_tower' },
     art: [
       'XXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXXXXXXX',
@@ -330,7 +334,7 @@ Game.Data.Maps = {
       'XXXXXXXXXXXXXXXXXDXX',
       'XXDDDDDDDDDDDDDDDDXX',
       'XXDDDDXXDDDDXXDDDDXX',
-      'XXD3DDLDDDDDDDDDDDXX',
+      'XXD3DDLDDDDDDDDDD5XX',
       'XXDXXXXXXXXXXXXXXXXX',
       'XXDDDDDDDDDDDDDDDDXX',
       'XXDDDDXXDDDDXXDDDDXX',
@@ -347,7 +351,7 @@ Game.Data.Maps = {
   academy_altar: buildMap({
     id: 'academy_altar', name: '学院地下祭壇', kind: 'dungeon', startX: 2, startY: 2,
     encounterTable: 'academy_altar', church: '学院都市サマルトリアの 礼拝堂', bossId: 'magatsuki',
-    chests: { '1': 'altar_seisui', '2': 'altar_gold', '3': 'altar_earring' },
+    chests: { '1': 'altar_seisui', '2': 'altar_gold', '3': 'altar_earring', '4': 'medal_altar' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
@@ -355,7 +359,7 @@ Game.Data.Maps = {
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
       'XXDXXXXXXXXXDXXXXXXXXXDXXX',
-      'XDDDDXDDDDXDDDDXDDDDXDDDDX',
+      'XDDDDXDDDDXDDDDXDDDDXDDD4X',
       'XDDDDDDDDDXDDDDXDDDDDDBDDX',
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
@@ -372,7 +376,7 @@ Game.Data.Maps = {
   abyss_depth: buildMap({
     id: 'abyss_depth', name: '業の底', kind: 'dungeon', startX: 1, startY: 16,
     encounterTable: 'abyss_depth', church: 'ムーンブルクの 月の神殿', bossId: 'abyss_matriarch',
-    chests: { '1': 'abyss_jokyu', '2': 'abyss_phoenix', '3': 'abyss_gold', '4': 'abyss_brooch' },
+    chests: { '1': 'abyss_jokyu', '2': 'abyss_phoenix', '3': 'abyss_gold', '4': 'abyss_brooch', '5': 'medal_abyss' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -384,7 +388,7 @@ Game.Data.Maps = {
       'XXXDDDDDDDDX~~~~DDDDDDDXXX',
       'XXXDDDXXDDDX~~~~DDXXDDDXXX',
       'XXXXDXXXXXXX~~~~XXXXXDXXXX',
-      'XXXDDDXXXXDDDXXXXXXXXDXXXX',
+      'XXXDD5XXXXDDDXXXXXXXXDXXXX',
       'XDDDDDDDDDDDDXDDDXXXDDDXXX',
       'XDDDDDDDXXDDDXDDDDDDDDDBDX',
       'XDDXXDDDXXXDXXDDDXXXDDDDDX',
@@ -399,7 +403,7 @@ Game.Data.Maps = {
   forbidden_ritual_chamber: buildMap({
     id: 'forbidden_ritual_chamber', name: '禁呪暴走空間', kind: 'dungeon', startX: 1, startY: 1,
     encounterTable: 'forbidden_ritual_chamber', church: '学院都市サマルトリアの 礼拝堂', bossId: 'genso_no_katsubo',
-    chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold' },
+    chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold', '5': 'medal_ritual' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',
       'XDDDDLDDDDDDDDDDDDDD2X',
@@ -408,7 +412,7 @@ Game.Data.Maps = {
       'XDXXDXXXXXXXXXXXXDXXDX',
       'XDXXDXXDDDLDDDDXXDXXDX',
       'XDXXDXXDXXDXXXDXXDXXDX',
-      'XDXXDXXDXDDDDXDXXDXXDX',
+      'XDXXDXXDXDDD5XDXXDXXDX',
       'XDXXDXXDXDBDDXDXXDXXDX',
       'XDXXDXXDXDDDDXDXXDXXDX',
       'XDXXDXXDXDDDDXDXXDXXDX',
