@@ -11,6 +11,7 @@ Game.Battle = (function () {
   }
 
   function start(monsterIds, onEnd) {
+    Game.Fx.clear();   // 前の戦いの揺れや点滅を持ち越さない
     state = {
       phase: 'intro',
       enemies: monsterIds.map(cloneMonster),
@@ -173,10 +174,28 @@ Game.Battle = (function () {
     return Math.random() < Math.min(0.12, (actor.luck || 0) * 0.004);
   }
 
+  // ログの一行に演出を添える。文章が出るのと同時に、画面のほうも反応させたい。
+  // (ラウンドはまとめて解決してからログを流すので、解決時に演出を出すと
+  //  文章より先に画面だけが暴れることになる)
+  function say(text, fx) { state.log.push(fx ? { t: text, fx: fx } : text); }
+
   function flushLog(next) {
     if (state.log.length === 0) { next(); return; }
     var msg = state.log.shift();
-    Game.Dialogue.show(msg, function () { flushLog(next); });
+    var text = (typeof msg === 'string') ? msg : msg.t;
+    if (msg && msg.fx) msg.fx();
+    Game.Dialogue.show(text, function () { flushLog(next); });
+  }
+
+  // 仲間が受けた一撃。減ったぶんが大きいほど強く揺れる
+  function fxPartyHurt(member, dmg) {
+    return function () { Game.Fx.partyHurt(dmg / Math.max(1, member.maxHp)); };
+  }
+  // 魔物が受けた一撃。半分以上持っていったなら画面も少し揺らす
+  function fxEnemyHurt(enemy, dmg) {
+    var key = state.enemies.indexOf(enemy);
+    var big = dmg >= enemy.hp * 0.35;
+    return function () { Game.Fx.enemyHurt(key, big); };
   }
 
   // 手番が回ってきたキャラの状態異常を処理する。
@@ -209,11 +228,11 @@ Game.Battle = (function () {
     var dmg = damageOf(effAtk(actor), effDef(target));
     if (isEnemy) {
       target.curHp = Math.max(0, target.curHp - dmg);
-      state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ');
+      say(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ', fxEnemyHurt(target, dmg));
       if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
     } else {
       hurt(target, dmg);
-      state.log.push(actor.name + 'は なかまの ' + target.name + 'を 殴ってしまった! ' + dmg + ' の ダメージ');
+      say(actor.name + 'は なかまの ' + target.name + 'を 殴ってしまった! ' + dmg + ' の ダメージ', fxPartyHurt(target, dmg));
     }
   }
 
@@ -320,7 +339,7 @@ Game.Battle = (function () {
       var def = Game.Party.statusOf(m);
       if (!def || !def.poisonDamage) return;
       m.hp = Math.max(0, m.hp - def.poisonDamage);
-      state.log.push(m.name + def.onTick + ' ' + def.poisonDamage + ' の ダメージ');
+      say(m.name + def.onTick + ' ' + def.poisonDamage + ' の ダメージ', fxPartyHurt(m, def.poisonDamage));
     });
   }
 
@@ -350,7 +369,7 @@ Game.Battle = (function () {
         var pal = others[Math.floor(Math.random() * others.length)];
         var d = damageOf(effAtk(enemy), effDef(pal));
         pal.curHp = Math.max(0, pal.curHp - d);
-        state.log.push(enemy.label + 'は こんらんして ' + pal.label + 'を 攻撃した! ' + d + ' の ダメージ');
+        say(enemy.label + 'は こんらんして ' + pal.label + 'を 攻撃した! ' + d + ' の ダメージ', fxEnemyHurt(pal, d));
         if (pal.curHp <= 0) state.log.push(pal.label + 'は たおれた!');
       } else {
         state.log.push(enemy.label + 'は こんらんして あたりを 殴っている。');
@@ -372,7 +391,7 @@ Game.Battle = (function () {
       if (skill.target === 'all_party') {
         alive.forEach(function (member) {
           var dmg = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member)) * skill.power));
-          state.log.push(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ');
+          say(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + dmg + ' の ダメージ', fxPartyHurt(member, dmg));
         });
         return;
       }
@@ -383,7 +402,7 @@ Game.Battle = (function () {
       return;
     }
     var dmg2 = hurt(target, damageOf(effAtk(enemy), effDef(target)));
-    state.log.push(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ');
+    say(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ', fxPartyHurt(target, dmg2));
     if (target.hp <= 0) state.log.push(target.name + 'は たおれてしまった!');
     // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
     if (enemy.inflict && target.hp > 0 && Math.random() < enemy.inflict.chance) {
@@ -422,6 +441,7 @@ Game.Battle = (function () {
     var defeatedIds = state.enemies.map(function (e) { return e.id; });
     // 眠りと混乱は戦闘が終われば解ける。毒だけは持ち越す。
     Game.Party.clearTemporaryStatuses();
+    Game.Fx.clear();   // 揺れたままフィールドへ戻らない
     state = null;
     if (cb) cb(result, defeatedIds);
   }
@@ -475,8 +495,8 @@ Game.Battle = (function () {
     var hit = applyResistance(target, 'physical', raw);
     var dmg = hit.dmg;
     target.curHp = Math.max(0, target.curHp - dmg);
-    if (crit) state.log.push('かいしんの いちげき!!');
-    state.log.push(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ' + hit.note);
+    if (crit) say('かいしんの いちげき!!', function () { Game.Fx.critical(); });
+    say(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ' + hit.note, fxEnemyHurt(target, dmg));
     if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
   }
 
@@ -578,7 +598,7 @@ Game.Battle = (function () {
         var raw2 = Math.round(damageOf(powerStat(actor, skill), effDef(t)) * (skill.power || 1));
         var hit2 = applyResistance(t, skill.element || 'physical', raw2);
         t.curHp = Math.max(0, t.curHp - hit2.dmg);
-        state.log.push(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + hit2.dmg + ' の ダメージ' + hit2.note);
+        say(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + hit2.dmg + ' の ダメージ' + hit2.note, fxEnemyHurt(t, hit2.dmg));
         if (t.curHp <= 0) state.log.push(t.label + 'を たおした!');
       });
     }
@@ -671,9 +691,19 @@ Game.Battle = (function () {
     var enemies = state.enemies;
     var startX = W / 2 - (enemies.length - 1) * 70;
     enemies.forEach(function (e, i) {
-      var x = startX + i * 140, y = 130;
+      var flash = Game.Fx.enemyFlash(i);
+      // 殴られた相手は白く光り、少しのけぞる
+      var x = startX + i * 140 + (flash > 0 ? Math.round(flash * 10) * (i % 2 ? -1 : 1) : 0);
+      var y = 130;
       ctx.fillStyle = e.curHp > 0 ? (e.boss ? '#8a3230' : '#96702a') : '#333b57';
       ctx.beginPath(); ctx.arc(x, y, e.boss ? 42 : 34, 0, Math.PI * 2); ctx.fill();
+      if (flash > 0) {
+        ctx.save();
+        ctx.globalAlpha = flash * 0.85;
+        ctx.fillStyle = '#ece7da';
+        ctx.beginPath(); ctx.arc(x, y, e.boss ? 42 : 34, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
       Game.Renderer.drawText(ctx, e.label || e.name, x, y + (e.boss ? 68 : 60), { align: 'center', size: 12 });
       if (e.curHp > 0) Game.Renderer.drawBar(ctx, x - 40, y + (e.boss ? 76 : 68), 80, 7, e.curHp / e.hp, '#8a3230');
       if (state.menu === 'target' && aliveEnemies()[state.cursor] === e) {

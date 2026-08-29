@@ -92,11 +92,30 @@ Game.Core = (function () {
     } else if (mode === 'ending') {
       // エンディングでは操作待ちのみ
     }
+    Game.Fx.tick();
     Game.Input.endFrame();
   }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
+    // 揺れは画面ぜんぶにかける。文字も枠も一緒に振れないと、殴られた感じが出ない
+    var off = Game.Fx.offset();
+    ctx.save();
+    if (off.x || off.y) ctx.translate(off.x, off.y);
+    drawScene();
+    ctx.restore();
+    // 被弾の赤みは揺れの外側に。画面全体を薄く染める
+    var a = Game.Fx.veilAlpha();
+    if (a > 0) {
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.fillStyle = Game.Fx.veilTone();
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+  }
+
+  function drawScene() {
     if (mode === 'title') {
       drawTitle();
     } else if (mode === 'field') {
