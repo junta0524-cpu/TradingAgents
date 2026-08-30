@@ -5,6 +5,10 @@ Game.Field = (function () {
   var px = 0, py = 0;
   var moveCooldown = 0;
   var MOVE_DELAY = 9; // フレーム数(約60fpsで0.15秒間隔)
+  // 1マスを一瞬で飛ぶと「コマ落ち」に見える。動いている間の途中の位置を作り、
+  // 描画にだけ小数のタイル座標を渡して、ドット単位で滑らせる。
+  var moveFrom = null;   // 動き出す前の先頭の位置
+  var moveSpan = 0;      // 補間にかけるフレーム数(門で足止めされたときは 0)
   var callbacks = {};
 
   // ---- 隊列 ----
@@ -15,11 +19,31 @@ Game.Field = (function () {
   var steps = 0;         // 歩数。歩行アニメのコマ送りに使う
   var TRAIL_MAX = 5;
 
+  // 0(動き出し)→1(到着)。止まっているときは 1。
+  function progress() {
+    if (!moveSpan || moveCooldown <= 0) return 1;
+    var t = 1 - moveCooldown / moveSpan;
+    return t < 0 ? 0 : t > 1 ? 1 : t;
+  }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  // いま画面上のどこに居るか(小数のタイル座標)
+  function visualPos() {
+    var t = progress();
+    if (!moveFrom || t >= 1) return { x: px, y: py };
+    return { x: lerp(moveFrom.x, px, t), y: lerp(moveFrom.y, py, t) };
+  }
+
   function resetTrail() {
     trail = [];
     for (var i = 0; i < TRAIL_MAX; i++) trail.push({ x: px, y: py });
     facing = 'down';
     steps = 0;
+    // 場所を飛ばしたときは補間を切る。切らないと、前の立ち位置から
+    // 新しい立ち位置まで画面を横切って滑ってしまう
+    moveFrom = null;
+    moveSpan = 0;
+    moveCooldown = 0;
   }
 
   function load(mapId, cbs) {
@@ -156,6 +180,8 @@ Game.Field = (function () {
     facing = dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : 'right';
     steps += 1;
     Game.Moon.step();   // 世界の時計。歩くほどに月が満ち欠けする
+    moveFrom = { x: px, y: py };
+    moveSpan = MOVE_DELAY;
     px = nx; py = ny;
     callbacks.onStep && callbacks.onStep();
     moveCooldown = MOVE_DELAY;
@@ -200,9 +226,11 @@ Game.Field = (function () {
   function actorFor(member, x, y, dir) {
     var walk = Game.Assets.walkSheet(member.id, dir);
     if (walk) {
+      // 歩いている間だけ足を出し、止まったら立ち姿(1コマ目)に戻す
+      var moving = progress() < 1;
       return {
         x: x, y: y, img: walk.img, frames: walk.frames, flip: walk.flip,
-        frame: FRAME_CYCLE[steps % FRAME_CYCLE.length],
+        frame: moving ? FRAME_CYCLE[steps % FRAME_CYCLE.length] : 1,
       };
     }
     return {
@@ -216,21 +244,25 @@ Game.Field = (function () {
   function partyActors() {
     var members = Game.Party.list();
     var out = [];
+    var t = progress();
+    var lead = visualPos();
     var aheadX = px, aheadY = py;
     members.forEach(function (m, i) {
-      if (i === 0) { out.push(actorFor(m, px, py, facing)); return; }
-      var spot = trail[i - 1] || { x: px, y: py };
-      var dx = aheadX - spot.x, dy = aheadY - spot.y;
+      if (i === 0) { out.push(actorFor(m, lead.x, lead.y, facing)); return; }
+      // 到着地点は trail[i-1]、出発地点は trail[i]。先頭と同じ拍で滑る
+      var to = trail[i - 1] || { x: px, y: py };
+      var from = trail[i] || to;
+      var dx = aheadX - to.x, dy = aheadY - to.y;
       var dir = dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : dx > 0 ? 'right' : facing;
-      out.push(actorFor(m, spot.x, spot.y, dir));
-      aheadX = spot.x; aheadY = spot.y;
+      out.push(actorFor(m, lerp(from.x, to.x, t), lerp(from.y, to.y, t), dir));
+      aheadX = to.x; aheadY = to.y;
     });
     return out;
   }
 
   function draw(ctx) {
     if (!map) return;
-    var off = Game.Renderer.mapOffset(map, ctx.canvas.width, ctx.canvas.height, { x: px, y: py });
+    var off = Game.Renderer.mapOffset(map, ctx.canvas.width, ctx.canvas.height, visualPos());
     Game.Renderer.drawMap(ctx, map, off);
     // 町の人と隊列をまとめて、手前の者ほど後に描く
     Game.Renderer.drawActors(ctx, Game.Renderer.npcActors(map).concat(partyActors()), off);
@@ -240,6 +272,7 @@ Game.Field = (function () {
     load: load, currentMap: currentMap, playerPos: playerPos, lightSwitch: lightSwitch,
     stepCount: function () { return steps; },
     resetToStart: resetToStart, setPosition: setPosition, wardSteps: wardSteps,
+    __visual: visualPos,   // 検証用: 画面上のいまの位置(小数)
     update: update, draw: draw,
     // 検証用: いま使っているイベント一式
     __cbs: null,

@@ -35,6 +35,7 @@ Game.Battle = (function () {
     clearBattleMul();
     state.surprise = rollSurprise();
     Game.Audio.play('encounter');   // 出くわした合図。文より先に鳴る
+    Game.Fx.fade(9, 4);             // 一拍 暗くしてから戦闘画面へ
     Game.Dialogue.show(encounterLine(state.enemies), function () {
       if (state.surprise === 0) { beginTurn(); return; }
       Game.Dialogue.show(state.surprise > 0

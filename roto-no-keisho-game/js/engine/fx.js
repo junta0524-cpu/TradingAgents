@@ -10,6 +10,9 @@ Game.Fx = (function () {
   var veilLeft = 0, veilSpan = 1, veilColor = '#8a3230';
   var flashes = {};   // 相手ごとの点滅の残り
   var FLASH_SPAN = 9;
+  // 場面の切り替え。暗転してから戻る。
+  // 戦闘に入る瞬間や宿屋の朝に「間」が無いと、場面が変わった実感が出ない。
+  var fadeLeft = 0, fadeSpan = 1, fadeHold = 0;
 
   // 画面を揺らす。power は最大でずれる画素数
   function shake(power, frames) {
@@ -40,9 +43,27 @@ Game.Fx = (function () {
 
   function critical() { shake(13, 14); veil('#d4af5a', 12); Game.Audio.play('critical'); }
 
+  // 暗転 → (hold フレーム 真っ暗) → 明転
+  function fade(frames, hold) {
+    fadeSpan = frames || 12;
+    fadeLeft = fadeSpan * 2 + (hold || 0);
+    fadeHold = hold || 0;
+  }
+  // いまどれだけ暗いか(0=透明 1=真っ暗)
+  function fadeAlpha() {
+    if (fadeLeft <= 0) return 0;
+    var total = fadeSpan * 2 + fadeHold;
+    var done = total - fadeLeft;
+    if (done < fadeSpan) return done / fadeSpan;              // 暗くなっていく
+    if (done < fadeSpan + fadeHold) return 1;                 // 真っ暗のまま
+    return Math.max(0, (total - done) / fadeSpan);            // 明るくなっていく
+  }
+  function isFading() { return fadeLeft > 0; }
+
   function clear() { shakeLeft = 0; veilLeft = 0; flashes = {}; }
 
   function tick() {
+    if (fadeLeft > 0) fadeLeft -= 1;
     if (shakeLeft > 0) shakeLeft -= 1;
     if (veilLeft > 0) veilLeft -= 1;
     for (var k in flashes) {
@@ -69,5 +90,6 @@ Game.Fx = (function () {
     shake: shake, veil: veil, partyHurt: partyHurt, enemyHurt: enemyHurt,
     critical: critical, clear: clear, tick: tick,
     offset: offset, veilAlpha: veilAlpha, veilTone: veilTone, enemyFlash: enemyFlash,
+    fade: fade, fadeAlpha: fadeAlpha, isFading: isFading,
   };
 })();

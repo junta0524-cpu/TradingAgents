@@ -135,6 +135,7 @@ Game.Shop = (function () {
       return;
     }
     Game.Party.restAll();
+    Game.Fx.fade(22, 26);   // 眠って、朝になる。ここは長めに暗くする
     Game.Audio.play('inn');
     Game.Dialogue.show('ぐっすり 眠った。パーティは 全回復した!', close);
   }

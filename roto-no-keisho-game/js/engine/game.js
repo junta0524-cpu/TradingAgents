@@ -167,6 +167,15 @@ Game.Core = (function () {
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
     }
+    // 場面の切り替えの暗転。いちばん上に重ねる
+    var f = Game.Fx.fadeAlpha();
+    if (f > 0) {
+      ctx.save();
+      ctx.globalAlpha = f;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
   }
 
   function drawScene() {

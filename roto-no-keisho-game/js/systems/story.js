@@ -253,6 +253,7 @@ Game.Story = (function () {
     Game.Data.resetSwitches(Game.Data.Maps[st.map]);
     applyOnComplete(st.onEnter);
     var proceed = function () {
+      Game.Fx.fade(11, 6);   // 舞台が変わる。一拍 暗くしてから次の場所へ
       Game.Field.load(st.map, fieldCallbacksFor(st));
       // 歩数の起点は、マップを読み込んだあとに取る。
       // load は歩数を0に戻すので、先に取ると前の舞台の歩数が起点になり、
