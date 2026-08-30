@@ -94,15 +94,18 @@ Game.Battle = (function () {
   }
   function currentActor() { return Game.Party.get(state.turnOrder[state.turnIndex]); }
 
-  function commandList() {
-    return [
+  function commandList(actor) {
+    var rows = [
       { id: 'attack', label: 'たたかう' },
       { id: 'skill', label: 'じゅもん' },
-      { id: 'guard', label: 'ぼうぎょ' },
-      { id: 'item', label: 'どうぐ' },
-      { id: 'flee', label: 'にげる' },
-      { id: 'tactic', label: 'さくせん' },
     ];
+    // 猛りが満ちている者だけ、そのひとの一撃を選べる
+    if (actor && isFuming(actor) && actor.limit) rows.push({ id: 'rage', label: 'たける' });
+    rows.push({ id: 'guard', label: 'ぼうぎょ' });
+    rows.push({ id: 'item', label: 'どうぐ' });
+    rows.push({ id: 'flee', label: 'にげる' });
+    rows.push({ id: 'tactic', label: 'さくせん' });
+    return rows;
   }
 
   function usableSkills(actor) {
@@ -176,7 +179,9 @@ Game.Battle = (function () {
   }
   function clearBattleMul() {
     Game.Party.list().forEach(function (m) { m.battleMul = null; });
-    state.enemies.forEach(function (e) { e.battleMul = null; e.status = null; });
+    state.enemies.forEach(function (e) {
+      e.battleMul = null; e.status = null; e.echo = 0; e.echoHeld = false;
+    });
   }
 
   function damageOf(atk, def) {
@@ -192,15 +197,33 @@ Game.Battle = (function () {
     return effAtk(actor);
   }
 
+  // ---- 呼応 ----
+  // 弱点を続けて突くと、その相手のなかで手応えが積み上がっていく。
+  // 魔物図鑑には9系統×5属性の耐性表が組んであるのに、
+  // 一番強い呪文を1発撃てば終わり、では その表が遊びに出てこない。
+  // 「同じ弱点で押し続ける」ことに意味を持たせて、属性を選ぶ判断をつくる。
+  var ECHO_MAX = 4;
+  function echoMul(target) { return 1 + 0.22 * Math.min(target.echo || 0, ECHO_MAX); }
+
   // 種族ごとの効き方をダメージに乗せ、手応えを一言で添える。
   // 弱点を突けているかどうかが、遊んでいて分かるようにしておく。
   function applyResistance(target, element, dmg) {
     var r = Game.Data.resistanceOf(target, element);
-    var out = Math.max(0, Math.round(dmg * r));
+    var weak = r >= 1.4;
+    // 弱点なら呼応が伸び、外せば途切れる
+    var before = target.echo || 0;
+    target.echo = weak ? Math.min(ECHO_MAX, before + 1) : 0;
+    target.echoHeld = true;   // このラウンドは維持された
+
+    var out = Math.max(0, Math.round(dmg * r * echoMul(target)));
     var note = '';
     if (r === 0) { note = ' ' + target.label + 'には きかない!'; }
-    else if (r >= 1.4) { note = ' 弱点を ついた!'; }
+    else if (weak) {
+      note = ' 弱点を ついた!';
+      if (target.echo > before && target.echo > 1) note += ' 呼応が 高まる!';
+    }
     else if (r <= 0.7) { note = ' しかし 効果は うすい……'; }
+    if (!weak && before > 1) note += ' ' + target.label + 'の 呼応が とぎれた……';
     return { dmg: out, note: note };
   }
 
@@ -351,6 +374,13 @@ Game.Battle = (function () {
       }
     }
 
+    // 猛りが満ちているなら叩きつける。ここを書かないと、
+    // 「めいれいさせろ」以外の方針では一生使われない機能になる。
+    // 「いのちだいじに」は、まず仲間の傷を診てからにする。
+    if (isFuming(actor) && actor.limit && foes.length && tactic !== 'careful') {
+      return { kind: 'rage', target: foes[0] };
+    }
+
     // 手当て。「いのちだいじに」は早めに、「ガンガン」は瀕死のときだけ
     var hurtLine = tactic === 'careful' ? 0.6 : 0.28;
     var weak = weakestAlly();
@@ -444,6 +474,12 @@ Game.Battle = (function () {
   function endRound() {
     clearGuards(); // 防御のかまえはこのラウンドまで
     if (state.surprise < 0) state.surprise = 0;   // 不意打ちの一巡はここで終わり
+    // 1ラウンドまるごと弱点を突けなければ、呼応は一段ゆるむ。
+    // ボスは二段ゆるむので、押し切るには手数がいる
+    state.enemies.forEach(function (e) {
+      if (!e.echoHeld && e.echo) e.echo = Math.max(0, e.echo - (e.boss ? 2 : 1));
+      e.echoHeld = false;
+    });
     tickPoison();
     flushLog(function () {
       if (Game.Party.isWiped()) { endBattle('lost'); return; }
@@ -455,9 +491,24 @@ Game.Battle = (function () {
   }
 
   // 防御中(受け流し)なら被ダメージを軽減して適用し、実際に与えたダメージを返す
+  // ---- 猛り ----
+  // 押し込まれている側に「あと一手」を持たせる。
+  // いままで、負けているときの選択肢は 回復して耐える しかなかった。
+  // 殴られたからこそ返せる、という軸をひとつ足す。
+  var RAGE_FULL = 100;
+  function isFuming(m) { return (m.rage || 0) >= RAGE_FULL; }
+
   function hurt(member, rawDmg) {
     var dmg = member.guarding ? Math.max(1, Math.round(rawDmg * (1 - member.guarding))) : rawDmg;
     member.hp = Math.max(0, member.hp - dmg);
+    // 最大HPの7割ぶんを持っていかれると満ちる
+    member.rage = Math.min(RAGE_FULL, (member.rage || 0) + Math.round(dmg / member.maxHp * 140));
+    if (member.hp <= 0) {
+      // 仲間が倒れると、残った者の猛りが跳ねる
+      Game.Party.aliveList().forEach(function (o) {
+        o.rage = Math.min(RAGE_FULL, (o.rage || 0) + 25);
+      });
+    }
     return dmg;
   }
 
@@ -698,7 +749,27 @@ Game.Battle = (function () {
     if (a.kind === 'flee') return resolveFlee(a, actor);
     if (a.kind === 'skip') { state.log.push(a.message); return; }
     if (a.kind === 'confused') return actConfused(actor);
+    if (a.kind === 'rage') return resolveRage(actor, a.target);
     // 'guarded' は選んだ時点で効いているので、ここでは何もしない
+  }
+
+  // 溜まった猛りを叩きつける。守備は通さない ―― 耐えて返す一撃なので
+  function resolveRage(actor, target) {
+    var lim = actor.limit;
+    if (!lim) return;
+    actor.rage = 0;
+    var all = lim.target === 'all_enemies';
+    var list = all ? aliveEnemies() : [target];
+    if (!all && (!target || target.curHp <= 0)) list = aliveEnemies().slice(0, 1);
+    say(actor.name + 'の ' + lim.name + '!!', function () { Game.Fx.critical(); });
+    list.forEach(function (t) {
+      if (!t || t.curHp <= 0) return;
+      var raw = Math.round(damageOf(powerStat(actor, lim), 0) * (lim.power || 2.6));
+      var hit = applyResistance(t, lim.element || 'physical', raw);
+      t.curHp = Math.max(0, t.curHp - hit.dmg);
+      say(t.label + 'に ' + hit.dmg + ' の ダメージ' + hit.note, fxEnemyHurt(t, hit.dmg));
+      if (t.curHp <= 0) say(t.label + 'を たおした!', vanish(t));
+    });
   }
 
   function resolveAttack(actor, target) {
@@ -850,11 +921,11 @@ Game.Battle = (function () {
 
   function currentMenuList() {
     var actor = currentActor();
-    if (state.menu === 'main') return commandList();
+    if (state.menu === 'main') return commandList(actor);
     if (state.menu === 'skill') return usableSkills(actor);
     if (state.menu === 'item') return usableItems();
     if (state.menu === 'tactic') return Game.Data.Tactics;
-    if (state.menu === 'target') return aliveEnemies();
+    if (state.menu === 'target' || state.menu === 'ragetarget') return aliveEnemies();
     if (state.menu === 'allytarget') {
       if (state.pendingSkill) {
         return allyTargetsFor(state.pendingSkill.kind === 'revive' ? 'revive' : 'heal');
@@ -881,7 +952,8 @@ Game.Battle = (function () {
     if (Game.Input.wasPressed('up')) state.cursor = (list.length === 0) ? 0 : (state.cursor - 1 + list.length) % list.length;
 
     if (Game.Input.wasPressed('cancel')) {
-      if (state.menu === 'target' || state.menu === 'allytarget') { state.menu = state.pendingSkill ? 'skill' : (state.pendingItem ? 'item' : 'main'); state.pendingSkill = null; state.pendingItem = null; state.cursor = 0; }
+      if (state.menu === 'ragetarget') { state.menu = 'main'; state.cursor = 0; }
+      else if (state.menu === 'target' || state.menu === 'allytarget') { state.menu = state.pendingSkill ? 'skill' : (state.pendingItem ? 'item' : 'main'); state.pendingSkill = null; state.pendingItem = null; state.cursor = 0; }
       else if (state.menu !== 'main') { state.menu = 'main'; state.cursor = 0; }
       return;
     }
@@ -896,6 +968,11 @@ Game.Battle = (function () {
       else if (cmd === 'tactic') { state.menu = 'tactic'; state.cursor = 0; }
       else if (cmd === 'guard') { doGuard(); }
       else if (cmd === 'flee') { doFlee(); }
+      else if (cmd === 'rage') {
+        var lim = currentActor().limit;
+        if (lim && lim.target === 'all_enemies') { queueAction({ kind: 'rage' }); }
+        else { state.menu = 'ragetarget'; state.cursor = 0; }
+      }
     } else if (state.menu === 'tactic') {
       var t = list[state.cursor];
       Game.Party.setTactic(t.id);
@@ -924,6 +1001,8 @@ Game.Battle = (function () {
       var enemyTarget = list[state.cursor];
       if (state.pendingSkill) { var sk = state.pendingSkill; state.pendingSkill = null; doSkill(sk, enemyTarget); }
       else { doAttack(enemyTarget); }
+    } else if (state.menu === 'ragetarget') {
+      queueAction({ kind: 'rage', target: list[state.cursor] });
     } else if (state.menu === 'allytarget') {
       var allyTarget = list[state.cursor];
       if (state.pendingSkill) { var sk2 = state.pendingSkill; state.pendingSkill = null; doSkill(sk2, allyTarget); }
@@ -1012,7 +1091,7 @@ Game.Battle = (function () {
       Game.Renderer.drawText(ctx, e.label || e.name, cx, GROUND_Y + 17, { align: 'center', size: 11 });
       // 魔物の残りHPは見せない。「あと何発で倒せるか」が分からないことが
       // ドラクエの戦闘の緊張そのものなので、ここは数えさせる。
-      if (state.menu === 'target' && aliveEnemies()[state.cursor] === e) {
+      if ((state.menu === 'target' || state.menu === 'ragetarget') && aliveEnemies()[state.cursor] === e) {
         Game.Renderer.drawText(ctx, '▼', cx, GROUND_Y - size - 6, { align: 'center', size: 18, color: '#d4af5a' });
       }
       x += size + 16 * scale;
@@ -1051,6 +1130,8 @@ Game.Battle = (function () {
       Game.Renderer.drawText(ctx, (isCurrent ? '▶' : '') + m.name, x + 8, y + 18, { size: 11, color: m.hp <= 0 ? '#6b6354' : (isCurrent ? '#d4af5a' : '#ece7da') });
       var st = Game.Party.statusOf(m);
       if (st) Game.Renderer.drawText(ctx, st.short, x + cardW - 8, y + 18, { size: 11, align: 'right', color: st.color });
+      // 猛りが満ちた者に「猛」の一文字。数字も棒も出さない
+      else if (isFuming(m)) Game.Renderer.drawText(ctx, '猛', x + cardW - 8, y + 18, { size: 12, align: 'right', color: '#d4af5a' });
       // ドラクエは棒グラフを使わない。数字だけを並べる。
       // 残りが「あと何発ぶんか」を自分で数えることが、緊張のもとになっている。
       var low = m.hp <= m.maxHp * 0.25;
@@ -1088,7 +1169,7 @@ Game.Battle = (function () {
       Game.Dialogue.draw(ctx, W, H);
       return;
     }
-    if (state.phase === 'command' && state.menu !== 'target' && state.menu !== 'allytarget') {
+    if (state.phase === 'command' && state.menu !== 'target' && state.menu !== 'ragetarget' && state.menu !== 'allytarget') {
       var list = currentMenuList();
       Game.Renderer.drawPanel(ctx, 8, menuY, W - 16, menuH);
       if (list.length === 0) {
@@ -1132,5 +1213,6 @@ Game.Battle = (function () {
   return { __commands: commandList, start: start, isActive: isActive, update: update, draw: draw,
            // 検証用: いまの戦闘の中身と、逃走判定
            __state: function () { return state; },
-           __resolveFlee: resolveFlee, __resolveSkill: resolveSkill, __enemyAct: enemyAct };
+           __resolveFlee: resolveFlee, __resolveSkill: resolveSkill, __enemyAct: enemyAct,
+           __hurt: hurt, __resolveRage: resolveRage };
 })();

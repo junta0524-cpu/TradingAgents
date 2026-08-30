@@ -78,6 +78,8 @@ Game.Data.Characters = {
     level: 1, exp: 0, expToNext: 12,
     hp: 28, maxHp: 28, mp: 4, maxMp: 4,
     atk: 12, def: 8, spd: 9, mag: 6, luck: 8,
+    // 猛りが満ちたときに撃てる、そのひとの一撃
+    limit: { name: '王の一閃', power: 2.6, stat: 'atk' },
     growth: { hp: 7, mp: 2, atk: 2, def: 2, spd: 1, mag: 1, luck: 1 },
     equipKinds: ['sword', 'armor', 'shield', 'helmet', 'accessory'],
     equip: { weapon: 'copper_sword', armor: 'cloth_robe' },
@@ -99,6 +101,8 @@ Game.Data.Characters = {
     level: 3, exp: 0, expToNext: 22,
     hp: 20, maxHp: 20, mp: 12, maxMp: 12,
     atk: 8, def: 5, spd: 7, mag: 16, luck: 6,
+    // 猛りが満ちたときに撃てる、そのひとの一撃
+    limit: { name: '蒼穹の裂け目', power: 1.5, stat: 'mag', target: 'all_enemies', element: 'io' },
     growth: { hp: 4, mp: 4, atk: 1, def: 1, spd: 1, mag: 3, luck: 1 },
     equipKinds: ['staff', 'armor', 'accessory'],
     equip: { weapon: 'silver_staff', armor: 'cloth_robe' },
@@ -125,6 +129,8 @@ Game.Data.Characters = {
     level: 3, exp: 0, expToNext: 22,
     hp: 24, maxHp: 24, mp: 8, maxMp: 8,
     atk: 12, def: 6, spd: 12, mag: 10, luck: 12,
+    // 猛りが満ちたときに撃てる、そのひとの一撃
+    limit: { name: '月を射抜く', power: 2.4, stat: 'atk', element: 'light' },
     growth: { hp: 5, mp: 3, atk: 2, def: 1, spd: 3, mag: 2, luck: 2 },
     equipKinds: ['bow', 'armor', 'helmet', 'accessory'],
     equip: { weapon: 'steel_bow', armor: 'leather_armor' },
@@ -144,6 +150,8 @@ Game.Data.Characters = {
     level: 5, exp: 0, expToNext: 41,
     hp: 46, maxHp: 46, mp: 12, maxMp: 12,
     atk: 15, def: 13, spd: 5, mag: 4, luck: 5,
+    // 猛りが満ちたときに撃てる、そのひとの一撃
+    limit: { name: '牙折りの一太刀', power: 2.9, stat: 'atk' },
     growth: { hp: 9, mp: 1, atk: 3, def: 3, spd: 1, mag: 0, luck: 1 },
     equipKinds: ['greatsword', 'armor', 'shield', 'helmet', 'accessory'],
     equip: { weapon: 'steel_greatsword', armor: 'chainmail', helmet: 'iron_helm' },
