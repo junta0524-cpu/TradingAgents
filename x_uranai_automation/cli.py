@@ -2,7 +2,12 @@
 
     python -m x_uranai_automation.cli generate-day
     python -m x_uranai_automation.cli post-day --live
+    python -m x_uranai_automation.cli post-slot --slot-index 0 --live
     python -m x_uranai_automation.cli stats
+
+``--provider``/``--model`` also read the ``X_AUTOMATION_LLM_PROVIDER`` /
+``X_AUTOMATION_LLM_MODEL`` env vars, so a scheduler (cron, GitHub Actions)
+doesn't need to hardcode them on the command line.
 """
 
 import datetime
@@ -14,6 +19,7 @@ from rich.table import Table
 from . import analytics, scheduler
 from .compliance import ComplianceError
 from .content_generator import ContentGenerator, GeneratorConfig
+from .scheduler import ScheduledPost
 from .x_client import XClient, XClientError
 
 app = typer.Typer(
@@ -23,16 +29,43 @@ app = typer.Typer(
 )
 console = Console()
 
+_PROVIDER_OPTION = typer.Option(
+    "openai", envvar="X_AUTOMATION_LLM_PROVIDER", help="LLM provider (see tradingagents.llm_clients)."
+)
+_MODEL_OPTION = typer.Option("gpt-5.4-mini", envvar="X_AUTOMATION_LLM_MODEL", help="LLM model name.")
+
 
 def _today(date: str | None) -> datetime.date:
     return datetime.date.fromisoformat(date) if date else datetime.date.today()
 
 
+def _post_one(
+    generator: ContentGenerator, client: XClient, scheduled: ScheduledPost
+) -> None:
+    try:
+        posts = generator.generate(scheduled.format, scheduled.date_label)
+    except ComplianceError as exc:
+        console.print(f"[red]Skipped {scheduled.slot_time} ({scheduled.format}): compliance check failed: {exc}[/red]")
+        return
+
+    texts = [post.text for post in posts]
+    try:
+        results = [client.post_tweet(texts[0])] if len(texts) == 1 else client.post_thread(texts)
+    except XClientError as exc:
+        console.print(f"[red]Post failed for {scheduled.slot_time} ({scheduled.format}): {exc}[/red]")
+        return
+
+    for post, result in zip(posts, results, strict=True):
+        tweet_id = result.get("data", {}).get("id") if not client.dry_run else None
+        analytics.log_post(post.format, post.text, tweet_id=tweet_id, dry_run=client.dry_run)
+    console.print(f"[green]Posted {scheduled.slot_time} ({scheduled.format}, {len(texts)} tweet(s)).[/green]")
+
+
 @app.command("generate-day")
 def generate_day(
     date: str = typer.Option(None, help="ISO date (YYYY-MM-DD); defaults to today."),
-    provider: str = typer.Option("openai", help="LLM provider (see tradingagents.llm_clients)."),
-    model: str = typer.Option("gpt-5.4-mini", help="LLM model name."),
+    provider: str = _PROVIDER_OPTION,
+    model: str = _MODEL_OPTION,
 ):
     """Generate (but do not post) today's full slate of posts, screened for compliance."""
     for_date = _today(date)
@@ -59,11 +92,16 @@ def generate_day(
 @app.command("post-day")
 def post_day(
     date: str = typer.Option(None, help="ISO date (YYYY-MM-DD); defaults to today."),
-    provider: str = typer.Option("openai", help="LLM provider (see tradingagents.llm_clients)."),
-    model: str = typer.Option("gpt-5.4-mini", help="LLM model name."),
+    provider: str = _PROVIDER_OPTION,
+    model: str = _MODEL_OPTION,
     live: bool = typer.Option(False, "--live", help="Actually post to X. Without this flag, runs as a dry run."),
 ):
-    """Generate and post today's full slate. Defaults to a dry run (nothing is sent to X)."""
+    """Generate and post today's full slate, back-to-back. Defaults to a dry run.
+
+    For spaced-out posting across the day (the realistic case — see
+    ``post-slot``), call this from three separate scheduler firings instead,
+    one per slot.
+    """
     for_date = _today(date)
     plan = scheduler.build_daily_plan(for_date)
     generator = ContentGenerator(GeneratorConfig(llm_provider=provider, llm_model=model))
@@ -73,26 +111,33 @@ def post_day(
         console.print("[bold red]LIVE mode: posts will be sent to X.[/bold red]")
 
     for scheduled in plan:
-        try:
-            posts = generator.generate(scheduled.format, scheduled.date_label)
-        except ComplianceError as exc:
-            console.print(f"[red]Skipped {scheduled.slot_time} ({scheduled.format}): compliance check failed: {exc}[/red]")
-            continue
+        _post_one(generator, client, scheduled)
 
-        texts = [post.text for post in posts]
-        try:
-            if len(texts) == 1:
-                results = [client.post_tweet(texts[0])]
-            else:
-                results = client.post_thread(texts)
-        except XClientError as exc:
-            console.print(f"[red]Post failed for {scheduled.slot_time} ({scheduled.format}): {exc}[/red]")
-            continue
 
-        for post, result in zip(posts, results, strict=True):
-            tweet_id = result.get("data", {}).get("id") if not client.dry_run else None
-            analytics.log_post(post.format, post.text, tweet_id=tweet_id, dry_run=client.dry_run)
-        console.print(f"[green]Posted {scheduled.slot_time} ({scheduled.format}, {len(texts)} tweet(s)).[/green]")
+@app.command("post-slot")
+def post_slot(
+    slot_index: int = typer.Option(..., help="Which of today's schedule.DEFAULT_SLOTS to post (0-indexed)."),
+    date: str = typer.Option(None, help="ISO date (YYYY-MM-DD); defaults to today."),
+    provider: str = _PROVIDER_OPTION,
+    model: str = _MODEL_OPTION,
+    live: bool = typer.Option(False, "--live", help="Actually post to X. Without this flag, runs as a dry run."),
+):
+    """Generate and post a single slot of the day's plan. Meant to be invoked
+    once per posting time by an external scheduler (cron, GitHub Actions),
+    so posts land spread across the day instead of all at once.
+    """
+    for_date = _today(date)
+    plan = scheduler.build_daily_plan(for_date)
+    if not 0 <= slot_index < len(plan):
+        raise typer.BadParameter(f"slot_index must be between 0 and {len(plan) - 1}")
+
+    generator = ContentGenerator(GeneratorConfig(llm_provider=provider, llm_model=model))
+    client = XClient(dry_run=not live)
+
+    if live:
+        console.print("[bold red]LIVE mode: post will be sent to X.[/bold red]")
+
+    _post_one(generator, client, plan[slot_index])
 
 
 @app.command("log-funnel")

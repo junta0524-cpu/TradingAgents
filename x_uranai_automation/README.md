@@ -23,6 +23,9 @@ python -m x_uranai_automation.cli post-day
 # 実際にXへ投稿
 python -m x_uranai_automation.cli post-day --live
 
+# 1枠だけ投稿(スケジューラーからの呼び出し用。0=メイン枠, 1・2=タロット1枚引き)
+python -m x_uranai_automation.cli post-slot --slot-index 0 --live
+
 # 収益化ファネルのイベントを記録(プロフィールリンククリック数、LINE登録数など)
 python -m x_uranai_automation.cli log-funnel line_registration --count 3
 
@@ -31,6 +34,20 @@ python -m x_uranai_automation.cli stats
 ```
 
 投稿ログは `~/.x_uranai_automation/posts.jsonl`、ファネルイベントは `~/.x_uranai_automation/funnel.jsonl` に追記されます。
+
+## 毎日の自動投稿(GitHub Actions)
+
+`.github/workflows/x_uranai_daily.yml` で、`scheduler.DEFAULT_SLOTS`(7:30/12:00/21:30 JST)の3枠それぞれに合わせてcronが発火し、`post-slot`で1枠ずつ投稿します。サーバー不要・無料で運用できます。
+
+**セットアップ手順**
+
+1. GitHubリポジトリの Settings > Secrets and variables > Actions で以下を登録
+   - Secrets: `OPENAI_API_KEY`(または使うLLMプロバイダのキー)、`X_API_KEY`、`X_API_SECRET`、`X_ACCESS_TOKEN`、`X_ACCESS_TOKEN_SECRET`
+   - Variables: `X_AUTOMATION_LIVE` を `true` に設定(**未設定・false のうちはdry-runのまま**。ログで生成内容を確認してから有効化することを推奨)
+2. リポジトリの Actions タブでワークフローを有効化
+3. 動作確認は Actions > "X Uranai Daily Posting" > "Run workflow" で手動実行できる(`slot_index`を指定)
+
+OpenAI以外のLLMプロバイダを使う場合は、ワークフロー内の `pip install` 行と `X_AUTOMATION_LLM_PROVIDER` / `X_AUTOMATION_LLM_MODEL` 環境変数(`post-slot`の`--provider`/`--model`が読む)を合わせて変更してください。
 
 ## 構成
 
