@@ -481,6 +481,7 @@ Game.Battle = (function () {
       e.echoHeld = false;
     });
     tickPoison();
+    autoHerb();
     flushLog(function () {
       if (Game.Party.isWiped()) { endBattle('lost'); return; }
       if (aliveEnemies().length === 0) { checkEnemiesDefeated(function () {}); return; }
@@ -498,8 +499,13 @@ Game.Battle = (function () {
   var RAGE_FULL = 100;
   function isFuming(m) { return (m.rage || 0) >= RAGE_FULL; }
 
-  function hurt(member, rawDmg) {
-    var dmg = member.guarding ? Math.max(1, Math.round(rawDmg * (1 - member.guarding))) : rawDmg;
+  // element を渡すと、装備の銘による属性の弾きが乗る。
+  // 物理の打撃には 'physical' を渡す ―― 棘の胸当てがここを見て打ち返す。
+  function hurt(member, rawDmg, element) {
+    var traits = Game.Party.traitsOf(member);
+    var r = element && traits.resist[element];
+    var dmg = r === undefined || r === null ? rawDmg : Math.max(1, Math.round(rawDmg * r));
+    if (member.guarding) dmg = Math.max(1, Math.round(dmg * (1 - member.guarding)));
     member.hp = Math.max(0, member.hp - dmg);
     // 最大HPの7割ぶんを持っていかれると満ちる
     member.rage = Math.min(RAGE_FULL, (member.rage || 0) + Math.round(dmg / member.maxHp * 140));
@@ -510,6 +516,29 @@ Game.Battle = (function () {
       });
     }
     return dmg;
+  }
+
+  // 癒しの首飾り。深手を負っている者が、袋の薬草をひとりでに使う。
+  // 銘のある者だけ、しかも袋に薬草があるときだけ働く。
+  function autoHerb() {
+    Game.Party.aliveList().forEach(function (m) {
+      if (!Game.Party.traitsOf(m).autoHerb) return;
+      if (m.hp > m.maxHp * 0.25) return;
+      // 効きの弱いものから使う。上級の薬草を無駄打ちしない
+      var herb = Game.Party.inventory().filter(function (it) {
+        var d = Game.Data.Items[it.id];
+        return d && d.kind === 'heal_hp' && it.count > 0;
+      }).sort(function (a, b) {
+        return (Game.Data.Items[a.id].power || 0) - (Game.Data.Items[b.id].power || 0);
+      })[0];
+      if (!herb) return;
+      var def = Game.Data.Items[herb.id];
+      Game.Party.consumeItem(herb.id);
+      var healed = Math.min(def.power || 20, m.maxHp - m.hp);
+      m.hp += healed;
+      say(m.name + 'の 首飾りが 光り、' + def.name + 'が ひとりでに つかわれた! ' +
+          healed + ' 回復した', function () { Game.Audio.play('heal'); });
+    });
   }
 
   // ラウンドの終わりに、毒に侵されている仲間を削る
@@ -600,7 +629,7 @@ Game.Battle = (function () {
       say(enemy.label + 'は ' + skill.name + 'を はなった!',
           function () { Game.Audio.play(skill.kind === 'spell' ? 'spell' : 'hit'); });
       targets.forEach(function (member) {
-        var d = hurt(member, Math.round(damageOf(effAtk(enemy), 0) * (skill.power || 1)));
+        var d = hurt(member, Math.round(damageOf(effAtk(enemy), 0) * (skill.power || 1)), skill.element);
         say(member.name + 'に ' + d + ' の ダメージ', fxPartyHurt(member, d));
         if (member.hp <= 0) say(member.name + 'は たおれてしまった!', function () { Game.Audio.play('downed'); });
       });
@@ -641,7 +670,7 @@ Game.Battle = (function () {
 
     if (skill.target === 'all_party') {
       alive.forEach(function (member) {
-        var d = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member)) * skill.power));
+        var d = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member)) * skill.power), skill.element);
         say(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + d + ' の ダメージ', fxPartyHurt(member, d));
       });
       return true;
@@ -665,9 +694,17 @@ Game.Battle = (function () {
       state.log.push(enemy.label + 'の こうげき! しかし 攻撃は はずれた!');
       return;
     }
-    var dmg2 = hurt(target, damageOf(effAtk(enemy), effDef(target)));
+    var dmg2 = hurt(target, damageOf(effAtk(enemy), effDef(target)), 'physical');
     say(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ', fxPartyHurt(target, dmg2));
     if (target.hp <= 0) say(target.name + 'は たおれてしまった!', function () { Game.Audio.play('downed'); });
+    // 棘の胸当て。受けた打撃の一部が、殴った相手へ返る
+    var thorns = Game.Party.traitsOf(target).thorns;
+    if (thorns > 0 && dmg2 > 0 && enemy.curHp > 0) {
+      var back = Math.max(1, Math.round(dmg2 * thorns));
+      enemy.curHp = Math.max(0, enemy.curHp - back);
+      say(enemy.label + 'に ' + back + ' の 反撃の ダメージ', fxEnemyHurt(enemy, back));
+      if (enemy.curHp <= 0) say(enemy.label + 'を たおした!', vanish(enemy));
+    }
     // 状態異常を持つ魔物は、攻撃に乗せて仕掛けてくる
     if (enemy.inflict && target.hp > 0 && Math.random() < enemy.inflict.chance) {
       var msg = Game.Party.inflict(target, enemy.inflict.status);
@@ -1214,5 +1251,5 @@ Game.Battle = (function () {
            // 検証用: いまの戦闘の中身と、逃走判定
            __state: function () { return state; },
            __resolveFlee: resolveFlee, __resolveSkill: resolveSkill, __enemyAct: enemyAct,
-           __hurt: hurt, __resolveRage: resolveRage };
+           __hurt: hurt, __resolveRage: resolveRage, __autoHerb: autoHerb };
 })();

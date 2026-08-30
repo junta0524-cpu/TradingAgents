@@ -78,6 +78,28 @@ Game.Data.GEAR_STATS = [
   { key: 'mag', label: '魔' }, { key: 'luck', label: '運' },
 ];
 
+// ---- 銘(めい) ----
+// これまで装備は atk/def/spd/mag/luck の数字だけで、買い物が「高いほうを買う」で
+// 終わっていた。とくに 敵の息と呪文は しゅび力を素通りするので、鎧をいくら固めても
+// ボスの大技はまったく軽くならない ―― 装備で応える手段が無かった。
+// 数字ではなく「性質」を持つ品をここに置く。呪われた装備が既にその先例になっている。
+Game.Data.Equipment.emberward_cloak = {
+  id: 'emberward_cloak', name: '炎除けの外套', slot: 'armor', kind: 'armor', def: 22, price: 1900,
+  mei: { resist: { fire: 0.5 }, note: '炎を なかば 弾く' },
+};
+Game.Data.Equipment.frostbite_shield = {
+  id: 'frostbite_shield', name: '凍てを弾く盾', slot: 'shield', kind: 'shield', def: 16, price: 1700,
+  mei: { resist: { ice: 0.5 }, note: '氷を なかば 弾く' },
+};
+Game.Data.Equipment.mending_pendant = {
+  id: 'mending_pendant', name: '癒しの首飾り', slot: 'accessory', kind: 'accessory', def: 4, price: 1600,
+  mei: { autoHerb: true, note: '深手を負うと ひとりでに 薬草を つかう' },
+};
+Game.Data.Equipment.thorn_cuirass = {
+  id: 'thorn_cuirass', name: '棘の胸当て', slot: 'armor', kind: 'armor', def: 26, price: 2400,
+  mei: { thorns: 0.25, note: '受けた 打撃の 一部を 返す' },
+};
+
 Game.Data.EQUIP_SLOTS = ['weapon', 'armor', 'shield', 'helmet', 'accessory'];
 Game.Data.SLOT_LABELS = {
   weapon: 'ぶき', armor: 'よろい', shield: 'たて', helmet: 'かぶと', accessory: 'そうしょくひん',

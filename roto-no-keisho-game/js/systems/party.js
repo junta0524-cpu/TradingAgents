@@ -29,6 +29,26 @@ Game.Party = (function () {
     STATS.forEach(function (stat) { m[stat] = totals[stat]; });
   }
 
+  // 装備の「銘」をまとめる。recalc は5つの数字しか合算しないので、
+  // 性質はこちらで別に集める。同じ属性の耐性は掛け算で重ねる。
+  function traitsOf(m) {
+    var out = { resist: {}, autoHerb: false, thorns: 0 };
+    if (!m || !m.equip) return out;
+    Game.Data.EQUIP_SLOTS.forEach(function (slot) {
+      var e = equipDef(m.equip[slot]);
+      if (!e || !e.mei) return;
+      var mei = e.mei;
+      if (mei.resist) {
+        Object.keys(mei.resist).forEach(function (el) {
+          out.resist[el] = (out.resist[el] === undefined ? 1 : out.resist[el]) * mei.resist[el];
+        });
+      }
+      if (mei.autoHerb) out.autoHerb = true;
+      if (mei.thorns) out.thorns += mei.thorns;
+    });
+    return out;
+  }
+
   // レベルアップの伸び。キャラごとの growth が無ければ標準の伸びを使う。
   var DEFAULT_GROWTH = { hp: 6, mp: 2, atk: 2, def: 1, spd: 1, mag: 1, luck: 1 };
   function growthOf(m) {
@@ -372,6 +392,7 @@ Game.Party = (function () {
   }
 
   return {
+    traitsOf: traitsOf,
     init: init, recruit: recruit, restAll: restAll, reviveFallen: reviveFallen, revive: revive,
     list: list, aliveList: aliveList, deadList: deadList, get: get,
     isWiped: isWiped, addExp: addExp, learnedSkills: learnedSkills,

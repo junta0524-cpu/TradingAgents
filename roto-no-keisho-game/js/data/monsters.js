@@ -94,12 +94,12 @@ function add(id, name, rank, loc, over) { M[id] = mon(id, name, rank, loc, over)
 
 // 詠唱者と呪術師は、名前のとおり唱えてくる。魔獣と竜は息を吐く。
 var SPELL = {
-  gira:   { kind: 'spell',  name: 'ギラ',       power: 1.15 },
-  merami: { kind: 'spell',  name: 'メラミ',     power: 1.35 },
-  hyado:  { kind: 'spell',  name: 'ヒャド',     power: 1.1 },
-  begira: { kind: 'breath', name: 'ベギラマ',   power: 0.85, target: 'all_party' },
-  honoo:  { kind: 'breath', name: 'ほのおの息', power: 0.8,  target: 'all_party' },
-  fubuki: { kind: 'breath', name: 'こごえる息', power: 0.9,  target: 'all_party' },
+  gira:   { kind: 'spell',  name: 'ギラ',       power: 1.15, element: 'fire' },
+  merami: { kind: 'spell',  name: 'メラミ',     power: 1.35, element: 'fire' },
+  hyado:  { kind: 'spell',  name: 'ヒャド',     power: 1.1,  element: 'ice' },
+  begira: { kind: 'breath', name: 'ベギラマ',   power: 0.85, target: 'all_party', element: 'fire' },
+  honoo:  { kind: 'breath', name: 'ほのおの息', power: 0.8,  target: 'all_party', element: 'fire' },
+  fubuki: { kind: 'breath', name: 'こごえる息', power: 0.9,  target: 'all_party', element: 'ice' },
   hoimi:  { kind: 'heal',   name: 'ホイミ',     power: 28 },
   behoimi:{ kind: 'heal',   name: 'ベホイミ',   power: 70 },
   rarihoo:{ kind: 'ailment', name: 'ラリホー',  ailment: 'sleep' },
@@ -202,7 +202,7 @@ Game.Data.Monsters.astro_guardian = {
   loc: ['azure_tower'], family: 'ancient',
   hp: 115, atk: 16, def: 10, spd: 10, exp: 250, gold: 450,
   bossSkills: [
-    { name: '星導の光', power: 1.2, target: 'all_party' },
+    { name: '星導の光', power: 1.2, target: 'all_party', element: 'light' },
     { name: '観測の眼', kind: 'ailment', ailment: 'sleep' },
   ],
 };
@@ -211,7 +211,7 @@ Game.Data.Monsters.galoz = {
   loc: ['ogre_camp'], family: 'remnant',
   hp: 290, atk: 30, def: 14, spd: 16, exp: 400, gold: 700,
   bossSkills: [
-    { name: '咆哮', power: 1.3, target: 'all_party' },
+    { name: '咆哮', power: 1.3, target: 'all_party' },   // 無属性。銘では弾けない
     { name: '痛恨の一撃', kind: 'crit', power: 1.5 },
   ],
 };
@@ -220,7 +220,7 @@ Game.Data.Monsters.magatsuki = {
   loc: ['academy_altar'], family: 'demon',
   hp: 350, atk: 36, def: 16, spd: 21, exp: 560, gold: 900,
   bossSkills: [
-    { name: '禁呪の残滓', power: 1.2, target: 'all_party' },
+    { name: '禁呪の残滓', power: 1.2, target: 'all_party', element: 'io' },
     { name: '正気を 削る囁き', kind: 'ailment', ailment: 'confuse' },
   ],
 };
@@ -229,7 +229,7 @@ Game.Data.Monsters.abyss_matriarch = {
   loc: ['abyss_depth'], family: 'deep',
   hp: 560, atk: 50, def: 20, spd: 18, exp: 820, gold: 1300,
   bossSkills: [
-    { name: '深淵の波動', power: 1.3, target: 'all_party' },
+    { name: '深淵の波動', power: 1.3, target: 'all_party', element: 'ice' },
     { name: '喰らいつき', kind: 'crit', power: 1.4 },
     { name: '毒の霧', kind: 'ailment', ailment: 'poison' },
   ],
@@ -239,7 +239,7 @@ Game.Data.Monsters.genso_no_katsubo = {
   loc: ['forbidden_ritual_chamber'], family: 'demon',
   hp: 680, atk: 54, def: 24, spd: 24, exp: 1100, gold: 1800,
   bossSkills: [
-    { name: '渇望の奔流', power: 1.4, target: 'all_party' },
+    { name: '渇望の奔流', power: 1.4, target: 'all_party' },   // 無属性。最後の壁なので銘では弾けない
     { name: '痛恨の一撃', kind: 'crit', power: 1.6 },
     { name: '意識を 塗りつぶす', kind: 'ailment', ailment: 'confuse' },
   ],
