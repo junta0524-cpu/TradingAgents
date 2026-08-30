@@ -98,6 +98,18 @@ Game.Assets = (function () {
   function bg(id) { return id ? images['bg/' + id + '.png'] || null : null; }
   function battleBg(mapId) { return bg(BG_FOR_MAP[mapId]); }
 
+  // 魔物の絵。60種を起動時にまとめて読むと、まだ無いぶんの空振りが並ぶので、
+  // 戦闘が始まったときに、その戦いに出てくるぶんだけ読みにいく。
+  var monsterAsked = {};
+  function preloadMonsters(ids) {
+    (ids || []).forEach(function (id) {
+      if (!id || monsterAsked[id]) return;
+      monsterAsked[id] = true;
+      tryLoad('monsters/' + id + '.png');
+    });
+  }
+  function monster(id) { return id ? images['monsters/' + id + '.png'] || null : null; }
+
   // その向きの歩行シートを返す。まだ無ければ null(立ち絵1枚で代用される)
   function walkSheet(id, dir) {
     var key = (dir === 'left' || dir === 'right') ? 'side' : dir;
@@ -117,6 +129,7 @@ Game.Assets = (function () {
     load: load, tile: tile, sprite: sprite, spriteForNpc: spriteForNpc,
     walkSheet: walkSheet, WALK_FRAMES: WALK_FRAMES,
     bg: bg, battleBg: battleBg,
+    preloadMonsters: preloadMonsters, monster: monster,
     SPRITE_W: SPRITE_W, SPRITE_H: SPRITE_H,
     isLoading: function () { return pending > 0; },
   };

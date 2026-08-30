@@ -12,6 +12,7 @@ Game.Battle = (function () {
 
   function start(monsterIds, onEnd) {
     Game.Fx.clear();   // 前の戦いの揺れや点滅を持ち越さない
+    Game.Assets.preloadMonsters(monsterIds);
     state = {
       phase: 'intro',
       enemies: monsterIds.map(cloneMonster),
@@ -874,6 +875,87 @@ Game.Battle = (function () {
     }
   }
 
+  // 白く光らせた魔物の絵を作って取っておく。毎フレーム作り直すと重いので1体1枚。
+  var flashCache = {};
+  function flashed(img) {
+    var key = img.src;
+    if (!flashCache[key]) {
+      var c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      var g = c.getContext('2d');
+      g.drawImage(img, 0, 0);
+      g.globalCompositeOperation = 'source-atop';   // 絵のある所だけを白く塗る
+      g.fillStyle = '#ece7da';
+      g.fillRect(0, 0, c.width, c.height);
+      flashCache[key] = c;
+    }
+    return flashCache[key];
+  }
+
+  // 魔物の並び。ドラクエと同じで、みんな同じ地面の線に足を揃えて立たせる。
+  var GROUND_Y = 236;           // この高さに足元が来る(名前とHPが下の窓に触れない位置)
+  var MOB_H = 96, BOSS_H = 160; // 素材のドット数(絵が無いときは丸の直径として使う)
+
+  function drawEnemies(ctx, W, H) {
+    var enemies = state.enemies;
+    var shown = enemies.map(function (e, i) { return { e: e, i: i }; })
+                       .filter(function (o) { return o.e.curHp > 0; });
+    if (shown.length === 0) return;
+
+    // 幅が足りないときは、全員そろえて縮める(1体だけ小さくならないように)
+    var natural = shown.reduce(function (sum, o) {
+      return sum + (o.e.boss ? BOSS_H : MOB_H);
+    }, 0) + (shown.length - 1) * 16;
+    var scale = Math.min(1, (W - 48) / natural);
+
+    var totalW = natural * scale;
+    var x = (W - totalW) / 2;
+    shown.forEach(function (o) {
+      var e = o.e;
+      var size = (e.boss ? BOSS_H : MOB_H) * scale;
+      var flash = Game.Fx.enemyFlash(o.i);
+      // 殴られた相手はのけぞる
+      var dx = flash > 0 ? Math.round(flash * 10) * (o.i % 2 ? -1 : 1) : 0;
+      var cx = x + size / 2 + dx;
+      var img = Game.Assets.monster(e.id);
+
+      if (img) {
+        var top = GROUND_Y - size;
+        ctx.drawImage(img, x + dx, top, size, size);
+        if (flash > 0) {
+          ctx.save();
+          ctx.globalAlpha = flash * 0.85;
+          ctx.drawImage(flashed(img), x + dx, top, size, size);
+          ctx.restore();
+        }
+      } else {
+        // まだ絵が無い魔物。いままでどおり色の丸で立たせる
+        var r = size * 0.36;
+        var cy = GROUND_Y - r;
+        ctx.fillStyle = e.boss ? '#8a3230' : '#96702a';
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+        if (flash > 0) {
+          ctx.save();
+          ctx.globalAlpha = flash * 0.85;
+          ctx.fillStyle = '#ece7da';
+          ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      Game.Renderer.drawText(ctx, e.label || e.name, cx, GROUND_Y + 17, { align: 'center', size: 11 });
+      // 無傷の相手にはバーを出さない。バーが出ていること自体が「効いている」合図になる
+      if (e.curHp < e.hp) {
+        var bw = Math.min(80, size * 0.9);
+        Game.Renderer.drawBar(ctx, cx - bw / 2, GROUND_Y + 25, bw, 6, e.curHp / e.hp, '#8a3230');
+      }
+      if (state.menu === 'target' && aliveEnemies()[state.cursor] === e) {
+        Game.Renderer.drawText(ctx, '▼', cx, GROUND_Y - size - 6, { align: 'center', size: 18, color: '#d4af5a' });
+      }
+      x += size + 16 * scale;
+    });
+  }
+
   function draw(ctx, W, H) {
     if (!state) return;
     ctx.fillStyle = '#171b2b';
@@ -892,28 +974,7 @@ Game.Battle = (function () {
       ctx.fillRect(0, 0, W, H * 0.55);
     }
 
-    var enemies = state.enemies;
-    var startX = W / 2 - (enemies.length - 1) * 70;
-    enemies.forEach(function (e, i) {
-      var flash = Game.Fx.enemyFlash(i);
-      // 殴られた相手は白く光り、少しのけぞる
-      var x = startX + i * 140 + (flash > 0 ? Math.round(flash * 10) * (i % 2 ? -1 : 1) : 0);
-      var y = 130;
-      ctx.fillStyle = e.curHp > 0 ? (e.boss ? '#8a3230' : '#96702a') : '#333b57';
-      ctx.beginPath(); ctx.arc(x, y, e.boss ? 42 : 34, 0, Math.PI * 2); ctx.fill();
-      if (flash > 0) {
-        ctx.save();
-        ctx.globalAlpha = flash * 0.85;
-        ctx.fillStyle = '#ece7da';
-        ctx.beginPath(); ctx.arc(x, y, e.boss ? 42 : 34, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      }
-      Game.Renderer.drawText(ctx, e.label || e.name, x, y + (e.boss ? 68 : 60), { align: 'center', size: 12 });
-      if (e.curHp > 0) Game.Renderer.drawBar(ctx, x - 40, y + (e.boss ? 76 : 68), 80, 7, e.curHp / e.hp, '#8a3230');
-      if (state.menu === 'target' && aliveEnemies()[state.cursor] === e) {
-        Game.Renderer.drawText(ctx, '▼', x, y - (e.boss ? 54 : 46), { align: 'center', size: 18, color: '#d4af5a' });
-      }
-    });
+    drawEnemies(ctx, W, H);
 
     // パーティ全員のステータス(横一列、人数に応じて幅を自動調整)
     var party = Game.Party.list();
@@ -984,5 +1045,7 @@ Game.Battle = (function () {
     Game.Dialogue.draw(ctx, W, H);
   }
 
-  return { __commands: commandList, start: start, isActive: isActive, update: update, draw: draw };
+  return { __commands: commandList, start: start, isActive: isActive, update: update, draw: draw,
+           // 検証用: いまの戦闘の中身
+           __state: function () { return state; } };
 })();
