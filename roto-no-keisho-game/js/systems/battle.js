@@ -34,6 +34,7 @@ Game.Battle = (function () {
     clearGuards();
     clearBattleMul();
     state.surprise = rollSurprise();
+    Game.Audio.play('encounter');   // 出くわした合図。文より先に鳴る
     Game.Dialogue.show(encounterLine(state.enemies), function () {
       if (state.surprise === 0) { beginTurn(); return; }
       Game.Dialogue.show(state.surprise > 0
@@ -87,7 +88,9 @@ Game.Battle = (function () {
   }
 
   function isActive() { return !!state; }
-  function aliveEnemies() { return state.enemies.filter(function (e) { return e.curHp > 0; }); }
+  function aliveEnemies() {
+    return state.enemies.filter(function (e) { return e.curHp > 0 && !e.fled; });
+  }
   function currentActor() { return Game.Party.get(state.turnOrder[state.turnIndex]); }
 
   function commandList() {
@@ -260,7 +263,7 @@ Game.Battle = (function () {
     if (isEnemy) {
       target.curHp = Math.max(0, target.curHp - dmg);
       say(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ', fxEnemyHurt(target, dmg));
-      if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
+      if (target.curHp <= 0) say(target.label + 'を たおした!', vanish(target));
     } else {
       hurt(target, dmg);
       say(actor.name + 'は なかまの ' + target.name + 'を 殴ってしまった! ' + dmg + ' の ダメージ', fxPartyHurt(target, dmg));
@@ -473,17 +476,15 @@ Game.Battle = (function () {
     // はぐれ者は無傷でも逃げる。最後の一匹でも逃げるので、取り逃がすことがある
     if (enemy.metal) {
       if (Math.random() > 0.45) return false;
-      state.log.push(enemy.label + 'は すばやく にげさった!');
-      var mi = state.enemies.indexOf(enemy);
-      if (mi >= 0) state.enemies.splice(mi, 1);
+      enemy.fled = true;   // 取り分から外れる。絵が消えるのは文を送ったとき
+      say(enemy.label + 'は すばやく にげさった!', vanish(enemy, true));
       return true;
     }
     if (aliveEnemies().length <= 1) return false;
     if (enemy.curHp > enemy.hp * 0.3) return false;
     if (Math.random() > 0.3) return false;
-    state.log.push(enemy.label + 'は にげだした!');
-    var i = state.enemies.indexOf(enemy);
-    if (i >= 0) state.enemies.splice(i, 1);
+    enemy.fled = true;
+    say(enemy.label + 'は にげだした!', vanish(enemy, true));
     return true;
   }
 
@@ -503,11 +504,16 @@ Game.Battle = (function () {
         var d = damageOf(effAtk(enemy), effDef(pal));
         pal.curHp = Math.max(0, pal.curHp - d);
         say(enemy.label + 'は こんらんして ' + pal.label + 'を 攻撃した! ' + d + ' の ダメージ', fxEnemyHurt(pal, d));
-        if (pal.curHp <= 0) state.log.push(pal.label + 'は たおれた!');
+        if (pal.curHp <= 0) say(pal.label + 'は たおれた!', vanish(pal));
       } else {
         state.log.push(enemy.label + 'は こんらんして あたりを 殴っている。');
       }
       return false;
+    }
+    // 目つぶしは、そのうち解ける。解けないままだと1回当てただけで戦いが終わる
+    if (enemy.status === 'blind' && Math.random() < 0.25) {
+      state.log.push(enemy.label + 'の 目が 見えるように なった!');
+      enemy.status = null;
     }
     return true;  // blind は行動はできる(命中が落ちる)
   }
@@ -528,8 +534,39 @@ Game.Battle = (function () {
 
   // ボスの大技。全体攻撃だけでなく、痛恨の一撃と 状態異常も持てるようにする。
   // 「まだ余裕がある」と思っていたところへ痛恨が入る ―― あの怖さが山場を作る。
-  function useBossSkill(enemy, alive) {
-    var skill = enemy.bossSkills[Math.floor(Math.random() * enemy.bossSkills.length)];
+  // ボスも雑魚も、同じ仕組みで技を使う。
+  // 「呪術師もどき」が殴るだけ、という状態を無くすためにここを共通化した。
+  function skillPool(enemy) { return enemy.bossSkills || enemy.skills || null; }
+
+  function useEnemySkill(enemy, alive) {
+    var pool = skillPool(enemy);
+    var skill = pool[Math.floor(Math.random() * pool.length)];
+
+    // 息と呪文は しゅび力を通さない。鎧を固めても軽くならない
+    if (skill.kind === 'breath' || skill.kind === 'spell') {
+      var targets = skill.target === 'all_party' ? alive : [pickPartyTarget(alive)];
+      say(enemy.label + 'は ' + skill.name + 'を はなった!',
+          function () { Game.Audio.play(skill.kind === 'spell' ? 'spell' : 'hit'); });
+      targets.forEach(function (member) {
+        var d = hurt(member, Math.round(damageOf(effAtk(enemy), 0) * (skill.power || 1)));
+        say(member.name + 'に ' + d + ' の ダメージ', fxPartyHurt(member, d));
+        if (member.hp <= 0) say(member.name + 'は たおれてしまった!', function () { Game.Audio.play('downed'); });
+      });
+      return true;
+    }
+
+    // 自分か、いちばん傷ついた仲間を癒す
+    if (skill.kind === 'heal') {
+      var hurtOnes = aliveEnemies().filter(function (e) { return e.curHp < e.hp; });
+      if (hurtOnes.length === 0) return false;   // 全員無傷なら、殴りに回る
+      hurtOnes.sort(function (a2, b2) { return (a2.curHp / a2.hp) - (b2.curHp / b2.hp); });
+      var patient = hurtOnes[0];
+      var amount = Math.round((skill.power || 20));
+      patient.curHp = Math.min(patient.hp, patient.curHp + amount);
+      say(enemy.label + 'は ' + skill.name + 'を となえた!', function () { Game.Audio.play('heal'); });
+      say(patient.label + 'の きずが 回復した!');
+      return true;
+    }
 
     if (skill.kind === 'crit') {
       // 痛恨は守備を通さない。堅い者を前に置いていても、これだけは効く
@@ -566,8 +603,10 @@ Game.Battle = (function () {
     if (maybeFlee(enemy)) return;
     if (!enemyStatus(enemy)) return;
 
-    if (enemy.boss && enemy.bossSkills && Math.random() < 0.4) {
-      if (useBossSkill(enemy, alive)) return;
+    // 技を持っている魔物は、確率で技を選ぶ。ボスほど頻繁ではない
+    var pool = skillPool(enemy);
+    if (pool && pool.length && Math.random() < (enemy.skillRate || (enemy.boss ? 0.4 : 0.3))) {
+      if (useEnemySkill(enemy, alive)) return;
     }
     var target = pickPartyTarget(alive);
     if (enemy.status === 'blind' && Math.random() < 0.6) {
@@ -586,14 +625,15 @@ Game.Battle = (function () {
 
   function checkEnemiesDefeated(cb) {
     if (aliveEnemies().length > 0) { cb(false); return; }
-    if (state.enemies.length === 0) {
+    if (state.enemies.every(function (e) { return e.fled; })) {
       // 全部逃げていった。取り分は無し
       Game.Dialogue.show('魔物たちは にげさっていった。', function () { endBattle('won'); });
       cb(true);
       return;
     }
-    var exp = state.enemies.reduce(function (s, e) { return s + e.exp; }, 0);
-    var gold = state.enemies.reduce(function (s, e) { return s + e.gold; }, 0);
+    var beaten = state.enemies.filter(function (e) { return !e.fled; });
+    var exp = beaten.reduce(function (s, e) { return s + e.exp; }, 0);
+    var gold = beaten.reduce(function (s, e) { return s + e.gold; }, 0);
     Game.Party.addGold(gold);
     var levelMsgs = Game.Party.addExp(exp);
     var msg = 'せんとうに かちどきをあげた! ' + exp + 'の けいけんちと ' + gold + 'ゴールドを てにいれた';
@@ -677,7 +717,7 @@ Game.Battle = (function () {
     target.curHp = Math.max(0, target.curHp - dmg);
     if (crit) say('かいしんの いちげき!!', function () { Game.Fx.critical(); });
     say(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ' + hit.note, fxEnemyHurt(target, dmg));
-    if (target.curHp <= 0) state.log.push(target.label + 'を たおした!');
+    if (target.curHp <= 0) say(target.label + 'を たおした!', vanish(target));
   }
 
   function resolveItem(actor, itemEntry, target) {
@@ -692,10 +732,17 @@ Game.Battle = (function () {
 
   function resolveFlee(a, actor) {
     var alive = aliveEnemies();
+    // 章の主からは逃げられない。逃げ場が無いことが山場をつくる
+    if (alive.some(function (e) { return e.boss; })) {
+      state.log.push('しかし にげられない!');
+      return;
+    }
     var avgEnemySpd = alive.reduce(function (s, e) { return s + e.spd; }, 0) / Math.max(1, alive.length);
-    var success = Math.random() < (0.5 + (actor.spd - avgEnemySpd) * 0.03);
+    // 素早さは装備とピオリム/ボミオスを込みで見る(ここだけ生の値を読んでいた)
+    var success = Math.random() < (0.5 + (effSpd(actor) - avgEnemySpd) * 0.03);
     if (success) {
       a.fled = true;
+      Game.Audio.play('escape');
       Game.Dialogue.show(actor.name + 'たちは にげだした!', function () { endBattle('fled'); });
       return;
     }
@@ -754,6 +801,11 @@ Game.Battle = (function () {
       state.log.push(chant);
       foes.forEach(function (t) {
         if (!t || t.curHp <= 0) return;
+        // 状態異常と同じで、弱体にも耐性がある。ボスは弾きやすい。
+        // これが無いと、ルカニを2回唱えるだけで どのボスも守備が底に張りついた。
+        var odds = (skill.chance || 0.75) * Game.Data.resistanceOf(t, 'ailment');
+        if (t.boss) odds *= 0.5;
+        if (Math.random() > odds) { state.log.push(t.label + 'には きかなかった!'); return; }
         applyMul(t, skill.stat_key, skill.mul);
         state.log.push(t.label + 'の ' + STAT_LABEL[skill.stat_key] + 'が さがった!');
       });
@@ -776,11 +828,14 @@ Game.Battle = (function () {
       var list = skill.target === 'all_enemies' ? aliveEnemies() : [target];
       if (skill.target !== 'all_enemies' && (!target || target.curHp <= 0)) list = aliveEnemies().slice(0, 1);
       list.forEach(function (t) {
-        var raw2 = Math.round(damageOf(powerStat(actor, skill), effDef(t)) * (skill.power || 1));
+        // 呪文は しゅび力で減らない。だから「硬い相手には呪文」という役割分担が立つ。
+        // ちから基準の武技は、いままでどおり守備に阻まれる。
+        var pierces = (skill.stat || 'mag') === 'mag';
+        var raw2 = Math.round(damageOf(powerStat(actor, skill), pierces ? 0 : effDef(t)) * (skill.power || 1));
         var hit2 = applyResistance(t, skill.element || 'physical', raw2);
         t.curHp = Math.max(0, t.curHp - hit2.dmg);
         say(actor.name + 'の ' + skill.name + '! ' + t.label + 'に ' + hit2.dmg + ' の ダメージ' + hit2.note, fxEnemyHurt(t, hit2.dmg));
-        if (t.curHp <= 0) state.log.push(t.label + 'を たおした!');
+        if (t.curHp <= 0) say(t.label + 'を たおした!', vanish(t));
       });
     }
   }
@@ -875,6 +930,14 @@ Game.Battle = (function () {
     }
   }
 
+  // 「たおした!」の行を送った瞬間に、魔物を画面から退場させる
+  function vanish(enemy, quiet) {
+    return function () {
+      enemy.vanished = true;
+      if (!quiet) Game.Audio.play('downed');
+    };
+  }
+
   // 白く光らせた魔物の絵を作って取っておく。毎フレーム作り直すと重いので1体1枚。
   var flashCache = {};
   function flashed(img) {
@@ -893,13 +956,15 @@ Game.Battle = (function () {
   }
 
   // 魔物の並び。ドラクエと同じで、みんな同じ地面の線に足を揃えて立たせる。
-  var GROUND_Y = 236;           // この高さに足元が来る(名前とHPが下の窓に触れない位置)
+  var GROUND_Y = 226;           // この高さに足元が来る(下の窓と重ならない位置)
   var MOB_H = 96, BOSS_H = 160; // 素材のドット数(絵が無いときは丸の直径として使う)
 
   function drawEnemies(ctx, W, H) {
     var enemies = state.enemies;
+    // HPが0になった瞬間に消すと、「〜を たおした!」の文より絵が先に進んでしまう。
+    // 文を送ったところで vanished が立ち、そこで初めて画面から消える。
     var shown = enemies.map(function (e, i) { return { e: e, i: i }; })
-                       .filter(function (o) { return o.e.curHp > 0; });
+                       .filter(function (o) { return !o.e.vanished; });
     if (shown.length === 0) return;
 
     // 幅が足りないときは、全員そろえて縮める(1体だけ小さくならないように)
@@ -944,11 +1009,8 @@ Game.Battle = (function () {
       }
 
       Game.Renderer.drawText(ctx, e.label || e.name, cx, GROUND_Y + 17, { align: 'center', size: 11 });
-      // 無傷の相手にはバーを出さない。バーが出ていること自体が「効いている」合図になる
-      if (e.curHp < e.hp) {
-        var bw = Math.min(80, size * 0.9);
-        Game.Renderer.drawBar(ctx, cx - bw / 2, GROUND_Y + 25, bw, 6, e.curHp / e.hp, '#8a3230');
-      }
+      // 魔物の残りHPは見せない。「あと何発で倒せるか」が分からないことが
+      // ドラクエの戦闘の緊張そのものなので、ここは数えさせる。
       if (state.menu === 'target' && aliveEnemies()[state.cursor] === e) {
         Game.Renderer.drawText(ctx, '▼', cx, GROUND_Y - size - 6, { align: 'center', size: 18, color: '#d4af5a' });
       }
@@ -979,7 +1041,7 @@ Game.Battle = (function () {
     // パーティ全員のステータス(横一列、人数に応じて幅を自動調整)
     var party = Game.Party.list();
     // 会話ウィンドウ(下から110px)と重ならない高さに置く
-    var statusY = H - 190, statusH = 68, gap = 6;
+    var statusY = H - 218, statusH = 68, gap = 6;
     var cardW = (W - 16 - (party.length - 1) * gap) / party.length;
     party.forEach(function (m, i) {
       var x = 8 + i * (cardW + gap), y = statusY;
@@ -988,11 +1050,16 @@ Game.Battle = (function () {
       Game.Renderer.drawText(ctx, (isCurrent ? '▶' : '') + m.name, x + 8, y + 18, { size: 11, color: m.hp <= 0 ? '#6b6354' : (isCurrent ? '#d4af5a' : '#ece7da') });
       var st = Game.Party.statusOf(m);
       if (st) Game.Renderer.drawText(ctx, st.short, x + cardW - 8, y + 18, { size: 11, align: 'right', color: st.color });
-      Game.Renderer.drawBar(ctx, x + 8, y + 26, cardW - 16, 7, m.hp / m.maxHp, '#5fae5f');
-      Game.Renderer.drawText(ctx, m.hp + '/' + m.maxHp, x + cardW - 8, y + 39, { size: 9, align: 'right', color: '#a49b86' });
+      // ドラクエは棒グラフを使わない。数字だけを並べる。
+      // 残りが「あと何発ぶんか」を自分で数えることが、緊張のもとになっている。
+      var low = m.hp <= m.maxHp * 0.25;
+      Game.Renderer.drawText(ctx, 'HP', x + 10, y + 42, { size: 12, color: '#a49b86' });
+      Game.Renderer.drawText(ctx, m.hp + '/' + m.maxHp, x + cardW - 10, y + 42,
+        { size: 13, align: 'right', color: low ? '#d3807d' : '#ece7da' });
       if (m.maxMp > 0) {
-        Game.Renderer.drawBar(ctx, x + 8, y + 44, cardW - 16, 7, m.mp / m.maxMp, '#5c8ecf');
-        Game.Renderer.drawText(ctx, m.mp + '/' + m.maxMp, x + cardW - 8, y + 57, { size: 9, align: 'right', color: '#a49b86' });
+        Game.Renderer.drawText(ctx, 'MP', x + 10, y + 60, { size: 12, color: '#a49b86' });
+        Game.Renderer.drawText(ctx, m.mp + '/' + m.maxMp, x + cardW - 10, y + 60,
+          { size: 13, align: 'right', color: '#ece7da' });
       }
     });
 
@@ -1002,8 +1069,24 @@ Game.Battle = (function () {
     Game.Renderer.drawText(ctx, 'さくせん ' + tac.name, W - 12, 20,
       { size: 11, align: 'right', color: tac.id === 'manual' ? '#6b6354' : '#d4af5a' });
 
-    // コマンドメニュー(下段・横いっぱい、現在の行動者ぶんのみ)
+    // コマンドメニュー(現在の行動者ぶんのみ)
     var menuY = H - 84, menuH = 76;
+    if (state.phase === 'command' && state.menu === 'main') {
+      // ドラクエの戦闘コマンドは、左下の小さな窓に縦一列。
+      // 横いっぱいの帯に2列で並べていたので、左右キーが要るうえ間延びしていた。
+      var mainList = currentMenuList();
+      var mw = 150, mh = 22 + mainList.length * 19;
+      var mx = 8, my = Math.max(H - 6 - mh, statusY + statusH + 6);
+      Game.Renderer.drawPanel(ctx, mx, my, mw, mh);
+      mainList.forEach(function (item, i) {
+        var sel = i === state.cursor;
+        Game.Renderer.drawText(ctx, (sel ? '▶' : '　') + item.label,
+          mx + 12, my + 26 + i * 19,
+          { size: 13, color: sel ? '#d4af5a' : '#ece7da' });
+      });
+      Game.Dialogue.draw(ctx, W, H);
+      return;
+    }
     if (state.phase === 'command' && state.menu !== 'target' && state.menu !== 'allytarget') {
       var list = currentMenuList();
       Game.Renderer.drawPanel(ctx, 8, menuY, W - 16, menuH);
@@ -1046,6 +1129,7 @@ Game.Battle = (function () {
   }
 
   return { __commands: commandList, start: start, isActive: isActive, update: update, draw: draw,
-           // 検証用: いまの戦闘の中身
-           __state: function () { return state; } };
+           // 検証用: いまの戦闘の中身と、逃走判定
+           __state: function () { return state; },
+           __resolveFlee: resolveFlee, __resolveSkill: resolveSkill, __enemyAct: enemyAct };
 })();

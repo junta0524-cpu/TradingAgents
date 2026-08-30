@@ -135,6 +135,7 @@ Game.Shop = (function () {
       return;
     }
     Game.Party.restAll();
+    Game.Audio.play('inn');
     Game.Dialogue.show('ぐっすり 眠った。パーティは 全回復した!', close);
   }
 
@@ -167,6 +168,7 @@ Game.Shop = (function () {
       Game.Dialogue.show('ゴールドが たりない!');
       return;
     }
+    Game.Audio.play('buy');
     Game.Dialogue.show(entry.def.name + 'を 買った!');
   }
 
@@ -201,6 +203,7 @@ Game.Shop = (function () {
 
   function doChurchSave() {
     if (Game.Save.save()) {
+      Game.Audio.play('save');
       Game.Dialogue.show('神官「ここまでの旅を 書き留めました」', function () {
         Game.Dialogue.show('ぼうけんのしょに きろくした。');
       });

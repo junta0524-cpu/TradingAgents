@@ -4,6 +4,10 @@ var Game = window.Game || {};
 Game.Dialogue = (function () {
   // キューの各要素は { lines: [表示行...], cb: 送り終えた時に呼ぶ関数 or null }
   var queue = [];
+  // ドラクエの文字送り。1フレームに CHARS_PER_FRAME 文字ずつ出し、
+  // 出しきる前に決定を押したら、そのページを一気に全部出す(2度押しで次へ)。
+  var shown = 0;                 // いま何文字まで出したか
+  var CHARS_PER_FRAME = 0.9;
 
   var FONT = '16px "Yu Gothic","Hiragino Sans",sans-serif';
   var LINE_H = 22;
@@ -65,11 +69,28 @@ Game.Dialogue = (function () {
 
   function isActive() { return queue.length > 0; }
 
+  function pageLength(entry) {
+    return entry.lines.reduce(function (n, l) { return n + l.length; }, 0);
+  }
+  function isDone() {
+    return !isActive() || shown >= pageLength(queue[0]);
+  }
+
   function update() {
     if (!isActive()) return;
+    var entry = queue[0];
+    var full = pageLength(entry);
+
     if (Game.Input.wasPressed('confirm')) {
-      var entry = queue.shift();
-      if (entry && entry.cb) entry.cb();
+      if (shown < full) { shown = full; return; }   // まず全部出す
+      queue.shift();
+      shown = 0;
+      if (entry.cb) entry.cb();
+      return;
+    }
+    if (shown < full) {
+      shown += CHARS_PER_FRAME;
+      if (shown > full) shown = full;
     }
   }
 
@@ -78,15 +99,25 @@ Game.Dialogue = (function () {
     var entry = queue[0];
     var top = H - PANEL_H - 6;
     Game.Renderer.drawPanel(ctx, PAD_X / 2, top, W - PAD_X, PANEL_H);
+
+    // 出した文字数を、行をまたいで振り分ける
+    var left = Math.floor(shown);
     entry.lines.forEach(function (line, i) {
-      Game.Renderer.drawText(ctx, line, PAD_X / 2 + TEXT_PAD, top + 28 + i * LINE_H, { size: 16 });
+      var part = left <= 0 ? '' : line.slice(0, left);
+      left -= line.length;
+      if (part) Game.Renderer.drawText(ctx, part, PAD_X / 2 + TEXT_PAD, top + 28 + i * LINE_H, { size: 16 });
     });
-    Game.Renderer.drawText(ctx, '▼ Zキーで進む', W - TEXT_PAD - 8, top + PANEL_H - 12,
-      { size: 12, align: 'right', color: '#a49b86' });
+
+    // 送り終えたら、右下の ▼ が点滅して入力を待つ
+    if (shown >= pageLength(entry) && Math.floor(Date.now() / 400) % 2 === 0) {
+      Game.Renderer.drawText(ctx, '▼', W - TEXT_PAD - 12, top + PANEL_H - 12,
+        { size: 14, align: 'right', color: '#ece7da' });
+    }
   }
 
   return {
     show: show, isActive: isActive, update: update, draw: draw, setWidth: setWidth,
+    isDone: isDone,
     // 検証用: いま出ている文面
     current: function () { return queue.length ? queue[0].lines.join('') : ''; },
   };

@@ -129,19 +129,42 @@ Game.Renderer = (function () {
     ctx.stroke();
   }
 
+  // ドラクエの窓。真っ黒のベタ塗りに、白い枠を二重に入れる。
+  // 半透明にすると後ろの地図が透けて「窓」に見えなくなるので、中は不透明。
   function drawPanel(ctx, x, y, w, h) {
-    ctx.fillStyle = 'rgba(23,27,43,0.92)';
-    ctx.strokeStyle = '#cbbfa0';
+    ctx.save();
+    ctx.fillStyle = '#0b0d16';
+    roundRect(ctx, x, y, w, h, 5); ctx.fill();
+    ctx.strokeStyle = '#ece7da';
     ctx.lineWidth = 2;
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeRect(x, y, w, h);
+    roundRect(ctx, x + 1, y + 1, w - 2, h - 2, 5); ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(236,231,218,0.55)';
+    roundRect(ctx, x + 5, y + 5, w - 10, h - 10, 3); ctx.stroke();
+    ctx.restore();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
   }
 
   function drawText(ctx, text, x, y, opts) {
     opts = opts || {};
-    ctx.fillStyle = opts.color || '#ece7da';
     ctx.font = (opts.size || 15) + 'px "Yu Gothic","Hiragino Sans",sans-serif';
     ctx.textAlign = opts.align || 'left';
+    // 1ドットの黒い影。ドット絵の上に置いた文字が締まって見える
+    if (opts.shadow !== false) {
+      ctx.fillStyle = 'rgba(0,0,0,0.85)';
+      ctx.fillText(text, x + 1, y + 1);
+    }
+    ctx.fillStyle = opts.color || '#ece7da';
     ctx.fillText(text, x, y);
   }
 

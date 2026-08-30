@@ -122,6 +122,7 @@ Game.Field = (function () {
       m.hp = Math.max(1, m.hp - d.fieldStepDamage);
       names.push(m.name);
     });
+    Game.Audio.play('poison');
     Game.Dialogue.show(names.join('と') + 'は どくで じわじわと 体力を うばわれている……');
     return true;
   }

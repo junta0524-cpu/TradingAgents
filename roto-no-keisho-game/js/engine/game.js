@@ -37,7 +37,10 @@ Game.Core = (function () {
       return;
     }
     var m = Game.Field.currentMap();
-    Game.Audio.bgm(m && m.kind === 'town' ? 'town' : 'field');
+    // 洞窟と塔は専用の曲。ここが「たびのおと」のままだと、
+    // 中に入った実感が出ない
+    var kind = m && m.kind;
+    Game.Audio.bgm(kind === 'town' ? 'town' : kind === 'dungeon' ? 'dungeon' : 'field');
   }
 
   // いまボスと戦っているか。Story から知らせてもらう

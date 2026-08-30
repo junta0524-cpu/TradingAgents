@@ -92,6 +92,21 @@ Game.Data.resistanceOf = function (monster, element) {
 var M = {};
 function add(id, name, rank, loc, over) { M[id] = mon(id, name, rank, loc, over); }
 
+// 詠唱者と呪術師は、名前のとおり唱えてくる。魔獣と竜は息を吐く。
+var SPELL = {
+  gira:   { kind: 'spell',  name: 'ギラ',       power: 1.15 },
+  merami: { kind: 'spell',  name: 'メラミ',     power: 1.35 },
+  hyado:  { kind: 'spell',  name: 'ヒャド',     power: 1.1 },
+  begira: { kind: 'breath', name: 'ベギラマ',   power: 0.85, target: 'all_party' },
+  honoo:  { kind: 'breath', name: 'ほのおの息', power: 0.8,  target: 'all_party' },
+  fubuki: { kind: 'breath', name: 'こごえる息', power: 0.9,  target: 'all_party' },
+  hoimi:  { kind: 'heal',   name: 'ホイミ',     power: 28 },
+  behoimi:{ kind: 'heal',   name: 'ベホイミ',   power: 70 },
+  rarihoo:{ kind: 'ailment', name: 'ラリホー',  ailment: 'sleep' },
+  medapani:{ kind: 'ailment', name: 'メダパニ', ailment: 'confuse' },
+};
+
+
 // ---- スライム系 ----
 add('chibi_slime', 'ちびスライム', 1, ['east_road', 'azure_plain'], { hp: 10, atk: 7, family: 'slime' });
 add('aka_slime', 'あかスライム', 1, ['east_road'], { hp: 13, atk: 8, inflict: { status: 'confuse', chance: 0.12 }, family: 'slime' });
@@ -132,44 +147,44 @@ add('dokugiri_kinoko', '毒霧茸', 3, ['cliff_road'], { inflict: { status: 'poi
 
 // ---- 空中系 ----
 add('koumori', 'こうもり', 2, ['azure_tower'], { hp: 18, atk: 12, spd: 14, family: 'sky' });
-add('soukyu_wyvern_ko', '蒼穹のワイバーン子', 2, ['azure_tower'], { spd: 12, family: 'sky' });
-add('yogiri_no_fukurou', '夜霧のフクロウ', 3, ['cliff_road'], { spd: 15, family: 'sky' });
+add('soukyu_wyvern_ko', '蒼穹のワイバーン子', 2, ['azure_tower'], { spd: 12, family: 'sky', skills: [SPELL.honoo], skillRate: 0.35 });
+add('yogiri_no_fukurou', '夜霧のフクロウ', 3, ['cliff_road'], { spd: 15, family: 'sky', skills: [SPELL.rarihoo], skillRate: 0.3 });
 add('dangai_no_harpy', '断崖のハーピー', 3, ['cliff_road'], { inflict: { status: 'confuse', chance: 0.28 }, family: 'sky' });
 // 塔の主に近い一体。第二章では格上として、ときどきだけ姿を見せる。
-add('arane_griffin_youju', '嵐羽のグリフィン幼獣', 3, ['azure_tower'], { family: 'sky' });
+add('arane_griffin_youju', '嵐羽のグリフィン幼獣', 3, ['azure_tower'], { family: 'sky', skills: [SPELL.fubuki], skillRate: 0.35 });
 add('kagewatari_bat_gun', '影渡りのバット群', 5, ['academy_altar'], { spd: 24, family: 'sky' });
 
 // ---- アンデッド系 ----
 add('samayou_yoroi', 'さまよう鎧', 2, ['azure_tower'], { def: 11, spd: 5, family: 'undead' });
-add('kodai_no_bourei', '古代の亡霊', 2, ['azure_tower'], { family: 'undead' });
+add('kodai_no_bourei', '古代の亡霊', 2, ['azure_tower'], { family: 'undead', skills: [SPELL.hoimi], skillRate: 0.3 });
 add('hone_no_banpei', '骨の番兵', 2, ['azure_tower'], { def: 9, family: 'undead' });
-add('norowareta_gakuto', '呪われた学徒の霊', 5, ['academy_altar'], { family: 'undead' });
+add('norowareta_gakuto', '呪われた学徒の霊', 5, ['academy_altar'], { family: 'undead', skills: [SPELL.hyado, SPELL.medapani], skillRate: 0.35 });
 add('souhaku_no_moja', '蒼白の亡者', 7, ['forbidden_ritual_chamber'], { inflict: { status: 'poison', chance: 0.3 }, family: 'undead' });
-add('dokuro_no_eishousha', '髑髏の詠唱者', 7, ['forbidden_ritual_chamber'], { atk: 52, def: 18, family: 'undead' });
+add('dokuro_no_eishousha', '髑髏の詠唱者', 7, ['forbidden_ritual_chamber'], { atk: 52, def: 18, family: 'undead', skills: [SPELL.merami, SPELL.begira], skillRate: 0.45 });
 
 // ---- 悪魔系 ----
 add('warau_kage', '嗤う影', 2, ['azure_plain'], { spd: 13, family: 'demon' });
-add('genwaku_no_imp', '幻惑のインプ', 2, ['azure_tower'], { inflict: { status: 'confuse', chance: 0.3 }, family: 'demon' });
-add('jujutsushi_modoki', '呪術師もどき', 3, ['cliff_road'], { family: 'demon' });
+add('genwaku_no_imp', '幻惑のインプ', 2, ['azure_tower'], { inflict: { status: 'confuse', chance: 0.3 }, family: 'demon', skills: [SPELL.medapani], skillRate: 0.3 });
+add('jujutsushi_modoki', '呪術師もどき', 3, ['cliff_road'], { family: 'demon', skills: [SPELL.gira, SPELL.rarihoo], skillRate: 0.4 });
 add('keiyaku_no_akuma_inu', '契約の悪魔犬', 5, ['academy_altar'], { spd: 28, family: 'demon' });
-add('chi_no_daikousha', '血の代行者', 5, ['academy_altar'], { atk: 38, family: 'demon' });
+add('chi_no_daikousha', '血の代行者', 5, ['academy_altar'], { atk: 38, family: 'demon', skills: [SPELL.begira, SPELL.behoimi], skillRate: 0.4 });
 add('nanamonaki_shito', '名もなき使徒', 7, ['forbidden_ritual_chamber'], { family: 'demon' });
 
 // ---- 深海系 ----
-add('hakkou_kurage', '発光クラゲ', 6, ['abyss_depth'], { inflict: { status: 'sleep', chance: 0.25 }, family: 'deep' });
+add('hakkou_kurage', '発光クラゲ', 6, ['abyss_depth'], { inflict: { status: 'sleep', chance: 0.25 }, family: 'deep', skills: [SPELL.hyado], skillRate: 0.3 });
 add('koukaku_kani', '甲殻の蟹型魔物', 6, ['abyss_depth'], { def: 26, spd: 12, family: 'deep' });
 add('shokushu_uo', '触手魚', 6, ['abyss_depth'], { family: 'deep' });
 add('shinkai_lobster', '深海のロブスター', 6, ['abyss_depth'], { def: 28, spd: 10, family: 'deep' });
-add('subo_no_youtai', '巣母の幼体', 6, ['abyss_depth'], { hp: 120, family: 'deep' });
-add('shinen_no_ankou', '深淵のアンコウ', 6, ['abyss_depth'], { inflict: { status: 'confuse', chance: 0.25 }, family: 'deep' });
+add('subo_no_youtai', '巣母の幼体', 6, ['abyss_depth'], { hp: 120, family: 'deep', skills: [SPELL.hoimi], skillRate: 0.3 });
+add('shinen_no_ankou', '深淵のアンコウ', 6, ['abyss_depth'], { inflict: { status: 'confuse', chance: 0.25 }, family: 'deep', skills: [SPELL.fubuki], skillRate: 0.3 });
 
 // ---- 古代文明系 ----
 // 守備が高く、物理が通りにくい。爆裂系の呪文で崩すのが早い。
 add('ishi_no_bannin', '石の番人', 2, ['azure_tower'], { def: 14, spd: 3, family: 'ancient' });
 add('sabita_golem', '錆びたゴーレム', 2, ['azure_tower'], { def: 15, spd: 4, family: 'ancient' });
-add('madou_ningyou', '魔導人形', 2, ['azure_tower'], { family: 'ancient' });
+add('madou_ningyou', '魔導人形', 2, ['azure_tower'], { family: 'ancient', skills: [SPELL.gira], skillRate: 0.3 });
 add('tenkyugi_no_shugoju', '天球儀の守護獣', 3, ['azure_tower'], { family: 'ancient' });
-add('kuzureshi_kenja_no_genei', '崩れし賢者の幻影', 3, ['azure_tower'], { family: 'ancient' });
+add('kuzureshi_kenja_no_genei', '崩れし賢者の幻影', 3, ['azure_tower'], { family: 'ancient', skills: [SPELL.merami, SPELL.behoimi], skillRate: 0.45 });
 add('fuuin_no_shugosekizou', '封印の守護石像', 3, ['azure_tower'], { hp: 66, def: 16, spd: 4, exp: 36, gold: 80, family: 'ancient' });
 
 Game.Data.Monsters = M;
