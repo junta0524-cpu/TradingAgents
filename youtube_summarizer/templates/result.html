@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ result.metadata.title or result.metadata.video_id }} - YouTube Summarizer{% endblock %}
+{% block content %}
+<article class="card report">
+  <h2>{{ result.metadata.title or result.metadata.video_id }}</h2>
+
+  <dl class="metadata">
+    <dt>URL</dt>
+    <dd><a href="{{ result.metadata.url }}" target="_blank" rel="noopener">{{ result.metadata.url }}</a></dd>
+    <dt>チャンネル</dt>
+    <dd>{{ result.metadata.channel or '不明' }}</dd>
+    <dt>再生回数</dt>
+    <dd>{{ '{:,}'.format(result.metadata.view_count) if result.metadata.view_count is not none else '不明' }}</dd>
+    <dt>高評価数</dt>
+    <dd>{{ '{:,}'.format(result.metadata.like_count) if result.metadata.like_count is not none else '不明' }}</dd>
+    <dt>コメント数</dt>
+    <dd>{{ '{:,}'.format(result.metadata.comment_count) if result.metadata.comment_count is not none else '不明' }}</dd>
+    {% if result.channel_stats and result.channel_stats.sample_size %}
+    <dt>チャンネル平均再生回数(直近{{ result.channel_stats.sample_size }}本)</dt>
+    <dd>
+      {{ '{:,.0f}'.format(result.channel_stats.average_view_count) if result.channel_stats.average_view_count is not none else '不明' }}
+      {% set ratio = result.channel_stats.ratio_for(result.metadata.view_count) %}
+      {% if ratio is not none %}(本動画はその約{{ '%.2f'|format(ratio) }}倍){% endif %}
+    </dd>
+    {% endif %}
+  </dl>
+
+  {% if channel_stats_error %}
+  <p class="note note-warning">チャンネル平均の取得をスキップしました: {{ channel_stats_error }}</p>
+  {% endif %}
+  {% if thumbnail_error %}
+  <p class="note note-warning">サムネイル画像の取得をスキップしました: {{ thumbnail_error }}</p>
+  {% endif %}
+  {% if result.thumbnail_considered %}
+  <p class="note">サムネイル画像を考察に反映しました。</p>
+  {% endif %}
+
+  <h3>要約</h3>
+  <p>{{ result.summary or '(要約なし)' }}</p>
+
+  <h3>要点</h3>
+  {% if result.key_points %}
+  <ul>
+    {% for point in result.key_points %}<li>{{ point }}</li>{% endfor %}
+  </ul>
+  {% else %}
+  <p>(要点なし)</p>
+  {% endif %}
+
+  <h3>再生回数が伸びた理由(考察)</h3>
+  <p>{{ result.view_count_reasoning or '(考察なし)' }}</p>
+
+  {% if include_transcript %}
+  <h3>文字起こし</h3>
+  <pre class="transcript">{{ result.transcript or '(文字起こしなし)' }}</pre>
+  {% endif %}
+
+  <p><a class="button" href="{{ url_for('download', result_id=result_id) }}">Markdownをダウンロード</a></p>
+</article>
+
+<p><a href="{{ url_for('index') }}">← 別の動画を要約する</a></p>
+{% endblock %}

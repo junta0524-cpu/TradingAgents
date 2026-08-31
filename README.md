@@ -261,6 +261,15 @@ ta = TradingAgentsGraph(config=config)
 _, decision = ta.propagate("NVDA", "2026-01-15")
 ```
 
+## YouTube Summarizer
+
+A standalone companion tool, independent of the trading framework, that
+summarizes a YouTube video into a transcript, summary, key points, and an
+LLM-generated analysis of why it likely got the views it did. It reuses
+TradingAgents' existing multi-provider LLM client. See
+[`youtube_summarizer/README.md`](youtube_summarizer/README.md) for setup and
+usage (`pip install -e ".[youtube]"` then `youtube-summarizer <url>`).
+
 ## Reproducibility
 
 TradingAgents is LLM-driven, so two runs of the same ticker and date can differ. This is expected for a research tool built on language models, not a defect. The variation comes from a few distinct sources, and it helps to separate them.
