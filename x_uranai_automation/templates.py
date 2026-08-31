@@ -30,9 +30,14 @@ def ranking(persona: Persona, date_label: str) -> list[str]:
     return [prompt]
 
 
-def tarot_pull(persona: Persona, date_label: str) -> list[str]:
-    """今日の1枚(タロット) — カード画像との相性が良く、シンプルで毎日回せる。"""
-    card = random.choice(TAROT_MAJOR_ARCANA)
+def tarot_pull(persona: Persona, date_label: str, card: dict | None = None) -> list[str]:
+    """今日の1枚(タロット) — カード画像との相性が良く、シンプルで毎日回せる。
+
+    ``card`` is normally chosen by the caller (``ContentGenerator``) rather
+    than here, so the same draw can also be handed to
+    ``image_generator.render_tarot_card`` for the accompanying image.
+    """
+    card = card or random.choice(TAROT_MAJOR_ARCANA)
     prompt = (
         _header(persona, date_label)
         + f"今日の1枚は「{card['name']}」の正位置(意味: {card['upright']})として、"
@@ -65,9 +70,9 @@ def caution_ranking(persona: Persona, date_label: str) -> list[str]:
     return [prompt]
 
 
-def thread(persona: Persona, date_label: str) -> list[str]:
+def thread(persona: Persona, date_label: str, card: dict | None = None) -> list[str]:
     """スレッド深掘り(タロット1枚引き→意味の解説→今日のアドバイス) — 滞在時間を伸ばす。"""
-    card = random.choice(TAROT_MAJOR_ARCANA)
+    card = card or random.choice(TAROT_MAJOR_ARCANA)
     base = _header(persona, date_label)
     return [
         base + f"スレッドの1投稿目。今日のカードは「{card['name']}」とだけ発表し、続きは次のツイートで、と匂わせる。",

@@ -19,6 +19,7 @@ from rich.table import Table
 from . import analytics, scheduler
 from .compliance import ComplianceError
 from .content_generator import ContentGenerator, GeneratorConfig
+from .image_generator import ImageGenerationError, render_tarot_card
 from .scheduler import ScheduledPost
 from .x_client import XClient, XClientError
 
@@ -48,9 +49,27 @@ def _post_one(
         console.print(f"[red]Skipped {scheduled.slot_time} ({scheduled.format}): compliance check failed: {exc}[/red]")
         return
 
+    media_ids = None
+    if posts[0].card_name:
+        try:
+            image = render_tarot_card(
+                card_name=posts[0].card_name,
+                meaning=posts[0].card_meaning or "",
+                persona_name=generator.config.persona.name,
+                date_label=scheduled.date_label,
+            )
+            media_ids = [client.upload_media(image.png_bytes, alt_text=image.alt_text)]
+        except ImageGenerationError as exc:
+            console.print(f"[yellow]Image generation skipped for {scheduled.slot_time}: {exc}[/yellow]")
+        except XClientError as exc:
+            console.print(f"[yellow]Image upload failed for {scheduled.slot_time}: {exc}[/yellow]")
+
     texts = [post.text for post in posts]
     try:
-        results = [client.post_tweet(texts[0])] if len(texts) == 1 else client.post_thread(texts)
+        if len(texts) == 1:
+            results = [client.post_tweet(texts[0], media_ids=media_ids)]
+        else:
+            results = client.post_thread(texts, first_media_ids=media_ids)
     except XClientError as exc:
         console.print(f"[red]Post failed for {scheduled.slot_time} ({scheduled.format}): {exc}[/red]")
         return

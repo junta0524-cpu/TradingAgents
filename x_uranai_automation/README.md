@@ -11,6 +11,14 @@ cp .env.example .env   # LLMプロバイダのAPIキー、X_API_* を設定
 
 `X_API_KEY` / `X_API_SECRET` / `X_ACCESS_TOKEN` / `X_ACCESS_TOKEN_SECRET` は X Developer Portal の対象アプリ「Keys and tokens」ページで発行される OAuth 1.0a User Context の資格情報です。未設定でも `generate-day` や `post-day`（`--live` なし＝dry-run）は動作します。
 
+タロットカード画像を生成するには日本語対応フォントが必要です：
+
+```bash
+sudo apt-get install -y fonts-noto-cjk   # Debian/Ubuntu。GitHub Actionsワークフローにも組み込み済み
+```
+
+フォントが別の場所にある場合は `X_AUTOMATION_CJK_FONT` でパスを指定してください。
+
 ## 使い方
 
 ```bash
@@ -57,7 +65,8 @@ OpenAI以外のLLMプロバイダを使う場合は、ワークフロー内の `
 | `templates.py` | バズりやすい投稿フォーマットごとのプロンプト |
 | `content_generator.py` | LLMで本文を生成し、コンプライアンスチェックを通す |
 | `compliance.py` | 景品表示法上の断定表現（「絶対当たる」等）を検出・拒否 |
-| `x_client.py` | X API v2への投稿クライアント（OAuth 1.0a、dry-run既定） |
+| `image_generator.py` | タロットカード風のブランド画像をPillowで生成（外部API不要） |
+| `x_client.py` | X API v2への投稿クライアント（OAuth 1.0a、画像アップロード対応、dry-run既定） |
 | `scheduler.py` | 曜日ローテーションで1日の投稿枠を組み立てる |
 | `analytics.py` | 投稿ログ・収益化ファネルイベントの記録と集計 |
 | `cli.py` | 上記を束ねるコマンド群 |
@@ -67,7 +76,7 @@ OpenAI以外のLLMプロバイダを使う場合は、ワークフロー内の `
 - **X Developer Portalでの申請とAPI利用枠**：無料枠は投稿数が少ないため、本格運用ならBasic/Proプランを検討する
 - **自動化であることの明示**：完全自動投稿はスパム判定・凍結のリスクがあるため、Xの自動化ポリシーに沿って運用する（人間によるレビューを挟む運用が無難）
 - **コンプライアンス**：景品表示法（「絶対当たる」等の断定表現の禁止）、有料サービスへ誘導する場合は特定商取引法の表記
-- **コンテンツパイプライン**：ペルソナ・世界観の固定、画像（タロットカード風ビジュアル等）、投稿スケジュール
+- **コンテンツパイプライン**：ペルソナ・世界観の固定、画像（`image_generator.py`でタロットカード風ビジュアルを自動生成）、投稿スケジュール
 - **分析基盤**：Xアナリティクス、この`analytics.py`によるファネル計測
 
 ## バズる投稿パターン（占いジャンル）
@@ -75,7 +84,7 @@ OpenAI以外のLLMプロバイダを使う場合は、ワークフロー内の `
 | 型 | 実装 | 特徴 |
 |---|---|---|
 | 12星座ランキング | `templates.ranking` | 自分の星座を探させる導線でリプ・保存率が高い |
-| 今日の1枚(タロット) | `templates.tarot_pull` | シンプルで毎日回せる、画像との相性が良い |
+| 今日の1枚(タロット) | `templates.tarot_pull` | シンプルで毎日回せる。`image_generator.py`が自動でカード画像を添付 |
 | 参加型診断 | `templates.diagnosis` | リプ・引用RTを誘発し、フォロー外にも伸びやすい |
 | 要注意ランキング | `templates.caution_ranking` | 保存・シェアされやすいが、煽りすぎない前向きな締めが必須 |
 | スレッド深掘り | `templates.thread` | タロット1枚引き→解説→アドバイスの3連投で滞在時間を伸ばす |

@@ -16,6 +16,9 @@ import requests
 from requests_oauthlib import OAuth1
 
 API_BASE = "https://api.twitter.com/2"
+# Media upload has no v2 equivalent yet; every X API client (including
+# tweepy) still goes through the legacy v1.1 endpoint for this.
+MEDIA_UPLOAD_URL = "https://upload.twitter.com/1.1/media/upload.json"
 MAX_TWEET_CHARS = 280
 
 
@@ -53,28 +56,71 @@ class XClient:
             raise XClientError(f"Missing X API credentials: {', '.join(missing)}")
         return OAuth1(self.api_key, self.api_secret, self.access_token, self.access_token_secret)
 
-    def post_tweet(self, text: str, reply_to_id: str | None = None) -> dict:
+    def upload_media(self, image_bytes: bytes, alt_text: str | None = None) -> str:
+        """Upload an image and return its media_id, for attaching to a tweet.
+
+        Uses the legacy v1.1 media/upload endpoint — X API v2 still has no
+        upload endpoint of its own, so every client (including tweepy) goes
+        through v1.1 for this step even when posting the tweet itself via v2.
+        """
+        if self.dry_run:
+            return "dry_run_media_id"
+
+        response = requests.post(
+            MEDIA_UPLOAD_URL,
+            files={"media": image_bytes},
+            auth=self._auth(),
+            timeout=30,
+        )
+        if response.status_code >= 300:
+            raise XClientError(f"X media upload error {response.status_code}: {response.text}")
+        media_id = response.json()["media_id_string"]
+
+        if alt_text:
+            metadata_response = requests.post(
+                f"{MEDIA_UPLOAD_URL}?command=metadata_create&media_id={media_id}",
+                json={"media_id": media_id, "alt_text": {"text": alt_text[:1000]}},
+                auth=self._auth(),
+                timeout=30,
+            )
+            if metadata_response.status_code >= 300:
+                raise XClientError(
+                    f"X media alt-text error {metadata_response.status_code}: {metadata_response.text}"
+                )
+
+        return media_id
+
+    def post_tweet(
+        self, text: str, reply_to_id: str | None = None, media_ids: list[str] | None = None
+    ) -> dict:
         if len(text) > MAX_TWEET_CHARS:
             raise XClientError(f"Tweet exceeds {MAX_TWEET_CHARS} characters ({len(text)}).")
 
         if self.dry_run:
-            return {"dry_run": True, "text": text, "reply_to_id": reply_to_id}
+            return {"dry_run": True, "text": text, "reply_to_id": reply_to_id, "media_ids": media_ids}
 
         payload: dict = {"text": text}
         if reply_to_id:
             payload["reply"] = {"in_reply_to_tweet_id": reply_to_id}
+        if media_ids:
+            payload["media"] = {"media_ids": media_ids}
 
         response = requests.post(f"{API_BASE}/tweets", json=payload, auth=self._auth(), timeout=30)
         if response.status_code >= 300:
             raise XClientError(f"X API error {response.status_code}: {response.text}")
         return response.json()
 
-    def post_thread(self, texts: list[str]) -> list[dict]:
-        """Post a reply chain; each tweet replies to the previous one."""
+    def post_thread(self, texts: list[str], first_media_ids: list[str] | None = None) -> list[dict]:
+        """Post a reply chain; each tweet replies to the previous one.
+
+        ``first_media_ids`` attaches media (e.g. a tarot card image) to only
+        the opening tweet — image + text once, plain text for the replies.
+        """
         results = []
         reply_to_id = None
-        for text in texts:
-            result = self.post_tweet(text, reply_to_id=reply_to_id)
+        for index, text in enumerate(texts):
+            media_ids = first_media_ids if index == 0 else None
+            result = self.post_tweet(text, reply_to_id=reply_to_id, media_ids=media_ids)
             results.append(result)
             if not self.dry_run:
                 reply_to_id = result["data"]["id"]

@@ -35,6 +35,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Japanese font (for the tarot-card images)
+        run: sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+
       - name: Install dependencies
         # langchain-openai is pinned here (not just "[x_automation]") because
         # the default LLM provider is openai; switch this line if
