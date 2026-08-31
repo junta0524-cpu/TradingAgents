@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('summarize') }}" class="card summarize-form">
+  <label for="url">YouTube動画のURLまたは動画ID</label>
+  <input type="text" id="url" name="url" required autofocus
+         placeholder="https://www.youtube.com/watch?v=..."
+         value="{{ form.url if form else '' }}">
+
+  <div class="form-row">
+    <div class="field">
+      <label for="provider">LLMプロバイダ</label>
+      <input type="text" id="provider" name="provider" value="{{ form.provider if form else 'anthropic' }}">
+    </div>
+    <div class="field">
+      <label for="model">モデル</label>
+      <input type="text" id="model" name="model" value="{{ form.model if form else 'claude-sonnet-5' }}">
+    </div>
+    <div class="field">
+      <label for="languages">文字起こしの優先言語</label>
+      <input type="text" id="languages" name="languages" value="{{ form.languages if form else 'ja,en' }}">
+    </div>
+  </div>
+
+  <fieldset class="checkboxes">
+    <label><input type="checkbox" name="channel_comparison" checked> チャンネル平均と比較する</label>
+    <label><input type="checkbox" name="thumbnail" checked> サムネイル画像を考慮する(画像対応モデルが必要)</label>
+    <label><input type="checkbox" name="include_transcript" checked> 結果画面に文字起こし全文を表示する</label>
+  </fieldset>
+
+  <button type="submit">要約する</button>
+</form>
+
+<p class="note">
+  要約には、指定したLLMプロバイダのAPIキー(例: <code>ANTHROPIC_API_KEY</code>)が
+  このアプリを起動した環境の環境変数に設定されている必要があります。
+  動画の長さや文字起こしの取得状況によっては、数十秒〜数分かかることがあります。
+</p>
+{% endblock %}
