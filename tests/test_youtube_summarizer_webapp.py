@@ -2,9 +2,11 @@ import re
 
 import pytest
 
-from youtube_summarizer.errors import VideoFetchError
-from youtube_summarizer.models import ChannelStats, VideoMetadata, VideoSummary
-from youtube_summarizer.webapp import app
+pytest.importorskip("flask")  # webapp.py needs the optional `web` extra installed
+
+from youtube_summarizer.errors import VideoFetchError  # noqa: E402
+from youtube_summarizer.models import ChannelStats, VideoMetadata, VideoSummary  # noqa: E402
+from youtube_summarizer.webapp import app  # noqa: E402
 
 METADATA = VideoMetadata(
     video_id="abc12345678",
