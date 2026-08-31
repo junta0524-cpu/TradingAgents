@@ -1,0 +1,78 @@
+name: X Uranai Daily Posting
+
+# Three schedule entries, one per posting slot in
+# x_uranai_automation/scheduler.py:DEFAULT_SLOTS (07:30 / 12:00 / 21:30 JST).
+# github.event.schedule tells the job which entry fired, so a single job
+# definition can post the right slot instead of the whole day at once.
+#
+# Safety: this workflow runs a DRY RUN by default even once it's enabled —
+# nothing is posted to X until the repository variable X_AUTOMATION_LIVE is
+# set to "true" (Settings > Secrets and variables > Actions > Variables).
+# That keeps a first-time enable, or a misconfigured secret, from posting
+# something bad live before anyone reviews the dry-run output in the logs.
+on:
+  schedule:
+    - cron: "30 22 * * *"  # 07:30 JST -> slot 0 (the day's main format)
+    - cron: "0 3 * * *"    # 12:00 JST -> slot 1 (tarot pull)
+    - cron: "30 12 * * *"  # 21:30 JST -> slot 2 (tarot pull)
+  workflow_dispatch:
+    inputs:
+      slot_index:
+        description: "Slot index to post (0, 1, or 2)"
+        required: true
+        default: "0"
+
+concurrency:
+  group: x-uranai-daily
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Japanese font (for the tarot-card images)
+        run: sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+
+      - name: Install dependencies
+        # langchain-openai is pinned here (not just "[x_automation]") because
+        # the default LLM provider is openai; switch this line if
+        # X_AUTOMATION_LLM_PROVIDER is set to something else below.
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[x_automation]" langchain-openai
+
+      - name: Resolve slot index from the firing schedule
+        id: slot
+        run: |
+          case "${{ github.event.schedule }}" in
+            "30 22 * * *") echo "index=0" >> "$GITHUB_OUTPUT" ;;
+            "0 3 * * *")   echo "index=1" >> "$GITHUB_OUTPUT" ;;
+            "30 12 * * *") echo "index=2" >> "$GITHUB_OUTPUT" ;;
+            *) echo "index=${{ github.event.inputs.slot_index || '0' }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Generate and post
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          # Override via repo Variables if you switch off the OpenAI default
+          # (and update the pip install step above to match).
+          X_AUTOMATION_LLM_PROVIDER: ${{ vars.X_AUTOMATION_LLM_PROVIDER || 'openai' }}
+          X_AUTOMATION_LLM_MODEL: ${{ vars.X_AUTOMATION_LLM_MODEL || 'gpt-5.4-mini' }}
+        run: |
+          LIVE_FLAG=""
+          if [ "${{ vars.X_AUTOMATION_LIVE }}" = "true" ]; then
+            LIVE_FLAG="--live"
+          fi
+          python -m x_uranai_automation.cli post-slot \
+            --slot-index "${{ steps.slot.outputs.index }}" \
+            --date "$(TZ=Asia/Tokyo date +%F)" \
+            $LIVE_FLAG
