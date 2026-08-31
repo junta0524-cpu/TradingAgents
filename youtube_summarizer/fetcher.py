@@ -11,7 +11,7 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 from .errors import TranscriptUnavailableError, VideoFetchError
-from .models import VideoMetadata
+from .models import ChannelStats, VideoMetadata
 
 _VIDEO_ID_RE = re.compile(r"^[\w-]{11}$")
 _PATH_ID_SUFFIXES = ("/embed/", "/shorts/", "/live/", "/v/")
@@ -71,6 +71,9 @@ def fetch_metadata(video_id: str) -> VideoMetadata:
         url=url,
         title=info.get("title") or "",
         channel=info.get("channel") or info.get("uploader") or "",
+        channel_id=info.get("channel_id"),
+        channel_url=info.get("channel_url") or info.get("uploader_url"),
+        subscriber_count=info.get("channel_follower_count"),
         description=info.get("description") or "",
         view_count=info.get("view_count"),
         like_count=info.get("like_count"),
@@ -79,7 +82,77 @@ def fetch_metadata(video_id: str) -> VideoMetadata:
         duration_seconds=info.get("duration"),
         tags=list(info.get("tags") or []),
         categories=list(info.get("categories") or []),
+        thumbnail_url=info.get("thumbnail"),
     )
+
+
+def fetch_channel_stats(
+    channel_url: str, *, exclude_video_id: str | None = None, sample_size: int = 15
+) -> ChannelStats:
+    """Fetch the average view count over a channel's most recent uploads.
+
+    Used to judge whether a video over- or under-performed its channel's
+    normal reach, rather than reading its view count in isolation. Best-effort:
+    videos yt-dlp can't return a view count for (rare, but happens for very
+    recent or restricted uploads) are simply excluded from the average.
+    """
+    try:
+        import yt_dlp
+    except ImportError as exc:
+        raise VideoFetchError(
+            "yt-dlp is required to fetch channel stats. Install it with "
+            '`pip install "tradingagents[youtube]"` or `pip install yt-dlp`.'
+        ) from exc
+
+    videos_url = channel_url.rstrip("/")
+    if not videos_url.endswith("/videos"):
+        videos_url += "/videos"
+
+    ydl_opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "extract_flat": True,
+        "playlistend": sample_size + 1,  # +1 to still have `sample_size` after excluding the video itself
+    }
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(videos_url, download=False)
+    except Exception as exc:
+        raise VideoFetchError(f"Failed to fetch channel videos for {channel_url}: {exc}") from exc
+
+    if not info:
+        raise VideoFetchError(f"No channel data returned for {channel_url}")
+
+    entries = [entry for entry in (info.get("entries") or []) if entry]
+    if exclude_video_id:
+        entries = [entry for entry in entries if entry.get("id") != exclude_video_id]
+    entries = entries[:sample_size]
+
+    view_counts = [
+        entry.get("view_count") for entry in entries if isinstance(entry.get("view_count"), (int, float))
+    ]
+    average = (sum(view_counts) / len(view_counts)) if view_counts else None
+
+    return ChannelStats(
+        channel=info.get("channel") or info.get("title") or "",
+        sample_size=len(view_counts),
+        average_view_count=average,
+    )
+
+
+def fetch_thumbnail(thumbnail_url: str) -> tuple[bytes, str]:
+    """Download a video's thumbnail image. Returns (bytes, mime_type)."""
+    import requests
+
+    try:
+        response = requests.get(thumbnail_url, timeout=15)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        raise VideoFetchError(f"Failed to download thumbnail from {thumbnail_url}: {exc}") from exc
+
+    mime_type = response.headers.get("Content-Type", "").split(";")[0].strip() or "image/jpeg"
+    return response.content, mime_type
 
 
 def _segment_text(segment) -> str:

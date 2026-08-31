@@ -3,7 +3,7 @@ import json
 import pytest
 
 from youtube_summarizer.errors import SummarizationError
-from youtube_summarizer.models import VideoMetadata
+from youtube_summarizer.models import ChannelStats, VideoMetadata
 from youtube_summarizer.summarizer import summarize_video
 
 METADATA = VideoMetadata(
@@ -118,3 +118,43 @@ def test_summarize_video_truncates_long_transcript(monkeypatch):
     prompt_text = human_message[1]
     assert "以下省略" in prompt_text
     assert len(prompt_text) < len(long_transcript)
+
+
+def test_summarize_video_defaults_have_no_channel_stats_or_thumbnail(monkeypatch):
+    payload = {"summary": "s", "key_points": [], "view_count_reasoning": "r"}
+    _patch_create_llm_client(monkeypatch, json.dumps(payload))
+
+    result = summarize_video(METADATA, "transcript")
+
+    assert result.channel_stats is None
+    assert result.thumbnail_considered is False
+
+
+def test_summarize_video_includes_channel_stats_in_prompt_and_result(monkeypatch):
+    payload = {"summary": "s", "key_points": [], "view_count_reasoning": "r"}
+    fake_client, _calls = _patch_create_llm_client(monkeypatch, json.dumps(payload))
+    channel_stats = ChannelStats(channel="Test Channel", sample_size=10, average_view_count=500.0)
+
+    result = summarize_video(METADATA, "transcript", channel_stats=channel_stats)
+
+    assert result.channel_stats is channel_stats
+    human_message = fake_client._llm.invoked_with[1]
+    prompt_text = human_message[1]
+    assert "チャンネル直近10本の平均再生回数" in prompt_text
+    assert "約2.00倍" in prompt_text  # METADATA.view_count == 1000, average == 500.0
+
+
+def test_summarize_video_attaches_thumbnail_as_image_content_block(monkeypatch):
+    payload = {"summary": "s", "key_points": [], "view_count_reasoning": "r"}
+    fake_client, _calls = _patch_create_llm_client(monkeypatch, json.dumps(payload))
+
+    result = summarize_video(METADATA, "transcript", thumbnail=b"binarydata", thumbnail_mime_type="image/png")
+
+    assert result.thumbnail_considered is True
+    human_message = fake_client._llm.invoked_with[1]
+    content_blocks = human_message[1]
+    assert isinstance(content_blocks, list)
+    assert content_blocks[0]["type"] == "text"
+    assert "サムネイル画像" in content_blocks[0]["text"]
+    assert content_blocks[1]["type"] == "image_url"
+    assert content_blocks[1]["image_url"]["url"].startswith("data:image/png;base64,")

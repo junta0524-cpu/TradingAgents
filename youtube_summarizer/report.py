@@ -25,14 +25,35 @@ def render_markdown(result: VideoSummary, *, include_transcript: bool = True) ->
         f"- 再生回数: {_format_count(metadata.view_count)}",
         f"- 高評価数: {_format_count(metadata.like_count)}",
         f"- コメント数: {_format_count(metadata.comment_count)}",
-        "",
-        "## 要約",
-        "",
-        result.summary or "(要約なし)",
-        "",
-        "## 要点",
-        "",
     ]
+
+    channel_stats = result.channel_stats
+    if channel_stats is not None and channel_stats.sample_size:
+        ratio = channel_stats.ratio_for(metadata.view_count)
+        avg_text = (
+            f"{channel_stats.average_view_count:,.0f}"
+            if channel_stats.average_view_count is not None
+            else "不明"
+        )
+        lines.append(
+            f"- チャンネル平均再生回数(直近{channel_stats.sample_size}本): {avg_text}"
+            + (f"(本動画はその約{ratio:.2f}倍)" if ratio is not None else "")
+        )
+
+    if result.thumbnail_considered:
+        lines.append("- サムネイル画像: 考察に反映済み")
+
+    lines.extend(
+        [
+            "",
+            "## 要約",
+            "",
+            result.summary or "(要約なし)",
+            "",
+            "## 要点",
+            "",
+        ]
+    )
 
     if result.key_points:
         lines.extend(f"- {point}" for point in result.key_points)

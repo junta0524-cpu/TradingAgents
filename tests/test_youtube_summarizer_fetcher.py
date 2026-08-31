@@ -4,7 +4,13 @@ import types
 import pytest
 
 from youtube_summarizer.errors import TranscriptUnavailableError, VideoFetchError
-from youtube_summarizer.fetcher import extract_video_id, fetch_metadata, fetch_transcript
+from youtube_summarizer.fetcher import (
+    extract_video_id,
+    fetch_channel_stats,
+    fetch_metadata,
+    fetch_thumbnail,
+    fetch_transcript,
+)
 
 VIDEO_ID = "dQw4w9WgXcQ"
 
@@ -46,6 +52,9 @@ class _FakeYoutubeDL:
         return {
             "title": "Test Video",
             "channel": "Test Channel",
+            "channel_id": "UC12345",
+            "channel_url": "https://www.youtube.com/channel/UC12345",
+            "channel_follower_count": 99000,
             "description": "A description",
             "view_count": 12345,
             "like_count": 678,
@@ -54,6 +63,7 @@ class _FakeYoutubeDL:
             "duration": 600,
             "tags": ["a", "b"],
             "categories": ["Education"],
+            "thumbnail": "https://example.com/thumb.jpg",
         }
 
 
@@ -73,6 +83,10 @@ def test_fetch_metadata_maps_yt_dlp_fields(monkeypatch):
     assert metadata.duration_seconds == 600
     assert metadata.tags == ["a", "b"]
     assert metadata.categories == ["Education"]
+    assert metadata.channel_id == "UC12345"
+    assert metadata.channel_url == "https://www.youtube.com/channel/UC12345"
+    assert metadata.subscriber_count == 99000
+    assert metadata.thumbnail_url == "https://example.com/thumb.jpg"
 
 
 def test_fetch_metadata_wraps_yt_dlp_failures(monkeypatch):
@@ -171,3 +185,102 @@ def test_fetch_transcript_missing_dependency(monkeypatch):
     monkeypatch.setitem(sys.modules, "youtube_transcript_api", None)
     with pytest.raises(TranscriptUnavailableError):
         fetch_transcript(VIDEO_ID)
+
+
+class _FakeChannelYoutubeDL:
+    def __init__(self, entries):
+        self._entries = entries
+
+    def __call__(self, opts=None):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        return False
+
+    def extract_info(self, url, download=False):
+        assert url.endswith("/videos")
+        return {"channel": "Test Channel", "entries": self._entries}
+
+
+def test_fetch_channel_stats_averages_view_counts(monkeypatch):
+    entries = [
+        {"id": "vid1", "view_count": 100},
+        {"id": "vid2", "view_count": 300},
+        {"id": VIDEO_ID, "view_count": 999999},  # excluded: the video being analyzed
+    ]
+    fake_module = types.SimpleNamespace(YoutubeDL=_FakeChannelYoutubeDL(entries))
+    monkeypatch.setitem(sys.modules, "yt_dlp", fake_module)
+
+    stats = fetch_channel_stats(
+        "https://www.youtube.com/@testchannel", exclude_video_id=VIDEO_ID, sample_size=15
+    )
+
+    assert stats.channel == "Test Channel"
+    assert stats.sample_size == 2
+    assert stats.average_view_count == 200
+    assert stats.ratio_for(400) == 2.0
+
+
+def test_fetch_channel_stats_handles_missing_view_counts(monkeypatch):
+    entries = [{"id": "vid1", "view_count": None}, {"id": "vid2"}]
+    fake_module = types.SimpleNamespace(YoutubeDL=_FakeChannelYoutubeDL(entries))
+    monkeypatch.setitem(sys.modules, "yt_dlp", fake_module)
+
+    stats = fetch_channel_stats("https://www.youtube.com/@testchannel")
+
+    assert stats.sample_size == 0
+    assert stats.average_view_count is None
+    assert stats.ratio_for(100) is None
+
+
+def test_fetch_channel_stats_wraps_failures(monkeypatch):
+    class _FailingYoutubeDL(_FakeYoutubeDL):
+        def extract_info(self, url, download=False):
+            raise RuntimeError("boom")
+
+    fake_module = types.SimpleNamespace(YoutubeDL=_FailingYoutubeDL)
+    monkeypatch.setitem(sys.modules, "yt_dlp", fake_module)
+
+    with pytest.raises(VideoFetchError):
+        fetch_channel_stats("https://www.youtube.com/@testchannel")
+
+
+class _FakeThumbnailResponse:
+    def __init__(self, content, content_type, raise_exc=None):
+        self.content = content
+        self.headers = {"Content-Type": content_type}
+        self._raise_exc = raise_exc
+
+    def raise_for_status(self):
+        if self._raise_exc:
+            raise self._raise_exc
+
+
+def test_fetch_thumbnail_returns_bytes_and_mime_type(monkeypatch):
+    import requests
+
+    monkeypatch.setattr(
+        requests,
+        "get",
+        lambda url, timeout=None: _FakeThumbnailResponse(b"binarydata", "image/webp"),
+    )
+
+    content, mime_type = fetch_thumbnail("https://example.com/thumb.webp")
+
+    assert content == b"binarydata"
+    assert mime_type == "image/webp"
+
+
+def test_fetch_thumbnail_wraps_request_failures(monkeypatch):
+    import requests
+
+    def _raise_get(url, timeout=None):
+        raise requests.RequestException("network error")
+
+    monkeypatch.setattr(requests, "get", _raise_get)
+
+    with pytest.raises(VideoFetchError):
+        fetch_thumbnail("https://example.com/thumb.jpg")

@@ -1,4 +1,4 @@
-from youtube_summarizer.models import VideoMetadata, VideoSummary
+from youtube_summarizer.models import ChannelStats, VideoMetadata, VideoSummary
 from youtube_summarizer.report import render_markdown
 
 METADATA = VideoMetadata(
@@ -57,3 +57,28 @@ def test_render_markdown_handles_missing_optional_fields():
     assert "(要点なし)" in report
     assert "(考察なし)" in report
     assert "(文字起こしなし)" in report
+
+
+def test_render_markdown_includes_channel_stats_and_thumbnail_note():
+    summary_with_extras = VideoSummary(
+        metadata=METADATA,
+        transcript="text",
+        summary="summary",
+        key_points=[],
+        view_count_reasoning="reasoning",
+        channel_stats=ChannelStats(channel="Test Channel", sample_size=12, average_view_count=100000.0),
+        thumbnail_considered=True,
+    )
+
+    report = render_markdown(summary_with_extras)
+
+    assert "チャンネル平均再生回数(直近12本): 100,000" in report
+    assert "約12.35倍" in report  # 1,234,567 / 100,000
+    assert "サムネイル画像: 考察に反映済み" in report
+
+
+def test_render_markdown_omits_channel_stats_when_absent():
+    report = render_markdown(SUMMARY)
+
+    assert "チャンネル平均再生回数" not in report
+    assert "サムネイル画像" not in report
