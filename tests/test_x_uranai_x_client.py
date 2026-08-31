@@ -1,6 +1,6 @@
 import pytest
 
-from x_uranai_automation.x_client import MAX_TWEET_CHARS, XClient, XClientError
+from x_uranai_automation.x_client import MAX_TWEET_CHARS, XClient, XClientError, weighted_length
 
 
 @pytest.mark.unit
@@ -53,6 +53,28 @@ def test_post_tweet_rejects_over_length_text():
     client = XClient(dry_run=True)
     with pytest.raises(XClientError, match="exceeds"):
         client.post_tweet("あ" * (MAX_TWEET_CHARS + 1))
+
+
+@pytest.mark.unit
+def test_weighted_length_counts_japanese_as_two():
+    assert weighted_length("あ") == 2
+    assert weighted_length("A") == 1
+    assert weighted_length("あA") == 3
+
+
+@pytest.mark.unit
+def test_weighted_length_matches_x_effective_japanese_limit():
+    # 140 pure-Japanese characters weigh exactly 280 — the well-known
+    # "280 Latin chars ~= 140 Japanese chars" rule this function encodes.
+    assert weighted_length("あ" * 140) == 280
+
+
+@pytest.mark.unit
+def test_post_tweet_accepts_140_japanese_chars_but_rejects_141():
+    client = XClient(dry_run=True)
+    client.post_tweet("あ" * 140)  # exactly at the weighted limit; must not raise
+    with pytest.raises(XClientError, match="exceeds"):
+        client.post_tweet("あ" * 141)
 
 
 @pytest.mark.unit

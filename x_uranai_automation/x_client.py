@@ -16,10 +16,39 @@ import requests
 from requests_oauthlib import OAuth1
 
 API_BASE = "https://api.twitter.com/2"
-# Media upload has no v2 equivalent yet; every X API client (including
-# tweepy) still goes through the legacy v1.1 endpoint for this.
-MEDIA_UPLOAD_URL = "https://upload.twitter.com/1.1/media/upload.json"
+# The legacy v1.1 media/upload endpoint was retired in March 2025; media now
+# goes through this v2 endpoint instead. It is documented as OAuth 1.0a User
+# Context only (a Bearer/OAuth2 token gets "not permitted" here) — matching
+# the auth this client already uses for posting. API surface here has moved
+# fast; re-check X's current media upload docs before relying on this in
+# production.
+MEDIA_UPLOAD_URL = "https://api.x.com/2/media/upload"
 MAX_TWEET_CHARS = 280
+
+# X counts most Basic-Multilingual-Plane CJK ideographs/kana/hangul/fullwidth
+# punctuation as weight 2 toward the character limit (the "weighted length"
+# rule behind the well-known "280 Latin chars ~= 140 Japanese chars"). Ranges
+# below mirror Twitter's own twitter-text ``config.json`` "weightedLength"
+# ranges for weight-2 codepoints.
+_WEIGHT_2_RANGES = (
+    (0x1100, 0x115F), (0x2E80, 0x303E), (0x3041, 0x33FF), (0x3400, 0x4DBF),
+    (0x4E00, 0x9FFF), (0xA000, 0xA4CF), (0xAC00, 0xD7A3), (0xF900, 0xFAFF),
+    (0xFF00, 0xFF60), (0xFFE0, 0xFFE6), (0x1F200, 0x1F251), (0x20000, 0x3FFFD),
+)
+
+
+def weighted_length(text: str) -> int:
+    """X's character count for the 280-char limit, not ``len(text)``.
+
+    A tweet made mostly of Japanese/Chinese/Korean text hits the limit at
+    roughly half the character count of one made of Latin text — this is
+    what actually gets enforced by the API, not a flat 280 characters.
+    """
+    total = 0
+    for ch in text:
+        cp = ord(ch)
+        total += 2 if any(lo <= cp <= hi for lo, hi in _WEIGHT_2_RANGES) else 1
+    return total
 
 
 class XClientError(RuntimeError):
@@ -93,8 +122,9 @@ class XClient:
     def post_tweet(
         self, text: str, reply_to_id: str | None = None, media_ids: list[str] | None = None
     ) -> dict:
-        if len(text) > MAX_TWEET_CHARS:
-            raise XClientError(f"Tweet exceeds {MAX_TWEET_CHARS} characters ({len(text)}).")
+        length = weighted_length(text)
+        if length > MAX_TWEET_CHARS:
+            raise XClientError(f"Tweet exceeds {MAX_TWEET_CHARS} weighted characters ({length}).")
 
         if self.dry_run:
             return {"dry_run": True, "text": text, "reply_to_id": reply_to_id, "media_ids": media_ids}

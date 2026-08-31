@@ -11,7 +11,11 @@ class Persona:
 
     name: str = "月詠(つくよみ)"
     tone: str = "落ち着いた大人の口調。断定しすぎず、寄り添うように語りかける。絵文字は要点の区切りに1〜2個まで。"
-    specialty: str = "西洋占星術・タロット"
+    # The account's differentiator is the 四柱推命×MBTI combo (see the
+    # diagnosis funnel in analytics/README) — daily posts still draw on
+    # zodiac/tarot content (templates.py), so specialty names both rather
+    # than making the LLM's system prompt contradict what it's asked to write.
+    specialty: str = "四柱推命×MBTI(独自の掛け合わせ診断)。西洋占星術・タロットも扱う"
     catchphrase: str = "今日のあなたに、そっと寄り添う一言を。"
     cta: str = "あなたの星座はどれ？リプで教えてね🔮"
 

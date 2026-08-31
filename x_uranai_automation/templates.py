@@ -11,7 +11,13 @@ import random
 
 from .persona import TAROT_MAJOR_ARCANA, ZODIAC_SIGNS, Persona
 
-MAX_CHARS = 280
+# X's 280-character limit is *weighted*, not a flat character count: most
+# Japanese characters (kana, kanji, full-width punctuation) count as 2
+# toward it, so a pure-Japanese tweet effectively caps at ~140 characters,
+# not 280 (see XClient.weighted_length). 120 leaves headroom for the LLM's
+# imprecision and any half-width characters (numbers, "X", emoji) mixed in,
+# without needing an X Premium account's long-form posting.
+MAX_CHARS = 120
 
 
 def _header(persona: Persona, date_label: str) -> str:
