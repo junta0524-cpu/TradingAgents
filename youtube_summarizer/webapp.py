@@ -111,9 +111,15 @@ def download(result_id: str):
 
 
 def main() -> None:
-    """Entry point for the `youtube-summarizer-web` console script."""
+    """Entry point for the `youtube-summarizer-web` console script.
+
+    Binds to 127.0.0.1 (this machine only) by default. Set ``HOST=0.0.0.0``
+    to also accept connections from other devices on the same network (e.g.
+    a phone on the same Wi-Fi), reachable at ``http://<this-machine's-LAN-IP>:<PORT>``.
+    """
+    host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "5000"))
-    app.run(host="127.0.0.1", port=port, debug=False)
+    app.run(host=host, port=port, debug=False)
 
 
 if __name__ == "__main__":

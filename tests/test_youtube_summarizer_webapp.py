@@ -6,7 +6,7 @@ pytest.importorskip("flask")  # webapp.py needs the optional `web` extra install
 
 from youtube_summarizer.errors import VideoFetchError  # noqa: E402
 from youtube_summarizer.models import ChannelStats, VideoMetadata, VideoSummary  # noqa: E402
-from youtube_summarizer.webapp import app  # noqa: E402
+from youtube_summarizer.webapp import app, main  # noqa: E402
 
 METADATA = VideoMetadata(
     video_id="abc12345678",
@@ -160,3 +160,27 @@ def test_download_unknown_id_returns_404(client):
     response = client.get("/download/does-not-exist")
 
     assert response.status_code == 404
+
+
+def test_main_defaults_to_localhost_only(monkeypatch):
+    monkeypatch.delenv("HOST", raising=False)
+    monkeypatch.delenv("PORT", raising=False)
+    calls = {}
+    monkeypatch.setattr(app, "run", lambda **kwargs: calls.update(kwargs))
+
+    main()
+
+    assert calls["host"] == "127.0.0.1"
+    assert calls["port"] == 5000
+
+
+def test_main_honors_host_and_port_env_vars(monkeypatch):
+    monkeypatch.setenv("HOST", "0.0.0.0")
+    monkeypatch.setenv("PORT", "8080")
+    calls = {}
+    monkeypatch.setattr(app, "run", lambda **kwargs: calls.update(kwargs))
+
+    main()
+
+    assert calls["host"] == "0.0.0.0"
+    assert calls["port"] == 8080
