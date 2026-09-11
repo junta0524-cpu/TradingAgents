@@ -98,6 +98,8 @@ Game.Menu = (function () {
     if (state.view === 'spellTarget') return spellTargets(currentSpell()).length;
     if (state.view === 'items') return bag().length;
     if (state.view === 'itemTarget') return targetsFor(currentItem() && currentItem().def).length;
+    if (state.view === 'who') return 2;
+    if (state.view === 'strength') return 0;
     if (state.view === 'member') return Game.Data.EQUIP_SLOTS.length;
     if (state.view === 'gear') return gearChoicesFor(currentMember(), Game.Data.EQUIP_SLOTS[state.slotIndex]).length;
     return 0;
@@ -132,7 +134,9 @@ Game.Menu = (function () {
       else if (state.view === 'spell') { state.view = 'caster'; state.cursor = state.casterIndex; }
       else if (state.view === 'spellTarget') { state.view = 'spell'; state.cursor = state.spellIndex; }
       else if (state.view === 'itemTarget') { state.view = 'items'; state.cursor = state.itemIndex; }
-      else if (state.view === 'member') { state.view = 'status'; state.cursor = state.memberIndex; }
+      else if (state.view === 'who') { state.view = 'status'; state.cursor = state.memberIndex; }
+      else if (state.view === 'strength') { state.view = 'who'; state.cursor = 0; }
+      else if (state.view === 'member') { state.view = 'who'; state.cursor = 1; }
       else { state.view = 'member'; state.cursor = state.slotIndex; }
       return;
     }
@@ -145,8 +149,13 @@ Game.Menu = (function () {
       if (state.cursor === ITEM_ROW()) { state.view = 'items'; state.cursor = 0; return; }
       if (state.cursor === SPELL_ROW()) { state.view = 'caster'; state.cursor = 0; return; }
       state.memberIndex = state.cursor;
-      state.view = 'member';
+      state.view = 'who';
       state.cursor = 0;
+    } else if (state.view === 'who') {
+      state.view = state.cursor === 0 ? 'strength' : 'member';
+      state.cursor = 0;
+    } else if (state.view === 'strength') {
+      state.view = 'who'; state.cursor = 0;
     } else if (state.view === 'order') {
       // つかむ → 上下で動かす → もう一度押して置く
       state.holding = state.holding === state.cursor ? -1 : state.cursor;
@@ -329,6 +338,8 @@ Game.Menu = (function () {
     else if (state.view === 'spellTarget') drawSpellTargets(ctx, x, y, w, h);
     else if (state.view === 'items') drawItems(ctx, x, y, w, h);
     else if (state.view === 'itemTarget') drawItemTargets(ctx, x, y, w, h);
+    else if (state.view === 'who') drawWho(ctx, x, y, w, h);
+    else if (state.view === 'strength') drawStrength(ctx, x, y, w, h);
     else if (state.view === 'member') drawMember(ctx, x, y, w, h);
     else drawGearChoices(ctx, x, y, w, h);
 
@@ -520,6 +531,77 @@ Game.Menu = (function () {
   function statLine(m) {
     return 'こうげき ' + m.atk + '  しゅび ' + m.def + '  すばやさ ' + m.spd +
       '  まりょく ' + m.mag + '  うん ' + m.luck;
+  }
+
+  // 仲間を選んだあとの2択。ドラクエの「つよさ / そうび」
+  function drawWho(ctx, x, y, w, h) {
+    var m = currentMember();
+    Game.Renderer.drawText(ctx, m.name, x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, m.title || '', x + w - 16, y + 22,
+      { size: 12, align: 'right', color: '#a49b86' });
+    ['つよさ', 'そうび'].forEach(function (label, i) {
+      var sel = i === state.cursor;
+      Game.Renderer.drawText(ctx, (sel ? '▶ ' : '　') + label, x + 24, y + 70 + i * 26,
+        { size: 14, color: sel ? '#d4af5a' : '#ece7da' });
+    });
+    Game.Renderer.drawText(ctx, 'Z: えらぶ    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
+  }
+
+  // つよさ ― レベル・経験値・素の値と装備ぶんの内訳・覚えた呪文・装備の銘。
+  // これまで、この一式を見る場所がどこにも無かった。
+  function drawStrength(ctx, x, y, w, h) {
+    var m = currentMember();
+    Game.Renderer.drawText(ctx, m.name + ' の つよさ', x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, 'レベル ' + m.level, x + w - 16, y + 22,
+      { size: 13, align: 'right', color: '#ece7da' });
+
+    var ly = y + 50;
+    Game.Renderer.drawText(ctx, 'HP ' + m.hp + '/' + m.maxHp, x + 16, ly, { size: 13 });
+    if (m.maxMp > 0) Game.Renderer.drawText(ctx, 'MP ' + m.mp + '/' + m.maxMp, x + 150, ly, { size: 13 });
+    Game.Renderer.drawText(ctx, 'つぎのレベルまで ' + m.expToNext, x + w - 16, ly,
+      { size: 12, align: 'right', color: '#a49b86' });
+
+    // 素の値と、装備で足された分を分けて見せる
+    var STATS = [['こうげき', 'atk', 'baseAtk'], ['みのまもり', 'def', 'baseDef'],
+                 ['すばやさ', 'spd', 'baseSpd'], ['まりょく', 'mag', 'baseMag'],
+                 ['うんのよさ', 'luck', 'baseLuck']];
+    STATS.forEach(function (row, i) {
+      var yy = y + 82 + i * 21;
+      var base = m[row[2]] || 0, total = m[row[1]] || 0, gear = total - base;
+      Game.Renderer.drawText(ctx, row[0], x + 16, yy, { size: 13, color: '#a49b86' });
+      Game.Renderer.drawText(ctx, String(total), x + 150, yy, { size: 13, align: 'right' });
+      if (gear !== 0) {
+        Game.Renderer.drawText(ctx, (gear > 0 ? '(+' : '(') + gear + ')', x + 158, yy,
+          { size: 11, color: gear > 0 ? '#5fae5f' : '#d3807d' });
+      }
+    });
+
+    // 覚えている呪文・特技
+    var skills = Game.Party.learnedSkills(m).map(function (sk) { return sk.name; });
+    Game.Renderer.drawText(ctx, 'おぼえた じゅもん・とくぎ', x + 240, y + 82,
+      { size: 12, color: '#a49b86' });
+    if (skills.length === 0) {
+      Game.Renderer.drawText(ctx, '―', x + 240, y + 104, { size: 12, color: '#6b6354' });
+    } else {
+      skills.forEach(function (name, i) {
+        Game.Renderer.drawText(ctx, name, x + 240 + (i % 2) * 110, y + 104 + Math.floor(i / 2) * 19,
+          { size: 12 });
+      });
+    }
+
+    // 装備の銘。数字に出ない性質なので、ここで読めるようにしておく
+    var notes = [];
+    Game.Data.EQUIP_SLOTS.forEach(function (slot) {
+      var e = m.equip[slot] && Game.Data.Equipment[m.equip[slot]];
+      if (e && e.mei && e.mei.note) notes.push(e.name + ' … ' + e.mei.note);
+    });
+    if (notes.length) {
+      Game.Renderer.drawText(ctx, '銘', x + 16, y + h - 58, { size: 12, color: '#d4af5a' });
+      notes.slice(0, 2).forEach(function (t, i) {
+        Game.Renderer.drawText(ctx, t, x + 40, y + h - 58 + i * 18, { size: 11, color: '#a49b86' });
+      });
+    }
+    Game.Renderer.drawText(ctx, 'X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 
   function drawMember(ctx, x, y, w, h) {

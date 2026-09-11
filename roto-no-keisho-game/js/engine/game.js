@@ -199,17 +199,35 @@ Game.Core = (function () {
 
   // 章のタイトルと、いま何をすべきかを画面の隅に出しておく。
   // 「どこへ行けばいいのか分からない」が、遊び始めで最初に詰まる場所なので。
+  // 章題と目的は、地図に直接書くと現代のスマホRPGのクエスト表示に見える。
+  // 窓に入れて「画面の外側の情報」に見せる ―― ドラクエの窓と同じ枠を使う。
+  // 全16章それぞれに目的がある作りなので、消してしまうと何をすべきか分からなくなる。
   function drawChapterBanner() {
-    Game.Renderer.drawText(ctx, Game.Story.currentTitle(), 12, 20, { size: 12, color: '#d4af5a' });
-    // 月は世界の時計。いまどの相かで、魔物の出方も、開く道も変わる
+    var title = Game.Story.currentTitle();
+    var goal = Game.Story.currentGoal();
     var m = Game.Field.currentMap();
-    if (m && m.kind !== 'town') {
-      Game.Renderer.drawText(ctx, Game.Moon.label(), W - 12, 20,
+    var moon = (m && m.kind !== 'town') ? Game.Moon.label() : null;
+
+    var bw = Math.min(W - 16, Math.max(220, measure(title, 12) + 24,
+                                       goal ? measure('▶ ' + goal, 12) + 24 : 0));
+    var bh = goal ? 44 : 26;
+    Game.Renderer.drawPanel(ctx, 8, 6, bw, bh);
+    Game.Renderer.drawText(ctx, title, 20, 24, { size: 12, color: '#d4af5a' });
+    if (goal) Game.Renderer.drawText(ctx, '▶ ' + goal, 20, 42, { size: 12, color: '#ece7da' });
+
+    // 月は世界の時計。いまどの相かで、魔物の出方も、開く道も変わる
+    if (moon) {
+      var mw = measure(moon, 12) + 24;
+      Game.Renderer.drawPanel(ctx, W - 8 - mw, 6, mw, 26);
+      Game.Renderer.drawText(ctx, moon, W - 20, 24,
         { size: 12, align: 'right', color: Game.Moon.isFull() ? '#d4af5a' : '#a49b86' });
     }
-    var goal = Game.Story.currentGoal();
-    if (!goal) return;
-    Game.Renderer.drawText(ctx, '▶ ' + goal, 12, 38, { size: 12, color: '#ece7da' });
+  }
+
+  // 枠の幅を決めるための文字幅
+  function measure(text, size) {
+    ctx.font = size + 'px "Yu Gothic","Hiragino Sans",sans-serif';
+    return ctx.measureText(text || '').width;
   }
 
   function drawTitle() {
