@@ -4,7 +4,7 @@ var Game = window.Game || {};
 Game.Dialogue = (function () {
   // キューの各要素は { lines: [表示行...], cb: 送り終えた時に呼ぶ関数 or null }
   var queue = [];
-  // ドラクエの文字送り。1フレームに CHARS_PER_FRAME 文字ずつ出し、
+  // この手のRPGの文字送り。1フレームに CHARS_PER_FRAME 文字ずつ出し、
   // 出しきる前に決定を押したら、そのページを一気に全部出す(2度押しで次へ)。
   var shown = 0;                 // いま何文字まで出したか
   var CHARS_PER_FRAME = 0.9;

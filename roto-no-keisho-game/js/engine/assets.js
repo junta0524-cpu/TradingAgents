@@ -45,26 +45,26 @@ Game.Assets = (function () {
 
   // 人物のスプライト。1マス(32px)より背が高く、足元をマスの下端に合わせて描く。
   var SPRITE_W = 32, SPRITE_H = 48;
-  var CHAR_IDS = ['rota', 'elrode', 'celestia', 'garai',
+  var CHAR_IDS = ['alva', 'elrode', 'celestia', 'balga',
                   'npc_king', 'npc_soldier', 'npc_oldwoman', 'npc_smith',
                   'npc_noble', 'npc_scholar', 'npc_priestess', 'npc_fisher',
-                  'roula', 'vance', 'vance_fallen', 'barrows'];
+                  'leyla', 'vance', 'vance_fallen', 'barrows'];
 
   // 街の人がどのスプライトで立つか。無いものは今までどおり色の四角になる。
   var NPC_SPRITE = {
-    radatome_king: 'npc_king',
-    radatome_soldier: 'npc_soldier',
-    radatome_oldwoman: 'npc_oldwoman',
-    loureshia_roula: 'roula',
-    loureshia_smith: 'npc_smith',
-    loureshia_noble: 'npc_noble',
-    loureshia_garai: 'garai',
-    samaltria_elrode: 'elrode',
-    samaltria_vance: 'vance',
-    samaltria_librarian: 'npc_scholar',
-    moonbrook_celestia: 'celestia',
-    moonbrook_knight: 'npc_soldier',
-    moonbrook_priestess: 'npc_priestess',
+    tardome_king: 'npc_king',
+    tardome_soldier: 'npc_soldier',
+    tardome_oldwoman: 'npc_oldwoman',
+    valderia_leyla: 'leyla',
+    valderia_smith: 'npc_smith',
+    valderia_noble: 'npc_noble',
+    valderia_balga: 'balga',
+    selmaria_elrode: 'elrode',
+    selmaria_vance: 'vance',
+    selmaria_librarian: 'npc_scholar',
+    silvabruk_celestia: 'celestia',
+    silvabruk_knight: 'npc_soldier',
+    silvabruk_priestess: 'npc_priestess',
     cliff_elder: 'npc_oldwoman',
     cliff_fisher: 'npc_fisher',
   };

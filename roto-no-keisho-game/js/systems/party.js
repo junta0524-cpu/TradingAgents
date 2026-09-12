@@ -8,7 +8,7 @@ Game.Party = (function () {
   var inventory = [];  // 消耗品 [{id, count}]
   var gear = [];       // 所持している装備 [{id, count}](装備中のものは含まない)
   var gold = 60;
-  // いまの さくせん。既定は「めいれいさせろ」(自分で指図する)
+  // いまの さくせん。既定は「ひとりずつ さしずする」(自分で指図する)
   var tactic = 'manual';
 
   function equipDef(id) { return id ? Game.Data.Equipment[id] : null; }
@@ -189,7 +189,7 @@ Game.Party = (function () {
         var before = m.level;
         m.level += 1;
         var g = growthOf(m);
-        // ドラクエと同じで、レベルアップは全快させない。
+        // 定石どおりで、レベルアップは全快させない。
         // 上がった最大値のぶんだけ、いまの値も一緒に増える。
         // (全快させると消耗が一切たまらず、宿屋も道具も使う理由が無くなる)
         m.maxHp += g.hp; m.hp = Math.min(m.maxHp, m.hp + g.hp);
@@ -199,7 +199,7 @@ Game.Party = (function () {
         recalc(m);
         m.expToNext = Math.round(m.expToNext * 1.35);
         messages.push(m.name + 'は レベル' + m.level + 'に あがった!');
-        // ドラクエと同じで、上がった項目は1つずつ送る。
+        // 定石どおりで、上がった項目は1つずつ送る。
         // 7項目を1行に詰めると、何が伸びたのか読み取れないまま流れてしまう。
         [['さいだいHP', g.hp], ['さいだいMP', m.maxMp > 0 ? g.mp : 0],
          ['ちから', g.atk], ['みのまもり', g.def], ['すばやさ', g.spd],
@@ -282,7 +282,7 @@ Game.Party = (function () {
     return true;
   }
 
-  // 売値は買値の半額(DQ の慣例)。物語上の装備は売れない。
+  // 売値は買値の半額(当時のRPG の慣例)。物語上の装備は売れない。
   function sellPriceOf(def) { return Math.floor((def.price || 0) / 2); }
 
   function sellItem(itemId) {

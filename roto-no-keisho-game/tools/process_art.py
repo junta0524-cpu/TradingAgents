@@ -92,8 +92,8 @@ def zoom(img, f=8):
     return img.resize((img.width*f, img.height*f), Image.NEAREST)
 
 TILES = [("tile_grass","762d18d3-image.jpg"), ("tile_road","816fc95b-image.jpg")]
-CHARS = [("rota","de5a3ae3-image.jpg"), ("elrode","59a77a55-image.jpg"),
-         ("celestia","74dd9a06-image.jpg"), ("garai","44d84937-image.jpg"),
+CHARS = [("alva","de5a3ae3-image.jpg"), ("elrode","59a77a55-image.jpg"),
+         ("celestia","74dd9a06-image.jpg"), ("balga","44d84937-image.jpg"),
          ("npc_king","95ed5946-image.jpg")]
 
 os.makedirs("out32", exist_ok=True); os.makedirs("out48", exist_ok=True)
@@ -121,6 +121,6 @@ def contact(dirname, items, cellw, cellh, path):
         sheet.paste(zoom(bg.convert("RGB"), f), (x, 5)); x += cellw*f+10
     sheet.save(path)
 
-contact("out32", ["tile_grass","tile_road","rota","elrode","celestia","garai","npc_king"], 32, 32, "cmp32.png")
-contact("out48", ["rota","elrode","celestia","garai","npc_king"], 32, 48, "cmp48.png")
+contact("out32", ["tile_grass","tile_road","alva","elrode","celestia","balga","npc_king"], 32, 32, "cmp32.png")
+contact("out48", ["alva","elrode","celestia","balga","npc_king"], 32, 48, "cmp48.png")
 print("done")

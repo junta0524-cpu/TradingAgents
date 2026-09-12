@@ -1,8 +1,8 @@
-// ぼうけんのしょ ― ブラウザの localStorage に進行を記録する。
+// たびのきろく ― ブラウザの localStorage に進行を記録する。
 // 保存先が使えない環境(プライベートモード等)でも落ちないよう、すべて try/catch で包む。
 var Game = window.Game || {};
 Game.Save = (function () {
-  var KEY = 'roto-no-keisho.save.v1';
+  var KEY = 'alva-no-keisho.save.v1';
   var VERSION = 1;
 
   function storage() {

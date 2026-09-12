@@ -6,14 +6,14 @@ var Game = window.Game || {};
 Game.Data = Game.Data || {};
 
 Game.Data.Equipment = {
-  // ---- 剣(ロト)----
+  // ---- 剣(アルヴァ)----
   copper_sword: { id: 'copper_sword', name: '銅の剣', slot: 'weapon', kind: 'sword', atk: 8, price: 120 },
   iron_sword: { id: 'iron_sword', name: '鉄の剣', slot: 'weapon', kind: 'sword', atk: 18, price: 450 },
   steel_sword: { id: 'steel_sword', name: '鋼の剣', slot: 'weapon', kind: 'sword', atk: 32, price: 1200 },
   dragon_slayer: { id: 'dragon_slayer', name: '竜殺しの剣', slot: 'weapon', kind: 'sword', atk: 50, price: 3000 },
-  roto_sword: { id: 'roto_sword', name: 'ロトの剣', slot: 'weapon', kind: 'sword', atk: 72, price: 0, story: true },
+  alva_sword: { id: 'alva_sword', name: 'アルヴァの剣', slot: 'weapon', kind: 'sword', atk: 72, price: 0, story: true },
 
-  // ---- 大剣(ガライ)----
+  // ---- 大剣(バルガ)----
   iron_greatsword: { id: 'iron_greatsword', name: '鉄の大剣', slot: 'weapon', kind: 'greatsword', atk: 20, price: 500 },
   steel_greatsword: { id: 'steel_greatsword', name: '鋼の大剣', slot: 'weapon', kind: 'greatsword', atk: 38, price: 1400 },
   fangbreaker: { id: 'fangbreaker', name: '竜牙砕きの大剣', slot: 'weapon', kind: 'greatsword', atk: 58, price: 3500 },
@@ -42,7 +42,7 @@ Game.Data.Equipment = {
   wood_shield: { id: 'wood_shield', name: '木の盾', slot: 'shield', kind: 'shield', def: 4, price: 100 },
   iron_shield: { id: 'iron_shield', name: '鉄の盾', slot: 'shield', kind: 'shield', def: 10, price: 500 },
   steel_shield: { id: 'steel_shield', name: '鋼の盾', slot: 'shield', kind: 'shield', def: 18, price: 1500 },
-  roto_shield: { id: 'roto_shield', name: 'ロトの盾', slot: 'shield', kind: 'shield', def: 32, luck: 8, price: 0, story: true },
+  alva_shield: { id: 'alva_shield', name: 'アルヴァの盾', slot: 'shield', kind: 'shield', def: 32, luck: 8, price: 0, story: true },
 
   // ---- 兜 ----
   leather_helm: { id: 'leather_helm', name: '革の兜', slot: 'helmet', kind: 'helmet', def: 3, price: 80 },

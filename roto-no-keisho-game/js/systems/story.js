@@ -71,7 +71,7 @@ Game.Story = (function () {
   function isFinished() { return finished; }
   function currentTitle() {
     var ch = chapter();
-    return (finished || !ch) ? '― ロトの継承 完 ―' : ch.title;
+    return (finished || !ch) ? '― アルヴァの継承 完 ―' : ch.title;
   }
 
   function begin(modeChangeCb) {
@@ -193,7 +193,7 @@ Game.Story = (function () {
     if (!stage()) return;
     var npc = npcId && Game.Data.Npcs[npcId];
     if (!npc) {
-      Game.Dialogue.show(map.name + 'の 住人「ロトさま、道中お気をつけて」');
+      Game.Dialogue.show(map.name + 'の 住人「アルヴァさま、道中お気をつけて」');
       return;
     }
     // まだ仲間になっていない人物は、その場に居ないことにする

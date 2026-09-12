@@ -1,5 +1,5 @@
 // パーティメニュー ― フィールドで決定キーを押すと開く。
-// 状態確認・どうぐ袋・装備の付け替え・ぼうけんのしょへの記録をここから行う。
+// 状態確認・どうぐ袋・装備の付け替え・たびのきろくへの記録をここから行う。
 var Game = window.Game || {};
 Game.Menu = (function () {
   // view:
@@ -29,7 +29,7 @@ Game.Menu = (function () {
     return e ? { entry: e, def: Game.Data.Items[e.id] } : null;
   }
 
-  // 一覧の並びは「仲間… / じゅもん / どうぐ / ぼうけんのしょに きろくする」
+  // 一覧の並びは「仲間… / じゅもん / どうぐ / たびのきろくに きろくする」
   function SPELL_ROW() { return party().length; }
   function ITEM_ROW() { return party().length + 1; }
   function TACTIC_ROW() { return party().length + 2; }
@@ -47,7 +47,7 @@ Game.Menu = (function () {
   }
   function currentSpell() { return fieldSpells(caster())[state.spellIndex] || null; }
 
-  // その呪文を誰にかけるか。ザオラルは倒れている仲間だけ。
+  // その呪文を誰にかけるか。リヴァルは倒れている仲間だけ。
   function spellTargets(sk) {
     if (!sk) return [];
     if (sk.kind === 'revive') return Game.Party.deadList();
@@ -304,7 +304,7 @@ Game.Menu = (function () {
   function doSave() {
     close();
     Game.Dialogue.show(Game.Save.save()
-      ? 'ぼうけんのしょに きろくした。'
+      ? 'たびのきろくに きろくした。'
       : 'このブラウザでは きろくを のこせないようだ……');
   }
 
@@ -362,7 +362,7 @@ Game.Menu = (function () {
       Game.Renderer.drawText(ctx, 'MP', x + 206, ly + 20, { size: 11, color: '#a49b86' });
       Game.Renderer.drawBar(ctx, x + 232, ly + 12, 60, 8, m.maxMp ? m.mp / m.maxMp : 0, '#5c8ecf');
       Game.Renderer.drawText(ctx, m.mp + '/' + m.maxMp, x + 298, ly + 20, { size: 11, color: '#a49b86' });
-      // ドラクエ風に、こうげき・しゅび・すばやさ・まりょく・うんのよさ をすべて出す
+      // この手のRPG風に、こうげき・しゅび・すばやさ・まりょく・うんのよさ をすべて出す
       Game.Renderer.drawText(ctx, 'こうげき ' + m.atk + '   しゅび ' + m.def + '   すばやさ ' + m.spd,
         x + 340, ly + 4, { size: 11, color: '#a49b86' });
       Game.Renderer.drawText(ctx, 'まりょく ' + m.mag + '   うんのよさ ' + m.luck,
@@ -395,7 +395,7 @@ Game.Menu = (function () {
     Game.Renderer.drawText(ctx, '前の者ほど 狙われる', x + 190, rowY + 78, { size: 12, color: '#a49b86' });
 
     var saveSelected = state.cursor === SAVE_ROW();
-    Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'ぼうけんのしょに きろくする', x + 16, rowY + 104,
+    Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'たびのきろくに きろくする', x + 16, rowY + 104,
       { size: 14, color: saveSelected ? '#d4af5a' : '#ece7da' });
     Game.Renderer.drawText(ctx, 'Z: えらぶ    X: とじる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
@@ -421,7 +421,7 @@ Game.Menu = (function () {
 
   function drawTactics(ctx, x, y, w, h) {
     Game.Renderer.drawText(ctx, 'さくせん', x + 16, y + 22, { size: 15, color: '#d4af5a' });
-    Game.Renderer.drawText(ctx, '「めいれいさせろ」以外を選ぶと、戦闘では自分たちで動きます。',
+    Game.Renderer.drawText(ctx, '「ひとりずつ さしずする」以外を選ぶと、戦闘では自分たちで動きます。',
       x + 16, y + 46, { size: 12, color: '#a49b86' });
     var now = Game.Party.tactic();
     Game.Data.Tactics.forEach(function (t, i) {
@@ -533,7 +533,7 @@ Game.Menu = (function () {
       '  まりょく ' + m.mag + '  うん ' + m.luck;
   }
 
-  // 仲間を選んだあとの2択。ドラクエの「つよさ / そうび」
+  // 仲間を選んだあとの2択。この手のRPGの「つよさ / そうび」
   function drawWho(ctx, x, y, w, h) {
     var m = currentMember();
     Game.Renderer.drawText(ctx, m.name, x + 16, y + 22, { size: 15, color: '#d4af5a' });

@@ -1,6 +1,6 @@
 // 店・宿屋・教会 ― 街の施設タイルを踏んだときに開く画面。
 // kind: 'item'(道具屋) / 'gear'(武器防具屋) / 'inn'(宿屋) / 'church'(教会)
-//       'medal'(ちいさなメダルの引き換え所)
+//       'medal'(ちいさな徽章の引き換え所)
 var Game = window.Game || {};
 Game.Shop = (function () {
   var state = null;
@@ -23,8 +23,8 @@ Game.Shop = (function () {
     } else if (kind === 'medal') {
       var n = Game.Data.medalCount();
       Game.Dialogue.show(n
-        ? '好事家「ちいさなメダルを ' + n + 'まい お持ちですな。何と 換えましょう」'
-        : '好事家「わしは ちいさなメダルを 集めておってな。見つけたら 持ってきなされ」');
+        ? '好事家「ちいさな徽章を ' + n + 'まい お持ちですな。何と 換えましょう」'
+        : '好事家「わしは ちいさな徽章を 集めておってな。見つけたら 持ってきなされ」');
     }
   }
 
@@ -66,10 +66,10 @@ Game.Shop = (function () {
 
   function rootList() {
     // 教会は 売り買いではなく「記録」と「祈り」。
-    // ぼうけんのしょがメニューの奥にしか無いと、はじめての人は見つけられない。
+    // たびのきろくがメニューの奥にしか無いと、はじめての人は見つけられない。
     if (state.kind === 'church') {
       var rows = [
-        { id: 'save',   label: 'ぼうけんのしょに きろくする' },
+        { id: 'save',   label: 'たびのきろくに きろくする' },
         { id: 'church', label: 'たおれた仲間に いのる' },
       ];
       // 呪われている者がいるときだけ、この一行が増える
@@ -181,7 +181,7 @@ Game.Shop = (function () {
     if (state.cursor >= sellList().length) state.cursor = Math.max(0, sellList().length - 1);
   }
 
-  // 教会での記録。ドラクエで最初に覚える手続きなので、いちばん上に置いてある。
+  // 教会での記録。この手のRPGで最初に覚える手続きなので、いちばん上に置いてある。
   // 呪いを解く値段。強い品ほど 高くつく
   function cursePrice(entry) {
     return 120 + entry.member.level * 20;
@@ -206,7 +206,7 @@ Game.Shop = (function () {
     if (Game.Save.save()) {
       Game.Audio.play('save');
       Game.Dialogue.show('神官「ここまでの旅を 書き留めました」', function () {
-        Game.Dialogue.show('ぼうけんのしょに きろくした。');
+        Game.Dialogue.show('たびのきろくに きろくした。');
       });
     } else {
       Game.Dialogue.show('神官「……筆が 走りません。この地では 書き留められぬようです」');
@@ -304,7 +304,7 @@ Game.Shop = (function () {
 
   function drawMedals(ctx, x, y, w, h) {
     var have = Game.Data.medalCount();
-    Game.Renderer.drawText(ctx, 'ちいさなメダル ' + have + 'まい', x + 16, y + 50,
+    Game.Renderer.drawText(ctx, 'ちいさな徽章 ' + have + 'まい', x + 16, y + 50,
       { size: 14, color: '#d4af5a' });
     Game.Data.MedalPrizes.forEach(function (pz, i) {
       var ly = y + 78 + i * 22;

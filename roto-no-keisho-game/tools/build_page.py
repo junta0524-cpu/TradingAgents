@@ -105,13 +105,13 @@ for k in S['bgs']:
 
 ALL = S['tiles'] + S['chars'] + S['walk'] + S['npcs'] + S['bosses'] + \
       [k for ks in S['mobgroups'].values() for k in ks] + S['bgs']
-PRIORITY_A = S['tiles'] + ['rota','elrode','celestia','garai'] + S['bosses']
+PRIORITY_A = S['tiles'] + ['alva','elrode','celestia','balga'] + S['bosses']
 
 COMMON = """これから、ドット絵のゲーム素材をいくつか作ってもらいます。
 この会話の間は、以下のルールを常に守ってください。
 
 【目指す絵柄】
-スーパーファミコン期(1990年代前半)のドラゴンクエストのドット絵です。
+1990年代前半・16bit機(スーパーファミコン)の日本製ロールプレイングゲームの、フィールド画面のドット絵です。
 アイロンビーズで組めるくらい、1ドットが四角くはっきりしていて、粒の大きさが揃っている。
 「ドット絵風のイラスト」ではなく「本物のドット絵」を描いてください。
 
@@ -270,7 +270,7 @@ html = """<title>画素譜</title>
 
 <main id="top">
   <div class="titleblock">
-    <span class="eyebrow">ロトの継承 ― 画像素材仕様</span>
+    <span class="eyebrow">アルヴァの継承 ― 画像素材仕様</span>
     <h1>画素譜</h1>
     <p class="subtitle">Geminiにそのまま貼れる、110本のドット絵プロンプト</p>
     <p>ボタンを押すとプロンプトが丸ごとコピーされます。<strong>ルールも寸法も各プロンプトの中に書き込んであるので、1本ずつ単独で貼って使えます</strong>。書き換える箇所はありません。</p>
@@ -352,7 +352,7 @@ html = """<title>画素譜</title>
   </div>
   <div class="callout">
     <h3>受け取る側はもう用意できています</h3>
-    <p>コードは<strong>すでに歩行シートを探しに行く状態</strong>です。<code>chars/rota_walk_down.png</code> のように置けば、その人物のその向きだけ歩き出します。まだ無い向きは今の立ち絵のまま表示されるので、<strong>1枚ずつ、好きな順で足せます</strong>。</p>
+    <p>コードは<strong>すでに歩行シートを探しに行く状態</strong>です。<code>chars/alva_walk_down.png</code> のように置けば、その人物のその向きだけ歩き出します。まだ無い向きは今の立ち絵のまま表示されるので、<strong>1枚ずつ、好きな順で足せます</strong>。</p>
   </div>
   <div class="bulkbar">""" + bulk(S['walk'], '歩行シート12枚をまとめて') + """</div>
   <div class="scroll">
@@ -416,16 +416,16 @@ html = """<title>画素譜</title>
   <p class="lead">ファイル名はゲーム内部のIDに合わせてあります。この名前で送ってもらえれば自動で当たります。名前が違っても、どの素材か分かれば直せます。</p>
   <div class="prompt"><div class="prompt-head"><span class="pname">フォルダ構成</span>
     <button type="button" class="cbtn" data-k="__dir">コピー</button></div>
-    <pre>roto-no-keisho-game/assets/
+    <pre>alva-no-keisho-game/assets/
   tiles/      tile_grass.png  tile_road.png  …  (16枚, 32×32)
-  chars/      rota.png  elrode.png  celestia.png  garai.png  npc_*.png  (16枚, 32×48)
+  chars/      alva.png  elrode.png  celestia.png  balga.png  npc_*.png  (16枚, 32×48)
               *_walk_down / _up / _side.png  (12枚, 96×48 ＝ 32×48が3コマ)
   monsters/   chibi_slime.png  …  galoz.png  …  (59枚, 96×96 / ボスのみ160×160)
   bg/         battle_*.png  title.png  (6枚, 320×240で描いて640×480へ) ← すべて到着</pre></div>
   <p>用意できたものは絵に、まだのものは今の色面のまま ― という混在で動くようにします。順番も自由です。</p>
 
   <footer>
-    画素譜 ― 『ロトの継承』画像素材仕様(オリジナル二次創作構想) / ドラゴンクエストシリーズの世界観に着想を得たファン制作物です。
+    画素譜 ― 『アルヴァの継承』画像素材仕様(オリジナル二次創作構想) / 当時のコマンド式RPGの世界観に着想を得たファン制作物です。
   </footer>
 </main>
 

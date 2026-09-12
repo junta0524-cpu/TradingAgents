@@ -227,7 +227,7 @@ Game.Battle = (function () {
     return { dmg: out, note: note };
   }
 
-  // かいしんの一撃。うんのよさが高いほど出やすい(上限12%)。守備を無視して大きく入る。
+  // 渾身の一撃。うんのよさが高いほど出やすい(上限12%)。守備を無視して大きく入る。
   function isCritical(actor) {
     return Math.random() < Math.min(0.12, (actor.luck || 0) * 0.004);
   }
@@ -375,13 +375,13 @@ Game.Battle = (function () {
     }
 
     // 猛りが満ちているなら叩きつける。ここを書かないと、
-    // 「めいれいさせろ」以外の方針では一生使われない機能になる。
-    // 「いのちだいじに」は、まず仲間の傷を診てからにする。
+    // 「ひとりずつ さしずする」以外の方針では一生使われない機能になる。
+    // 「いのちをまもれ」は、まず仲間の傷を診てからにする。
     if (isFuming(actor) && actor.limit && foes.length && tactic !== 'careful') {
       return { kind: 'rage', target: foes[0] };
     }
 
-    // 手当て。「いのちだいじに」は早めに、「ガンガン」は瀕死のときだけ
+    // 手当て。「いのちをまもれ」は早めに、「ガンガン」は瀕死のときだけ
     var hurtLine = tactic === 'careful' ? 0.6 : 0.28;
     var weak = weakestAlly();
     if (tactic !== 'nomagic' && weak && hurtRatio(weak) <= hurtLine) {
@@ -393,7 +393,7 @@ Game.Battle = (function () {
     }
 
     // 相手が はぐれ者ばかりなら、技も呪文も通らない。
-    // 硬い体を破れるのは かいしんの一撃だけなので、素直に殴りにいく。
+    // 硬い体を破れるのは 渾身の一撃だけなので、素直に殴りにいく。
     var allMetal = foes.length > 0 && foes.every(function (e) { return e.metal; });
 
     // 攻めの技。魔物が2体以上なら全体がけを優先する
@@ -404,7 +404,7 @@ Game.Battle = (function () {
         if (wantAll) return sk.target === 'all_enemies';
         return sk.target !== 'all_enemies';
       }) || bestSkill(actor, function (sk) { return sk.kind === 'attack'; });
-      // MPを使い切らないよう、「いのちだいじに」は残り半分を切ったら唱えない
+      // MPを使い切らないよう、「いのちをまもれ」は残り半分を切ったら唱えない
       var spare = tactic === 'careful' ? mpLeft > 0.5 : mpLeft > 0.15;
       if (atk && spare) return { kind: 'skill', skill: atk, target: foes[0] };
     }
@@ -413,7 +413,7 @@ Game.Battle = (function () {
   }
 
   // 選んだ行動をこのラウンドの予約に積み、次の仲間へ回す。
-  // ドラクエと同じで、全員のコマンドを決めてからまとめて解決する。
+  // 定石どおりで、全員のコマンドを決めてからまとめて解決する。
   function queueAction(action) {
     var actor = currentActor();
     action.actorId = actor.id;
@@ -599,7 +599,7 @@ Game.Battle = (function () {
     return true;  // blind は行動はできる(命中が落ちる)
   }
 
-  // 前に立つ者ほど狙われる。ドラクエの隊列と同じで、
+  // 前に立つ者ほど狙われる。この手のRPGの隊列と同じで、
   // 並び順そのものが「誰に矢面へ立ってもらうか」という判断になる。
   var ROW_WEIGHT = [10, 6, 3, 2];
   function pickPartyTarget(alive) {
@@ -613,7 +613,7 @@ Game.Battle = (function () {
     return alive[alive.length - 1];
   }
 
-  // ボスの大技。全体攻撃だけでなく、痛恨の一撃と 状態異常も持てるようにする。
+  // ボスの大技。全体攻撃だけでなく、必殺の一打と 状態異常も持てるようにする。
   // 「まだ余裕がある」と思っていたところへ痛恨が入る ―― あの怖さが山場を作る。
   // ボスも雑魚も、同じ仕組みで技を使う。
   // 「呪術師もどき」が殴るだけ、という状態を無くすためにここを共通化した。
@@ -815,16 +815,16 @@ Game.Battle = (function () {
       if (!target) return;
     }
     var crit = isCritical(actor);
-    // かいしんの一撃は守備力を無視するので、damageOf に def:0 を渡す
+    // 渾身の一撃は守備力を無視するので、damageOf に def:0 を渡す
     var raw = crit ? Math.round(damageOf(effAtk(actor), 0) * 1.4) : damageOf(effAtk(actor), effDef(target));
-    // はぐれ者は何を当てても通らないが、かいしんの一撃だけは別。
-    // ドラクエでメタルを狩るのが「会心待ち」になるのは、この一行のため。
+    // はぐれ者は何を当てても通らないが、渾身の一撃だけは別。
+    // この手のRPGでメタルを狩るのが「会心待ち」になるのは、この一行のため。
     var hit = (crit && target.metal)
       ? { dmg: raw, note: ' 硬い体を 貫いた!' }
       : applyResistance(target, 'physical', raw);
     var dmg = hit.dmg;
     target.curHp = Math.max(0, target.curHp - dmg);
-    if (crit) say('かいしんの いちげき!!', function () { Game.Fx.critical(); });
+    if (crit) say('こんしんの いちげき!!', function () { Game.Fx.critical(); });
     say(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ' + hit.note, fxEnemyHurt(target, dmg));
     if (target.curHp <= 0) say(target.label + 'を たおした!', vanish(target));
   }
@@ -847,7 +847,7 @@ Game.Battle = (function () {
       return;
     }
     var avgEnemySpd = alive.reduce(function (s, e) { return s + e.spd; }, 0) / Math.max(1, alive.length);
-    // 素早さは装備とピオリム/ボミオスを込みで見る(ここだけ生の値を読んでいた)
+    // 素早さは装備とセルタ/トルドを込みで見る(ここだけ生の値を読んでいた)
     var success = Math.random() < (0.5 + (effSpd(actor) - avgEnemySpd) * 0.03);
     if (success) {
       a.fled = true;
@@ -911,7 +911,7 @@ Game.Battle = (function () {
       foes.forEach(function (t) {
         if (!t || t.curHp <= 0) return;
         // 状態異常と同じで、弱体にも耐性がある。ボスは弾きやすい。
-        // これが無いと、ルカニを2回唱えるだけで どのボスも守備が底に張りついた。
+        // これが無いと、フラギを2回唱えるだけで どのボスも守備が底に張りついた。
         var odds = (skill.chance || 0.75) * Game.Data.resistanceOf(t, 'ailment');
         if (t.boss) odds *= 0.5;
         if (Math.random() > odds) { state.log.push(t.label + 'には きかなかった!'); return; }
@@ -1072,7 +1072,7 @@ Game.Battle = (function () {
     return flashCache[key];
   }
 
-  // 魔物の並び。ドラクエと同じで、みんな同じ地面の線に足を揃えて立たせる。
+  // 魔物の並び。定石どおりで、みんな同じ地面の線に足を揃えて立たせる。
   var GROUND_Y = 226;           // この高さに足元が来る(下の窓と重ならない位置)
   var MOB_H = 96, BOSS_H = 160; // 素材のドット数(絵が無いときは丸の直径として使う)
 
@@ -1127,7 +1127,7 @@ Game.Battle = (function () {
 
       Game.Renderer.drawText(ctx, e.label || e.name, cx, GROUND_Y + 17, { align: 'center', size: 11 });
       // 魔物の残りHPは見せない。「あと何発で倒せるか」が分からないことが
-      // ドラクエの戦闘の緊張そのものなので、ここは数えさせる。
+      // この手のRPGの戦闘の緊張そのものなので、ここは数えさせる。
       if ((state.menu === 'target' || state.menu === 'ragetarget') && aliveEnemies()[state.cursor] === e) {
         Game.Renderer.drawText(ctx, '▼', cx, GROUND_Y - size - 6, { align: 'center', size: 18, color: '#d4af5a' });
       }
@@ -1169,7 +1169,7 @@ Game.Battle = (function () {
       if (st) Game.Renderer.drawText(ctx, st.short, x + cardW - 8, y + 18, { size: 11, align: 'right', color: st.color });
       // 猛りが満ちた者に「猛」の一文字。数字も棒も出さない
       else if (isFuming(m)) Game.Renderer.drawText(ctx, '猛', x + cardW - 8, y + 18, { size: 12, align: 'right', color: '#d4af5a' });
-      // ドラクエは棒グラフを使わない。数字だけを並べる。
+      // この手のRPGは棒グラフを使わない。数字だけを並べる。
       // 残りが「あと何発ぶんか」を自分で数えることが、緊張のもとになっている。
       var low = m.hp <= m.maxHp * 0.25;
       Game.Renderer.drawText(ctx, 'HP', x + 10, y + 42, { size: 12, color: '#a49b86' });
@@ -1191,7 +1191,7 @@ Game.Battle = (function () {
     // コマンドメニュー(現在の行動者ぶんのみ)
     var menuY = H - 84, menuH = 76;
     if (state.phase === 'command' && state.menu === 'main') {
-      // ドラクエの戦闘コマンドは、左下の小さな窓に縦一列。
+      // この手のRPGの戦闘コマンドは、左下の小さな窓に縦一列。
       // 横いっぱいの帯に2列で並べていたので、左右キーが要るうえ間延びしていた。
       var mainList = currentMenuList();
       var mw = 150, mh = 22 + mainList.length * 19;

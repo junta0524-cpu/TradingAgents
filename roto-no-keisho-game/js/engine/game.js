@@ -25,7 +25,7 @@ Game.Core = (function () {
   }
 
   // 場面に合った曲へ。町と野外は同じ「フィールド」扱いにせず、
-  // 町に入ったら落ち着いた曲に変える(ドラクエで街に着いたときのあの感じ)。
+  // 町に入ったら落ち着いた曲に変える(この手のRPGで街に着いたときのあの感じ)。
   function updateBgm() {
     if (mode === 'title') { Game.Audio.bgm('title'); return; }
     if (mode === 'ending') { Game.Audio.bgm('ending'); return; }
@@ -58,12 +58,12 @@ Game.Core = (function () {
   function continueGame() {
     if (!Game.Save.load(onModeChange)) { startNewGame(); return; }
     mode = 'field';
-    Game.Dialogue.show('ぼうけんのしょから 旅を再開した。');
+    Game.Dialogue.show('たびのきろくから 旅を再開した。');
   }
 
-  // 全滅したときの扱い。DQ にならって、いちばん近い町の教会で目を覚ます。
+  // 全滅したときの扱い。当時のRPG にならって、いちばん近い町の教会で目を覚ます。
   // 傷は神官がすべて癒してくれるが、そのぶん所持金の半分を置いていくことになる。
-  // 罰はHPではなく金で受ける ―― これがドラクエの死の重さの付け方で、
+  // 罰はHPではなく金で受ける ―― これがこの手のRPGの死の重さの付け方で、
   // 稼いだ金がそのまま「失いたくないもの」として効いてくる。
   function onPartyWiped() {
     var map = Game.Field.currentMap();
@@ -200,7 +200,7 @@ Game.Core = (function () {
   // 章のタイトルと、いま何をすべきかを画面の隅に出しておく。
   // 「どこへ行けばいいのか分からない」が、遊び始めで最初に詰まる場所なので。
   // 章題と目的は、地図に直接書くと現代のスマホRPGのクエスト表示に見える。
-  // 窓に入れて「画面の外側の情報」に見せる ―― ドラクエの窓と同じ枠を使う。
+  // 窓に入れて「画面の外側の情報」に見せる ―― この手のRPGの窓と同じ枠を使う。
   // 全16章それぞれに目的がある作りなので、消してしまうと何をすべきか分からなくなる。
   function drawChapterBanner() {
     var title = Game.Story.currentTitle();
@@ -254,7 +254,7 @@ Game.Core = (function () {
       ctx.fillRect(0, H - 64, W, 64);
     }
 
-    Game.Renderer.drawText(ctx, 'ロトの継承', W / 2, H / 2 - 70, { align: 'center', size: 32, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, 'アルヴァの継承', W / 2, H / 2 - 70, { align: 'center', size: 32, color: '#d4af5a' });
     Game.Renderer.drawText(ctx, '― 三国建国記 ―', W / 2, H / 2 - 40, { align: 'center', size: 14, color: '#a49b86' });
 
     var opts = titleOptions();
@@ -276,8 +276,8 @@ Game.Core = (function () {
   function drawEnding() {
     ctx.fillStyle = '#171b2b';
     ctx.fillRect(0, 0, W, H);
-    Game.Renderer.drawText(ctx, '― ロトの継承 完 ―', W / 2, H / 2 - 30, { align: 'center', size: 26, color: '#d4af5a' });
-    Game.Renderer.drawText(ctx, 'この物語は、百年後の「ムーンブルク王国陥落」へと続いていく。', W / 2, H / 2 + 20, { align: 'center', size: 13, color: '#a49b86' });
+    Game.Renderer.drawText(ctx, '― アルヴァの継承 完 ―', W / 2, H / 2 - 30, { align: 'center', size: 26, color: '#d4af5a' });
+    Game.Renderer.drawText(ctx, 'この物語は、百年後の「シルヴァブルク王国陥落」へと続いていく。', W / 2, H / 2 + 20, { align: 'center', size: 13, color: '#a49b86' });
   }
 
   function loop() {

@@ -39,8 +39,8 @@ Game.Data.Treasures = {
   ritual_ring:   { kind: 'gear', id: 'power_ring' },
 };
 
-// ---- ちいさなメダル ----
-// 使い道は無いが、集めればローレシアの好事家が珍しいものと換えてくれる。
+// ---- ちいさな徽章 ----
+// 使い道は無いが、集めればヴァルデリアの好事家が珍しいものと換えてくれる。
 // 行き止まりや遠回りの先に置いてあり、寄り道の理由そのものになっている。
 Game.Data.Treasures.medal_ogre    = { kind: 'item', id: 'chiisana_medal', count: 1 };
 Game.Data.Treasures.medal_tower   = { kind: 'item', id: 'chiisana_medal', count: 1 };

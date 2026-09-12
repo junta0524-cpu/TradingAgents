@@ -129,7 +129,7 @@ Game.Renderer = (function () {
     ctx.stroke();
   }
 
-  // ドラクエの窓。真っ黒のベタ塗りに、白い枠を二重に入れる。
+  // この手のRPGの窓。真っ黒のベタ塗りに、白い枠を二重に入れる。
   // 半透明にすると後ろの地図が透けて「窓」に見えなくなるので、中は不透明。
   function drawPanel(ctx, x, y, w, h) {
     ctx.save();

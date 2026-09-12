@@ -82,7 +82,7 @@ Game.Field = (function () {
     return row[x];
   }
 
-  // トヘロスの効き目。残り歩数のあいだ、弱い魔物は寄ってこない。
+  // サンクトの効き目。残り歩数のあいだ、弱い魔物は寄ってこない。
   var wardLeft = 0;
   function wardSteps(n) { wardLeft = Math.max(wardLeft, n || 0); }
 
