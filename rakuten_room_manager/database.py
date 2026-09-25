@@ -93,6 +93,20 @@ def init_db() -> None:
         """
     )
 
+    # ---------------------------------------------------------------
+    # 参考投稿ライブラリ（ユーザーが手動でコピーして保存した「良い投稿」の実例）
+    # ---------------------------------------------------------------
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS reference_posts (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            content     TEXT NOT NULL,             -- 投稿文の本文（手動でコピーしたもの）
+            note        TEXT DEFAULT '',           -- なぜ良いと思ったかのメモ（任意）
+            created_at  TEXT DEFAULT (datetime('now', 'localtime'))
+        )
+        """
+    )
+
     conn.commit()
     conn.close()
 
@@ -289,5 +303,76 @@ def set_day_tracker(day_date: str, photo_posted: bool, like_follow_done: bool) -
         """,
         (day_date, int(photo_posted), int(like_follow_done)),
     )
+    conn.commit()
+    conn.close()
+
+
+# =============================================================================
+# 参考投稿ライブラリ（reference_posts）関連の関数
+# =============================================================================
+#
+# 楽天の規約でスクレイピング（投稿の自動収集）は禁止されているため、
+# ここに保存する投稿はすべてユーザー自身が目で見て、手動でコピー&ペーストしたものに限る。
+# あくまで「良い投稿の書き方の参考」として、紹介文の指示文作成時にAIへ渡すために使う。
+
+def insert_reference_post(content: str, note: str = "") -> int:
+    """
+    参考にしたい投稿の本文をライブラリに1件追加する。
+    戻り値: 追加した行のID。
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO reference_posts (content, note) VALUES (?, ?)",
+        (content, note),
+    )
+    conn.commit()
+    new_id = cur.lastrowid
+    conn.close()
+    return new_id
+
+
+def get_all_reference_posts() -> pd.DataFrame:
+    """保存済みの参考投稿を全件、新しい順（id降順）で取得する。"""
+    conn = get_connection()
+    df = pd.read_sql_query(
+        "SELECT * FROM reference_posts ORDER BY id DESC", conn
+    )
+    conn.close()
+    return df
+
+
+def get_reference_posts_by_ids(ids: list[int]) -> list[dict]:
+    """指定したID群の参考投稿を取得する（紹介文の指示文作成時に使用）。"""
+    if not ids:
+        return []
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in ids)
+    cur.execute(
+        f"SELECT * FROM reference_posts WHERE id IN ({placeholders})", ids
+    )
+    rows = [dict(row) for row in cur.fetchall()]
+    conn.close()
+    return rows
+
+
+def update_reference_post(post_id: int, content: str, note: str) -> None:
+    """参考投稿の内容・メモを更新する。"""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE reference_posts SET content = ?, note = ? WHERE id = ?",
+        (content, note, post_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_reference_post(post_id: int) -> None:
+    """参考投稿をライブラリから削除する。"""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM reference_posts WHERE id = ?", (post_id,))
     conn.commit()
     conn.close()

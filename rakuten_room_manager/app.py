@@ -85,6 +85,7 @@ page = st.sidebar.radio(
         "🔍 商品検索",
         "📦 商品管理",
         "✨ 紹介文AIジェネレーター",
+        "📚 参考投稿ライブラリ",
         "📅 ランク維持トラッカー",
         "⚙️ 設定",
     ],
@@ -278,8 +279,27 @@ elif page == "✨ 紹介文AIジェネレーター":
             height=120,
         )
 
+        # 「参考投稿ライブラリ」に保存済みの投稿があれば、文体の参考として選べるようにする
+        reference_df = db.get_all_reference_posts()
+        selected_reference_ids = []
+        if not reference_df.empty:
+            st.markdown("**参考にしたい投稿（任意）**")
+            st.caption("「📚 参考投稿ライブラリ」に保存した投稿から、文体・構成の参考にしたいものを選べます（コピーはされず、型だけ参考にする指示になります）。")
+            reference_options = {
+                f"ID:{row.id} - {row.content[:20]}...": row.id
+                for row in reference_df.itertuples()
+            }
+            selected_reference_labels = st.multiselect(
+                "参考にする投稿を選択（複数可・未選択でもOK）",
+                list(reference_options.keys()),
+            )
+            selected_reference_ids = [reference_options[label] for label in selected_reference_labels]
+        else:
+            st.caption("「📚 参考投稿ライブラリ」に投稿を保存すると、ここで文体の参考として選べるようになります。")
+
         if st.button("📝 指示文を作成する", type="primary"):
-            st.session_state["ai_prompt"] = build_prompt(product, appeal_points)
+            reference_posts = db.get_reference_posts_by_ids(selected_reference_ids)
+            st.session_state["ai_prompt"] = build_prompt(product, appeal_points, reference_posts)
 
         if "ai_prompt" in st.session_state:
             st.markdown("---")
@@ -302,6 +322,57 @@ elif page == "✨ 紹介文AIジェネレーター":
                     st.success("紹介文を保存しました（商品管理画面からも確認できます）。")
                 else:
                     st.warning("貼り付けられた紹介文が空です。")
+
+
+# =============================================================================
+# ページ: 参考投稿ライブラリ
+# =============================================================================
+
+elif page == "📚 参考投稿ライブラリ":
+    st.header("📚 参考投稿ライブラリ")
+    st.write("文体・構成の参考にしたい「良い投稿」を保存しておく場所です。紹介文を作成するときに参考例として選べます。")
+    st.warning(
+        "⚠️ 楽天の規約でスクレイピング（投稿の自動収集）は禁止されています。"
+        "ここに保存する投稿は、必ずあなた自身が楽天ROOMなどで実際に見て、"
+        "手動でコピー&ペーストしたものに限ってください。"
+    )
+
+    with st.form("add_reference_form", clear_on_submit=True):
+        new_content = st.text_area(
+            "参考にしたい投稿の本文をコピー&ペーストしてください",
+            height=150,
+            placeholder="良いと思った投稿の文章をそのまま貼り付けてください",
+        )
+        new_note = st.text_input(
+            "この投稿のどこが良いと思ったか（任意）",
+            placeholder="例: 冒頭の問いかけが引き込まれる、絵文字の使い方が自然 など",
+        )
+        submitted = st.form_submit_button("📚 ライブラリに保存", type="primary")
+
+    if submitted:
+        if new_content.strip():
+            db.insert_reference_post(new_content.strip(), new_note.strip())
+            st.success("参考投稿を保存しました。")
+            st.rerun()
+        else:
+            st.warning("投稿の本文が空です。")
+
+    st.markdown("---")
+    st.subheader("保存済みの参考投稿")
+
+    reference_df = db.get_all_reference_posts()
+    if reference_df.empty:
+        st.info("まだ参考投稿が登録されていません。上のフォームから追加してください。")
+    else:
+        for row in reference_df.itertuples():
+            with st.container(border=True):
+                st.markdown(row.content)
+                if row.note:
+                    st.caption(f"💡 {row.note}")
+                if st.button("🗑️ 削除", key=f"delete_ref_{row.id}"):
+                    db.delete_reference_post(row.id)
+                    st.success("削除しました。")
+                    st.rerun()
 
 
 # =============================================================================
