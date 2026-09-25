@@ -8,9 +8,18 @@ app.py
 楽天の利用規約（自動投稿・スクレイピングの禁止）を遵守するため、本アプリは
 以下の3つに機能を限定している。
   1. 楽天公式APIを使った商品情報の「取得」と、SQLiteでの「管理」
-  2. LLM（OpenAI/Anthropic）を使った紹介文の「ドラフト生成補助」
+  2. 紹介文の「指示文（プロンプト）作成補助」（AI呼び出し自体は行わない）
   3. ランク維持のための活動記録（ToDo管理）
 楽天ROOMへの自動投稿や、楽天サイトのスクレイピングは一切行わない。
+
+【紹介文AI機能について】
+本アプリはOpenAIやAnthropicなどのAPIを自動で呼び出すことはしない
+（呼び出すたびに料金が発生するため）。代わりに、AIチャットに貼り付けるための
+指示文（プロンプト）を作成する機能のみを提供する。ユーザーは普段使っている
+Claude.aiやChatGPT（無料枠でもよい）にその指示文を自分でコピー&ペーストし、
+出てきた紹介文をこのアプリに貼り戻して保存する。これにより追加のAPI利用料は
+一切かからない。
+
 生成された紹介文や取得した情報は、必ずユーザー自身が確認したうえで
 手動で楽天ROOMアプリ／サイトに投稿することを前提としている。
 
@@ -26,7 +35,7 @@ import streamlit as st
 
 import database as db
 from rakuten_api import search_items, RakutenAPIError
-from ai_generator import generate_caption, AIGeneratorError
+from ai_generator import build_prompt
 
 # .env ファイルがあれば読み込む（python-dotenv）。無くてもエラーにはしない。
 try:
@@ -232,17 +241,17 @@ elif page == "📦 商品管理":
 
 elif page == "✨ 紹介文AIジェネレーター":
     st.header("✨ 紹介文AIジェネレーター")
-    st.write("商品情報と、あなたの感想・アピールポイントから楽天ROOM向けの紹介文ドラフトを生成します。")
-
-    provider = db.get_setting("llm_provider", "OpenAI")
-    api_key = get_effective_setting(
-        "openai_api_key" if provider == "OpenAI" else "anthropic_api_key",
-        "OPENAI_API_KEY" if provider == "OpenAI" else "ANTHROPIC_API_KEY",
+    st.write(
+        "商品情報と、あなたの感想・アピールポイントから「AIに渡す指示文」を作成します。"
+        "このアプリ自体はAIを自動で呼び出さないので、追加の利用料金は一切かかりません。"
     )
-
-    st.caption(f"現在の生成プロバイダ: **{provider}**（変更は「⚙️ 設定」画面から）")
-    if not api_key:
-        st.warning(f"{provider} のAPIキーが未設定です。「⚙️ 設定」画面から入力してください。")
+    st.info(
+        "**使い方**\n"
+        "1. 下で商品と感想を入力し、「指示文を作成する」を押す\n"
+        "2. 表示された指示文をコピーする（右上のコピーアイコンが使えます）\n"
+        "3. 普段使っているClaude.aiやChatGPTなど（無料のもので構いません）のチャット画面に貼り付ける\n"
+        "4. 出てきた紹介文をコピーし、下の入力欄に貼り付けて保存する"
+    )
 
     products_df = db.get_all_products()
     if products_df.empty:
@@ -269,36 +278,30 @@ elif page == "✨ 紹介文AIジェネレーター":
             height=120,
         )
 
-        if st.button("✨ 紹介文を生成する", type="primary"):
-            if not api_key:
-                st.error(f"{provider} のAPIキーが設定されていません。")
-            else:
-                try:
-                    with st.spinner("紹介文を生成しています..."):
-                        caption = generate_caption(
-                            provider=provider,
-                            api_key=api_key,
-                            product=product,
-                            appeal_points=appeal_points,
-                        )
-                    st.session_state["generated_caption"] = caption
-                except AIGeneratorError as exc:
-                    st.error(str(exc))
+        if st.button("📝 指示文を作成する", type="primary"):
+            st.session_state["ai_prompt"] = build_prompt(product, appeal_points)
 
-        if "generated_caption" in st.session_state:
+        if "ai_prompt" in st.session_state:
             st.markdown("---")
-            st.subheader("生成された紹介文（ドラフト）")
-            edited_caption = st.text_area(
-                "内容を確認し、必要に応じて編集してから保存・コピーしてください",
-                value=st.session_state["generated_caption"],
+            st.subheader("① この指示文をコピーしてAIチャットに貼り付けてください")
+            # st.code は右上にコピー用のアイコンが表示されるため、コピー&ペーストがしやすい
+            st.code(st.session_state["ai_prompt"], language=None)
+
+            st.subheader("② AIから返ってきた紹介文をここに貼り付けてください")
+            pasted_caption = st.text_area(
+                "紹介文を貼り付け",
                 height=200,
-                key="caption_editor",
+                key="caption_paste_area",
+                placeholder="ここにAIチャットの回答をコピー&ペーストしてください",
             )
             st.caption("⚠️ この文章は下書きです。内容を必ず確認し、手動で楽天ROOMに投稿してください（自動投稿は行いません）。")
 
             if st.button("💾 この商品に紐づけて保存"):
-                db.update_product_fields(selected_id, generated_caption=edited_caption)
-                st.success("紹介文を保存しました（商品管理画面からも確認できます）。")
+                if pasted_caption.strip():
+                    db.update_product_fields(selected_id, generated_caption=pasted_caption)
+                    st.success("紹介文を保存しました（商品管理画面からも確認できます）。")
+                else:
+                    st.warning("貼り付けられた紹介文が空です。")
 
 
 # =============================================================================
@@ -368,10 +371,9 @@ elif page == "📅 ランク維持トラッカー":
 
 elif page == "⚙️ 設定":
     st.header("⚙️ 設定")
-    st.write("各種APIキーを設定します。ここで入力した値はSQLiteデータベースに保存され、次回起動時も保持されます。")
+    st.write("楽天のアプリケーションIDを設定します。ここで入力した値はSQLiteデータベースに保存され、次回起動時も保持されます。")
     st.caption(
-        "環境変数（RAKUTEN_APP_ID / OPENAI_API_KEY / ANTHROPIC_API_KEY）が設定されている場合は、"
-        "こちらの入力が空欄のときのフォールバックとして使用されます。"
+        "環境変数（RAKUTEN_APP_ID）が設定されている場合は、こちらの入力が空欄のときのフォールバックとして使用されます。"
     )
 
     st.subheader("楽天ウェブサービス")
@@ -387,27 +389,10 @@ elif page == "⚙️ 設定":
         st.success("保存しました。")
 
     st.markdown("---")
-    st.subheader("紹介文生成AI（LLM）")
-
-    current_provider = db.get_setting("llm_provider", "OpenAI")
-    provider_input = st.selectbox(
-        "利用するAIプロバイダ",
-        ["OpenAI", "Anthropic"],
-        index=["OpenAI", "Anthropic"].index(current_provider) if current_provider in ["OpenAI", "Anthropic"] else 0,
+    st.subheader("紹介文生成AIについて")
+    st.write(
+        "紹介文の生成は「⚙️ 設定」でのAPIキー登録は不要です。"
+        "「✨ 紹介文AIジェネレーター」画面で指示文を作成し、"
+        "普段お使いのClaude.aiやChatGPT（無料枠でも構いません）にコピー&ペーストして使う方式のため、"
+        "追加のAPI利用料は一切かかりません。"
     )
-
-    current_openai_key = db.get_setting("openai_api_key", "")
-    current_anthropic_key = db.get_setting("anthropic_api_key", "")
-
-    openai_key_input = st.text_input(
-        "OpenAI APIキー", value=current_openai_key, type="password"
-    )
-    anthropic_key_input = st.text_input(
-        "Anthropic APIキー", value=current_anthropic_key, type="password"
-    )
-
-    if st.button("AI設定を保存", type="primary"):
-        db.set_setting("llm_provider", provider_input)
-        db.set_setting("openai_api_key", openai_key_input)
-        db.set_setting("anthropic_api_key", anthropic_key_input)
-        st.success("保存しました。")

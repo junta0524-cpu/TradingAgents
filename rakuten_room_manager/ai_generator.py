@@ -2,34 +2,33 @@
 """
 ai_generator.py
 -----------------------------------------------------------------------------
-商品情報とユーザーの感想・アピールポイントをもとに、
-楽天ROOM投稿用の紹介文をLLM（OpenAI または Anthropic）で生成するモジュール。
+商品情報とユーザーの感想・アピールポイントから、
+楽天ROOM投稿用の紹介文を作ってもらうための「指示文（プロンプト）」を組み立てるモジュール。
 
-このモジュールはあくまで「紹介文のドラフト（下書き）生成の補助」を行うのみで、
-生成した文章を楽天ROOMへ自動投稿することは一切行わない。
-生成された文章は必ずユーザー自身が内容を確認し、手動で投稿することを想定している。
+【このアプリでの紹介文生成の方式について】
+自動でAPI（OpenAIやAnthropicなど）を呼び出すと、使うたびに料金が発生する。
+そこで本アプリでは、あえて自動呼び出しは行わず、
+「指示文を作る → ユーザーが普段使っているClaude.aiやChatGPT（無料枠でもOK）に
+自分でコピー&ペーストする → 出てきた紹介文をアプリに貼り戻して保存する」
+という手動コピペ方式を採用している。これにより追加のAPI利用料が一切かからない。
 """
 
-from openai import OpenAI
-import anthropic
 
-# デフォルトで使用するモデル名（設定画面で変更可能）
-DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
-DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5"
-
-
-class AIGeneratorError(Exception):
-    """紹介文生成に失敗した場合に送出する例外。"""
-    pass
-
-
-def _build_prompt(product: dict, appeal_points: str) -> str:
+def build_prompt(product: dict, appeal_points: str) -> str:
     """
-    LLMに渡すプロンプト（指示文）を組み立てる。
+    ChatGPTやClaudeなどのAIチャットに貼り付けるための指示文（プロンプト）を組み立てる。
 
-    商品情報（商品名・価格・ショップ名）と、ユーザーが入力した
-    「簡単な感想・アピールポイント」を組み合わせ、
-    楽天ROOM向けの紹介文の生成条件を明示的に指示する。
+    Parameters
+    ----------
+    product : dict
+        商品情報の辞書（item_name, price, shop_name等を含む）。
+    appeal_points : str
+        ユーザーが入力した感想・アピールポイント。
+
+    Returns
+    -------
+    str
+        AIチャットにそのままコピー&ペーストして使える指示文。
     """
     item_name = product.get("item_name", "")
     price = product.get("price", 0)
@@ -58,80 +57,3 @@ def _build_prompt(product: dict, appeal_points: str) -> str:
 紹介文本文のみを出力し、前置きや説明文は含めないでください。
 """
     return prompt.strip()
-
-
-def generate_caption(
-    provider: str,
-    api_key: str,
-    product: dict,
-    appeal_points: str,
-    model: str | None = None,
-) -> str:
-    """
-    紹介文を生成するメイン関数。
-
-    Parameters
-    ----------
-    provider : str
-        "OpenAI" または "Anthropic"。
-    api_key : str
-        使用するLLMプロバイダのAPIキー。
-    product : dict
-        商品情報の辞書（item_name, price, shop_name等を含む）。
-    appeal_points : str
-        ユーザーが入力した感想・アピールポイント。
-    model : str, optional
-        使用するモデル名。未指定時はプロバイダごとのデフォルトモデルを使用する。
-
-    Returns
-    -------
-    str
-        生成された紹介文。
-    """
-    if not api_key:
-        raise AIGeneratorError(
-            f"{provider} のAPIキーが設定されていません。設定画面から入力してください。"
-        )
-
-    prompt = _build_prompt(product, appeal_points)
-
-    if provider == "OpenAI":
-        return _generate_with_openai(api_key, prompt, model or DEFAULT_OPENAI_MODEL)
-    elif provider == "Anthropic":
-        return _generate_with_anthropic(api_key, prompt, model or DEFAULT_ANTHROPIC_MODEL)
-    else:
-        raise AIGeneratorError(f"未対応のプロバイダです: {provider}")
-
-
-def _generate_with_openai(api_key: str, prompt: str, model: str) -> str:
-    """OpenAI APIを利用して紹介文を生成する。"""
-    try:
-        client = OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "あなたは優秀な日本語のSNSマーケティングライターです。"},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.8,
-            max_tokens=600,
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as exc:  # OpenAI SDKの例外を包んで扱いやすくする
-        raise AIGeneratorError(f"OpenAI APIの呼び出しに失敗しました: {exc}") from exc
-
-
-def _generate_with_anthropic(api_key: str, prompt: str, model: str) -> str:
-    """Anthropic APIを利用して紹介文を生成する。"""
-    try:
-        client = anthropic.Anthropic(api_key=api_key)
-        response = client.messages.create(
-            model=model,
-            max_tokens=600,
-            temperature=0.8,
-            system="あなたは優秀な日本語のSNSマーケティングライターです。",
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response.content[0].text.strip()
-    except Exception as exc:  # Anthropic SDKの例外を包んで扱いやすくする
-        raise AIGeneratorError(f"Anthropic APIの呼び出しに失敗しました: {exc}") from exc
