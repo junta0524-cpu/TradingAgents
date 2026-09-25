@@ -87,6 +87,7 @@ Game.Story = (function () {
     openedChests = {};
     progress = { talked: {}, defeated: 0, lit: 0 };
     flags = {};
+    Game.Field.resetVisited();
     enterChapter();
   }
 

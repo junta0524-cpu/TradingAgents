@@ -24,6 +24,10 @@ Game.Assets = (function () {
     'I': 'tiles/tile_inn.png',
     'H': 'tiles/tile_church.png',
     'K': 'tiles/tile_throne.png',
+    // 大陸の地形
+    ',': 'tiles/tile_woods.png',
+    '^': 'tiles/tile_mountain.png',
+    '_': 'tiles/tile_waste.png',
   };
 
   // 戦闘背景とタイトル画面。キャンバスと同じ 640×480 で持つ。
@@ -85,8 +89,20 @@ Game.Assets = (function () {
   var WALK_DIRS = ['down', 'up', 'side'];
   var WALK_FRAMES = 3;
 
+  // 大陸の上の入口の絵。入口のマスはどれも 'E' なので、種類(記号)ごとに引き分ける
+  var WORLD_ICON_FILES = {
+    '城': 'tiles/world_castle.png',
+    '街': 'tiles/world_town.png',
+    '村': 'tiles/world_village.png',
+    '塔': 'tiles/world_tower.png',
+    '洞': 'tiles/world_cave.png',
+    '陣': 'tiles/world_camp.png',
+    '渦': 'tiles/world_vortex.png',
+  };
+
   function load() {
     Object.keys(TILE_FILES).forEach(function (ch) { tryLoad(TILE_FILES[ch]); });
+    Object.keys(WORLD_ICON_FILES).forEach(function (g) { tryLoad(WORLD_ICON_FILES[g]); });
     CHAR_IDS.forEach(function (id) {
       tryLoad('chars/' + id + '.png');
       WALK_DIRS.forEach(function (d) { tryLoad('chars/' + id + '_walk_' + d + '.png'); });
@@ -122,10 +138,16 @@ Game.Assets = (function () {
     var p = TILE_FILES[ch];
     return p ? images[p] || null : null;
   }
+  // まだ届いていなければ null。描く側は一文字の記号で代える
+  function worldIcon(glyph) {
+    var p = WORLD_ICON_FILES[glyph];
+    return p ? images[p] || null : null;
+  }
   function sprite(id) { return id ? images['chars/' + id + '.png'] || null : null; }
   function spriteForNpc(npcId) { return sprite(NPC_SPRITE[npcId]); }
 
   return {
+    worldIcon: worldIcon,
     load: load, tile: tile, sprite: sprite, spriteForNpc: spriteForNpc,
     walkSheet: walkSheet, WALK_FRAMES: WALK_FRAMES,
     bg: bg, battleBg: battleBg,

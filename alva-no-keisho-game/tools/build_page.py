@@ -103,9 +103,22 @@ for k in S['bgs']:
         '<td><code>%s</code></td>' % PATH[k],
     ])
 
-ALL = S['tiles'] + S['chars'] + S['walk'] + S['npcs'] + S['bosses'] + \
+world_rows = ''
+for k in S['world']:
+    m = S['worldmeta'][k]
+    world_rows += row(k, [
+        '<td class="glyph">%s</td>' % esc(m['glyph']),
+        '<td>%s</td>' % esc(m['use']),
+        '<td><code>%s</code></td>' % PATH[k],
+    ])
+
+ALL = S['tiles'] + S['world'] + S['chars'] + S['walk'] + S['npcs'] + S['bosses'] + \
       [k for ks in S['mobgroups'].values() for k in ks] + S['bgs']
-PRIORITY_A = S['tiles'] + ['alva','elrode','celestia','balga'] + S['bosses']
+# 大陸の記号も「まず要る分」に入れる。大陸は画面にいちばん長く映るので
+PRIORITY_A = S['tiles'] + S['world'] + ['alva','elrode','celestia','balga'] + S['bosses']
+
+# 枚数は数えて出す。手で書いていたら「17枚」「110本」と 実物(16枚・109本)からずれていた
+N_TILES, N_WORLD, N_ALL = len(S['tiles']), len(S['world']), len(ALL)
 
 COMMON = """これから、ドット絵のゲーム素材をいくつか作ってもらいます。
 この会話の間は、以下のルールを常に守ってください。
@@ -264,7 +277,7 @@ html = """<title>画素譜</title>
 
 <nav class="catbar">
   <a href="#top">TOP</a><a href="#start">はじめに貼る</a><a href="#sum">必要枚数</a>
-  <a href="#tiles">タイル</a><a href="#chars">キャラ</a><a href="#walk">歩行アニメ</a><a href="#npc">町の人</a>
+  <a href="#tiles">タイル</a><a href="#world">大陸の記号</a><a href="#chars">キャラ</a><a href="#walk">歩行アニメ</a><a href="#npc">町の人</a>
   <a href="#boss">ボス</a><a href="#mons">雑魚</a><a href="#bg">背景</a><a href="#deliver">納品</a>
 </nav>
 
@@ -272,7 +285,7 @@ html = """<title>画素譜</title>
   <div class="titleblock">
     <span class="eyebrow">アルヴァの継承 ― 画像素材仕様</span>
     <h1>画素譜</h1>
-    <p class="subtitle">Geminiにそのまま貼れる、110本のドット絵プロンプト</p>
+    <p class="subtitle">Geminiにそのまま貼れる、""" + str(N_ALL) + """本のドット絵プロンプト</p>
     <p>ボタンを押すとプロンプトが丸ごとコピーされます。<strong>ルールも寸法も各プロンプトの中に書き込んであるので、1本ずつ単独で貼って使えます</strong>。書き換える箇所はありません。</p>
   </div>
 
@@ -289,7 +302,7 @@ html = """<title>画素譜</title>
     <p>1024×1024のような大きいままで構いません。<strong>ニアレストネイバーでの縮小、マゼンタの透過抜き、パレット整理、ゲームへの組み込みはこちらで処理します</strong>。1枚届いた時点で組み込めるので、全部揃うのを待つ必要もありません。</p>
   </div>
 
-  <h2 id="sum"><span class="n">02</span>必要枚数 ― 全110枚</h2>
+  <h2 id="sum"><span class="n">02</span>必要枚数 ― 全""" + str(N_ALL) + """枚</h2>
   <div class="bulkbar">
     """ + bulk(PRIORITY_A, 'まず要る分だけコピー') + """
     """ + bulk(ALL, '全部コピー') + """
@@ -299,7 +312,8 @@ html = """<title>画素譜</title>
   <table>
     <thead><tr><th>区分</th><th>枚数</th><th>1枚の寸法</th><th>優先</th><th>無いとどうなるか</th></tr></thead>
     <tbody>
-      <tr><td>マップのタイル</td><td>17</td><td>32×32</td><td>A</td><td>いまは色のべた塗り。ここが一番印象を変える</td></tr>
+      <tr><td>マップのタイル</td><td>""" + str(N_TILES) + """</td><td>32×32</td><td>A</td><td>いまは色のべた塗り。ここが一番印象を変える</td></tr>
+      <tr><td>大陸の記号(城・街・洞窟…)</td><td>""" + str(N_WORLD) + """</td><td>32×32</td><td>A</td><td>いまは 城/街/洞 の一文字。大陸でどこが何かを見分ける手がかり</td></tr>
       <tr><td>パーティ4人(立ち絵)</td><td>4</td><td>32×32</td><td>A</td><td>いまは金色の丸ひとつ</td></tr>
       <tr><td>歩行アニメ(4人×3向き)</td><td>12</td><td>96×48</td><td>A</td><td>隊列は組むが、全員つっ立ったまま滑る</td></tr>
       <tr><td>ボス</td><td>5</td><td>160×160</td><td>A</td><td>いまは赤い丸。章の山場なので優先</td></tr>
@@ -310,13 +324,25 @@ html = """<title>画素譜</title>
   </table>
   </div>
 
-  <h2 id="tiles"><span class="n">03</span>マップのタイル ― 17枚</h2>
+  <h2 id="tiles"><span class="n">03</span>マップのタイル ― """ + str(N_TILES) + """枚</h2>
   <p class="lead">すべて32×32。マップは32pxの升目で敷き詰めるので、<strong>四辺どこで繋いでも継ぎ目が見えないこと</strong>を各プロンプトで指定してあります。色は今の画面の色をそのまま指定値に入れてあります。</p>
-  <div class="bulkbar">""" + bulk(S['tiles'], 'タイル17枚をまとめて') + """</div>
+  <div class="bulkbar">""" + bulk(S['tiles'], 'タイル' + str(N_TILES) + '枚をまとめて') + """</div>
   <div class="scroll">
   <table>
     <thead><tr><th>記号</th><th>用途</th><th>指定色</th><th>納品ファイル名</th><th></th></tr></thead>
     <tbody>""" + tile_rows + """</tbody>
+  </table>
+  </div>
+
+  <h2 id="world"><span class="n">03b</span>大陸の記号 ― """ + str(N_WORLD) + """枚</h2>
+  <p class="lead">大陸の上に立つ 城・街・洞窟の入口です。当時のRPGと同じく、建物を<strong>1マスの小さな絵</strong>で示します。
+  どれも同じ「門」だと、大陸を見渡してもどこが町でどこが洞窟か分からないので、<strong>種類ごとに1枚ずつ</strong>。
+  まわりは草原にして、隣の草原タイルと地続きに見えるよう指定してあります。</p>
+  <div class="bulkbar">""" + bulk(S['world'], '大陸の記号' + str(N_WORLD) + '枚をまとめて') + """</div>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>記号</th><th>何の記号か</th><th>納品ファイル名</th><th></th></tr></thead>
+    <tbody>""" + world_rows + """</tbody>
   </table>
   </div>
 
@@ -417,7 +443,8 @@ html = """<title>画素譜</title>
   <div class="prompt"><div class="prompt-head"><span class="pname">フォルダ構成</span>
     <button type="button" class="cbtn" data-k="__dir">コピー</button></div>
     <pre>alva-no-keisho-game/assets/
-  tiles/      tile_grass.png  tile_road.png  …  (16枚, 32×32)
+  tiles/      tile_grass.png  tile_road.png  …  (""" + str(N_TILES) + """枚, 32×32)
+              world_castle.png  world_town.png  …  (""" + str(N_WORLD) + """枚, 32×32 ・ 大陸の記号)
   chars/      alva.png  elrode.png  celestia.png  balga.png  npc_*.png  (16枚, 32×48)
               *_walk_down / _up / _side.png  (12枚, 96×48 ＝ 32×48が3コマ)
   monsters/   chibi_gel.png  …  galoz.png  …  (59枚, 96×96 / ボスのみ160×160)

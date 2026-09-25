@@ -98,6 +98,7 @@ Game.Menu = (function () {
     if (state.view === 'spellTarget') return spellTargets(currentSpell()).length;
     if (state.view === 'items') return bag().length;
     if (state.view === 'itemTarget') return targetsFor(currentItem() && currentItem().def).length;
+    if (state.view === 'warp') return Game.Field.warpTargets().length;
     if (state.view === 'who') return 2;
     if (state.view === 'strength') return 0;
     if (state.view === 'member') return Game.Data.EQUIP_SLOTS.length;
@@ -134,6 +135,11 @@ Game.Menu = (function () {
       else if (state.view === 'spell') { state.view = 'caster'; state.cursor = state.casterIndex; }
       else if (state.view === 'spellTarget') { state.view = 'spell'; state.cursor = state.spellIndex; }
       else if (state.view === 'itemTarget') { state.view = 'items'; state.cursor = state.itemIndex; }
+      else if (state.view === 'warp') {
+        // 行き先を選ばずに戻った。羽根もMPも まだ使っていない
+        if (state.warpBy === 'item') { state.view = 'items'; state.cursor = state.itemIndex; }
+        else { state.view = 'spell'; state.cursor = state.spellIndex; }
+      }
       else if (state.view === 'who') { state.view = 'status'; state.cursor = state.memberIndex; }
       else if (state.view === 'strength') { state.view = 'who'; state.cursor = 0; }
       else if (state.view === 'member') { state.view = 'who'; state.cursor = 1; }
@@ -151,6 +157,10 @@ Game.Menu = (function () {
       state.memberIndex = state.cursor;
       state.view = 'who';
       state.cursor = 0;
+    } else if (state.view === 'warp') {
+      var dest = Game.Field.warpTargets()[state.cursor];
+      if (!dest) return;
+      doWarp(dest);
     } else if (state.view === 'who') {
       state.view = state.cursor === 0 ? 'strength' : 'member';
       state.cursor = 0;
@@ -252,6 +262,7 @@ Game.Menu = (function () {
   function castField(sk, target) {
     var m = caster();
     if (!m || m.mp < sk.mp) { close(); Game.Dialogue.show('MPが たりない。'); return; }
+    if (sk.effect === 'warp') { openWarp('spell'); return; }
     m.mp -= sk.mp;
     var say = m.name + 'は ' + sk.name + 'を となえた!';
     var result = '';
@@ -279,8 +290,10 @@ Game.Menu = (function () {
       }
     } else if (sk.kind === 'field') {
       if (sk.effect === 'exit') {
-        Game.Field.resetToStart();
-        result = '入り口まで もどってきた。';
+        // エクセは洞窟や塔の中からだけ。外で唱えても何も起こらない
+        result = Game.Field.escapeDungeon()
+          ? '光に つつまれ、外へ 抜け出した。'
+          : 'しかし なにも おこらなかった。';
       } else if (sk.effect === 'ward_steps') {
         Game.Field.wardSteps(sk.power || 100);
         result = '弱い魔物が よってこなくなった。';
@@ -293,12 +306,52 @@ Game.Menu = (function () {
     Game.Dialogue.show(say, function () { Game.Dialogue.show(result); });
   }
 
-  // 帰還の羽根 ― いま居るマップの入り口まで一気に戻る
+  // 帰還の羽根 ― 一度訪れた町へ ひとっとび。行き先を選んでから羽根を使う
   function useOnField(picked) {
-    Game.Party.consumeItem(picked.entry.id);
-    Game.Field.resetToStart();
+    if (picked.def.kind === 'return') { openWarp('item'); return; }
+  }
+
+  // ---- ひとっとび(リガル / 帰還の羽根) ----
+  // 行き先の一覧を開く。飛べない場所・行き先が無いときは、何も払わずに理由を言う
+  function openWarp(by) {
+    if (!Game.Field.canWarp()) {
+      close();
+      Game.Dialogue.show(by === 'item'
+        ? '羽根を 空へ かざした! しかし 天井に 頭を ぶつけた。'
+        : 'しかし 天井に 頭を ぶつけた!');
+      return;
+    }
+    if (Game.Field.warpTargets().length === 0) {
+      close();
+      Game.Dialogue.show('まだ どこへも 飛んでいけない。(一度 入った町へ 飛べる)');
+      return;
+    }
+    state.warpBy = by;
+    state.view = 'warp';
+    state.cursor = 0;
+  }
+
+  // 行き先が決まってから、はじめて羽根を使い、MPを払う
+  function doWarp(dest) {
+    var say;
+    if (state.warpBy === 'item') {
+      var picked = currentItem();
+      if (!picked) { close(); return; }
+      Game.Party.consumeItem(picked.entry.id);
+      say = picked.def.name + 'を 空へ かざした!';
+    } else {
+      var m = caster(), sk = currentSpell();
+      if (!m || !sk || m.mp < sk.mp) { close(); Game.Dialogue.show('MPが たりない。'); return; }
+      m.mp -= sk.mp;
+      say = m.name + 'は ' + sk.name + 'を となえた!';
+    }
     close();
-    Game.Dialogue.show(picked.def.name + 'を 空へ かざした! ひとっとびで 入り口まで もどった。');
+    Game.Fx.fade(10, 6);
+    Game.Field.warpTo(dest.id);
+    Game.Audio.play('spell');
+    Game.Dialogue.show(say, function () {
+      Game.Dialogue.show('ひとっとびで ' + dest.name + 'の 門前に 降り立った。');
+    });
   }
 
   function doSave() {
@@ -314,7 +367,7 @@ Game.Menu = (function () {
     if (def.kind === 'heal_mp') return 'MPを ' + def.power + ' かいふく';
     if (def.kind === 'revive') return 'たおれた仲間を いきかえらせる';
     if (def.kind === 'ward') return 'つぎの状態異常を 一度だけ 防ぐ';
-    if (def.kind === 'return') return 'マップの 入り口へ もどる';
+    if (def.kind === 'return') return '一度 入った町へ ひとっとび';
     if (def.kind === 'cure') {
       return (def.cures || []).map(function (c) { return Game.Data.Statuses[c].name; }).join('・') + 'を なおす';
     }
@@ -338,6 +391,7 @@ Game.Menu = (function () {
     else if (state.view === 'spellTarget') drawSpellTargets(ctx, x, y, w, h);
     else if (state.view === 'items') drawItems(ctx, x, y, w, h);
     else if (state.view === 'itemTarget') drawItemTargets(ctx, x, y, w, h);
+    else if (state.view === 'warp') drawWarp(ctx, x, y, w, h);
     else if (state.view === 'who') drawWho(ctx, x, y, w, h);
     else if (state.view === 'strength') drawStrength(ctx, x, y, w, h);
     else if (state.view === 'member') drawMember(ctx, x, y, w, h);
@@ -473,8 +527,24 @@ Game.Menu = (function () {
     if (sk.kind === 'heal') return sk.target === 'all_allies' ? '全員のHPを かいふく' : 'HPを かいふく';
     if (sk.kind === 'cure') return (sk.cures || []).map(function (c) { return Game.Data.Statuses[c].name; }).join('・') + 'を なおす';
     if (sk.kind === 'revive') return 'たおれた仲間を 生きかえらせる';
-    if (sk.kind === 'field') return sk.effect === 'exit' ? 'マップの 入り口へ もどる' : '弱い魔物が よってこなくなる';
+    if (sk.kind === 'field') {
+      if (sk.effect === 'exit') return '洞窟や塔から 外へ 抜け出す';
+      if (sk.effect === 'warp') return '一度 入った町へ ひとっとび';
+      return '弱い魔物が よってこなくなる';
+    }
     return '';
+  }
+
+  // 行き先の一覧。訪れた順に並ぶ
+  function drawWarp(ctx, x, y, w, h) {
+    var head = state.warpBy === 'item' ? '帰還の羽根 ― どこへ 飛ぶ?' : 'リガル ― どこへ 飛ぶ?';
+    Game.Renderer.drawText(ctx, head, x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    Game.Field.warpTargets().forEach(function (d, i) {
+      var sel = i === state.cursor;
+      Game.Renderer.drawText(ctx, (sel ? '▶ ' : '　') + d.name, x + 16, y + 60 + i * 30,
+        { size: 14, color: sel ? '#d4af5a' : '#ece7da' });
+    });
+    Game.Renderer.drawText(ctx, 'Z: とぶ    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 
   function drawSpellTargets(ctx, x, y, w, h) {

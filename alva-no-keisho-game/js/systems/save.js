@@ -21,6 +21,9 @@ Game.Save = (function () {
       story: Game.Story.serialize(),
       field: { mapId: map ? map.id : null, x: pos.x, y: pos.y },
       moon: Game.Moon.serialize(),
+      // 訪れた町。リガルの行き先と、全滅したときに目を覚ます町
+      visited: Game.Field.visitedList(),
+      lastTown: Game.Field.lastTown(),
     };
     try {
       s.setItem(KEY, JSON.stringify(data));
@@ -65,9 +68,15 @@ Game.Save = (function () {
     if (!data) return false;
     if (!Game.Party.deserialize(data.party)) return false;
     Game.Moon.restore(data.moon);
+    Game.Field.setVisited(data.visited, data.lastTown);
     Game.Story.resume(data.story, modeChangeCb);
     if (data.field && data.field.mapId) {
       var map = Game.Field.currentMap();
+      // 記録は教会で ―― つまり町の中で とることが多い。
+      // resume は章の門前(大陸の上)に立たせるので、町の中で記録していたなら
+      // その町の中へ入り直す。これをしないと、大陸の反対側で目を覚ますことがある
+      if (map && map.id !== data.field.mapId) Game.Field.restoreInside(data.field.mapId);
+      map = Game.Field.currentMap();
       // 記録時と同じマップにいる場合だけ、立ち位置まで戻す
       if (map && map.id === data.field.mapId) Game.Field.setPosition(data.field.x, data.field.y);
     }

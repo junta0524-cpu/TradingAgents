@@ -44,6 +44,11 @@ Game.Renderer = (function () {
         // 玉座のように、そのマス自身の絵があるものはそれを使い、無ければ街の床に落とす。
         var img = Game.Assets.tile(ch);
         if (!img && def.isNpc) img = Game.Assets.tile('F');
+        // 大陸の入口は、城・街・洞窟…と種類ごとに絵が違う
+        if (def.isEntrance) {
+          var ei = map.entranceAt && map.entranceAt[x + ',' + y];
+          img = (ei && Game.Assets.worldIcon(ei.glyph)) || img;
+        }
         if (img) {
           ctx.drawImage(img, px, py, TILE, TILE);
         } else {

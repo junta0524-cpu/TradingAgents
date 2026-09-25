@@ -44,10 +44,23 @@ Game.Field = (function () {
     moveFrom = null;
     moveSpan = 0;
     moveCooldown = 0;
+    queuedDir = null;
+  }
+
+  // 足を踏み入れた町・城。リガルと帰還の羽根の行き先になる。
+  // 並びは訪れた順 ―― 行き先の一覧も その順に出す
+  var visited = [];
+  var lastTown = null;   // いちばん最近 入った町。全滅したら ここの教会で目を覚ます
+
+  function markVisited(m) {
+    if (!m || m.kind !== 'town') return;
+    if (visited.indexOf(m.id) === -1) visited.push(m.id);
+    lastTown = m.id;
   }
 
   function load(mapId, cbs) {
     map = Game.Data.Maps[mapId];
+    markVisited(map);
     px = map.startX; py = map.startY;
     // 呼び出し側が省略したときは、直前のイベント一式をそのまま使う
     callbacks = cbs && Object.keys(cbs).length ? cbs : callbacks;
@@ -92,6 +105,56 @@ Game.Field = (function () {
     worldReturn = { x: px, y: py };
     return e;
   }
+
+  // ---- リガル / 帰還の羽根 ----
+  // 行き先は 訪れたことがあって、しかも大陸の上に門がある町だけ
+  function warpTargets() {
+    return visited.filter(function (id) { return !!entranceOf(id); }).map(function (id) {
+      var e = entranceOf(id);
+      return { id: id, name: e.name };
+    });
+  }
+
+  // 洞窟や塔の中では飛べない。天井に頭をぶつけるだけ ―― 当時のRPGのお約束
+  function canWarp() { return !!map && map.kind !== 'dungeon'; }
+
+  // 飛んだ先は その町の門前(大陸の上)。中へは自分で入ってもらう
+  function warpTo(mapId) {
+    standAtEntrance(mapId, null);
+    Game.Core.updateBgm();
+  }
+
+  // エクセ。ダンジョンの中からだけ、大陸の上の その入口の前へ出る
+  function escapeDungeon() {
+    if (!map || map.kind !== 'dungeon') return false;
+    if (!entranceOf(map.id)) { resetToStart(); return true; }
+    standAtEntrance(map.id, null);
+    Game.Core.updateBgm();
+    return true;
+  }
+
+  // 記録を読み込んだとき、町の中で記録していたなら その町の中へ戻す。
+  // 門前から入り直す形にしておけば、出たときに正しい門の前に立てる
+  function restoreInside(mapId) {
+    if (!entranceOf(mapId)) return false;
+    standAtEntrance(mapId, null);
+    enterFrom(mapId, null);
+    return true;
+  }
+
+  // 全滅したとき、最後に入った町の中で目を覚ます。まだどこにも入っていなければ null
+  function wakeInLastTown() {
+    if (!lastTown || !entranceOf(lastTown)) return null;
+    restoreInside(lastTown);
+    return Game.Data.Maps[lastTown];
+  }
+
+  function visitedList() { return visited.slice(); }
+  function setVisited(list, last) {
+    visited = (list || []).filter(function (id) { return !!Game.Data.Maps[id]; });
+    lastTown = last && Game.Data.Maps[last] ? last : (visited[visited.length - 1] || null);
+  }
+  function resetVisited() { visited = []; lastTown = null; }
 
   function walkableAt(x, y) {
     var d = Game.Data.TileDefs[tileAt(x, y)];
@@ -207,16 +270,33 @@ Game.Field = (function () {
     return true;
   }
 
+  // 軽く叩いた方向キーを1つだけ覚えておく。
+  // 押しっぱなしだけを見ていると、1フレームより短い「ちょん押し」や、
+  // 一歩のあいだ(や壁にぶつかった直後)に押した向きが まるごと消える ――
+  // 隣の人のほうへ向き直ろうとして、振り向かないことがあった。
+  var queuedDir = null;
+  var DIRS = ['up', 'down', 'left', 'right'];
+
+  function heldDir() {
+    for (var i = 0; i < DIRS.length; i++) if (Game.Input.isDown(DIRS[i])) return DIRS[i];
+    return null;
+  }
+  function tappedDir() {
+    for (var i = 0; i < DIRS.length; i++) if (Game.Input.wasPressed(DIRS[i])) return DIRS[i];
+    return null;
+  }
+
   function update() {
     if (!map) return;
+    var tap = tappedDir();
+    if (tap) queuedDir = tap;
     if (moveCooldown > 0) { moveCooldown--; return; }
 
-    var dx = 0, dy = 0;
-    if (Game.Input.isDown('up')) dy = -1;
-    else if (Game.Input.isDown('down')) dy = 1;
-    else if (Game.Input.isDown('left')) dx = -1;
-    else if (Game.Input.isDown('right')) dx = 1;
-    if (dx === 0 && dy === 0) return;
+    var dir = heldDir() || queuedDir;
+    queuedDir = null;
+    if (!dir) return;
+    var dx = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
+    var dy = dir === 'up' ? -1 : dir === 'down' ? 1 : 0;
 
     var nx = px + dx, ny = py + dy;
     // 進めなくても、向きだけは変わる。当時のRPGと同じで、壁や人に向かって
@@ -365,6 +445,10 @@ Game.Field = (function () {
     __visual: visualPos,   // 検証用: 画面上のいまの位置(小数)
     update: update, draw: draw, interact: interact,
     enterFrom: enterFrom, returnToWorld: returnToWorld,
+    warpTargets: warpTargets, canWarp: canWarp, warpTo: warpTo,
+    escapeDungeon: escapeDungeon, restoreInside: restoreInside, wakeInLastTown: wakeInLastTown,
+    visitedList: visitedList, setVisited: setVisited, resetVisited: resetVisited,
+    lastTown: function () { return lastTown; },
     entranceOf: entranceOf, standAtEntrance: standAtEntrance,
     // 検証用: いまの地域の出現表
     __table: function () { return tableHere(); },

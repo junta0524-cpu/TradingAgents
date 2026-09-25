@@ -1,11 +1,13 @@
 // 店の品揃え ― 街ごとに扱う商品を変え、物語が進むほど良い装備が並ぶようにしている。
 // 物語で手に入る装備(story: true)は店には並ばない。
+// 帰還の羽根は どの町の道具屋にも置く。大陸を行き来する手段なので、
+// 一軒でしか買えないと、そこへ戻るために大陸を歩いて横切ることになる。
 var Game = window.Game || {};
 Game.Data = Game.Data || {};
 
 Game.Data.Shops = {
   tardome: {
-    item: ['yakusou', 'dokukeshi', 'mezame_no_ha'],
+    item: ['yakusou', 'dokukeshi', 'mezame_no_ha', 'kikan_no_hane'],
     gear: ['copper_sword', 'wood_staff', 'wood_bow', 'cloth_robe', 'wood_shield', 'leather_helm'],
   },
   valderia_town: {
@@ -14,18 +16,18 @@ Game.Data.Shops = {
            'leather_armor', 'chainmail', 'iron_shield', 'iron_helm', 'power_ring'],
   },
   selmaria_town: {
-    item: ['yakusou', 'jokyu_yakusou', 'mahou_no_mi', 'seisui', 'kago_no_gofu', 'phoenix_no_shizuku'],
+    item: ['yakusou', 'jokyu_yakusou', 'mahou_no_mi', 'seisui', 'kago_no_gofu', 'phoenix_no_shizuku', 'kikan_no_hane'],
     gear: ['silver_staff', 'sage_staff', 'chainmail', 'steel_shield', 'sage_glasses', 'spirit_earring',
            'emberward_cloak', 'mending_pendant'],
   },
   silvabruk_town: {
-    item: ['yakusou', 'jokyu_yakusou', 'mahou_no_mi', 'seisui', 'phoenix_no_shizuku'],
+    item: ['yakusou', 'jokyu_yakusou', 'mahou_no_mi', 'seisui', 'phoenix_no_shizuku', 'kikan_no_hane'],
     gear: ['steel_bow', 'falcon_bow', 'steel_armor', 'steel_shield', 'steel_helm',
            'frostbite_shield', 'thorn_cuirass',
            'moonlight_brooch', 'swift_necklace'],
   },
   cliff_village: {
-    item: ['yakusou', 'dokukeshi', 'mezame_no_ha', 'mahou_no_mi'],
+    item: ['yakusou', 'dokukeshi', 'mezame_no_ha', 'mahou_no_mi', 'kikan_no_hane'],
     gear: ['wood_bow', 'steel_bow', 'leather_armor', 'leather_helm'],
   },
 };

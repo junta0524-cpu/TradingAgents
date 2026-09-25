@@ -66,14 +66,17 @@ Game.Core = (function () {
   // 罰はHPではなく金で受ける ―― これがこの手のRPGの死の重さの付け方で、
   // 稼いだ金がそのまま「失いたくないもの」として効いてくる。
   function onPartyWiped() {
-    var map = Game.Field.currentMap();
-    var church = (map && map.church) || 'ちかくの 教会';
     Game.Party.restAll();
     var lost = Math.floor(Game.Party.gold() / 2);
     Game.Party.spend(lost);
-    // 世界はまだ地続きに歩けないので、目を覚ましたあとは
-    // その舞台の入り口へ送り返す(章の進行を止めないため)
-    Game.Field.resetToStart();
+    // 最後に入った町の教会で目を覚ます。大陸が地続きになったので、
+    // ダンジョンの入口で「教会で寝かされていた」と言われる食い違いはもう要らない。
+    // まだどの町にも入っていなければ(序章の城の外など)、これまでどおりその場の入り口へ
+    var town = Game.Field.wakeInLastTown();
+    if (!town) Game.Field.resetToStart();
+    var map = Game.Field.currentMap();
+    var church = town ? town.name + 'の 教会' : ((map && map.church) || 'ちかくの 教会');
+    Game.Core.updateBgm();
     Game.Audio.play('wipe');
     Game.Dialogue.show('目の前が まっくらに なった……。', function () {
       Game.Dialogue.show('気がつくと ' + church + 'で 寝かされていた。', function () {

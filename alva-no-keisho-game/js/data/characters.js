@@ -62,6 +62,8 @@ Game.Data.Skills = {
   // ---- 旅の呪文(戦闘では使えない) ----
   exce: { id: 'exce', name: 'エクセ', mp: 8, kind: 'field', effect: 'exit', target: 'self', field: true, fieldOnly: true },
   sankt: { id: 'sankt', name: 'サンクト', mp: 6, kind: 'field', effect: 'ward_steps', power: 120, target: 'self', field: true, fieldOnly: true },
+  // 一度訪れた町へ ひとっとび。洞窟や塔の中では 天井に頭をぶつける
+  riga: { id: 'riga', name: 'リガル', mp: 6, kind: 'field', effect: 'warp', target: 'self', field: true, fieldOnly: true },
 
   // ---- 武技(呪文ではないので まりょく を使わない) ----
   nagiharai: { id: 'nagiharai', name: 'なぎ払い', mp: 3, kind: 'attack', power: 1.3, target: 'all_enemies' },
@@ -89,6 +91,7 @@ Game.Data.Characters = {
       { id: 'mina', level: 2 },
       { id: 'seina', level: 4 },
       { id: 'nagiharai', level: 6 },
+      { id: 'riga', level: 7 },
       { id: 'minara', level: 9 },
       { id: 'lux', level: 12 },
       { id: 'rival', level: 15 },
