@@ -61,6 +61,14 @@ Game.Renderer = (function () {
           ctx.font = '18px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText('⛩', px + TILE / 2, py + TILE / 2 + 6);
+        } else if (def.isEntrance) {
+          // 大陸の上の入口。城・街・塔・洞窟で記号を変えないと、
+          // どれも同じ「門」に見えて、どこへ向かえばいいのか分からない
+          var ent = map.entranceAt && map.entranceAt[x + ',' + y];
+          ctx.fillStyle = '#f7f3e9';
+          ctx.font = 'bold 15px "Yu Gothic","Hiragino Sans",sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText((ent && ent.glyph) || def.glyph, px + TILE / 2, py + TILE / 2 + 5);
         } else if (def.glyph) {
           // 店・宿屋・教会は一文字で示す(あとで看板の絵に差し替えられる)
           ctx.fillStyle = '#f7f3e9';

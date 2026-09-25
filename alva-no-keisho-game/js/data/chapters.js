@@ -13,7 +13,7 @@ Game.Data.Chapters = [
       'その夜、アルヴァはレイラ、エルロード、セレスティアと円卓を囲み、三方に散って大陸を守る誓いを立てた。',
     ],
     stages: [{
-      map: 'tardome', type: 'gate',
+      map: 'tardome', type: 'gate', inside: true,
       goal: '城の者たちと 話してから 城を出る',
       require: { talk: ['tardome_king', 'tardome_soldier', 'tardome_oldwoman'] },
       blocked: '別れも告げずに 発つわけにはいかない。',
@@ -24,8 +24,8 @@ Game.Data.Chapters = [
     title: '第一章 ― 東方の沃野へ',
     intro: ['タルドームを離れ、アルヴァは東へ向かう。この先に肥沃な平野が広がっているという。'],
     stages: [{
-      map: 'east_road', type: 'gate',
-      goal: '街道の魔物を 退けて 東へ抜ける',
+      map: 'world', type: 'travel', to: 'ogre_camp', from: 'tardome',
+      goal: '東方街道の魔物を 退け、街道の先の野営地まで 出る',
       require: { defeat: 3 },
       blocked: '魔物が うろついている。このままでは 開拓民が 通れない。',
     }],
@@ -36,8 +36,8 @@ Game.Data.Chapters = [
     intro: ['一方その頃、エルロードは大陸北方の高原、古代文明の遺構「蒼穹の塔」を目指していた。'],
     stages: [
       {
-        map: 'azure_plain', type: 'gate',
-        goal: '湖を回り込んで 北の塔へ向かう',
+        map: 'world', type: 'travel', to: 'selmaria_town', from: 'tardome',
+        goal: '蒼穹平原を 北へ抜けて 学院都市へ向かう',
         require: { defeat: 3 },
         blocked: '塔へ続く道に 魔物が 群れている。',
       },
@@ -62,8 +62,8 @@ Game.Data.Chapters = [
     intro: ['セレスティアは西へ向かう。一族の悲願だった、断崖の防衛拠点の建設地を目指して。'],
     stages: [
       {
-        map: 'cliff_road', type: 'gate',
-        goal: '桟道を のぼって 断崖の村をめざす',
+        map: 'world', type: 'travel', to: 'cliff_village', from: 'silvabruk_town',
+        goal: '断崖の道を 西へたどり、氏族の村をめざす',
         require: { defeat: 3 },
         blocked: '海から這い出た 異形が 道をふさいでいる。',
       },

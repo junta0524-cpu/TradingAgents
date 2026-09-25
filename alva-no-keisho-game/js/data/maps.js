@@ -21,6 +21,12 @@ Game.Data.TileDefs = {
   '~': { walkable: false, color: '#3d6e86', encounter: 0 },
   'D': { walkable: true, color: '#4a4658', encounter: 0.12 },
   'F': { walkable: true, color: '#b7a888', encounter: 0 },
+  // ---- 大陸の地形 ----
+  // 森は通れる(そのかわり よく出る)。山と深い森は通れない ―― この二つが
+  // 三方の道を「わざわざ回り込むもの」にしている
+  ',': { walkable: true, color: '#4a7a3a', encounter: 0.105 },
+  '^': { walkable: false, color: '#6b6258', encounter: 0 },
+  '_': { walkable: true, color: '#9c8a63', encounter: 0.085 },
   'C': { walkable: true, color: '#b08d3e', encounter: 0, isGate: true },
   'B': { walkable: true, color: '#8a3230', encounter: 0, isBoss: true },
   // 人は障害物。踏んで通り抜けるのではなく、隣に立って話しかける
@@ -40,6 +46,9 @@ Game.Data.TileDefs = {
   'O': { walkable: true, color: '#5c6f9c', encounter: 0, moonGate: true, glyph: '月' },
   // ちいさな徽章を集めている好事家の家
   'P': { walkable: true, color: '#8a6a9c', encounter: 0, shop: 'medal', glyph: '珍' },
+  // 大陸の上に立つ 街・城・ダンジョンの入口。踏むと その中の地図へ入る。
+  // どこへ通じているかは、マップごとの entranceAt から引く
+  'E': { walkable: true, color: '#b08d3e', encounter: 0, isEntrance: true, glyph: '門' },
 };
 
 // 仕掛けを消えている状態に戻す。同じ階へ入り直すたびに呼ぶ
@@ -64,15 +73,17 @@ Game.Data.switchCount = function (map) {
 // art の中の数字は目印で、chests / npcs の対応表を引いて宝箱・人物に置き換える。
 // こうしておくと、形を描き替えても座標を数え直さずに済む。
 function buildMap(def) {
-  var chestAt = {}, npcAt = {};
+  var chestAt = {}, npcAt = {}, entranceAt = {};
   var tiles = def.art.map(function (row, y) {
     var out = '';
     for (var x = 0; x < row.length; x++) {
       var ch = row[x];
       var chest = def.chests && def.chests[ch];
       var npc = def.npcs && def.npcs[ch];
+      var ent = def.entrances && def.entrances[ch];
       if (chest) { chestAt[x + ',' + y] = chest; out += 'T'; }
       else if (npc) { npcAt[x + ',' + y] = npc.id; out += npc.king ? 'K' : 'N'; }
+      else if (ent) { entranceAt[x + ',' + y] = ent; out += 'E'; }
       else { out += ch; }
     }
     return out;
@@ -87,10 +98,17 @@ function buildMap(def) {
   if (def.bossId) map.bossId = def.bossId;
   if (def.chests) map.chestAt = chestAt;
   if (def.npcs) map.npcAt = npcAt;
+  if (def.entrances) map.entranceAt = entranceAt;
+  if (def.regions) map.regions = def.regions;
   return map;
 }
 
 Game.Data.Maps = {
+  // ============ 大陸 ============
+  // 街も城もダンジョンも、この一枚の上に入口として置いてある。
+  // 中身は tools/build_world.py が組み立てて js/data/world.js に書き出したもの。
+  world: buildMap(Game.Data.WorldDef),
+
   // ============ 街 ============
   // 城。奥の玉座の間と城下の広場を大扉で仕切っている
   tardome: buildMap({
@@ -319,7 +337,7 @@ Game.Data.Maps = {
       'XDDDDDDDDDDDDDDDDXDDXXDX',
       'XDDXXDDDDDDDDDXXXDDDXXDX',
       'XDDXXD3DDDDDDDXXXXD4DDDX',
-      'XDDDDDDDDDDDDDDDDXDDDDDX',
+      'XCDDDDDDDDDDDDDDDXDDDDDX',
       'XXXXXXXXXXXXXXXXXXXXXXXX',
     ],
   }),
@@ -345,7 +363,7 @@ Game.Data.Maps = {
       'XXDDDLDDDDDDDDDDD2XX',
       'XXXXXXXXXXXXXXXXXDXX',
       'XXDDDDDDDDDDDDDDDDXX',
-      'XXDDDDXXDDDDXXDDDDXX',
+      'XXDDCDXXDDDDXXDDDDXX',
       'XX1DDLDDDDDDDDDDDDXX',
       'XXXXXXXXXXXXXXXXXXXX',
     ],
@@ -359,7 +377,7 @@ Game.Data.Maps = {
     art: [
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
-      'XDDDDDDDDDDDDDDDDDD2DDDDDX',
+      'XDCDDDDDDDDDDDDDDDD2DDDDDX',
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
       'XDDDDXDDDDXDDDDXDDDDXDDDDX',
       'XXDXXXXXXXXXDXXXXXXXXXDXXX',
@@ -398,7 +416,7 @@ Game.Data.Maps = {
       'XDDXXDDDXXXDXXDDDXXXDDDDDX',
       'XDXXXDDDXXDDDXXDXX~~~XDD6X',
       'XD1XXDDDDDDDDXDDDX~~~XDDDX',
-      'XDDXXDDDXXDDDXDDDD4DDDDDDX',
+      'XCDXXDDDXXDDDXDDDD4DDDDDDX',
       'XXXXXXXXXXXXXXXXXXXXXXXXXX',
     ],
   }),
@@ -410,7 +428,7 @@ Game.Data.Maps = {
     chests: { '1': 'ritual_phoenix', '2': 'ritual_ring', '3': 'ritual_armor', '4': 'ritual_gold', '5': 'medal_ritual', '6': 'ritual_cursed' },
     art: [
       'XXXXXXXXXXXXXXXXXXXXXX',
-      'XDDDDLDDDDDDDDDDDDDD2X',
+      'XCDDDLDDDDDDDDDDDDDD2X',
       'XDXXXXXXXXXDXXXXXXXXDX',
       'XDXXDDDLDDDDDDDDD4XXDX',
       'XDXXDXXXXXXXXXXXXDXXDX',

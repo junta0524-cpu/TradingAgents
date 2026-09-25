@@ -54,6 +54,50 @@ Game.Field = (function () {
     resetTrail();
   }
 
+  // 中へ入る前に立っていた大陸のマス。出口を踏んだら ここへ戻す。
+  // 覚えておかないと、町から出たとたん大陸の反対側に立つことになる。
+  var worldReturn = null;
+
+  // 大陸の入口から、その中の地図へ入る
+  function enterFrom(mapId, cbs) {
+    if (map && map.id === 'world') worldReturn = { x: px, y: py };
+    load(mapId, cbs);
+  }
+
+  // 中から大陸へ出る。入ってきた入口のマスに立ち直す
+  function returnToWorld(cbs) {
+    load('world', cbs);
+    if (worldReturn) { px = worldReturn.x; py = worldReturn.y; resetTrail(); }
+  }
+
+  // 大陸の上で、その場所の入口がどこかを引く
+  function entranceOf(mapId) {
+    var w = Game.Data.Maps.world;
+    if (!w || !w.entranceAt) return null;
+    var keys = Object.keys(w.entranceAt);
+    for (var i = 0; i < keys.length; i++) {
+      if (w.entranceAt[keys[i]].to === mapId) {
+        var xy = keys[i].split(',');
+        return { x: parseInt(xy[0], 10), y: parseInt(xy[1], 10), name: w.entranceAt[keys[i]].name };
+      }
+    }
+    return null;
+  }
+
+  // 章が変わったとき、次の舞台の門前に立たせる。中へは自分で入ってもらう
+  function standAtEntrance(mapId, cbs) {
+    var e = entranceOf(mapId);
+    load('world', cbs);
+    if (e) { px = e.x; py = e.y + 1; if (!walkableAt(px, py)) { px = e.x; py = e.y; } resetTrail(); }
+    worldReturn = { x: px, y: py };
+    return e;
+  }
+
+  function walkableAt(x, y) {
+    var d = Game.Data.TileDefs[tileAt(x, y)];
+    return !!(d && d.walkable);
+  }
+
   function currentMap() { return map; }
   function playerPos() { return { x: px, y: py }; }
   // 全滅から復帰した際など、現在のマップの入り口へ戻す
@@ -98,8 +142,20 @@ Game.Field = (function () {
     return Math.random() < def.encounter * Game.Moon.encounterScale();
   }
 
+  // 大陸は一枚だが、場所によって出る魔物は違う。
+  // いま立っているマスがどの地域に入っているかで、出現表を選び分ける。
+  function tableHere() {
+    if (map.regions) {
+      for (var i = 0; i < map.regions.length; i++) {
+        var r = map.regions[i];
+        if (px >= r.x && px < r.x + r.w && py >= r.y && py < r.y + r.h) return r.table;
+      }
+    }
+    return map.encounterTable;
+  }
+
   function pickEncounter() {
-    var table = Game.Data.EncounterTables[map.encounterTable];
+    var table = Game.Data.EncounterTables[tableHere()];
     if (!table || table.length === 0) return null;
     var total = table.reduce(function (s, e) { return s + e.weight; }, 0);
     var r = Math.random() * total;
@@ -193,6 +249,10 @@ Game.Field = (function () {
     // (踏み直さないと二度と反応しないので、詰みになる)。
     var poisonTicked = tickFieldPoison();
 
+    if (def.isEntrance) {
+      var ent = map.entranceAt && map.entranceAt[nx + ',' + ny];
+      if (ent) { callbacks.onEnter && callbacks.onEnter(ent); return; }
+    }
     if (def.isGate) { callbacks.onGate && callbacks.onGate(); return; }
     if (def.isBoss) { callbacks.onBoss && callbacks.onBoss(map.bossId); return; }
     if (def.shop) { callbacks.onShop && callbacks.onShop(def.shop, map.id); return; }
@@ -304,6 +364,10 @@ Game.Field = (function () {
     resetToStart: resetToStart, setPosition: setPosition, wardSteps: wardSteps,
     __visual: visualPos,   // 検証用: 画面上のいまの位置(小数)
     update: update, draw: draw, interact: interact,
+    enterFrom: enterFrom, returnToWorld: returnToWorld,
+    entranceOf: entranceOf, standAtEntrance: standAtEntrance,
+    // 検証用: いまの地域の出現表
+    __table: function () { return tableHere(); },
     // 検証用: いま向いている先のマス
     __facing: function () { return { dir: facing, tile: facingTile() }; },
     // 検証用: いま使っているイベント一式

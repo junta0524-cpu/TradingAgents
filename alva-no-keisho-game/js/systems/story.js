@@ -66,6 +66,13 @@ Game.Story = (function () {
       parts.push(sl > 0 ? 'のこり ' + sl + '歩' : '手遅れ');
     }
     var base = st.goal || (st.type === 'boss' ? '最奥の敵を たおす' : '出口をめざす');
+    // まだ舞台の外(大陸の上)にいるなら、まずどこへ入るのかを言う。
+    // 広い大陸に放り出されて「どこへ行けば」で止まるのが いちばん困るので。
+    var here = Game.Field.currentMap();
+    if (here && here.id === 'world' && st.map !== 'world' && st.type !== 'travel') {
+      var target = Game.Data.Maps[st.map];
+      if (target) base = target.name + 'へ 入る  ―― ' + base;
+    }
     return parts.length ? base + '  (' + parts.join(' / ') + ')' : base;
   }
   function isFinished() { return finished; }
@@ -105,7 +112,7 @@ Game.Story = (function () {
     if (!ch) { finished = true; return null; }
     stageIndex = Math.min(data.stageIndex || 0, ch.stages.length - 1);
     var st = stage();
-    if (st) Game.Field.load(st.map, fieldCallbacksFor(st));
+    if (st) placeForStage(st);
     return st;
   }
 
@@ -117,7 +124,7 @@ Game.Story = (function () {
     Game.Party.reviveFallen();
     // 章タイトルと導入を読んでいる間、背後にこれから進む舞台を映しておく
     // (先にマップを読み込まないと、導入の間ずっと真っ暗な画面になってしまう)
-    Game.Field.load(ch.stages[0].map, fieldCallbacksFor(ch.stages[0]));
+    placeForStage(ch.stages[0]);
     Game.Dialogue.show(ch.title, function () {
       showLines(ch.intro.slice(), function () { loadStage(); });
     });
@@ -138,9 +145,27 @@ Game.Story = (function () {
         Game.Battle.start(monsterIds, handleRandomBattleEnd);
       },
       onGate: function () {
-        if (st.type !== 'gate') return;
-        if (!requirementsMet(st)) { sayBlocked(st); return; }
-        handleStageClear();
+        var here = Game.Field.currentMap();
+        // いまの段の舞台から出ようとしているときだけ、条件を見る
+        if (st.type === 'gate' && here && here.id === st.map) {
+          if (!requirementsMet(st)) { sayBlocked(st); return; }
+          handleStageClear();
+          return;
+        }
+        // それ以外は ただ外へ出るだけ。寄り道した町から大陸へ戻る
+        leaveToWorld(st);
+      },
+      // 大陸の上の入口を踏んだ。
+      // その場所に着くことが段の目的なら、ここで段が片づく。
+      onEnter: function (ent) {
+        if (st.type === 'travel' && st.to === ent.to) {
+          if (!requirementsMet(st)) { sayBlocked(st); return; }
+          Game.Dialogue.show(ent.name + 'に たどり着いた。', function () { handleStageClear(); });
+          return;
+        }
+        Game.Field.enterFrom(ent.to, fieldCallbacksFor(st));
+        Game.Core.updateBgm();
+        Game.Dialogue.show(ent.name + 'に 着いた。');
       },
       onBoss: function (bossId) {
         if (st.type !== 'boss' || bossId !== st.bossId) return;
@@ -158,6 +183,13 @@ Game.Story = (function () {
       onSwitch: function (x, y) { lightUp(st, x, y); },
       onStep: function () { checkOverrun(st); },
     };
+  }
+
+  // 中から大陸へ出る。入ってきた門の前に立ち直す
+  function leaveToWorld(st) {
+    Game.Fx.fade(9, 5);
+    Game.Field.returnToWorld(fieldCallbacksFor(st || stage()));
+    Game.Core.updateBgm();
   }
 
   // まだ条件を満たしていないときに、何が足りないのかを伝える
@@ -245,6 +277,24 @@ Game.Story = (function () {
     Game.Dialogue.show(st.overrun || '……間に合わなかった。');
   }
 
+  // その段の舞台に立たせる。
+  // 中へ直に降ろすのは、外に大陸が無い序章だけ。それ以外は 大陸の門前に立たせ、
+  // 自分で歩いて入ってもらう ―― 章が変わるたびに世界を飛ぶのではなく、
+  // 世界の上を移動している感じにしたいため。
+  function placeForStage(st) {
+    var cbs = fieldCallbacksFor(st);
+    if (st.map === 'world') {
+      // from があれば そこの門前から歩き出す。無ければ いま居る場所のまま
+      if (st.from && Game.Field.entranceOf(st.from)) Game.Field.standAtEntrance(st.from, cbs);
+      else if (Game.Field.currentMap() && Game.Field.currentMap().id === 'world') Game.Field.load('world', cbs);
+      else Game.Field.load('world', cbs);
+      return;
+    }
+    if (st.inside) { Game.Field.load(st.map, cbs); return; }
+    if (!Game.Field.entranceOf(st.map)) { Game.Field.load(st.map, cbs); return; }
+    Game.Field.standAtEntrance(st.map, cbs);
+  }
+
   function loadStage() {
     var st = stage();
     progress = { talked: {}, defeated: 0, lit: 0 };
@@ -254,7 +304,7 @@ Game.Story = (function () {
     applyOnComplete(st.onEnter);
     var proceed = function () {
       Game.Fx.fade(11, 6);   // 舞台が変わる。一拍 暗くしてから次の場所へ
-      Game.Field.load(st.map, fieldCallbacksFor(st));
+      placeForStage(st);
       // 歩数の起点は、マップを読み込んだあとに取る。
       // load は歩数を0に戻すので、先に取ると前の舞台の歩数が起点になり、
       // 制限が実際より長くなってしまう(残り227歩/上限220歩 が出ていた)
@@ -265,7 +315,7 @@ Game.Story = (function () {
     };
     if (st.intro) {
       // ステージ導入の間も、その舞台を背景に出しておく
-      Game.Field.load(st.map, fieldCallbacksFor(st));
+      placeForStage(st);
       showLines(st.intro.slice(), proceed);
     } else {
       proceed();
