@@ -1,0 +1,155 @@
+<title>アルヴァの継承</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap">
+<style>
+  /* 画面そのものが夜の世界なので、明暗テーマは切り替えず一つの世界観に寄せている。
+     背景・文字色はすべて明示的に塗り、ホスト側の地色を borrow しない。 */
+  :root {
+    --void:   #0d1018;   /* 盤面の外側。canvas より一段深い闇 */
+    --screen: #171b2b;   /* ゲーム画面と同じ紺 */
+    --frame:  #cbbfa0;   /* 資料集と共通の羊皮紙色の枠 */
+    --gold:   #d4af5a;   /* 見出しとカーソルの金 */
+    --ink:    #ece7da;   /* 本文 */
+    --muted:  #8d8471;   /* 補助テキスト */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--void);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Yu Gothic", "Hiragino Sans", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.2rem 1rem 2rem;
+    overscroll-behavior: none;   /* 仮想パッド操作でページが引っぱられないように */
+  }
+
+  header { text-align: center; display: flex; flex-direction: column; gap: .3rem; }
+  h1 {
+    font-family: "Shippori Mincho B1", serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: .06em;
+    margin: 0;
+    color: var(--gold);
+  }
+  .sub { font-size: .76rem; color: var(--muted); letter-spacing: .1em; margin: 0; }
+
+  .stage {
+    position: relative;
+    border: 2px solid var(--frame);
+    background: var(--screen);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .55);
+    line-height: 0;
+    width: 100%;
+    max-width: 644px;   /* canvas 640 + 枠 */
+  }
+  canvas { display: block; image-rendering: pixelated; width: 100%; height: auto; }
+
+  /* クリック/タップして操作を始めてもらうための覆い。キー入力は canvas ではなく
+     window が拾うので、先にこの領域へフォーカスを渡しておく。 */
+  .veil {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13, 16, 24, .82);
+    color: var(--ink);
+    font-size: .95rem;
+    letter-spacing: .08em;
+    cursor: pointer;
+    line-height: 1.6;
+    border: 0;
+    width: 100%;
+    font-family: inherit;
+  }
+  .veil:focus-visible { outline: 2px solid var(--gold); outline-offset: -6px; }
+  .veil[hidden] { display: none; }
+
+  .keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.5rem;
+    justify-content: center;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+  .keys b { color: var(--ink); font-weight: 500; }
+  footer { font-size: .7rem; color: var(--muted); text-align: center; max-width: 46ch; line-height: 1.7; }
+
+  /* 指で操作する端末では、キーボードの案内を隠し、見出し・画面・パッドを
+     上・中・下に振り分ける。パッドを下端に置くと親指が自然に届く。 */
+  @media (pointer: coarse) {
+    body {
+      justify-content: flex-start;   /* パッド側が margin-top:auto で下端に沈む */
+      min-height: 100vh;
+      min-height: 100dvh;   /* アドレスバーの出入りで高さが変わる端末向け */
+      gap: .6rem;
+      padding: .7rem .6rem 1rem;
+    }
+    .keys, footer { display: none; }
+    header h1 { font-size: 1.15rem; }
+    header .sub { font-size: .68rem; }
+  }
+</style>
+
+<header>
+  <h1>アルヴァの継承</h1>
+  <p class="sub">― 三国建国記 ―</p>
+</header>
+
+<div class="stage">
+  <canvas id="game-canvas"></canvas>
+  <button class="veil" id="veil" type="button">タップして はじめる</button>
+</div>
+
+<div class="keys">
+  <span><b>↑↓←→ / WASD</b> 移動(壁や人に向かって押すと その場で振り向く)</span>
+  <span><b>Z / Enter</b> 目の前の相手に 話す・調べる / 何も無ければメニュー</span>
+  <span><b>X / Esc</b> キャンセル</span>
+  <span><b>Shift</b> ダッシュ・会話の早送り</span>
+  <span><b>M</b> 音を消す</span>
+</div>
+
+<footer>
+  全16章。宿屋で休み、店で装備を整えて進みます。記録は教会で(「たびのきろく」)。章の変わり目には自動でも残ります。<br>
+  <b>町の人は通り抜けられません。</b>隣に立ち、その人のほうを向いて決定キーを押すと話しかけます(壁や人に向かって一度押すと、進まずに振り向きます)。<br>
+  傷は章をまたいで残ります。全滅すると近くの町の教会に運ばれ、神官が傷を癒すかわりに所持金の半分を持っていきます。<br>
+  戦闘の「さくせん」を「ひとりずつ さしずする」以外にすると、仲間が自分で動きます。並び順は前に立つ者ほど狙われます。<br>
+  メニューのいちばん下「はなす」で仲間と話せます。学院都市セルマリアの北東の隅にある「さだめの祠」では職に就け、戦うほど★が上がって技を覚えます。「せってい」で文字の速さと魔物の出やすさを変えられます。<br>
+  画面の右上は月齢です。闇が濃いほど魔物は多く、満月のあいだだけ開く道があります。音は最初のキー入力から鳴りはじめます。
+</footer>
+
+<script>
+/* GAME */
+</script>
+<script>
+  // スマホで 980px 幅に縮小表示されないよう、viewport の指定が無ければ補う。
+  // (ホスト側が既に指定している場合は触らない)
+  (function () {
+    if (document.querySelector('meta[name="viewport"]')) return;
+    var meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1, viewport-fit=cover';
+    document.head.appendChild(meta);
+  })();
+
+  // 覆いを外したらキーボードを掴む。以後の入力は window のハンドラが処理する。
+  (function () {
+    var veil = document.getElementById('veil');
+    function begin() {
+      veil.hidden = true;
+      window.focus();
+      document.body.focus();
+    }
+    veil.addEventListener('click', begin);
+    veil.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); begin(); }
+    });
+  })();
+</script>
