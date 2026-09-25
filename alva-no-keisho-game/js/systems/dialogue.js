@@ -7,7 +7,11 @@ Game.Dialogue = (function () {
   // この手のRPGの文字送り。1フレームに CHARS_PER_FRAME 文字ずつ出し、
   // 出しきる前に決定を押したら、そのページを一気に全部出す(2度押しで次へ)。
   var shown = 0;                 // いま何文字まで出したか
-  var CHARS_PER_FRAME = 0.9;
+  // 1フレームに何文字出すかは「せってい」の文字の速さで決まる(おそい/ふつう/はやい)
+  function charsPerFrame() { return Game.Settings ? Game.Settings.textCharsPerFrame() : 0.9; }
+  // Shift を押しているあいだは早送り。ページを一気に出し、少し見せてから次へ
+  var FF_HOLD = 6;               // 早送り中、1ページを見せておくフレーム数
+  var ffTimer = 0;
 
   var FONT = '16px "Yu Gothic","Hiragino Sans",sans-serif';
   var LINE_H = 22;
@@ -81,15 +85,21 @@ Game.Dialogue = (function () {
     var entry = queue[0];
     var full = pageLength(entry);
 
-    if (Game.Input.wasPressed('confirm')) {
+    var fastForward = Game.Input.isDown('dash');
+    if (fastForward) {
+      if (shown < full) { shown = full; ffTimer = 0; return; }
+      if (++ffTimer < FF_HOLD) return;
+    }
+    if (fastForward || Game.Input.wasPressed('confirm')) {
       if (shown < full) { shown = full; return; }   // まず全部出す
       queue.shift();
       shown = 0;
+      ffTimer = 0;
       if (entry.cb) entry.cb();
       return;
     }
     if (shown < full) {
-      shown += CHARS_PER_FRAME;
+      shown += charsPerFrame();
       if (shown > full) shown = full;
     }
   }

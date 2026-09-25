@@ -5,6 +5,8 @@ Game.Field = (function () {
   var px = 0, py = 0;
   var moveCooldown = 0;
   var MOVE_DELAY = 9; // フレーム数(約60fpsで0.15秒間隔)
+  var DASH_DELAY = 6; // Shift を押しているあいだ。1.5倍の速さで歩く
+  function stepDelay() { return Game.Input.isDown('dash') ? DASH_DELAY : MOVE_DELAY; }
   // 1マスを一瞬で飛ぶと「コマ落ち」に見える。動いている間の途中の位置を作り、
   // 描画にだけ小数のタイル座標を渡して、ドット単位で滑らせる。
   var moveFrom = null;   // 動き出す前の先頭の位置
@@ -196,6 +198,9 @@ Game.Field = (function () {
   function tryEncounter(tileChar) {
     var def = Game.Data.TileDefs[tileChar];
     if (!def || def.encounter <= 0) return false;
+    // 「せってい」で少なめにしていれば、ここで半分になる
+    var setting = Game.Settings ? Game.Settings.encounterScale() : 1;
+    if (Math.random() >= setting) return false;
     if (wardLeft > 0) {
       wardLeft -= 1;
       // 効いている間も、格上の魔物だけはまれに出る
@@ -319,10 +324,10 @@ Game.Field = (function () {
     steps += 1;
     Game.Moon.step();   // 世界の時計。歩くほどに月が満ち欠けする
     moveFrom = { x: px, y: py };
-    moveSpan = MOVE_DELAY;
+    moveSpan = stepDelay();
     px = nx; py = ny;
     callbacks.onStep && callbacks.onStep();
-    moveCooldown = MOVE_DELAY;
+    moveCooldown = moveSpan;
     // 毒の報せは出すが、踏んだマスの出来事はそのまま起こす。
     // ここで打ち切ってしまうと、毒を受けている間だけ 門・ボス床・宝箱・店・
     // 町の人 が反応しなくなり、その場に立ったまま先へ進めなくなる
@@ -452,6 +457,8 @@ Game.Field = (function () {
     entranceOf: entranceOf, standAtEntrance: standAtEntrance,
     // 検証用: いまの地域の出現表
     __table: function () { return tableHere(); },
+    // 検証用: 遭遇の判定を1回だけ振る
+    __tryEncounter: function (ch) { return tryEncounter(ch); },
     // 検証用: いま向いている先のマス
     __facing: function () { return { dir: facing, tile: facingTile() }; },
     // 検証用: いま使っているイベント一式

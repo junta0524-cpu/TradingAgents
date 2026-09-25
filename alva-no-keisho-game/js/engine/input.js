@@ -12,6 +12,8 @@ Game.Input = (function () {
     Enter: 'confirm', KeyZ: 'confirm', Space: 'confirm',
     Escape: 'cancel', KeyX: 'cancel',
     KeyM: 'mute',
+    // 押しているあいだ、会話の早送りと 歩きのダッシュ
+    ShiftLeft: 'dash', ShiftRight: 'dash',
   };
 
   window.addEventListener('keydown', function (e) {

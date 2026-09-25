@@ -35,6 +35,7 @@ Game.Menu = (function () {
   function TACTIC_ROW() { return party().length + 2; }
   function ORDER_ROW() { return party().length + 3; }
   function SAVE_ROW() { return party().length + 4; }
+  function SETTINGS_ROW() { return party().length + 5; }
 
   function caster() { return party()[state.casterIndex]; }
 
@@ -90,7 +91,8 @@ Game.Menu = (function () {
   function needsTarget(def) { return def && def.kind !== 'return'; }
 
   function listLength() {
-    if (state.view === 'status') return party().length + 5;
+    if (state.view === 'status') return party().length + 6;
+    if (state.view === 'settings') return Game.Settings.keys().length;
     if (state.view === 'tactic') return Game.Data.Tactics.length;
     if (state.view === 'order') return party().length;
     if (state.view === 'caster') return party().length;
@@ -122,8 +124,14 @@ Game.Menu = (function () {
       if (Game.Input.wasPressed('up')) state.cursor = len ? (state.cursor - 1 + len) % len : 0;
     }
 
+    if (state.view === 'settings') {
+      var lr = Game.Input.wasPressed('right') ? 1 : Game.Input.wasPressed('left') ? -1 : 0;
+      if (lr) Game.Settings.cycle(Game.Settings.keys()[state.cursor], lr);
+    }
+
     if (Game.Input.wasPressed('cancel')) {
       if (state.view === 'status') close();
+      else if (state.view === 'settings') { state.view = 'status'; state.cursor = SETTINGS_ROW(); }
       else if (state.view === 'items') { state.view = 'status'; state.cursor = ITEM_ROW(); }
       else if (state.view === 'tactic') { state.view = 'status'; state.cursor = TACTIC_ROW(); }
       else if (state.view === 'order') {
@@ -150,6 +158,7 @@ Game.Menu = (function () {
 
     if (state.view === 'status') {
       if (state.cursor === SAVE_ROW()) { doSave(); return; }
+      if (state.cursor === SETTINGS_ROW()) { state.view = 'settings'; state.cursor = 0; return; }
       if (state.cursor === ORDER_ROW()) { state.view = 'order'; state.cursor = 0; state.holding = -1; return; }
       if (state.cursor === TACTIC_ROW()) { state.view = 'tactic'; state.cursor = 0; return; }
       if (state.cursor === ITEM_ROW()) { state.view = 'items'; state.cursor = 0; return; }
@@ -157,6 +166,8 @@ Game.Menu = (function () {
       state.memberIndex = state.cursor;
       state.view = 'who';
       state.cursor = 0;
+    } else if (state.view === 'settings') {
+      Game.Settings.cycle(Game.Settings.keys()[state.cursor], 1);
     } else if (state.view === 'warp') {
       var dest = Game.Field.warpTargets()[state.cursor];
       if (!dest) return;
@@ -392,6 +403,7 @@ Game.Menu = (function () {
     else if (state.view === 'items') drawItems(ctx, x, y, w, h);
     else if (state.view === 'itemTarget') drawItemTargets(ctx, x, y, w, h);
     else if (state.view === 'warp') drawWarp(ctx, x, y, w, h);
+    else if (state.view === 'settings') drawSettings(ctx, x, y, w, h);
     else if (state.view === 'who') drawWho(ctx, x, y, w, h);
     else if (state.view === 'strength') drawStrength(ctx, x, y, w, h);
     else if (state.view === 'member') drawMember(ctx, x, y, w, h);
@@ -451,6 +463,12 @@ Game.Menu = (function () {
     var saveSelected = state.cursor === SAVE_ROW();
     Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'たびのきろくに きろくする', x + 16, rowY + 104,
       { size: 14, color: saveSelected ? '#d4af5a' : '#ece7da' });
+
+    var settingsSelected = state.cursor === SETTINGS_ROW();
+    Game.Renderer.drawText(ctx, (settingsSelected ? '▶ ' : '　') + 'せってい', x + 16, rowY + 130,
+      { size: 14, color: settingsSelected ? '#d4af5a' : '#ece7da' });
+    Game.Renderer.drawText(ctx, '文字 ' + Game.Settings.label('textSpeed') + ' / 魔物 ' + Game.Settings.label('encounter'),
+      x + 190, rowY + 130, { size: 12, color: '#a49b86' });
     Game.Renderer.drawText(ctx, 'Z: えらぶ    X: とじる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 
@@ -533,6 +551,26 @@ Game.Menu = (function () {
       return '弱い魔物が よってこなくなる';
     }
     return '';
+  }
+
+  // せってい。左右か決定で値を回す
+  var SETTING_NAMES = { textSpeed: '文字の速さ', encounter: '魔物の出やすさ' };
+  function drawSettings(ctx, x, y, w, h) {
+    Game.Renderer.drawText(ctx, 'せってい', x + 16, y + 22, { size: 15, color: '#d4af5a' });
+    Game.Settings.keys().forEach(function (k, i) {
+      var ly = y + 64 + i * 34;
+      var sel = i === state.cursor;
+      Game.Renderer.drawText(ctx, (sel ? '▶ ' : '　') + SETTING_NAMES[k], x + 16, ly,
+        { size: 14, color: sel ? '#d4af5a' : '#ece7da' });
+      Game.Renderer.drawText(ctx, '◀ ' + Game.Settings.label(k) + ' ▶', x + 220, ly,
+        { size: 14, color: sel ? '#ece7da' : '#a49b86' });
+    });
+    var ty = y + 64 + Game.Settings.keys().length * 34 + 20;
+    Game.Renderer.drawText(ctx, 'Shift を押しているあいだ:会話を早送り / 野や町をダッシュ(1.5倍)',
+      x + 16, ty, { size: 12, color: '#a49b86' });
+    Game.Renderer.drawText(ctx, '魔物を「少なめ」にすると、出会う回数が半分になります',
+      x + 16, ty + 22, { size: 12, color: '#a49b86' });
+    Game.Renderer.drawText(ctx, '←→ / Z: かえる    X: もどる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 
   // 行き先の一覧。訪れた順に並ぶ
