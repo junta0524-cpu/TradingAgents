@@ -6,6 +6,7 @@ u"""通し試験 ― 序章から終章まで、キー操作だけで歩いて �
 ・「魔物を あと N体」は、その段で戦ってよい場所(段の舞台、大陸を行く段なら大陸)でだけ、
   そこの出現表から ふつうの遭遇と同じ道筋で戦いを起こして片づける
 ・仲間は倒れないよう 数値を底上げする(ここで見たいのは 進行が詰まらないこと)
+・仲間は加わったら 職に就かせ、勝つたびの ★の数えも 通しで走らせる
 ・関係のない入口・出口・ボス床・店は 踏まない
 
 詰まったら その時点の様子を出して 失敗で終わる。
@@ -17,7 +18,7 @@ from common import Checks, launch, ev, new_game
 
 KEY = {"up": "ArrowUp", "down": "ArrowDown", "left": "ArrowLeft", "right": "ArrowRight"}
 DXY = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
-SHOPS = set("SWIHP")
+SHOPS = set("SWIHPJ")
 MAX_SECONDS = 2100
 
 c = Checks()
@@ -41,7 +42,13 @@ def state(pg):
     }""")
 
 
+JOBS = {"alva": "tsurugi", "elrode": "majinai", "celestia": "iyashi", "balga": "kobushi"}
+
+
 def god(pg):
+    # 加わった仲間は すぐ職に就ける。勝つたびに ★の数えと知らせが 通し試験の中でも走る
+    ev(pg, """(jobs) => { Game.Party.list().forEach(function (m) {
+      if (m.job === 'arinomama' && jobs[m.id]) Game.Party.changeJob(m.id, jobs[m.id]); }); }""", JOBS)
     ev(pg, """() => { Game.Party.list().forEach(function (m) {
       m.maxHp = Math.max(m.maxHp, 999); m.hp = m.maxHp; m.maxMp = Math.max(m.maxMp, 99); m.mp = m.maxMp;
       m.atk = 999; m.def = 999; m.spd = 999; m.status = null; }); }""")

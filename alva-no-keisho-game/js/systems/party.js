@@ -17,10 +17,47 @@ Game.Party = (function () {
   var STATS = ['atk', 'def', 'spd', 'mag', 'luck'];
   function baseKey(stat) { return 'base' + stat.charAt(0).toUpperCase() + stat.slice(1); }
 
+  // ---- 職 ----
+  // 素の値に 職の倍率を掛ける(切り捨て)。うんのよさ には掛けない。
+  function jobDef(m) { return Game.Data.Jobs[(m && m.job) || 'arinomama'] || Game.Data.Jobs.arinomama; }
+  function jobMul(m, key) {
+    var v = jobDef(m).mul[key];
+    return v === undefined ? 1 : v;
+  }
+  function starFromBattles(n) {
+    var star = 1;
+    for (var s = 2; s <= Game.Data.JOB_MAX_STAR; s++) if (n >= Game.Data.JOB_STARS[s]) star = s;
+    return star;
+  }
+  function jobBattles(m, jobId) { return (m.jobs && m.jobs[jobId] && m.jobs[jobId].battles) || 0; }
+  function jobStar(m, jobId) { return starFromBattles(jobBattles(m, jobId || m.job)); }
+  // つぎの★まで あと何回か。極めていれば null
+  function battlesToNextStar(m, jobId) {
+    var star = jobStar(m, jobId);
+    if (star >= Game.Data.JOB_MAX_STAR) return null;
+    return Game.Data.JOB_STARS[star + 1] - jobBattles(m, jobId);
+  }
+  // 最大HP・MPは 伸びた生の値(raw)を持ち、職の倍率を掛けて出す
+  function applyJobVitals(m) {
+    m.maxHp = Math.max(1, Math.floor(m.rawMaxHp * jobMul(m, 'hp')));
+    m.maxMp = m.rawMaxMp > 0 ? Math.max(1, Math.floor(m.rawMaxMp * jobMul(m, 'mp'))) : 0;
+    m.hp = Math.min(m.hp, m.maxHp);
+    m.mp = Math.min(m.mp, m.maxMp);
+  }
+  function ensureJobFields(m) {
+    if (!m.job || !Game.Data.Jobs[m.job]) m.job = 'arinomama';
+    m.jobs = m.jobs || {};
+    if (m.rawMaxHp === undefined) m.rawMaxHp = m.maxHp;
+    if (m.rawMaxMp === undefined) m.rawMaxMp = m.maxMp;
+  }
+
   // 装備込みの実効ステータスを組み直す
   function recalc(m) {
     var totals = {};
-    STATS.forEach(function (stat) { totals[stat] = m[baseKey(stat)] || 0; });
+    STATS.forEach(function (stat) {
+      var base = m[baseKey(stat)] || 0;
+      totals[stat] = stat === 'luck' ? base : Math.floor(base * jobMul(m, stat));
+    });
     Game.Data.EQUIP_SLOTS.forEach(function (slot) {
       var e = equipDef(m.equip[slot]);
       if (!e) return;
@@ -65,6 +102,7 @@ Game.Party = (function () {
     var m = JSON.parse(JSON.stringify(base));
     STATS.forEach(function (stat) { m[baseKey(stat)] = base[stat] || 0; });
     m.equip = m.equip || {};
+    ensureJobFields(m);
     recalc(m);
     return m;
   }
@@ -174,10 +212,73 @@ Game.Party = (function () {
   }
 
   // そのレベルで使える技だけを返す(まだ覚えていない技は出さない)
+  // レベルで覚えた技 と 職の★で覚えた技。同じ技は ひとつにまとめる。
+  // 職の技は 職を変えても残る(その職が keepSkills: false なら、就いているあいだだけ)
   function learnedSkills(m) {
-    return (m.skills || [])
+    var ids = (m.skills || [])
       .filter(function (s) { return m.level >= s.level; })
-      .map(function (s) { return Game.Data.Skills[s.id]; });
+      .map(function (s) { return s.id; });
+    Game.Data.JOB_ORDER.forEach(function (jobId) {
+      var j = Game.Data.Jobs[jobId];
+      if (j.keepSkills === false && m.job !== jobId) return;
+      var star = jobBattles(m, jobId) > 0 || m.job === jobId ? jobStar(m, jobId) : 0;
+      j.skills.forEach(function (s) { if (star >= s.star && ids.indexOf(s.id) === -1) ids.push(s.id); });
+    });
+    return ids.map(function (id) { return Game.Data.Skills[id]; });
+  }
+
+  // その職に就けるか。就けないなら理由の文を返す
+  function jobLockReason(m, jobId) {
+    var j = Game.Data.Jobs[jobId];
+    if (!j) return 'そのような 職は ない。';
+    var req = j.requires;
+    if (!req) return null;
+    var lacking = Object.keys(req).filter(function (id) { return jobStar(m, id) < req[id] || jobBattles(m, id) === 0; });
+    if (!lacking.length) return null;
+    return Object.keys(req).map(function (id) { return Game.Data.Jobs[id].name; }).join('と ') +
+      'を ★' + req[Object.keys(req)[0]] + 'まで 極めねば、この道は 開かれぬ。';
+  }
+
+  function changeJob(memberId, jobId) {
+    var m = members[memberId];
+    if (!m || jobLockReason(m, jobId)) return false;
+    m.job = jobId;
+    m.jobs[jobId] = m.jobs[jobId] || { battles: 0 };
+    applyJobVitals(m);
+    recalc(m);
+    return true;
+  }
+
+  // 勝った戦いを、いまの職の修行として数える。
+  // maxRank はその戦いで いちばん格の高い魔物。弱すぎれば 数えない。
+  function countJobBattle(maxRank) {
+    var alive = aliveList();
+    var trainees = alive.filter(function (m) { return m.job && m.job !== 'arinomama'; });
+    if (!trainees.length) return [];
+    var avg = alive.reduce(function (s, m) { return s + m.level; }, 0) / alive.length;
+    if (avg > Game.Data.jobCap(maxRank)) return ['(この辺りの 魔物では、もう 修行に ならない……)'];
+    var out = [];
+    trainees.forEach(function (m) {
+      var before = learnedSkills(m).map(function (sk) { return sk.id; });
+      var starBefore = jobStar(m, m.job);
+      m.jobs[m.job] = m.jobs[m.job] || { battles: 0 };
+      m.jobs[m.job].battles += 1;
+      var star = jobStar(m, m.job);
+      if (star === starBefore) return;
+      out.push(m.name + 'の ' + jobDef(m).name + 'の 熟練度が ★' + star + 'に あがった!' +
+        (star === Game.Data.JOB_MAX_STAR ? ' (極めた!)' : ''));
+      learnedSkills(m).forEach(function (sk) {
+        if (before.indexOf(sk.id) === -1) out.push(m.name + 'は ' + sk.name + 'を おぼえた!');
+      });
+    });
+    return out;
+  }
+
+  // 渾身の一撃の出やすさ(職の性質で 底上げされるぶん)。0 なら 底上げなし
+  function jobCritRate(m) {
+    var t = jobDef(m).trait;
+    if (!t || !t.crit || jobStar(m, m.job) < (t.fromStar || 1)) return 0;
+    return t.crit;
   }
 
   function addExp(exp) {
@@ -192,8 +293,14 @@ Game.Party = (function () {
         // 定石どおりで、レベルアップは全快させない。
         // 上がった最大値のぶんだけ、いまの値も一緒に増える。
         // (全快させると消耗が一切たまらず、宿屋も道具も使う理由が無くなる)
-        m.maxHp += g.hp; m.hp = Math.min(m.maxHp, m.hp + g.hp);
-        if (m.maxMp > 0) { m.maxMp += g.mp; m.mp = Math.min(m.maxMp, m.mp + g.mp); }
+        // 生の値を伸ばし、職の倍率を掛けて出し直す。いまの値は 増えたぶんだけ足す
+        ensureJobFields(m);
+        var hpBefore = m.maxHp, mpBefore = m.maxMp;
+        m.rawMaxHp += g.hp;
+        if (m.rawMaxMp > 0) m.rawMaxMp += g.mp;
+        applyJobVitals(m);
+        m.hp = Math.min(m.maxHp, m.hp + Math.max(0, m.maxHp - hpBefore));
+        m.mp = Math.min(m.maxMp, m.mp + Math.max(0, m.maxMp - mpBefore));
         m.baseAtk += g.atk; m.baseDef += g.def; m.baseSpd += g.spd;
         m.baseMag += g.mag; m.baseLuck += g.luck;
         recalc(m);
@@ -381,6 +488,7 @@ Game.Party = (function () {
       });
       m.equip = m.equip || {};
       m.guarding = false;
+      ensureJobFields(m);
       members[id] = m;
       recalc(m);
     });
@@ -396,6 +504,8 @@ Game.Party = (function () {
     init: init, recruit: recruit, restAll: restAll, reviveFallen: reviveFallen, revive: revive,
     list: list, aliveList: aliveList, deadList: deadList, get: get,
     isWiped: isWiped, addExp: addExp, learnedSkills: learnedSkills,
+    jobOf: jobDef, jobStar: jobStar, jobBattles: jobBattles, battlesToNextStar: battlesToNextStar,
+    jobLockReason: jobLockReason, changeJob: changeJob, countJobBattle: countJobBattle, jobCritRate: jobCritRate,
     statusOf: statusOf, inflict: inflict, cure: cure, cureAll: cureAll,
     clearTemporaryStatuses: clearTemporaryStatuses,
     inventory: function () { return inventory; },

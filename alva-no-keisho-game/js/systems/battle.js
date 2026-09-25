@@ -248,7 +248,10 @@ Game.Battle = (function () {
 
   // 渾身の一撃。うんのよさが高いほど出やすい(上限12%)。守備を無視して大きく入る。
   function isCritical(actor) {
-    return Math.random() < Math.min(0.12, (actor.luck || 0) * 0.004);
+    var byLuck = Math.min(0.12, (actor.luck || 0) * 0.004);
+    // こぶし士など、職の性質で 出やすくなっている者は そちらが下限
+    var byJob = actor.job ? Game.Party.jobCritRate(actor) : 0;
+    return Math.random() < Math.max(byLuck, byJob);
   }
 
   // ログの一行に演出を添える。文章が出るのと同時に、画面のほうも反応させたい。
@@ -751,11 +754,16 @@ Game.Battle = (function () {
     var gold = beaten.reduce(function (s, e) { return s + e.gold; }, 0);
     Game.Party.addGold(gold);
     var levelMsgs = Game.Party.addExp(exp);
+    // 職の修行。いちばん格の高い相手で、修行になるかどうかを見る
+    var maxRank = beaten.reduce(function (r, e) { return Math.max(r, e.rank || 1); }, 1);
+    var jobMsgs = Game.Party.countJobBattle(maxRank);
+    var leveled = !!(levelMsgs && levelMsgs.length);
+    levelMsgs = (levelMsgs || []).concat(jobMsgs);
     var msg = 'せんとうに かちどきをあげた! ' + exp + 'の けいけんちと ' + gold + 'ゴールドを てにいれた';
     Game.Audio.play('victory');
     Game.Dialogue.show(msg, function () {
       // レベルが上がったなら、勝利のジングルのあとに上昇の音を重ねる
-      if (levelMsgs && levelMsgs.length) Game.Audio.play('levelup');
+      if (leveled) Game.Audio.play('levelup');
       flushArray(levelMsgs, function () { endBattle('won'); });
     });
     cb(true);

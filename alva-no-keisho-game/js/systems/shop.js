@@ -1,6 +1,6 @@
 // 店・宿屋・教会 ― 街の施設タイルを踏んだときに開く画面。
 // kind: 'item'(道具屋) / 'gear'(武器防具屋) / 'inn'(宿屋) / 'church'(教会)
-//       'medal'(ちいさな徽章の引き換え所)
+//       'medal'(ちいさな徽章の引き換え所) / 'shrine'(さだめの祠 ― 職に就く)
 var Game = window.Game || {};
 Game.Shop = (function () {
   var state = null;
@@ -20,6 +20,9 @@ Game.Shop = (function () {
       Game.Dialogue.show('宿屋「ひと晩 ' + price + 'ゴールドだよ。泊まっていくかい?」');
     } else if (kind === 'church') {
       Game.Dialogue.show('神官「ようこそ。旅の記録も、倒れた方への祈りも、ここで承ります」');
+    } else if (kind === 'shrine') {
+      Game.Dialogue.show('祠守「ここは さだめの祠。生き方を 選び直す場所じゃ。' +
+        'レベルは そのまま、力の出かたが 変わる。覚えた技は 忘れぬ」');
     } else if (kind === 'medal') {
       var n = Game.Data.medalCount();
       Game.Dialogue.show(n
@@ -38,7 +41,7 @@ Game.Shop = (function () {
 
   function title() {
     return { item: 'どうぐや', gear: 'ぶきぼうぐや', inn: 'やどや',
-             church: 'きょうかい', medal: 'メダルの ひきかえ所' }[state.kind];
+             church: 'きょうかい', medal: 'メダルの ひきかえ所', shrine: 'さだめの祠' }[state.kind];
   }
 
   // ---- 一覧の中身 ----
@@ -64,7 +67,20 @@ Game.Shop = (function () {
     return out;
   }
 
+  // 祠: まず 誰を、つぎに どの職へ
+  function shrineRoot() {
+    return Game.Party.list().map(function (m) { return { id: 'member', member: m }; })
+      .concat([{ id: 'leave', label: 'でていく' }]);
+  }
+  function jobList() {
+    var m = state.member;
+    return Game.Data.JOB_ORDER.map(function (id) {
+      return { id: id, def: Game.Data.Jobs[id], lock: Game.Party.jobLockReason(m, id) };
+    });
+  }
+
   function rootList() {
+    if (state.kind === 'shrine') return shrineRoot();
     // 教会は 売り買いではなく「記録」と「祈り」。
     // たびのきろくがメニューの奥にしか無いと、はじめての人は見つけられない。
     if (state.kind === 'church') {
@@ -87,6 +103,7 @@ Game.Shop = (function () {
     if (state.view === 'church') return Game.Party.deadList();
     if (state.view === 'curse') return Game.Party.cursedList();
     if (state.view === 'medal') return Game.Data.MedalPrizes;
+    if (state.view === 'job') return jobList();
     return [];
   }
 
@@ -107,6 +124,7 @@ Game.Shop = (function () {
     if (Game.Input.wasPressed('cancel')) {
       if (state.view === 'root' || state.view === 'medal') close();
       else if (state.view === 'church' || state.view === 'curse') { state.view = 'root'; state.cursor = 0; }
+      else if (state.view === 'job') { state.view = 'root'; state.cursor = state.memberIndex || 0; }
       else { state.view = 'root'; state.cursor = 0; }
       return;
     }
@@ -116,6 +134,13 @@ Game.Shop = (function () {
       var cmd = list[state.cursor].id;
       if (cmd === 'leave') { close(); return; }
       if (cmd === 'save') { doChurchSave(); return; }
+      if (cmd === 'member') {
+        state.member = list[state.cursor].member;
+        state.memberIndex = state.cursor;
+        state.view = 'job';
+        state.cursor = Math.max(0, Game.Data.JOB_ORDER.indexOf(state.member.job));
+        return;
+      }
       state.view = cmd; state.cursor = 0;
       return;
     }
@@ -124,6 +149,24 @@ Game.Shop = (function () {
     if (state.view === 'sell') { doSell(list[state.cursor]); return; }
     if (state.view === 'church') { doRevive(list[state.cursor]); return; }
     if (state.view === 'curse') { doLiftCurse(list[state.cursor]); return; }
+    if (state.view === 'job') { doChangeJob(list[state.cursor]); return; }
+  }
+
+  function doChangeJob(entry) {
+    var m = state.member;
+    if (!entry || !m) return;
+    if (entry.lock) { Game.Dialogue.show('祠守「' + entry.lock + '」'); return; }
+    if (m.job === entry.id) {
+      Game.Dialogue.show('祠守「' + m.name + 'は すでに ' + entry.def.name + 'として 歩んでおる」');
+      return;
+    }
+    Game.Party.changeJob(m.id, entry.id);
+    Game.Audio.play('save');
+    Game.Dialogue.show('祠守「……さだめは 書き換えられた」', function () {
+      Game.Dialogue.show(entry.id === 'arinomama'
+        ? m.name + 'は 職を 離れ、ありのままの 姿に もどった!'
+        : m.name + 'は ' + entry.def.name + 'に なった!');
+    });
   }
 
   function updateInn() {
@@ -248,6 +291,7 @@ Game.Shop = (function () {
     }
 
     if (state.view === 'medal') { drawMedals(ctx, x, y, w, h); return; }
+    if (state.kind === 'shrine') { drawShrine(ctx, x, y, w, h); return; }
 
     var list = currentList();
     if (list.length === 0) {
@@ -300,6 +344,63 @@ Game.Shop = (function () {
     }
 
     Game.Dialogue.draw(ctx, W, H);
+  }
+
+  function jobLabel(m, id) {
+    var j = Game.Data.Jobs[id];
+    if (id === 'arinomama') return j.name;
+    return j.name + ' ★' + Game.Party.jobStar(m, id);
+  }
+
+  function drawShrine(ctx, x, y, w, h) {
+    var list = currentList();
+    if (state.view === 'root') {
+      list.forEach(function (entry, i) {
+        var ly = y + 62 + i * 22;
+        var prefix = i === state.cursor ? '▶ ' : '　';
+        if (entry.id === 'leave') {
+          Game.Renderer.drawText(ctx, prefix + entry.label, x + 16, ly, { size: 14 });
+          return;
+        }
+        var m = entry.member;
+        Game.Renderer.drawText(ctx, prefix + m.name + '  Lv' + m.level, x + 16, ly, { size: 14 });
+        Game.Renderer.drawText(ctx, jobLabel(m, m.job), x + 230, ly, { size: 13, color: '#d4af5a' });
+      });
+      Game.Renderer.drawText(ctx, 'だれの さだめを 書き換える?    X: でる', x + 16, y + h - 16,
+        { size: 12, color: '#6b6354' });
+      Game.Dialogue.draw(ctx, W_CACHE, H_CACHE);
+      return;
+    }
+    // 職の一覧
+    var m = state.member;
+    Game.Renderer.drawText(ctx, m.name + ' の さだめ', x + 200, y + 26, { size: 13, color: '#ece7da' });
+    list.forEach(function (entry, i) {
+      var ly = y + 56 + i * 22;
+      var sel = i === state.cursor;
+      var color = entry.lock ? '#6b6354' : (m.job === entry.id ? '#d4af5a' : '#ece7da');
+      Game.Renderer.drawText(ctx, (sel ? '▶ ' : '　') + entry.def.name + (m.job === entry.id ? '(いま)' : ''),
+        x + 16, ly, { size: 14, color: color });
+      var right = entry.lock ? '条件あり'
+        : entry.id === 'arinomama' ? '' : '★' + Game.Party.jobStar(m, entry.id) + '  (' + Game.Party.jobBattles(m, entry.id) + '戦)';
+      Game.Renderer.drawText(ctx, right, x + w - 16, ly, { size: 12, align: 'right', color: '#a49b86' });
+    });
+    // 選んでいる職の 倍率と 性質
+    var sel = list[state.cursor];
+    if (sel) {
+      var mul = sel.def.mul, parts = [];
+      [['ちから', 'atk'], ['みのまもり', 'def'], ['すばやさ', 'spd'], ['まりょく', 'mag'], ['HP', 'hp'], ['MP', 'mp']]
+        .forEach(function (p) {
+          var v = mul[p[1]] === undefined ? 1 : mul[p[1]];
+          var pct = Math.round((v - 1) * 100);
+          parts.push(p[0] + (pct === 0 ? '±0' : (pct > 0 ? '+' : '') + pct) + '%');
+        });
+      Game.Renderer.drawText(ctx, sel.def.role + (sel.def.trait ? ' / ' + sel.def.trait.note : ''),
+        x + 16, y + h - 52, { size: 12, color: '#a49b86' });
+      Game.Renderer.drawText(ctx, sel.id === 'arinomama' ? '倍率なし' : parts.join('  '),
+        x + 16, y + h - 34, { size: 11, color: '#a49b86' });
+    }
+    Game.Renderer.drawText(ctx, 'Z: この職に就く    X: もどる', x + 16, y + h - 14, { size: 12, color: '#6b6354' });
+    Game.Dialogue.draw(ctx, W_CACHE, H_CACHE);
   }
 
   function drawMedals(ctx, x, y, w, h) {

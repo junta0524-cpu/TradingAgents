@@ -12,7 +12,7 @@ Game.Data = Game.Data || {};
 
 // stat: 'mag' の技は呪文で、まりょくから威力を出す。省略した技は武技で、ちから(こうげき力)で殴る。
 // kind:
-//   attack   … 攻撃。target が all_enemies なら全体、group なら並んだ数体
+//   attack   … 攻撃。target が all_enemies なら全体
 //   heal     … 回復。heal_party で味方全体
 //   cure     … 状態異常を治す      revive … 生き返らせる
 //   guard    … かまえ(その場で発動)
@@ -72,6 +72,22 @@ Game.Data.Skills = {
   mangetsu_no_ichiya: { id: 'mangetsu_no_ichiya', name: '満月の一矢', mp: 10, kind: 'attack', power: 2.0, target: 'one_enemy', element: 'light' },
   balga_nagiharai: { id: 'balga_nagiharai', name: 'なぎ払い斬り', mp: 0, kind: 'attack', power: 0.9, target: 'all_enemies' },
   chikai_no_ichigeki: { id: 'chikai_no_ichigeki', name: '誓約の一撃', mp: 8, kind: 'attack', power: 1.6, target: 'one_enemy' },
+
+  // ---- 職の技(さだめの祠で就いた職の ★で覚える) ----
+  // つるぎ士
+  makko_giri: { id: 'makko_giri', name: 'まっこう斬り', mp: 2, kind: 'attack', power: 1.5, target: 'one_enemy' },
+  susobarai: { id: 'susobarai', name: 'すそ払い', mp: 3, kind: 'attack', power: 0.9, target: 'all_enemies' },
+  tatakkiri: { id: 'tatakkiri', name: 'たたっ斬り', mp: 6, kind: 'attack', power: 2.0, target: 'one_enemy' },
+  tsurugi_no_mai: { id: 'tsurugi_no_mai', name: 'つるぎの舞', mp: 8, kind: 'attack', power: 1.3, target: 'all_enemies' },
+  // こぶし士
+  mawashigeri: { id: 'mawashigeri', name: 'まわし蹴り', mp: 2, kind: 'attack', power: 0.7, target: 'all_enemies' },
+  seiken_zuki: { id: 'seiken_zuki', name: 'せいけん突き', mp: 4, kind: 'attack', power: 1.8, target: 'one_enemy' },
+  bakuretsu_ken: { id: 'bakuretsu_ken', name: 'ばくれつ拳', mp: 6, kind: 'attack', power: 1.2, target: 'all_enemies' },
+  // まほろば剣士 ― 剣に 属性を 乗せる
+  homura_giri: { id: 'homura_giri', name: 'ほむら斬り', mp: 4, kind: 'attack', power: 1.5, target: 'one_enemy', element: 'fire' },
+  kori_giri: { id: 'kori_giri', name: 'こおり斬り', mp: 4, kind: 'attack', power: 1.5, target: 'one_enemy', element: 'ice' },
+  kamaitachi_giri: { id: 'kamaitachi_giri', name: 'かまいたち斬り', mp: 6, kind: 'attack', power: 1.0, target: 'all_enemies', element: 'wind' },
+  mahoroba_issen: { id: 'mahoroba_issen', name: 'まほろば一閃', mp: 10, kind: 'attack', power: 2.4, target: 'one_enemy', element: 'light' },
 };
 
 Game.Data.Characters = {

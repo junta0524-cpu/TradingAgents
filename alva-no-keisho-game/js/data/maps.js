@@ -8,7 +8,7 @@ Game.Data = Game.Data || {};
 // タイル凡例:
 //   進入不可 … # 木立 / X 岩壁・崖 / Y 建物 / ~ 水場 / N 町の人 / K 王
 //   通行可   … . 草原(遭遇:高) = 街道(遭遇:低) D ダンジョン床(遭遇:中) F 街の床(遭遇:なし)
-//   イベント … C 出口/門  B ボス部屋  T 宝箱  S/W/I/H 道具屋/武器屋/宿屋/教会
+//   イベント … C 出口/門  B ボス部屋  T 宝箱  S/W/I/H 道具屋/武器屋/宿屋/教会  J さだめの祠
 // 人は通り抜けられない。隣に立って そちらを向き、決定キーで話しかける。
 // 宝箱と仕掛けは通れるままにしてある ―― 塔と渦では、宝箱が一本道の途中に
 // 置かれていて、固くするとボス床まで行けなくなる(実測で確かめた)。
@@ -44,6 +44,8 @@ Game.Data.TileDefs = {
   'l': { walkable: true, color: '#d4af5a', encounter: 0, isSwitch: true, lit: true, glyph: '灯' },
   // 月光の門。満月のあいだだけ通れる
   'O': { walkable: true, color: '#5c6f9c', encounter: 0, moonGate: true, glyph: '月' },
+  // さだめの祠。職に就く・職を変える
+  'J': { walkable: true, color: '#6a5a8a', encounter: 0, shop: 'shrine', glyph: '祠' },
   // ちいさな徽章を集めている好事家の家
   'P': { walkable: true, color: '#8a6a9c', encounter: 0, shop: 'medal', glyph: '珍' },
   // 大陸の上に立つ 街・城・ダンジョンの入口。踏むと その中の地図へ入る。
@@ -163,7 +165,7 @@ Game.Data.Maps = {
     ],
   }),
 
-  // 中庭の泉を回廊がぐるりと囲む学院都市
+  // 中庭の泉を回廊がぐるりと囲む学院都市。北東の隅に さだめの祠がある
   selmaria_town: buildMap({
     id: 'selmaria_town', name: '学院都市セルマリア', kind: 'town', startX: 10, startY: 11,
     npcs: {
@@ -173,7 +175,7 @@ Game.Data.Maps = {
         },
     art: [
       'YYYYYYYYYYYYYYYYYYYY',
-      'YFFFFFFFFFFFFFFFFFFY',
+      'YFFFFFFFFFFFFFFFFFJY',
       'YFYYFFFF1FFFFFFFYYFY',
       'YFYYFFFFFFFFFFFFYYFY',
       'YFFFFFYYYYYYYYFFFFFY',

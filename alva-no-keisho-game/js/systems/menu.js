@@ -436,8 +436,13 @@ Game.Menu = (function () {
         x + 340, ly + 4, { size: 11, color: '#a49b86' });
       Game.Renderer.drawText(ctx, 'まりょく ' + m.mag + '   うんのよさ ' + m.luck,
         x + 340, ly + 20, { size: 11, color: '#a49b86' });
-      Game.Renderer.drawText(ctx, 'つぎのレベルまで あと ' + Math.max(0, m.expToNext - m.exp),
-        x + 340, ly + 36, { size: 11, color: '#6b6354' });
+      // 職と ★。職に就いていなければ 出さない
+      if (m.job && m.job !== 'arinomama') {
+        Game.Renderer.drawText(ctx, Game.Party.jobOf(m).name + '★' + Game.Party.jobStar(m, m.job),
+          x + 340, ly + 36, { size: 11, color: '#d4af5a' });
+      }
+      Game.Renderer.drawText(ctx, 'つぎのLvまで ' + Math.max(0, m.expToNext - m.exp),
+        x + w - 16, ly + 36, { size: 11, align: 'right', color: '#6b6354' });
     });
 
     var rowY = y + 58 + party().length * 50;
@@ -677,14 +682,24 @@ Game.Menu = (function () {
     if (m.maxMp > 0) Game.Renderer.drawText(ctx, 'MP ' + m.mp + '/' + m.maxMp, x + 150, ly, { size: 13 });
     Game.Renderer.drawText(ctx, 'つぎのレベルまで ' + m.expToNext, x + w - 16, ly,
       { size: 12, align: 'right', color: '#a49b86' });
+    // 職。★と つぎの★まで あと何戦か
+    var job = Game.Party.jobOf(m);
+    var jobLine = '職: ' + job.name;
+    if (m.job && m.job !== 'arinomama') {
+      var left = Game.Party.battlesToNextStar(m, m.job);
+      jobLine += '  ★' + Game.Party.jobStar(m, m.job) + (left === null ? '  (極めた)' : '  つぎの★まで ' + left + '戦');
+    }
+    Game.Renderer.drawText(ctx, jobLine, x + 16, ly + 22, { size: 12, color: '#d4af5a' });
 
     // 素の値と、装備で足された分を分けて見せる
     var STATS = [['こうげき', 'atk', 'baseAtk'], ['みのまもり', 'def', 'baseDef'],
                  ['すばやさ', 'spd', 'baseSpd'], ['まりょく', 'mag', 'baseMag'],
                  ['うんのよさ', 'luck', 'baseLuck']];
     STATS.forEach(function (row, i) {
-      var yy = y + 82 + i * 21;
-      var base = m[row[2]] || 0, total = m[row[1]] || 0, gear = total - base;
+      var yy = y + 100 + i * 21;
+      // かっこ内は 装備のぶんだけ。職の倍率は 数字そのものに 含めて見せる
+      var mul = row[1] === 'luck' ? 1 : (Game.Party.jobOf(m).mul[row[1]] || 1);
+      var base = Math.floor((m[row[2]] || 0) * mul), total = m[row[1]] || 0, gear = total - base;
       Game.Renderer.drawText(ctx, row[0], x + 16, yy, { size: 13, color: '#a49b86' });
       Game.Renderer.drawText(ctx, String(total), x + 150, yy, { size: 13, align: 'right' });
       if (gear !== 0) {
@@ -695,13 +710,13 @@ Game.Menu = (function () {
 
     // 覚えている呪文・特技
     var skills = Game.Party.learnedSkills(m).map(function (sk) { return sk.name; });
-    Game.Renderer.drawText(ctx, 'おぼえた じゅもん・とくぎ', x + 240, y + 82,
+    Game.Renderer.drawText(ctx, 'おぼえた じゅもん・とくぎ', x + 240, y + 100,
       { size: 12, color: '#a49b86' });
     if (skills.length === 0) {
-      Game.Renderer.drawText(ctx, '―', x + 240, y + 104, { size: 12, color: '#6b6354' });
+      Game.Renderer.drawText(ctx, '―', x + 240, y + 122, { size: 12, color: '#6b6354' });
     } else {
       skills.forEach(function (name, i) {
-        Game.Renderer.drawText(ctx, name, x + 240 + (i % 2) * 110, y + 104 + Math.floor(i / 2) * 19,
+        Game.Renderer.drawText(ctx, name, x + 240 + (i % 2) * 110, y + 122 + Math.floor(i / 2) * 19,
           { size: 12 });
       });
     }
