@@ -29,13 +29,15 @@ Game.Menu = (function () {
     return e ? { entry: e, def: Game.Data.Items[e.id] } : null;
   }
 
-  // 一覧の並びは「仲間… / じゅもん / どうぐ / たびのきろくに きろくする」
+  // 一覧の並びは「仲間… / じゅもん / どうぐ / さくせん / ならびかえ / きろく / せってい / はなす」。
+  // はなす は いちばん下に置く。開いてすぐ ↑ で届く(カーソルは上下で ひと回りする)。
   function SPELL_ROW() { return party().length; }
   function ITEM_ROW() { return party().length + 1; }
   function TACTIC_ROW() { return party().length + 2; }
   function ORDER_ROW() { return party().length + 3; }
   function SAVE_ROW() { return party().length + 4; }
   function SETTINGS_ROW() { return party().length + 5; }
+  function TALK_ROW() { return party().length + 6; }
 
   function caster() { return party()[state.casterIndex]; }
 
@@ -91,7 +93,7 @@ Game.Menu = (function () {
   function needsTarget(def) { return def && def.kind !== 'return'; }
 
   function listLength() {
-    if (state.view === 'status') return party().length + 6;
+    if (state.view === 'status') return party().length + 7;
     if (state.view === 'settings') return Game.Settings.keys().length;
     if (state.view === 'tactic') return Game.Data.Tactics.length;
     if (state.view === 'order') return party().length;
@@ -158,6 +160,7 @@ Game.Menu = (function () {
 
     if (state.view === 'status') {
       if (state.cursor === SAVE_ROW()) { doSave(); return; }
+      if (state.cursor === TALK_ROW()) { state.open = false; Game.Story.partyChat(); return; }
       if (state.cursor === SETTINGS_ROW()) { state.view = 'settings'; state.cursor = 0; return; }
       if (state.cursor === ORDER_ROW()) { state.view = 'order'; state.cursor = 0; state.holding = -1; return; }
       if (state.cursor === TACTIC_ROW()) { state.view = 'tactic'; state.cursor = 0; return; }
@@ -390,7 +393,7 @@ Game.Menu = (function () {
     // 背後のフィールドを暗く落として、数値を読みやすくする
     ctx.fillStyle = 'rgba(8,10,18,0.72)';
     ctx.fillRect(0, 0, W, H);
-    // 仲間4人ぶんの状態と、じゅもん/どうぐ/さくせん/ならびかえ/きろく の5行が入る高さ
+    // 仲間4人ぶんの状態と、じゅもん〜はなす の7行が入る高さ(4人のとき 下の行は 24px 刻みに詰める)
     var x = 20, y = 18, w = W - 40, h = H - 34;
     Game.Renderer.drawPanel(ctx, x, y, w, h);
 
@@ -416,7 +419,7 @@ Game.Menu = (function () {
   function drawStatus(ctx, x, y, w, h) {
     Game.Renderer.drawText(ctx, Game.Story.currentTitle(), x + 16, y + 22, { size: 13, color: '#d4af5a' });
     party().forEach(function (m, i) {
-      var ly = y + 48 + i * 54;
+      var ly = y + 48 + i * 50;
       var prefix = i === state.cursor ? '▶ ' : '　';
       var st = Game.Party.statusOf(m);
       Game.Renderer.drawText(ctx, prefix + m.name + '  Lv' + m.level, x + 16, ly,
@@ -437,7 +440,8 @@ Game.Menu = (function () {
         x + 340, ly + 36, { size: 11, color: '#6b6354' });
     });
 
-    var rowY = y + 60 + party().length * 54;
+    var rowY = y + 58 + party().length * 50;
+    var RH = 24;
     var spellSelected = state.cursor === SPELL_ROW();
     Game.Renderer.drawText(ctx, (spellSelected ? '▶ ' : '　') + 'じゅもん', x + 16, rowY,
       { size: 14, color: spellSelected ? '#d4af5a' : '#ece7da' });
@@ -445,30 +449,35 @@ Game.Menu = (function () {
     Game.Renderer.drawText(ctx, castable + ' つ となえられる', x + 190, rowY, { size: 12, color: '#a49b86' });
 
     var itemSelected = state.cursor === ITEM_ROW();
-    Game.Renderer.drawText(ctx, (itemSelected ? '▶ ' : '　') + 'どうぐ', x + 16, rowY + 26,
+    Game.Renderer.drawText(ctx, (itemSelected ? '▶ ' : '　') + 'どうぐ', x + 16, rowY + RH,
       { size: 14, color: itemSelected ? '#d4af5a' : '#ece7da' });
-    Game.Renderer.drawText(ctx, bag().length + ' しゅるい', x + 190, rowY + 26, { size: 12, color: '#a49b86' });
+    Game.Renderer.drawText(ctx, bag().length + ' しゅるい', x + 190, rowY + RH, { size: 12, color: '#a49b86' });
 
     var tacticSelected = state.cursor === TACTIC_ROW();
-    Game.Renderer.drawText(ctx, (tacticSelected ? '▶ ' : '　') + 'さくせん', x + 16, rowY + 52,
+    Game.Renderer.drawText(ctx, (tacticSelected ? '▶ ' : '　') + 'さくせん', x + 16, rowY + RH * 2,
       { size: 14, color: tacticSelected ? '#d4af5a' : '#ece7da' });
-    Game.Renderer.drawText(ctx, Game.Data.tacticOf(Game.Party.tactic()).name, x + 190, rowY + 52,
+    Game.Renderer.drawText(ctx, Game.Data.tacticOf(Game.Party.tactic()).name, x + 190, rowY + RH * 2,
       { size: 12, color: '#a49b86' });
 
     var orderSelected = state.cursor === ORDER_ROW();
-    Game.Renderer.drawText(ctx, (orderSelected ? '▶ ' : '　') + 'ならびかえ', x + 16, rowY + 78,
+    Game.Renderer.drawText(ctx, (orderSelected ? '▶ ' : '　') + 'ならびかえ', x + 16, rowY + RH * 3,
       { size: 14, color: orderSelected ? '#d4af5a' : '#ece7da' });
-    Game.Renderer.drawText(ctx, '前の者ほど 狙われる', x + 190, rowY + 78, { size: 12, color: '#a49b86' });
+    Game.Renderer.drawText(ctx, '前の者ほど 狙われる', x + 190, rowY + RH * 3, { size: 12, color: '#a49b86' });
 
     var saveSelected = state.cursor === SAVE_ROW();
-    Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'たびのきろくに きろくする', x + 16, rowY + 104,
+    Game.Renderer.drawText(ctx, (saveSelected ? '▶ ' : '　') + 'たびのきろくに きろくする', x + 16, rowY + RH * 4,
       { size: 14, color: saveSelected ? '#d4af5a' : '#ece7da' });
 
     var settingsSelected = state.cursor === SETTINGS_ROW();
-    Game.Renderer.drawText(ctx, (settingsSelected ? '▶ ' : '　') + 'せってい', x + 16, rowY + 130,
+    Game.Renderer.drawText(ctx, (settingsSelected ? '▶ ' : '　') + 'せってい', x + 16, rowY + RH * 5,
       { size: 14, color: settingsSelected ? '#d4af5a' : '#ece7da' });
     Game.Renderer.drawText(ctx, '文字 ' + Game.Settings.label('textSpeed') + ' / 魔物 ' + Game.Settings.label('encounter'),
-      x + 190, rowY + 130, { size: 12, color: '#a49b86' });
+      x + 190, rowY + RH * 5, { size: 12, color: '#a49b86' });
+
+    var talkSelected = state.cursor === TALK_ROW();
+    Game.Renderer.drawText(ctx, (talkSelected ? '▶ ' : '　') + 'はなす', x + 16, rowY + RH * 6,
+      { size: 14, color: talkSelected ? '#d4af5a' : '#ece7da' });
+    Game.Renderer.drawText(ctx, '仲間の ひとことを 聞く', x + 190, rowY + RH * 6, { size: 12, color: '#a49b86' });
     Game.Renderer.drawText(ctx, 'Z: えらぶ    X: とじる', x + 16, y + h - 12, { size: 12, color: '#6b6354' });
   }
 

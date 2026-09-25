@@ -399,6 +399,44 @@ Game.Story = (function () {
     });
   }
 
+  // ---- 仲間との会話(メニューの「はなす」) ----
+  // 連れている仲間が 順に ひとことずつ話す。誰もいなければ アルヴァの胸の内。
+  function chatText(entry, cleared) {
+    if (!entry) return null;
+    if (typeof entry === 'string') return entry;
+    var alt = (entry['if'] || []).filter(function (r) { return hasFlag(r.flag); })[0];
+    if (alt) return alt.text;
+    return (cleared && entry.done) || entry.text || null;
+  }
+  function chatLines() {
+    var C = Game.Data.PartyChat;
+    var here = Game.Field.currentMap();
+    var st = finished ? null : stage();
+    // 段の舞台に いるときだけ、その段の台詞を使う(大陸を行く段は 大陸の上で)
+    var onStage = !!(st && here && here.id === st.map);
+    var tables = [];
+    if (onStage) tables.push(C.stages[chapterIndex + '-' + stageIndex]);
+    if (here) tables.push(C.places[here.id], C.kinds[here.kind]);
+    tables.push(C.idle);
+    var cleared = !!(st && requirementsMet(st));
+    function lineFor(id) {
+      for (var i = 0; i < tables.length; i++) {
+        var t = chatText(tables[i] && tables[i][id], cleared);
+        if (t) return t;
+      }
+      return null;
+    }
+    var out = [];
+    Game.Party.list().forEach(function (m) {
+      if (m.id === 'alva' || m.hp <= 0) return;
+      var t = lineFor(m.id);
+      if (t) out.push(((C.names && C.names[m.id]) || m.name) + '「' + t + '」');
+    });
+    if (!out.length) out.push('(' + lineFor('alva') + ')');
+    return out;
+  }
+  function partyChat() { showLines(chatLines(), function () {}); }
+
   function applyOnComplete(onComplete) {
     if (!onComplete) return;
     if (onComplete.recruit) {
@@ -425,7 +463,8 @@ Game.Story = (function () {
   return {
     begin: begin, resume: resume, serialize: serialize,
     isFinished: isFinished, currentTitle: currentTitle,
-    currentGoal: currentGoal, hasFlag: hasFlag,
+    currentGoal: currentGoal, hasFlag: hasFlag, partyChat: partyChat,
+    __chatLines: chatLines,
     // 検証用
     __state: function () { return { progress: progress, flags: flags, stage: stage(), finished: finished }; },
     __needTalk: function () { return finished ? [] : talkLeft(stage()); },
