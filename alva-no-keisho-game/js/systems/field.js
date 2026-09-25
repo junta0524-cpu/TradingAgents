@@ -459,6 +459,8 @@ Game.Field = (function () {
     __table: function () { return tableHere(); },
     // 検証用: 遭遇の判定を1回だけ振る
     __tryEncounter: function (ch) { return tryEncounter(ch); },
+    // 検証用: 指定の魔物と、ふつうの遭遇と同じ道筋で戦いを始める
+    __encounter: function (ids) { callbacks.onEncounter && callbacks.onEncounter(ids); },
     // 検証用: いま向いている先のマス
     __facing: function () { return { dir: facing, tile: facingTile() }; },
     // 検証用: いま使っているイベント一式

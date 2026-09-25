@@ -184,10 +184,29 @@ Game.Battle = (function () {
     });
   }
 
-  function damageOf(atk, def) {
-    var base = Math.max(1, atk - Math.floor(def * 0.6));
-    var variance = Math.floor(base * 0.2);
-    return base + Math.floor(Math.random() * (variance * 2 + 1)) - variance;
+  // ダメージの式は 当時のRPGのもの ―― 攻撃力÷2 − 守備力÷4。
+  // 守備力は攻撃力の半分しか効かない(攻撃が2上がると1増え、守備が4上がると1減る)。
+  // ただしこの世界のHPは、その2倍の打撃で釣り合うように作ってあるので、最後に2倍する。
+  // (そのまま使うと一撃が半分になり、戦闘の長さが倍になる。先に詰めたHPの釣り合いが崩れる)
+  // ゆらぎは 7/8〜9/8。
+  // 式の値が2に届かない ―― つまり歯が立たない相手には、0か1しか入らない。0は「ミス!」。
+  // 魔物が仲間の守備を相手に殴るときだけ、倍率を 1.8 に下げる。守備の効きが前の式より
+  // 軽くなったぶん、そのままだと受ける傷が1〜2割ふえ、ボス戦の釣り合いが崩れるため。
+  // (守備を無視するブレスや呪文は前と同じ値になるので、2のまま)
+  var DAMAGE_SCALE = 2, ENEMY_HIT_SCALE = 1.8;
+  function damageOf(atk, def, scale) {
+    var dq = atk / 2 - def / 4;
+    if (dq < 2) return Math.random() < 0.5 ? 0 : 1;
+    return Math.floor(dq * (scale || DAMAGE_SCALE) * (7 / 8 + Math.random() * 2 / 8));
+  }
+
+  // ふつうの打撃の一文。0なら「ミス!」
+  function hitOnEnemy(label, dmg, note) {
+    return dmg > 0 ? label + 'に ' + dmg + ' の ダメージ' + (note || '')
+                   : 'ミス! ' + label + 'に ダメージを あたえられない!';
+  }
+  function hitOnParty(name, dmg) {
+    return dmg > 0 ? name + 'に ' + dmg + ' の ダメージ' : 'ミス! ' + name + 'は ダメージを うけない!';
   }
 
   // 技の威力のもとになる値。呪文(stat: 'mag')はまりょく、武技はこうげき力。
@@ -286,11 +305,11 @@ Game.Battle = (function () {
     var dmg = damageOf(effAtk(actor), effDef(target));
     if (isEnemy) {
       target.curHp = Math.max(0, target.curHp - dmg);
-      say(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ', fxEnemyHurt(target, dmg));
+      say(actor.name + 'の こうげき! ' + hitOnEnemy(target.label, dmg), fxEnemyHurt(target, dmg));
       if (target.curHp <= 0) say(target.label + 'を たおした!', vanish(target));
     } else {
-      hurt(target, dmg);
-      say(actor.name + 'は なかまの ' + target.name + 'を 殴ってしまった! ' + dmg + ' の ダメージ', fxPartyHurt(target, dmg));
+      dmg = hurt(target, dmg);
+      say(actor.name + 'は なかまの ' + target.name + 'を 殴ってしまった! ' + hitOnParty(target.name, dmg), fxPartyHurt(target, dmg));
     }
   }
 
@@ -429,8 +448,10 @@ Game.Battle = (function () {
     else resolveRound();
   }
 
-  // すばやさの高い者から動く。同じ値でも毎回きっちり同じ順にならないよう揺らす。
-  function initiative(spd) { return (spd || 1) * (0.75 + Math.random() * 0.5); }
+  // すばやさの高い者から動く……が、必ずその順ではない。当時のRPGの手ざわりで、
+  // (すばやさ + 20) に 0.5〜1.0 の乱数を掛ける。+20 があるので、すばやさが倍ほど
+  // 違っても ときどき順番が入れ替わる(掛け算だけだと、倍違えば一度も入れ替わらない)。
+  function initiative(spd) { return ((spd || 0) + 20) * (0.5 + Math.random() * 0.5); }
 
   function resolveRound() {
     var queue = state.actions.slice();
@@ -443,7 +464,10 @@ Game.Battle = (function () {
       var actor = a.kind === 'enemy' ? a.enemy : Game.Party.get(a.actorId);
       a.order = initiative(actor && effSpd(actor));
     });
-    queue.sort(function (a, b) { return b.order - a.order; });
+    // 同じ値なら味方が先(並び順のまま。sort は安定なので崩れない)
+    queue.sort(function (a, b) {
+      return (b.order - a.order) || ((a.kind === 'enemy' ? 1 : 0) - (b.kind === 'enemy' ? 1 : 0));
+    });
     state.phase = 'resolving';
     // 「かまえをとった」などの、行動前に出ている文を先に流す
     flushLog(function () { runQueue(queue, 0); });
@@ -502,6 +526,8 @@ Game.Battle = (function () {
   // element を渡すと、装備の銘による属性の弾きが乗る。
   // 物理の打撃には 'physical' を渡す ―― 棘の胸当てがここを見て打ち返す。
   function hurt(member, rawDmg, element) {
+    // 空振りは空振り。耐性やぼうぎょの「最低1」で 1 に化けさせない
+    if (!(rawDmg > 0)) return 0;
     var traits = Game.Party.traitsOf(member);
     var r = element && traits.resist[element];
     var dmg = r === undefined || r === null ? rawDmg : Math.max(1, Math.round(rawDmg * r));
@@ -584,7 +610,7 @@ Game.Battle = (function () {
         var pal = others[Math.floor(Math.random() * others.length)];
         var d = damageOf(effAtk(enemy), effDef(pal));
         pal.curHp = Math.max(0, pal.curHp - d);
-        say(enemy.label + 'は こんらんして ' + pal.label + 'を 攻撃した! ' + d + ' の ダメージ', fxEnemyHurt(pal, d));
+        say(enemy.label + 'は こんらんして ' + pal.label + 'を 攻撃した! ' + hitOnEnemy(pal.label, d), fxEnemyHurt(pal, d));
         if (pal.curHp <= 0) say(pal.label + 'は たおれた!', vanish(pal));
       } else {
         state.log.push(enemy.label + 'は こんらんして あたりを 殴っている。');
@@ -670,7 +696,7 @@ Game.Battle = (function () {
 
     if (skill.target === 'all_party') {
       alive.forEach(function (member) {
-        var d = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member)) * skill.power), skill.element);
+        var d = hurt(member, Math.round(damageOf(effAtk(enemy), effDef(member), ENEMY_HIT_SCALE) * skill.power), skill.element);
         say(enemy.label + 'の ' + skill.name + '! ' + member.name + 'に ' + d + ' の ダメージ', fxPartyHurt(member, d));
       });
       return true;
@@ -694,8 +720,8 @@ Game.Battle = (function () {
       state.log.push(enemy.label + 'の こうげき! しかし 攻撃は はずれた!');
       return;
     }
-    var dmg2 = hurt(target, damageOf(effAtk(enemy), effDef(target)), 'physical');
-    say(enemy.label + 'の こうげき! ' + target.name + 'に ' + dmg2 + ' の ダメージ', fxPartyHurt(target, dmg2));
+    var dmg2 = hurt(target, damageOf(effAtk(enemy), effDef(target), ENEMY_HIT_SCALE), 'physical');
+    say(enemy.label + 'の こうげき! ' + hitOnParty(target.name, dmg2), fxPartyHurt(target, dmg2));
     if (target.hp <= 0) say(target.name + 'は たおれてしまった!', function () { Game.Audio.play('downed'); });
     // 棘の胸当て。受けた打撃の一部が、殴った相手へ返る
     var thorns = Game.Party.traitsOf(target).thorns;
@@ -817,6 +843,11 @@ Game.Battle = (function () {
     var crit = isCritical(actor);
     // 渾身の一撃は守備力を無視するので、damageOf に def:0 を渡す
     var raw = crit ? Math.round(damageOf(effAtk(actor), 0) * 1.4) : damageOf(effAtk(actor), effDef(target));
+    // 空振り。耐性の計算も呼応の積み上げもしない(当たっていないので、途切れもしない)
+    if (raw === 0) {
+      say(actor.name + 'の こうげき! ' + hitOnEnemy(target.label, 0));
+      return;
+    }
     // はぐれ者は何を当てても通らないが、渾身の一撃だけは別。
     // この手のRPGでメタルを狩るのが「会心待ち」になるのは、この一行のため。
     var hit = (crit && target.metal)
@@ -825,7 +856,7 @@ Game.Battle = (function () {
     var dmg = hit.dmg;
     target.curHp = Math.max(0, target.curHp - dmg);
     if (crit) say('こんしんの いちげき!!', function () { Game.Fx.critical(); });
-    say(actor.name + 'の こうげき! ' + target.label + 'に ' + dmg + ' の ダメージ' + hit.note, fxEnemyHurt(target, dmg));
+    say(actor.name + 'の こうげき! ' + hitOnEnemy(target.label, dmg, hit.note), fxEnemyHurt(target, dmg));
     if (target.curHp <= 0) say(target.label + 'を たおした!', vanish(target));
   }
 
@@ -1247,7 +1278,9 @@ Game.Battle = (function () {
     Game.Dialogue.draw(ctx, W, H);
   }
 
-  return { __commands: commandList, start: start, isActive: isActive, update: update, draw: draw,
+  return {
+    // 検証用
+    __damageOf: damageOf, __initiative: initiative, __commands: commandList, start: start, isActive: isActive, update: update, draw: draw,
            // 検証用: いまの戦闘の中身と、逃走判定
            __state: function () { return state; },
            __resolveFlee: resolveFlee, __resolveSkill: resolveSkill, __enemyAct: enemyAct,
