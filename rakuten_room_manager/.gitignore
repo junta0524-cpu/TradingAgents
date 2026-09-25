@@ -1,0 +1,10 @@
+# APIキーを含む可能性があるためコミットしない
+.env
+
+# SQLiteデータベース（実行時に自動生成される）
+*.db
+*.db-journal
+
+# Python関連
+__pycache__/
+*.pyc
