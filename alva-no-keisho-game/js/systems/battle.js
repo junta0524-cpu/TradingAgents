@@ -63,7 +63,7 @@ Game.Battle = (function () {
     return 0;
   }
 
-  // 「スライムが 2ひき あらわれた!」のように、同じ魔物はまとめて数える
+  // 「ちびゲルが 2ひき あらわれた!」のように、同じ魔物はまとめて数える
   function encounterLine(enemies) {
     var order = [], counts = {};
     enemies.forEach(function (e) {

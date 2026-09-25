@@ -67,7 +67,7 @@ function mon(id, name, rank, loc, over) {
 // 1.0 が等倍。1.5 で弱点、0.5 で耐性、0 なら効かない。
 // physical は 通常攻撃と武技(属性を持たない技)にかかる。
 Game.Data.Families = {
-  slime:    { name: '粘体系',   physical: 1.0, fire: 1.2, ice: 1.0, blast: 1.3, wind: 1.0, light: 1.0, ailment: 1.2 },
+  gel:      { name: '粘体系',   physical: 1.0, fire: 1.2, ice: 1.0, blast: 1.3, wind: 1.0, light: 1.0, ailment: 1.2 },
   remnant:  { name: '旧竜軍残党系', physical: 1.0, fire: 1.0, ice: 1.0, blast: 1.0, wind: 1.2, light: 1.2, ailment: 1.0 },
   beast:    { name: '魔獣系',       physical: 1.0, fire: 1.3, ice: 1.0, blast: 1.0, wind: 1.0, light: 1.0, ailment: 1.1 },
   plant:    { name: '植物系',       physical: 0.8, fire: 1.8, ice: 1.2, blast: 1.0, wind: 0.6, light: 1.0, ailment: 1.3 },
@@ -108,17 +108,17 @@ var SPELL = {
 
 
 // ---- 粘体系 ----
-add('chibi_slime', 'ちびゲル', 1, ['east_road', 'azure_plain'], { hp: 10, atk: 7, family: 'slime' });
-add('aka_slime', 'あかゲル', 1, ['east_road'], { hp: 13, atk: 8, inflict: { status: 'confuse', chance: 0.12 }, family: 'slime' });
+add('chibi_gel', 'ちびゲル', 1, ['east_road', 'azure_plain'], { hp: 10, atk: 7, family: 'gel' });
+add('aka_gel', 'あかゲル', 1, ['east_road'], { hp: 13, atk: 8, inflict: { status: 'confuse', chance: 0.12 }, family: 'gel' });
 // ---- はぐれ者 ----
 // 硬く、すばやく、すぐ逃げる。そのかわり倒せば経験値が跳ねる。
 // まともに削ろうとしても通らないので、渾身の一撃が出るかどうかの勝負になる。
-add('hane_slime', 'はねゲル', 1, ['east_road', 'azure_plain', 'cliff_road'],
+add('hane_gel', 'はねゲル', 1, ['east_road', 'azure_plain', 'cliff_road'],
     { hp: 6, atk: 6, def: 40, spd: 30, exp: 120, gold: 90, family: 'metal', metal: true });
-add('hagure_slime', 'はぐれ鋼', 4, ['ogre_camp', 'academy_altar', 'abyss_depth'],
+add('hagure_kou', 'はぐれ鋼', 4, ['ogre_camp', 'academy_altar', 'abyss_depth'],
     { hp: 10, atk: 20, def: 90, spd: 42, exp: 900, gold: 500, family: 'metal', metal: true });
-add('king_slime_kakera', '粘王の欠片', 3, ['cliff_road'], { hp: 72, atk: 19, family: 'slime' });
-add('hedoro_slime', 'ヘドロゲル', 6, ['abyss_depth'], { inflict: { status: 'poison', chance: 0.3 }, family: 'slime' });
+add('nen_ou_kakera', '粘王の欠片', 3, ['cliff_road'], { hp: 72, atk: 19, family: 'gel' });
+add('hedoro_gel', 'ヘドロゲル', 6, ['abyss_depth'], { inflict: { status: 'poison', chance: 0.3 }, family: 'gel' });
 
 // ---- 旧竜軍残党系 ----
 // 竜帝軍の残党は、散り散りになった先のオーガ野営地に集まっている。

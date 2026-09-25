@@ -420,7 +420,7 @@ html = """<title>画素譜</title>
   tiles/      tile_grass.png  tile_road.png  …  (16枚, 32×32)
   chars/      alva.png  elrode.png  celestia.png  balga.png  npc_*.png  (16枚, 32×48)
               *_walk_down / _up / _side.png  (12枚, 96×48 ＝ 32×48が3コマ)
-  monsters/   chibi_slime.png  …  galoz.png  …  (59枚, 96×96 / ボスのみ160×160)
+  monsters/   chibi_gel.png  …  galoz.png  …  (59枚, 96×96 / ボスのみ160×160)
   bg/         battle_*.png  title.png  (6枚, 320×240で描いて640×480へ) ← すべて到着</pre></div>
   <p>用意できたものは絵に、まだのものは今の色面のまま ― という混在で動くようにします。順番も自由です。</p>
 
