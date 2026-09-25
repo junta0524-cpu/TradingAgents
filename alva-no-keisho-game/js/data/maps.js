@@ -6,9 +6,12 @@ var Game = window.Game || {};
 Game.Data = Game.Data || {};
 
 // タイル凡例:
-//   進入不可 … # 木立 / X 岩壁・崖 / Y 建物 / ~ 水場
+//   進入不可 … # 木立 / X 岩壁・崖 / Y 建物 / ~ 水場 / N 町の人 / K 王
 //   通行可   … . 草原(遭遇:高) = 街道(遭遇:低) D ダンジョン床(遭遇:中) F 街の床(遭遇:なし)
-//   イベント … C 出口/門  B ボス部屋  N 町の人  K 王  T 宝箱  S/W/I/H 道具屋/武器屋/宿屋/教会
+//   イベント … C 出口/門  B ボス部屋  T 宝箱  S/W/I/H 道具屋/武器屋/宿屋/教会
+// 人は通り抜けられない。隣に立って そちらを向き、決定キーで話しかける。
+// 宝箱と仕掛けは通れるままにしてある ―― 塔と渦では、宝箱が一本道の途中に
+// 置かれていて、固くするとボス床まで行けなくなる(実測で確かめた)。
 Game.Data.TileDefs = {
   '#': { walkable: false, color: '#3c5c33', encounter: 0 },
   'X': { walkable: false, color: '#5a5348', encounter: 0 },
@@ -20,8 +23,9 @@ Game.Data.TileDefs = {
   'F': { walkable: true, color: '#b7a888', encounter: 0 },
   'C': { walkable: true, color: '#b08d3e', encounter: 0, isGate: true },
   'B': { walkable: true, color: '#8a3230', encounter: 0, isBoss: true },
-  'N': { walkable: true, color: '#8a76b8', encounter: 0, isNpc: true },
-  'K': { walkable: true, color: '#9c7c2e', encounter: 0, isNpc: true, glyph: '王' },
+  // 人は障害物。踏んで通り抜けるのではなく、隣に立って話しかける
+  'N': { walkable: false, color: '#8a76b8', encounter: 0, isNpc: true },
+  'K': { walkable: false, color: '#9c7c2e', encounter: 0, isNpc: true, glyph: '王' },
   'T': { walkable: true, color: '#7a5a24', encounter: 0, isChest: true, glyph: '宝' },
   // 街の施設。踏むとそれぞれの画面が開く
   'S': { walkable: true, color: '#4f8a5c', encounter: 0, shop: 'item', glyph: '道' },

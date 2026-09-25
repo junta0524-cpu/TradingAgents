@@ -163,9 +163,12 @@ Game.Field = (function () {
     if (dx === 0 && dy === 0) return;
 
     var nx = px + dx, ny = py + dy;
+    // 進めなくても、向きだけは変わる。当時のRPGと同じで、壁や人に向かって
+    // 一度押すとその場で振り向く ―― 隣の人に話しかけるには、これが要る。
+    facing = dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : 'right';
     var tile = tileAt(nx, ny);
     var def = tile && Game.Data.TileDefs[tile];
-    if (!def || !def.walkable) return;
+    if (!def || !def.walkable) { moveCooldown = MOVE_DELAY; return; }
     // 月光の門は満月のあいだだけ開く。閉じているときは、いつ開くかを伝える
     if (def.moonGate && !Game.Moon.isFull()) {
       Game.Dialogue.show('月光の門は 固く閉じている。(満月まで あと ' +
@@ -177,7 +180,6 @@ Game.Field = (function () {
     // 先頭が動く前にいたマスを履歴の先頭へ。仲間はこれを順に辿る
     trail.unshift({ x: px, y: py });
     if (trail.length > TRAIL_MAX) trail.length = TRAIL_MAX;
-    facing = dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : 'right';
     steps += 1;
     Game.Moon.step();   // 世界の時計。歩くほどに月が満ち欠けする
     moveFrom = { x: px, y: py };
@@ -204,17 +206,45 @@ Game.Field = (function () {
       if (!def.lit) callbacks.onSwitch && callbacks.onSwitch(nx, ny, map);
       return;
     }
-    if (def.isNpc) {
-      // 誰に話しかけたかは、立ち位置から引く
-      var npcId = map.npcAt && map.npcAt[nx + ',' + ny];
-      callbacks.onNpc && callbacks.onNpc(npcId, map);
-      return;
-    }
     // 毒で削られた直後に不意打ちまで重ねない。そのぶんは一歩見逃す
     if (!poisonTicked && tryEncounter(tile)) {
       var group = pickEncounterGroup();
       if (group.length) callbacks.onEncounter && callbacks.onEncounter(group);
     }
+  }
+
+  // ---- 目の前のもの ----
+  // 向いている先のマス。話しかける相手も、開ける宝箱も、ここから引く
+  function facingTile() {
+    var dx = facing === 'left' ? -1 : facing === 'right' ? 1 : 0;
+    var dy = facing === 'up' ? -1 : facing === 'down' ? 1 : 0;
+    return { x: px + dx, y: py + dy };
+  }
+
+  // 決定キーで呼ばれる。目の前に用があれば済ませて true を返す。
+  // false のときは呼び出し側がメニューを開く ―― 当時のRPGと同じ振り分けで、
+  // 人の前で押せば話し、何も無いところで押せばコマンドが出る。
+  function interact() {
+    if (!map) return false;
+    var f = facingTile();
+    var tile = tileAt(f.x, f.y);
+    var def = tile && Game.Data.TileDefs[tile];
+    if (!def) return false;
+    var key = f.x + ',' + f.y;
+    if (def.isNpc) {
+      callbacks.onNpc && callbacks.onNpc(map.npcAt && map.npcAt[key], map);
+      return true;
+    }
+    // 宝箱と仕掛けは踏んでも開く/点くが、手前からも手が届くようにしておく
+    if (def.isChest) {
+      callbacks.onChest && callbacks.onChest(map.chestAt && map.chestAt[key], map.id, key);
+      return true;
+    }
+    if (def.isSwitch && !def.lit) {
+      callbacks.onSwitch && callbacks.onSwitch(f.x, f.y, map);
+      return true;
+    }
+    return false;
   }
 
   // 歩行アニメのコマ。立ち→右足→立ち→左足 の4拍で回す。
@@ -273,7 +303,9 @@ Game.Field = (function () {
     stepCount: function () { return steps; },
     resetToStart: resetToStart, setPosition: setPosition, wardSteps: wardSteps,
     __visual: visualPos,   // 検証用: 画面上のいまの位置(小数)
-    update: update, draw: draw,
+    update: update, draw: draw, interact: interact,
+    // 検証用: いま向いている先のマス
+    __facing: function () { return { dir: facing, tile: facingTile() }; },
     // 検証用: いま使っているイベント一式
     __cbs: null,
     // 検証用: いま隊列がどのマスにいるか

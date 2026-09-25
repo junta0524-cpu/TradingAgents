@@ -135,7 +135,9 @@ Game.Core = (function () {
       } else if (Game.Menu.isOpen()) {
         Game.Menu.update();
       } else if (Game.Input.wasPressed('confirm')) {
-        Game.Menu.toggle();
+        // 目の前に人や宝箱がいれば そちらが先。何も無いところで押したときだけ
+        // コマンドの窓が出る ―― 当時のRPGの決定キーの振り分け
+        if (!Game.Field.interact()) Game.Menu.toggle();
       } else {
         Game.Field.update();
       }
