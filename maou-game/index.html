@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+  このファイルの役目：ゲームの入口。ダブルクリックで開くと遊べる。
+  画面（canvas）とスマホ用ボタンを置き、JSファイルを決まった順に読み込む。
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>魔王が仲間になりたそうな顔でこちらを見ている</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="screen"><canvas id="game" width="480" height="320"></canvas></div>
+<div id="pad">
+  <div class="dpad">
+    <button data-action="up" class="up">▲</button>
+    <button data-action="left" class="left">◀</button>
+    <button data-action="right" class="right">▶</button>
+    <button data-action="down" class="down">▼</button>
+  </div>
+  <div class="ab">
+    <button data-action="cancel" class="b">B</button>
+    <button data-action="ok" class="a">A</button>
+  </div>
+</div>
+
+<!-- 読み込み順が大事。上から順に読まれる。 -->
+<!-- 土台 -->
+<script src="js/core/rng.js"></script>
+<script src="js/core/input.js"></script>
+<script src="js/core/renderer.js"></script>
+<script src="js/core/window.js"></script>
+<script src="js/core/scene.js"></script>
+<script src="js/core/message.js"></script>
+<script src="js/core/debug.js"></script>
+<!-- データ -->
+<script src="js/data/balance.js"></script>
+<script src="js/data/story/demo.js"></script>
+<!-- 画面 -->
+<script src="js/scenes/title.js"></script>
+<script src="js/scenes/demo.js"></script>
+<!-- 起動（必ず最後） -->
+<script src="js/core/main.js"></script>
+</body>
+</html>

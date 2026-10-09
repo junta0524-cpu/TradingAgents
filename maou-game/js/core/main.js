@@ -1,0 +1,52 @@
+// このファイルの役目：ゲームを起動し、1秒に60回「動かす→描く」をくり返す。
+// F1キーのデバッグメニューもここで受け付ける。エラーが起きたら画面に赤字で出す。
+(function () {
+  const G = window.GAME = window.GAME || {};
+
+  // 設定（フェーズ3でセーブと一緒に保存する予定）
+  G.settings = G.settings || {
+    textSpeed: 'normal',   // slow / normal / fast
+    encounter: 'normal',   // normal / low
+    sound: true,
+  };
+  G.frame = 0;
+
+  const STEP = 1000 / 60;
+  let last = performance.now(), acc = 0, crashed = null;
+
+  function step() {
+    if (G.input.pressed('debug')) G.debug.toggle();
+    else G.scene.update();
+    G.input.endFrame();
+    G.frame++;
+  }
+
+  function drawCrash() {
+    const r = G.renderer;
+    r.clear('#200');
+    r.text('エラーが起きました。この画面を写真に撮って知らせてください。', 8, 8, '#f66');
+    r.wrap(String(crashed), r.W - 16).slice(0, 16).forEach((line, i) => r.text(line, 8, 32 + i * 16, '#fcc'));
+  }
+
+  function loop(now) {
+    try {
+      if (crashed) { drawCrash(); return; }
+      acc += Math.min(now - last, 250);   // 別タブから戻ったときに一気に進みすぎない
+      last = now;
+      while (acc >= STEP) { step(); acc -= STEP; }
+      G.scene.draw();
+    } catch (e) {
+      crashed = (e && e.stack) || e;
+      console.error(e);
+      drawCrash();
+      return;
+    } finally {
+      if (!crashed) requestAnimationFrame(loop);
+    }
+  }
+
+  window.addEventListener('error', e => { if (!crashed) { crashed = e.message; drawCrash(); } });
+
+  G.scene.change(G.scenes.title());
+  requestAnimationFrame(loop);
+})();
