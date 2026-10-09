@@ -48,16 +48,21 @@
       this.title = opts.title || '';
       this.cancelable = opts.cancelable !== false;
       this.index = opts.index || 0;
+      this.rows = opts.rows || 0;   // 一度に見せる行数（0＝全部）。多いときは上下に流れる
+      this.top = 0;
       this.lineH = 16;
       this.pad = 8;
     }
+    get visible() { return this.rows ? Math.min(this.rows, this.items.length) : this.items.length; }
     get h() {
-      return this.pad * 2 + this.items.length * this.lineH + (this.title ? this.lineH + 4 : 0);
+      return this.pad * 2 + this.visible * this.lineH + (this.title ? this.lineH + 4 : 0);
     }
     update() {
       const inp = G.input, n = this.items.length;
       if (inp.repeat('up')) this.index = (this.index - 1 + n) % n;
       if (inp.repeat('down')) this.index = (this.index + 1) % n;
+      if (this.index < this.top) this.top = this.index;
+      if (this.index >= this.top + this.visible) this.top = this.index - this.visible + 1;
       if (inp.pressed('ok')) return { type: 'select', index: this.index, item: this.items[this.index] };
       if (this.cancelable && inp.pressed('cancel')) return { type: 'cancel' };
       return null;
@@ -70,13 +75,18 @@
         r.text(this.title, this.x + this.pad, ty, '#ffd866');
         ty += this.lineH + 4;
       }
-      this.items.forEach((it, i) => {
-        const y = ty + i * this.lineH;
+      const visibleItems = this.items.slice(this.top, this.top + this.visible);
+      visibleItems.forEach((it, k) => {
+        const i = this.top + k;
+        const y = ty + k * this.lineH;
         const color = it.disabled ? '#777' : '#fff';
         r.text(it.label, this.x + this.pad + 14, y + 1, color);
         if (it.note) r.text(it.note, this.x + this.w - this.pad, y + 1, it.disabled ? '#666' : '#aaa', 'right');
         if (i === this.index && blinkOn()) r.text('▶', this.x + this.pad, y + 1, '#fff');
       });
+      // 続きがあるときの印
+      if (this.top > 0) r.text('▲', this.x + this.w / 2, ty - 12, '#aaa', 'center');
+      if (this.top + this.visible < this.items.length) r.text('▼', this.x + this.w / 2, this.y + this.h - 11, '#aaa', 'center');
     }
   }
 

@@ -5,12 +5,12 @@
   const G = window.GAME = window.GAME || {};
 
   const ITEMS = [
-    { label: '章・マップへ移動',       phase: 1 },
+    { label: '章・マップへ移動',       phase: 1, run: () => G.scene.push(createMapPicker()) },
     { label: '全回復',                 phase: 2 },
     { label: 'レベル＋1',              phase: 3 },
     { label: '言霊を全習得',           phase: 3 },
     { label: '阻害ゲージの増減',       phase: 5 },
-    { label: 'フラグ一覧と切り替え',   phase: 1 },
+    { label: 'フラグ一覧と切り替え',   phase: 1, run: () => G.scene.push(createFlagList()) },
     { label: 'エンカウント ON/OFF',    phase: 2 },
     { label: '戦闘計算の中身を表示',   phase: 2 },
     { label: '自動で100回戦闘',        phase: 2 },
@@ -28,7 +28,7 @@
   ];
 
   // いま作っているフェーズ（これより後の項目は灰色）
-  const CURRENT_PHASE = 0;
+  const CURRENT_PHASE = 1;
 
   function buildMenuItems() {
     return ITEMS.map(it => {
@@ -39,6 +39,59 @@
         note: ready ? (it.note ? it.note() : '') : `フェーズ${it.phase}〜`,
       };
     });
+  }
+
+  // マップを選んで、そこへ飛ぶ
+  function createMapPicker() {
+    const ids = Object.keys(G.DATA.maps);
+    const menu = new G.ui.Menu(ids.map(id => ({ label: G.DATA.maps[id].name, note: id })),
+      { x: 64, y: 40, w: 352, title: 'どのマップへ移動しますか', rows: 12 });
+    return {
+      name: 'デバッグ：マップ',
+      opaque: true,
+      update() {
+        const res = menu.update();
+        if (!res) return;
+        if (res.type === 'cancel') { G.scene.pop(); return; }
+        if (!G.state) G.party.newGame();
+        const id = ids[res.index], s = G.DATA.maps[id].start;
+        G.scene.change(G.scenes.map(id, s.x, s.y, s.dir));
+      },
+      draw() { G.renderer.clear('#000'); menu.draw(); },
+    };
+  }
+
+  // フラグの一覧（宝箱など、データにあるものすべて）。決定キーで ON/OFF
+  function knownFlags() {
+    const names = new Set(Object.keys(G.flags.data));
+    Object.keys(G.DATA.maps).forEach(id => (G.DATA.maps[id].chests || []).forEach(c => names.add(G.flags.chestKey(id, c.id))));
+    return Array.from(names).sort();
+  }
+  function flagLabel(name) {
+    const m = name.match(/^chest:([^:]+):(.+)$/);
+    if (m && G.DATA.maps[m[1]]) return `宝箱：${G.DATA.maps[m[1]].name}（${m[2]}）`;
+    return name;
+  }
+  function createFlagList() {
+    const names = knownFlags();
+    const build = () => names.map(n => ({ label: flagLabel(n), note: G.flags.get(n) ? 'ON' : 'OFF' }));
+    const menu = new G.ui.Menu(build(), { x: 32, y: 24, w: 416, title: 'フラグ一覧（決定で切り替え）', rows: 14 });
+    return {
+      name: 'デバッグ：フラグ',
+      opaque: true,
+      update() {
+        const res = menu.update();
+        if (!res) return;
+        if (res.type === 'cancel') { G.scene.pop(); return; }
+        G.flags.toggle(names[res.index]);
+        menu.items = build();
+      },
+      draw() {
+        G.renderer.clear('#000');
+        menu.draw();
+        if (!names.length) G.renderer.text('（フラグはまだありません）', 60, 60, '#aaa');
+      },
+    };
   }
 
   function createDebugScene() {

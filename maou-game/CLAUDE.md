@@ -23,7 +23,10 @@
 ## 構成メモ（実装で決めたこと）
 
 - `js/core/`：土台（入力・描画・ウィンドウ・メッセージ・場面管理・乱数・デバッグ・起動）
-- `js/scenes/`：各画面（タイトルなど）。仕様書の構成にない追加フォルダ。
+- `js/scenes/`：各画面（title / map / fieldmenu）。仕様書の構成にない追加フォルダ。
+- マップ：`js/data/maps/*.js` に文字の並び（rows）で書く。文字の意味は `js/data/tiles.js`。人（npcs）・宝箱（chests）・立て札（signs）・出入口（warps）も同じファイルに書く。新しいマップは index.html に1行足す。
+- 絵：マス目は `js/core/tileset.js`、人物は `js/data/sprites.js` の型紙＋色。宝箱のフラグ名は `chest:マップ名:宝箱名`。
+- セリフの「（仮）」は、小説の文章が届いたら差し替える。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。
 - 入力は `GAME.input.pressed('ok')` のように命令名で読む。命令名：up/down/left/right/ok/cancel/fast/debug。

@@ -1,5 +1,5 @@
 // このファイルの役目：タイトル画面。題名を表示し、「はじめから」「文字の速さ」を選べる。
-// （フェーズ0では「はじめから」で動作確認用の文章が流れる）
+// 「はじめから」で港町ミナモから歩き始める。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -43,7 +43,11 @@
       update() {
         const res = menu.update();
         if (!res || res.type !== 'select') return;
-        if (res.index === 0) G.scene.change(G.scenes.demo());
+        if (res.index === 0) {
+          G.party.newGame();
+          const st = G.state;
+          G.scene.change(G.scenes.map(st.mapId, st.x, st.y, st.dir));
+        }
         else G.scene.push(createSpeedScene());
       },
       draw() {
@@ -57,7 +61,7 @@
         r.text('仲間になりたそうな顔で', r.W / 2, 86, '#fff', 'center');
         r.text('こちらを見ている', r.W / 2, 108, '#fff', 'center');
         r.rect(140, 132, 200, 1, '#a33');
-        r.text('〔フェーズ0：土台〕', r.W / 2, 144, '#888', 'center');
+        r.text('〔フェーズ1：マップと会話〕', r.W / 2, 144, '#888', 'center');
         menu.draw();
         r.text('F1：デバッグメニュー', r.W - 8, r.H - 18, '#666', 'right');
       },
