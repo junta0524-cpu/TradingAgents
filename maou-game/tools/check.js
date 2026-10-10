@@ -594,7 +594,7 @@ const { chromium } = require('playwright');
   await shot('53_ch1_field');
   // ハニヤスと話す前は、市場へ行けない
   await placeAt('yomi_hani', 28, 9, 'right'); await wait(200);
-  await key('ArrowRight', 400);
+  await hold('ArrowRight', 150); await wait(200);
   expect('話す前は東へ行けない', (await scenes()).endsWith('メッセージ') && (await ev(() => GAME.state.x)) === 28, true);
   await closeMessages();
   // ハニヤスに話す → 街道のオモイカ（背景の絵）
@@ -628,7 +628,7 @@ const { chromium } = require('playwright');
   expect('3章：広間に立つ', await pos(), 'yomi_palace(9,9)');
   // 3章：牢のタケルに格子越しに話す → ナキメ → 報告
   await placeAt('yomi_palace', 1, 6, 'left'); await wait(200);
-  await key('ArrowLeft', 600);
+  await hold('ArrowLeft', 150); await wait(600);
   expect('3章：牢へ入れる', await pos(), 'yomi_prison(6,6)');
   await placeAt('yomi_prison', 2, 4, 'up'); await wait(200);
   await shot('58_ch3_prison');
