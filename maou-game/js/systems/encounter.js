@@ -23,6 +23,8 @@
     step(map, tile) {
       const enc = map.encounter;
       if (!enc || !G.encounter.enabled || (tile && tile.noEncounter)) return null;
+      // 結界張り：決まった歩数のあいだ、敵に出会わない
+      if (G.state.barrier > 0) { G.state.barrier--; return null; }
       if (G.state.encounterSteps == null) G.state.encounterSteps = nextSteps(enc);
       G.state.encounterSteps -= (tile && tile.tallGrass) ? G.DATA.balance.TALL_GRASS_STEPS : 1;
       if (G.state.encounterSteps > 0) return null;

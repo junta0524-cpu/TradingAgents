@@ -62,10 +62,11 @@
       },
     },
     { label: '蹂躙戦闘の即時開始',     phase: 5 },
+    { label: '臨時の仲間の入れ替え（試し）', phase: 4, run: () => G.scene.push(createTempPicker()) },
   ];
 
   // いま作っているフェーズ（これより後の項目は灰色）
-  const CURRENT_PHASE = 3;
+  const CURRENT_PHASE = 4;
 
   function buildMenuItems() {
     return ITEMS.map(it => {
@@ -93,6 +94,31 @@
       `勝ち ${r.wins}回　負け ${r.loses}回\n平均 ${(r.turns / n).toFixed(1)}ターン　受けたダメージ 平均${(r.damageTaken / n).toFixed(1)}`,
       `会心 ${r.crits}回／攻撃 ${r.attacks}回（${critPct}％）\n※会心の決まりは 1/64（約1.6％）`,
     ]);
+  }
+
+  // 臨時の仲間を章ごとに入れ替える（物語ができるまでの試し用）
+  function createTempPicker() {
+    ensureGame();
+    const sets = [
+      { label: '5章：スクナ・コノハ', ids: ['sukuna', 'konoha'] },
+      { label: '6章：カナメ・コトシロ', ids: ['kaname', 'kotoshiro'] },
+      { label: '7章：ウズメ・ヒエダ', ids: ['uzume', 'hieda'] },
+      { label: '臨時の仲間なし（二人旅）', ids: [] },
+    ];
+    const menu = new G.ui.Menu(sets.map(s => ({ label: s.label })), { x: 64, y: 60, w: 352, title: 'どの仲間にしますか' });
+    return {
+      name: 'デバッグ：仲間',
+      opaque: true,
+      update() {
+        const res = menu.update();
+        if (!res) return;
+        if (res.type === 'cancel') { G.scene.pop(); return; }
+        G.party.setTemps(sets[res.index].ids);
+        G.scene.pop();
+        G.message.show(`仲間を入れ替えました：${G.state.party.map(p => p.name).join('・')}`);
+      },
+      draw() { G.renderer.clear('#000'); menu.draw(); },
+    };
   }
 
   // マップを選んで、そこへ飛ぶ

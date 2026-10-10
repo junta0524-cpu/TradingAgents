@@ -75,9 +75,31 @@
     const party = partyMembers.map(m => Object.assign(m, { side: 'party', defending: false }));
     return {
       party, enemies, escapeTries: 0, boss: !!opts.boss,
-      showCalc: !!opts.showCalc, lastKilled: null, turn: 0,
+      showCalc: !!opts.showCalc, lastKilled: null, turn: 0, plans: {},
     };
   }
+
+  // 敵の行動をラウンドの最初に決めておく（先読みで見えるように）
+  function planEnemies(st) {
+    st.plans = {};
+    st.enemies.filter(e => e.hp > 0).forEach(e => {
+      const acts = G.DATA.enemies[e.id].actions || [{ w: 1, type: 'attack' }];
+      const total = acts.reduce((s, a) => s + a.w, 0);
+      let r = G.rng.random() * total, pick = acts[0];
+      for (const a of acts) { r -= a.w; if (r < 0) { pick = a; break; } }
+      st.plans[e.key] = pick.type === 'kotodama'
+        ? { type: 'kotodama', id: pick.id }
+        : { type: 'attack', target: pickPartyTarget(st.party) };
+    });
+  }
+
+  // 混乱：敵味方の区別なく、だれかを打つ
+  function confusedTarget(st, actor) {
+    const all = st.party.concat(st.enemies).filter(u => u.hp > 0 && u !== actor);
+    return all[G.rng.int(0, all.length - 1)];
+  }
+
+  const hasPerk = (st, perk) => st.party.some(p => p.hp > 0 && charOf(p).perk === perk);
 
   const aliveEnemies = st => st.enemies.filter(e => e.hp > 0);
   const charOf = m => G.DATA.characters[m.id] || {};
@@ -93,11 +115,23 @@
   // 1人ぶんの行動を行い、起きたこと（events）を返す
   // cmd：{ type: 'attack', target } / { type: 'defend' } / { type: 'kotodama', id, target } / { type: 'item', id, target }
   function act(st, actor, cmd) {
-    const ev = [];
+    let ev = [];
     if (actor.hp <= 0) return ev;
 
+    // 状態異常：眠り・縛りは動けない。混乱はだれかを打つ
+    const pre = G.status.beforeAct(actor);
+    ev = ev.concat(pre.ev);
+    if (pre.skip) return ev;
+    if (pre.confused) {
+      const t = confusedTarget(st, actor);
+      return t ? attack(st, actor, t, ev) : ev;
+    }
+
     if (actor.side === 'enemy') {
-      const target = pickPartyTarget(st.party);
+      const plan = st.plans[actor.key] || { type: 'attack' };
+      if (plan.type === 'kotodama') return ev.concat(G.kotodama.castEnemy(actor, plan.id, null, st));
+      let target = plan.target;
+      if (!target || target.hp <= 0) target = pickPartyTarget(st.party);
       if (!target) return ev;
       return attack(st, actor, target, ev);
     }
@@ -105,8 +139,8 @@
       ev.push({ type: 'msg', text: `${actor.name}は身を守っている。` });
       return ev;
     }
-    if (cmd.type === 'kotodama') return G.kotodama.cast(actor, cmd.id, cmd.target, st);
-    if (cmd.type === 'item') return G.kotodama.useItem(actor, cmd.id, cmd.target, st);
+    if (cmd.type === 'kotodama') return ev.concat(G.kotodama.cast(actor, cmd.id, cmd.target, st));
+    if (cmd.type === 'item') return ev.concat(G.kotodama.useItem(actor, cmd.id, cmd.target, st));
     // 攻撃：狙った敵が倒れていたら、別の敵へ
     let target = cmd.target;
     if (!target || target.hp <= 0) target = aliveEnemies(st)[0];
@@ -116,6 +150,16 @@
 
   function attack(st, actor, target, ev) {
     ev.push({ type: 'msg', text: `${actor.name}の攻撃！` });
+    // 身代わり：守られている味方への打撃は、守り手が受ける
+    if (target.coveredBy && target.coveredBy.hp > 0 && target.coveredBy !== actor && target.side !== actor.side) {
+      ev.push({ type: 'msg', text: `${target.coveredBy.name}が、${target.name}の身代わりになった！` });
+      target = target.coveredBy;
+    }
+    // 朧：目がかすんで外れることがある
+    if (G.status.has(actor, 'oboro') && G.rng.chance(G.DATA.balance.STATUS.OBORO_MISS)) {
+      ev.push({ type: 'msg', text: 'しかし、攻撃は外れた！' });
+      return ev;
+    }
     const atk = Math.floor(actor.atk * G.kotodama.buffMult(actor, 'atk'));
     const def = Math.floor(target.def * G.kotodama.buffMult(target, 'def'));
     const r = calcPhysical(atk, def);
@@ -135,6 +179,13 @@
     if (target.hp === 0) {
       ev.push({ type: 'ko', target });
       ev.push({ type: 'msg', text: target.side === 'enemy' ? `${target.name}を倒した。` : `${target.name}は倒れた……。` });
+      return ev;
+    }
+    if (dmg > 0) {
+      G.status.onPhysicalHit(target).forEach(e => ev.push(e));
+      // 敵の打撃に毒などがついている
+      const hit = actor.side === 'enemy' && G.DATA.enemies[actor.id].onHit;
+      if (hit && G.rng.chance(hit.chance)) G.status.inflict(target, hit.status, 1).filter(e => e.type !== 'msg' || !e.text.endsWith('効かなかった。')).forEach(e => ev.push(e));
     }
     return ev;
   }
@@ -156,7 +207,12 @@
 
   // 1ラウンドの終わり（強化の残りを減らす）
   function endRound(st) {
-    return G.kotodama.endRound(st.party.concat(st.enemies));
+    return G.kotodama.endRound(st.party.concat(st.enemies), st);
+  }
+
+  // 先手：ウズメがいると、ときどき敵より先に動ける（最初のラウンドは敵が動かない）
+  function rollFirstStrike(st) {
+    return hasPerk(st, 'firstStrike') && G.rng.chance(G.DATA.balance.FIRST_STRIKE);
   }
 
   // 勝ったときのごほうび（経験値は、レベルの上がる仲間で分ける）
@@ -169,11 +225,12 @@
     // 落とし物は、最後に倒した敵1体だけが判定
     let drop = null;
     const last = st.lastKilled && G.DATA.enemies[st.lastKilled.id].drop;
-    if (last && G.rng.chance(b.DROP_RATE[last.rank] || 0)) drop = last.item;
+    const boost = hasPerk(st, 'dropBoost') ? G.DATA.balance.DROP_BOOST : 1;   // コトシロがいると増える
+    if (last && G.rng.chance((b.DROP_RATE[last.rank] || 0) * boost)) drop = last.item;
     return { exp, each, copper, drop, alive };
   }
 
-  // 自動戦闘（デバッグ用）：味方は全員「こうげき」、敵はランダムに選んだ組で n 回戦う
+  // 自動戦闘（デバッグ用）：味方は全員「うまくやって」、敵はランダムに選んだ組で n 回戦う
   function simulate(n, groups) {
     const result = { wins: 0, loses: 0, crits: 0, attacks: 0, turns: 0, damageTaken: 0 };
     for (let i = 0; i < n; i++) {
@@ -184,15 +241,17 @@
       while (!out && turns < 100) {
         turns++;
         st.party.forEach(p => { p.defending = false; });
+        planEnemies(st);
         for (const a of turnOrder(st.party.concat(st.enemies))) {
           const hpBefore = st.party.reduce((s, p) => s + p.hp, 0);
-          const ev = act(st, a, { type: 'attack', target: aliveEnemies(st)[0] });
+          const ev = act(st, a, a.side === 'party' ? G.ai.decide(st, a) : null);
           ev.forEach(e => { if (e.type === 'msg' && e.text === '会心の一撃！') result.crits++; });
           if (a.side === 'party' && ev.length) result.attacks++;
           result.damageTaken += hpBefore - st.party.reduce((s, p) => s + p.hp, 0);
           out = outcome(st);
           if (out) break;
         }
+        if (!out) { endRound(st); out = outcome(st); }
       }
       result.turns += turns;
       if (out === 'win') result.wins++; else result.loses++;
@@ -200,5 +259,5 @@
     return result;
   }
 
-  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound };
+  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike };
 })();

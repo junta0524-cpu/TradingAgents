@@ -68,10 +68,14 @@
     }
 
     // ---- コマンド選び ----
+    // 指示を出す相手：生きていて、「ぜんぶ指示する」で、眠り・縛り・混乱でない仲間
+    const needsInput = p => p.hp > 0 && p.tactic !== 'auto' &&
+      !G.status.has(p, 'sleep') && !G.status.has(p, 'bind') && !G.status.has(p, 'confuse');
     function beginInput() {
       party.forEach(p => { p.defending = false; });
       commands = [];
-      cmdIndex = party.findIndex(p => p.hp > 0);
+      cmdIndex = party.findIndex(needsInput);
+      if (cmdIndex < 0) { executeTurn(); return; }   // 全員「うまくやって」なら、そのまま進む
       openMenu();
     }
     function openMenu() {
@@ -81,13 +85,13 @@
     }
     function setCommand(cmd) { commands[cmdIndex] = cmd; nextMember(); }
     function nextMember() {
-      do { cmdIndex++; } while (cmdIndex < party.length && party[cmdIndex].hp <= 0);
+      do { cmdIndex++; } while (cmdIndex < party.length && !needsInput(party[cmdIndex]));
       if (cmdIndex >= party.length) executeTurn();
       else openMenu();
     }
     function prevMember() {
       let i = cmdIndex;
-      do { i--; } while (i >= 0 && party[i].hp <= 0);
+      do { i--; } while (i >= 0 && !needsInput(party[i]));
       if (i < 0) return;
       cmdIndex = i;
       commands[cmdIndex] = undefined;
@@ -135,6 +139,12 @@
       log.length = 0;
       // ぼうぎょはターンの最初から効く
       party.forEach((p, i) => { p.defending = !!(commands[i] && commands[i].type === 'defend'); });
+      G.battle.planEnemies(st);
+      if (firstStrike) {   // 先手：最初のラウンドは味方だけが動く
+        firstStrike = false;
+        runOrder(G.battle.turnOrder(party));
+        return;
+      }
       runOrder(G.battle.turnOrder(party.concat(enemies)));
     }
     function runOrder(order) {
@@ -147,7 +157,8 @@
         return;
       }
       if (actor.hp <= 0) { runOrder(order); return; }
-      const cmd = actor.side === 'party' ? commands[party.indexOf(actor)] : null;
+      let cmd = null;
+      if (actor.side === 'party') cmd = actor.tactic === 'auto' ? G.ai.decide(st, actor) : commands[party.indexOf(actor)];
       play(G.battle.act(st, actor, cmd || { type: 'attack' }), () => runOrder(order));
     }
     function runEscape() {
@@ -197,13 +208,18 @@
     const names = {};
     enemies.forEach(e => { const n = G.DATA.enemies[e.id].name; names[n] = (names[n] || 0) + 1; });
     const appear = Object.keys(names).map(n => names[n] > 1 ? `${n}が${names[n]}匹` : `${n}が`).join('、');
-    play([{ type: 'msg', text: `${appear}現れた！` }], beginInput);
+    let firstStrike = G.battle.rollFirstStrike(st);
+    const opening = [{ type: 'msg', text: `${appear}現れた！` }];
+    if (firstStrike) opening.push({ type: 'msg', text: '先手を取った！' });
+    play(opening, beginInput);
 
     // ---- 敵の並び ----
+    // 敵は、右上の体力の窓をよけた左側に並べる
     function enemyX(i) {
-      const n = enemies.length, w = 16 * ENEMY_SCALE, gap = 28;
+      const n = enemies.length, w = 16 * ENEMY_SCALE, gap = 24;
       const total = n * w + (n - 1) * gap;
-      return Math.round((G.renderer.W - total) / 2 + i * (w + gap));
+      const area = G.renderer.W - 160;
+      return Math.round((area - total) / 2 + i * (w + gap));
     }
     const visibleEnemies = () => enemies.filter(e => e.hp > 0);
     const aliveParty = () => party.filter(p => p.hp > 0);
@@ -211,6 +227,7 @@
     return {
       name: '戦闘',
       opaque: true,
+      get phase() { return phase; },   // 自動チェック用：いまの段階
 
       update() {
         if (flashTimer > 0) flashTimer--;
@@ -294,6 +311,8 @@
           ctx.globalAlpha = e.hp <= 0 ? f / 20 : 1;
           G.sprite.drawEnemy(ctx, e.id, enemyX(i), ENEMY_BASE_Y - 16 * ENEMY_SCALE, ENEMY_SCALE);
           ctx.globalAlpha = 1;
+          const tg = e.hp > 0 ? G.status.tags(e) : '';
+          if (tg) r.text(tg, enemyX(i) + 8 * ENEMY_SCALE, ENEMY_BASE_Y + 2, '#ff9', 'center');
         });
         if (phase === 'target' && list[targetIndex] && G.ui.blinkOn()) {
           const i = enemies.indexOf(list[targetIndex]);
@@ -301,17 +320,17 @@
         }
         ctx.restore();
 
-        // 右上：味方の体力
-        const sw = 150, sx = r.W - sw - 8;
-        G.ui.drawWindow(sx, 8, sw, 14 + party.length * 34);
+        // 右上：味方の体力（4人でも収まるよう、1人30ドット）
+        const sw = 150, sx = r.W - sw - 8, rowH = party.length > 2 ? 30 : 34;
+        G.ui.drawWindow(sx, 8, sw, 12 + party.length * rowH);
         party.forEach((p, i) => {
-          const y = 15 + i * 34;
+          const y = 14 + i * rowH;
           const color = p.hp <= 0 ? '#ff5050' : (p.hp < p.maxHp / 4 ? '#ffa040' : '#fff');
           let mark = '';
           if ((phase === 'command' || phase === 'sub' || phase === 'target') && i === cmdIndex) mark = '▶';
           if (phase === 'ally' && i === allyIndex && G.ui.blinkOn()) mark = '▶';
           r.text(mark + p.name, sx + 10, y, color);
-          const tags = (p.buffs && p.buffs.def ? '守↑' : '') + (p.buffs && p.buffs.atk ? '攻↑' : '') + (p.guard > 0 ? '岩' : '');
+          const tags = G.status.tags(p) + (p.buffs && p.buffs.def ? '守↑' : '') + (p.buffs && p.buffs.atk ? '攻↑' : '') + (p.guard > 0 ? '岩' : '') + (p.reflect > 0 ? '鏡' : '');
           if (tags) r.text(tags, sx + sw - 10, y, '#9cf', 'right');
           r.text(`HP ${p.hp}/${p.maxHp}`, sx + 10, y + 16, color);
           r.text(`MP ${p.mp}`, sx + sw - 10, y + 16, color, 'right');

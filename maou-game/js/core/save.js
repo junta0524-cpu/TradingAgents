@@ -48,7 +48,11 @@
     apply(data) {
       G.state = clone(data.state);
       G.flags.data = clone(data.flags || {});
-      G.state.party.forEach(m => G.party.recalc(m));
+      G.state.party.forEach(m => {
+        // 古い記録には作戦がないので、最初の作戦を入れる
+        if (!m.tactic) m.tactic = (G.DATA.characters[m.id] || {}).tactic || 'manual';
+        G.party.recalc(m);
+      });
     },
     // 一番新しい記録
     latest() {

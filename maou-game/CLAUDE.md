@@ -35,6 +35,10 @@
 - 成長：`js/systems/growth.js`、表は balance.js の GROWTH/EXP_TABLE。ベルは fixed（レベルなし）。経験値はベル以外で分ける。
 - 装備・道具：`js/data/items.js`、値段は balance.js の PRICES。お店は `js/data/shops.js`、町の人に `shop:` / `inn: true`。
 - 一覧から選ばせるときは `G.ui.choose(items, opts, onSelect)`、はい/いいえは `G.ui.confirm`。
+- 状態異常：`js/systems/status.js`（名前は `js/data/status.js`、数字は balance.js の STATUS）。毒だけ戦闘後も残る。移動中の毒は1で止まる。
+- 仲間：最大4人。臨時の仲間は「その土地の間だけ同行」（ユーザー決定）。`G.party.join/leave/setTemps`。強さは balance.js の TEMP_PARTY。
+- 作戦：`js/systems/ai.js`（うまくやって／ぜんぶ指示する。ほかはフェーズ10）。ベルと臨時の仲間は最初「うまくやって」。
+- 敵の行動はラウンドの最初に決める（`planEnemies`、先読みで見える）。敵の言霊は `G.DATA.kotodamaEnemy`。
 - デバッグのフェーズ番号は `js/core/debug.js` の CURRENT_PHASE（フェーズを進めたら上げる）。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。

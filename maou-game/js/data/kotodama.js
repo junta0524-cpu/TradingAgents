@@ -10,6 +10,10 @@
 //   { kind: 'buff', stat: 'atk'|'def'|'both', mult: 倍率, turns: ターン数 }   … 強くする
 //   { kind: 'guard', turns: ターン数 }                                        … 傷を受けない
 //   { kind: 'scan' }                                                           … 敵の強さを見る
+//   { kind: 'status', status: 'sleep' など, chance: 確率 }                     … 状態異常にする（耐性で下がる）
+//   { kind: 'cure', statuses: [...] }                                          … 状態異常を治す
+//   { kind: 'mind', turns }（心鎮め）／{ kind: 'reflect', turns }（返し鏡）／{ kind: 'cover', turns }（身代わり）
+//   { kind: 'foresee' }（先読み）／{ kind: 'barrier' }（結界張り：敵に出会いにくくなる）
 // phase：その数字のフェーズで使えるようになる（今はまだ使えない言霊）
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -27,16 +31,16 @@
     // ---- オオヤマツミ（山・守）----
     katame:         { name: '堅め',         sys: 'yama', mp: 2,  target: 'ally',    use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 1.5, turns: 5 } },
     katame_ren:     { name: '堅め連',       sys: 'yama', mp: 5,  target: 'allies',  use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 1.5, turns: 5 } },
-    kaeshikagami:   { name: '返し鏡',       sys: 'yama', mp: 6,  target: 'ally',    use: 'battle', phase: 4 },
+    kaeshikagami:   { name: '返し鏡',       sys: 'yama', mp: 6,  target: 'ally',    use: 'battle', effect: { kind: 'reflect', turns: 3 } },
     iwato:          { name: '岩戸',         sys: 'yama', mp: 8,  target: 'ally',    use: 'battle', effect: { kind: 'guard', turns: 2 } },
-    kokoroshizume:  { name: '心鎮め',       sys: 'yama', mp: 3,  target: 'ally',    use: 'battle', phase: 4 },
-    migawari:       { name: '身代わり',     sys: 'yama', mp: 5,  target: 'ally',    use: 'battle', phase: 4 },
-    kekkai:         { name: '結界張り',     sys: 'yama', mp: 6,  target: 'allies',  use: 'both',   phase: 4 },
+    kokoroshizume:  { name: '心鎮め',       sys: 'yama', mp: 3,  target: 'ally',    use: 'battle', effect: { kind: 'mind', turns: 5 } },
+    migawari:       { name: '身代わり',     sys: 'yama', mp: 5,  target: 'ally',    use: 'battle', effect: { kind: 'cover', turns: 3 } },
+    kekkai:         { name: '結界張り',     sys: 'yama', mp: 6,  target: 'self',    use: 'field',  effect: { kind: 'barrier' } },
     katame_jin:     { name: '堅めの陣',     sys: 'yama', mp: 9,  target: 'allies',  use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 1.75, turns: 5 } },
     iwagaki:        { name: '岩垣',         sys: 'yama', mp: 12, target: 'allies',  use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 2, turns: 3 } },
-    hanekaeshi_mai: { name: '跳ね返しの舞', sys: 'yama', mp: 14, target: 'allies',  use: 'battle', phase: 4 },
+    hanekaeshi_mai: { name: '跳ね返しの舞', sys: 'yama', mp: 14, target: 'allies',  use: 'battle', effect: { kind: 'reflect', turns: 3 } },
     yamamori_omi:   { name: '山守の大御',   sys: 'yama', mp: 24, target: 'allies',  use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 2.5, turns: 5 } },
-    kokoroshizume_omi: { name: '心鎮めの大御', sys: 'yama', mp: 20, target: 'allies', use: 'battle', phase: 4 },
+    kokoroshizume_omi: { name: '心鎮めの大御', sys: 'yama', mp: 20, target: 'allies', use: 'battle', effect: { kind: 'mind', turns: 8 } },
 
     // ---- ホノカグツチ（火・攻）----
     takeri:         { name: '猛り',         sys: 'hono', mp: 3,  target: 'ally',    use: 'battle', effect: { kind: 'buff', stat: 'atk', mult: 1.5, turns: 5 } },
@@ -57,44 +61,47 @@
     iyashi:         { name: '癒やし',       sys: 'iza', mp: 3,  target: 'ally',    use: 'both',   effect: { kind: 'heal', power: [12, 18] } },
     iyashi_ren:     { name: '癒やし連',     sys: 'iza', mp: 7,  target: 'allies',  use: 'both',   effect: { kind: 'heal', power: [12, 18] } },
     michi_iyashi:   { name: '満ち癒やし',   sys: 'iza', mp: 8,  target: 'ally',    use: 'both',   effect: { kind: 'heal', full: true } },
-    dokubarai:      { name: '毒払い',       sys: 'iza', mp: 2,  target: 'ally',    use: 'both',   phase: 4 },
-    mezame:         { name: '目覚め',       sys: 'iza', mp: 2,  target: 'ally',    use: 'battle', phase: 4 },
+    dokubarai:      { name: '毒払い',       sys: 'iza', mp: 2,  target: 'ally',    use: 'both',   effect: { kind: 'cure', statuses: ['poison', 'venom'] } },
+    mezame:         { name: '目覚め',       sys: 'iza', mp: 2,  target: 'ally',    use: 'battle', effect: { kind: 'cure', statuses: ['sleep', 'bind'] } },
     nayobi:         { name: '名呼び',       sys: 'iza', mp: 0,  target: 'ally',    use: 'battle', phase: 12, special: true },
     ikikaeshi:      { name: '生き返し',     sys: 'iza', mp: 20, target: 'ally',    use: 'both',   phase: 9 },
     musuhi:         { name: '産霊',         sys: 'iza', mp: 0,  target: 'allies',  use: 'battle', phase: 9 },
     iyashi_mai:     { name: '癒やしの舞',   sys: 'iza', mp: 6,  target: 'ally',    use: 'both',   effect: { kind: 'heal', power: [50, 70] } },
-    kiyome:         { name: '清め',         sys: 'iza', mp: 5,  target: 'allies',  use: 'both',   phase: 4 },
+    kiyome:         { name: '清め',         sys: 'iza', mp: 5,  target: 'allies',  use: 'both',   effect: { kind: 'cure', statuses: ['sleep', 'confuse', 'silence', 'bind', 'poison', 'venom', 'oboro'] } },
     nayobi_jin:     { name: '名呼びの陣',   sys: 'iza', mp: 0,  target: 'allies',  use: 'battle', phase: 12, special: true },
     michi_iyashi_omi: { name: '満ち癒やしの大御', sys: 'iza', mp: 30, target: 'allies', use: 'both', effect: { kind: 'heal', full: true } },
     musuhi_omi:     { name: '産霊の大御',   sys: 'iza', mp: 0,  target: 'allies',  use: 'battle', phase: 9 },
 
     // ---- ツクヨミ（静・知）----
     kotozute:       { name: '言伝',         sys: 'tsuku', mp: 0,  target: 'self',    use: 'field',  phase: 6 },
-    nemurigasumi:   { name: '眠り霞',       sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', phase: 4 },
-    madowashi:      { name: '惑わし',       sys: 'tsuku', mp: 4,  target: 'enemy',   use: 'battle', phase: 4 },
-    oboro:          { name: '朧',           sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', phase: 4 },
-    kuchifuuji:     { name: '口封じ',       sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', phase: 4 },
+    nemurigasumi:   { name: '眠り霞',       sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'sleep', chance: 0.75 } },
+    madowashi:      { name: '惑わし',       sys: 'tsuku', mp: 4,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'confuse', chance: 0.6 } },
+    oboro:          { name: '朧',           sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'oboro', chance: 0.8 } },
+    kuchifuuji:     { name: '口封じ',       sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'silence', chance: 0.7 } },
     miyaburi:       { name: '見破り',       sys: 'tsuku', mp: 1,  target: 'enemy',   use: 'battle', effect: { kind: 'scan' } },
     naabaki:        { name: '名暴き',       sys: 'tsuku', mp: 6,  target: 'enemy',   use: 'battle', phase: 9 },
-    shibari:        { name: '縛り',         sys: 'tsuku', mp: 4,  target: 'enemy',   use: 'battle', phase: 4 },
-    nemurigasumi_mai: { name: '眠り霞の舞', sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', phase: 4 },
-    oboro_jin:      { name: '朧の陣',       sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', phase: 4 },
-    kuchifuuji_mai: { name: '口封じの舞',   sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', phase: 4 },
-    sakiyomi:       { name: '先読み',       sys: 'tsuku', mp: 2,  target: 'self',    use: 'battle', phase: 4 },
+    shibari:        { name: '縛り',         sys: 'tsuku', mp: 4,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'bind', chance: 0.6 } },
+    nemurigasumi_mai: { name: '眠り霞の舞', sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'sleep', chance: 0.65 } },
+    oboro_jin:      { name: '朧の陣',       sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'oboro', chance: 0.7 } },
+    kuchifuuji_mai: { name: '口封じの舞',   sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'silence', chance: 0.6 } },
+    sakiyomi:       { name: '先読み',       sys: 'tsuku', mp: 2,  target: 'self',    use: 'battle', effect: { kind: 'foresee' } },
     naabaki_omi:    { name: '名暴きの大御', sys: 'tsuku', mp: 20, target: 'enemies', use: 'battle', phase: 9 },
-    shibari_omi:    { name: '縛りの大御',   sys: 'tsuku', mp: 20, target: 'enemies', use: 'battle', phase: 4 },
+    shibari_omi:    { name: '縛りの大御',   sys: 'tsuku', mp: 20, target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'bind', chance: 0.7 } },
 
     // ---- アメノミナカヌシ（根源・調和）----
     chouwa:         { name: '調和の光',     sys: 'ame', mp: 20, target: 'allies',  use: 'battle', effect: { kind: 'buff', stat: 'both', mult: 1.3, turns: 5 } },
     makoto:         { name: 'まことの名',   sys: 'ame', mp: 50, target: 'enemies', use: 'battle', effect: { kind: 'damage', power: [200, 250], element: 'none' } },
   };
 
-  // 敵だけが使う言霊（物語用。フェーズ4以降で中身を入れる）
+  // 敵だけが使う言霊（刷り込み・甘言は心を惑わす。心鎮めで防げる）
   const ENEMY_ONLY = {
     na_no_hakudatsu: { name: '名の剥奪',     sys: 'enemy', phase: 12 },
-    surikomi:        { name: '刷り込み',     sys: 'enemy', phase: 4 },
-    kangen:          { name: '甘言',         sys: 'enemy', phase: 4 },
+    surikomi:        { name: '刷り込み',     sys: 'enemy', target: 'enemy',   effect: { kind: 'status', status: 'confuse', chance: 0.5 } },
+    kangen:          { name: '甘言',         sys: 'enemy', target: 'enemies', effect: { kind: 'status', status: 'confuse', chance: 0.3 } },
     shihai_uwagaki:  { name: '支配の上書き', sys: 'enemy', phase: 12 },
+    // 獣の技（敵用）
+    doku_rinpun:     { name: '毒の鱗粉',     sys: 'enemy', target: 'enemies', effect: { kind: 'status', status: 'poison', chance: 0.4 } },
+    mayoi_bi:        { name: '迷い火',       sys: 'enemy', target: 'enemy',   effect: { kind: 'status', status: 'sleep', chance: 0.5 } },
   };
 
   G.DATA.kotodama = K;

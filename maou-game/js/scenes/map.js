@@ -1,6 +1,7 @@
 // このファイルの役目：マップを歩く画面。歩く・走る・壁で止まる・人に話す・宝箱・立て札・出入口を扱う。
 // マップの中身（地形・人・宝箱）は js/data/maps/ にあり、ここは「動かし方」だけを書く。
 // 決定キー＝目の前を調べる／話す、Xキー＝メニュー、Shift＝走る。
+// 仲間はベルの後ろを一列についてくる（ぶつからない）。毒の仲間は、歩くたびに少しずつ体力が減る。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -16,7 +17,8 @@
 
   G.scenes.map = function (startMap, startX, startY, startDir) {
     const B = G.DATA.balance;
-    let map, mapId, npcs, player;
+    let map, mapId, npcs, player, followers = [];
+    let poisonFlash = 0;
     let fade = 0, fadeDir = 0, pendingWarp = null, nameTimer = 0;
     let battleFlash = 0, pendingBattle = null;
     let sleeping = null;   // 宿屋で眠るとき、真っ暗になった瞬間に呼ぶ処理
@@ -30,11 +32,31 @@
       if (!map) throw new Error('マップが見つかりません：' + id);
       npcs = (map.npcs || []).map(n => Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }));
       player = makeEntity(x, y, dir || 'down', 'bell');
+      buildFollowers();
       Object.assign(G.state, { mapId: id, x, y, dir: player.dir });
       G.encounter.reset(map);
       // 敵の出ない場所（町・建物）に入ったら、自動で記録する
       if (!map.encounter) G.party.saveRecord();
       nameTimer = 120;
+    }
+
+    // ---- ついてくる仲間 ----
+    function followerIds() { return G.state.party.filter(m => m.id !== 'bell').map(m => m.id); }
+    function buildFollowers() {
+      followers = followerIds().map(id => makeEntity(player.x, player.y, player.dir, (G.DATA.characters[id] || {}).look || id));
+      followers.forEach((f, i) => { f.id = followerIds()[i]; });
+    }
+    // ベルが1歩動き出したら、前の人がいた場所へ1歩ずつ詰める
+    function followStep(fromX, fromY) {
+      let px = fromX, py = fromY;
+      followers.forEach(f => {
+        const ox = f.x, oy = f.y;
+        if (ox !== px || oy !== py) {
+          f.dir = px > ox ? 'right' : px < ox ? 'left' : py > oy ? 'down' : 'up';
+          f.tx = px; f.ty = py; f.moving = true;
+        }
+        px = ox; py = oy;
+      });
     }
 
     // ---- 地形と当たり判定 ----
@@ -196,10 +218,15 @@
         }
         const inp = G.input;
 
+        // 仲間が入れ替わったら、ついてくる列を作り直す
+        if (followers.map(f => f.id).join() !== followerIds().join()) buildFollowers();
+        if (poisonFlash > 0) poisonFlash--;
         if (player.moving) {
           const speed = inp.held('fast') ? B.DASH_SPEED : B.WALK_SPEED;
+          followers.forEach(f => advance(f, speed));
           if (advance(player, speed)) {
             Object.assign(G.state, { x: player.x, y: player.y, dir: player.dir });
+            if (G.status.fieldStep().length) poisonFlash = 8;
             if (checkWarp()) return;
             const group = G.encounter.step(map, tileAt(player.x, player.y));
             if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; return; }
@@ -209,8 +236,9 @@
           if (inp.pressed('cancel')) { G.scene.push(G.scenes.fieldMenu()); return; }
           if (inp.pressed('ok')) { interact(); return; }
           const dir = heldDir();
-          if (dir) tryMove(player, dir);
-          else player.walk = 0;
+          const fx = player.x, fy = player.y;
+          if (dir) { if (tryMove(player, dir)) followStep(fx, fy); }
+          else { player.walk = 0; followers.forEach(f => { f.walk = 0; }); }
         }
         updateNpcs();
       },
@@ -232,6 +260,9 @@
           G.sprite.drawObject(ctx, G.flags.get(G.flags.chestKey(mapId, c.id)) ? 'chestOpen' : 'chest', c.x * T - cam.x, c.y * T - cam.y) }));
         (map.signs || []).forEach(s => things.push({ y: s.y * T, draw: () =>
           G.sprite.drawObject(ctx, 'sign', s.x * T - cam.x, s.y * T - cam.y) }));
+        // 仲間は列の後ろから描き、ベルがいちばん手前になるようにする
+        followers.slice().reverse().forEach((e, k) => things.push({ y: e.py - 0.01 * (k + 1), draw: () =>
+          G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x, e.py - cam.y) }));
         npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () =>
           G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x, e.py - cam.y) }));
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
@@ -241,6 +272,7 @@
           G.ui.drawWindow(8, 8, w, 26);
           r.text(map.name, 20, 15, '#fff');
         }
+        if (poisonFlash > 0) r.rect(0, 0, r.W, r.H, 'rgba(80,200,60,0.25)');
         if (fade > 0) r.rect(0, 0, r.W, r.H, `rgba(0,0,0,${Math.min(1, fade)})`);
         if (battleFlash > 0 && Math.floor(battleFlash / 4) % 2 === 0) r.rect(0, 0, r.W, r.H, 'rgba(255,255,255,0.7)');
       },

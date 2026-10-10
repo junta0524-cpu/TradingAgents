@@ -7,7 +7,7 @@
   G.DATA.shops = {
     minamo: {
       name: 'ミナモの道具屋',
-      items: ['kizugusuri', 'hoshiii', 'copper_knife', 'leather_armor', 'mamori_ishi', 'hayate_obi'],
+      items: ['kizugusuri', 'hoshiii', 'dokukeshi', 'mezamashi', 'copper_knife', 'leather_armor', 'mamori_ishi', 'hayate_obi'],
     },
   };
 })();

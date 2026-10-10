@@ -29,6 +29,19 @@
     // ベルは本来カンストだが、4〜9章は力を抑えている（仕様書 7-2）。ここは「抑えた強さ」で、レベルは上がらない
     BELL: { hp: 60, mp: 0, atk: 14, def: 12, agi: 10 },
 
+    // 臨時の仲間の強さ（その土地の間だけ一緒に戦う。レベルは上がらない）
+    TEMP_PARTY: {
+      sukuna:    { hp: 40, mp: 40, atk: 8,  def: 8,  agi: 7 },    // 5章：老薬師（回復役・後衛）
+      konoha:    { hp: 45, mp: 12, atk: 16, def: 9,  agi: 14 },   // 5章：混血エルフ（弓と剣）
+      kaname:    { hp: 60, mp: 15, atk: 18, def: 14, agi: 6 },    // 6章：女鍛冶師（前衛・火）
+      kotoshiro: { hp: 38, mp: 10, atk: 9,  def: 9,  agi: 8 },    // 6章：検品官（落とし物が増える）
+      uzume:     { hp: 42, mp: 8,  atk: 13, def: 8,  agi: 18 },   // 7章：斥候（先手を取りやすい）
+      hieda:     { hp: 32, mp: 45, atk: 7,  def: 7,  agi: 6 },    // 7章：語り部（見破り・後衛）
+    },
+    PARTY_MAX: 4,
+    DROP_BOOST: 2,        // コトシロがいると、落とし物の確率が何倍になるか
+    FIRST_STRIKE: 1 / 4,  // ウズメがいると、先手を取れる確率
+
     // 成長表：レベルごとの「素の強さ」（装備の分は含まない）。試作はレベル20まで
     //          レベル  HP   MP  攻撃 守備 素早さ
     GROWTH: {
@@ -68,7 +81,7 @@
     // ---- お金 ----
     // 買う値段（銅貨）。売るときは SELL_RATE 倍
     PRICES: {
-      kizugusuri: 8, hoshiii: 4,
+      kizugusuri: 8, hoshiii: 4, dokukeshi: 6, mezamashi: 10,
       copper_knife: 40, iron_sword: 120,
       leather_armor: 50, chain_mail: 150,
       mamori_ishi: 30, hayate_obi: 60,
@@ -88,6 +101,19 @@
       EXP_SPLIT: true,               // true：経験値を生きている仲間で分ける（レベルの上がらないベルは数えない）
       DROP_RATE: { S: 1 / 128, A: 1 / 32, B: 1 / 16, C: 1 / 8 },  // 落とし物の確率ランク
     },
+
+    // ---- 状態異常（仕様書 第6章）----
+    STATUS: {
+      TURNS: {                          // 続くターン数（最小〜最大）
+        sleep: [2, 5], confuse: [6, 9], silence: [7, 10], bind: [4, 7], venom: [99, 99], oboro: [3, 5],
+      },
+      WAKE_ON_HIT: { party: 1 / 2, enemy: 1 / 4 },   // 眠っているとき、打たれて目が覚める確率
+      VENOM_RATE: 1 / 8,                // 猛毒：毎ターン最大HPのこの割合だけ減る
+      OBORO_MISS: 1 / 2,                // 朧：打撃が外れる確率
+      POISON_STEP_DAMAGE: 1,            // 毒：移動中、1歩ごとに減るHP（1より下にはならない）
+      MIND_GUARD: ['confuse'],          // 心鎮めで防げる状態異常
+    },
+    BARRIER_STEPS: 120,                 // 結界張り：敵に出会いにくくなる歩数
 
     // ---- 遭遇（エンカウント）----
     ENCOUNTER_LOW_MULT: 2,           // 設定「少なめ」のとき、遭遇までの歩数を何倍にするか

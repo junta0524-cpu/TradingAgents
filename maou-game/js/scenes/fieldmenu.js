@@ -1,5 +1,5 @@
 // このファイルの役目：マップでXキーを押すと開くメニュー。
-// もちもの（使う）／ことだま（唱える）／そうび（付け替え）／つよさ／セーブ（記録）。
+// もちもの（使う）／ことだま（唱える）／そうび（付け替え）／さくせん（AI）／つよさ／セーブ（記録）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -13,6 +13,8 @@
     party.forEach((p, i) => {
       const y = 15 + i * 34;
       r.text(p.name + (p.lv ? ` Lv${p.lv}` : ''), 332, y, '#ffd866');
+      const tg = G.status.tags(p);
+      if (tg) r.text(tg, 462, y, '#9f6', 'right');
       r.text(`HP ${p.hp}/${p.maxHp}`, 332, y + 16, hpColor(p));
       r.text(`MP ${p.mp}`, 462, y + 16, hpColor(p), 'right');
     });
@@ -119,7 +121,23 @@
     });
   }
 
-  // ---- つよさ ----
+  // ---- さくせん ----
+  function tacticMenu() {
+    pickMember('だれの作戦を変えますか', null, m => {
+      const T = G.ai.TACTICS;
+      G.ui.choose(T.map(t => ({ label: t.name, note: t.id === m.tactic ? '←いま' : (t.later ? 'フェーズ10' : ''), disabled: !!t.later })), {
+        x: 136, y: 56, w: 240, title: `${m.name}の作戦`, name: '作戦を選ぶ', index: Math.max(0, T.findIndex(t => t.id === m.tactic)),
+        extra: () => {
+          G.ui.drawWindow(8, 240, 464, 72);
+          G.renderer.text('うまくやって：自分で考えて、回復・治療・攻撃をする（道具は使わない）', 20, 252, '#ccc');
+          G.renderer.text('ぜんぶ指示する：毎ターン、こちらでコマンドを選ぶ', 20, 268, '#ccc');
+        },
+        onDisabled: () => G.message.show('この作戦は、フェーズ10で作ります。'),
+      }, i => { m.tactic = T[i].id; G.message.show(`${m.name}の作戦を「${T[i].name}」にした。`); });
+    });
+  }
+
+  // ---- つよさ ----（3人以上のときは2列に並べる）
   function createStatusScene() {
     return {
       name: 'つよさ',
@@ -127,18 +145,28 @@
         if (G.input.pressed('ok') || G.input.pressed('cancel')) G.scene.pop();
       },
       draw() {
-        const r = G.renderer, party = G.state.party;
-        G.ui.drawWindow(8, 8, 464, 24 + party.length * 88);
+        const r = G.renderer, party = G.state.party, two = party.length > 2;
+        const cw = two ? 232 : 464, ch = two ? 150 : 100;
         party.forEach((p, i) => {
-          const y = 18 + i * 88;
-          r.text(p.name + (p.lv ? `　レベル ${p.lv}` : '　（力を抑えている）'), 22, y, '#ffd866');
+          const x = 8 + (two ? (i % 2) * 232 : 0), y0 = 8 + (two ? Math.floor(i / 2) : i) * (ch + 2);
+          G.ui.drawWindow(x, y0, cw, ch);
+          const y = y0 + 10, L = x + 12, R = x + cw - 12;
+          r.text(p.name + (p.lv ? `　Lv ${p.lv}` : (G.DATA.characters[p.id].isBell ? '　（力を抑えている）' : '　（臨時の仲間）')), L, y, '#ffd866');
           const next = G.growth.toNext(p);
-          r.text(p.lv ? `経験値 ${p.exp}` + (next != null ? `（次まで ${next}）` : '') : '', 458, y, '#aaa', 'right');
-          r.text(`HP ${p.hp}/${p.maxHp}　MP ${p.mp}/${p.maxMp}`, 22, y + 16, hpColor(p));
-          r.text(`攻撃 ${p.atk}　守備 ${p.def}　素早さ ${p.agi}`, 22, y + 32, '#fff');
+          const expText = p.lv ? `経験値 ${p.exp}` + (next != null ? `（次まで ${next}）` : '') : '';
+          const tactic = (G.ai.TACTICS.find(t => t.id === p.tactic) || {}).name || '';
+          const tg = G.status.tags(p);
+          const lines = [
+            [`HP ${p.hp}/${p.maxHp}　MP ${p.mp}/${p.maxMp}`, hpColor(p)],
+            [`攻撃 ${p.atk}　守備 ${p.def}　素早さ ${p.agi}`, '#fff'],
+            [`作戦：${tactic}${tg ? '　状態：' + tg : ''}`, '#ccc'],
+            [`言霊：${(p.kotodama || []).length}個`, '#ccc'],
+          ];
           const eq = G.party.SLOTS.map(s => G.DATA.items[p.equip[s]]).filter(Boolean).map(it => it.name).join('・');
-          r.text(`装備：${eq || 'なし'}`, 22, y + 48, '#ccc');
-          r.text(`言霊：${(p.kotodama || []).length}個`, 22, y + 64, '#ccc');
+          if (eq) lines.push([`装備：${eq}`, '#ccc']);
+          if (two) { if (expText) lines.push([expText, '#aaa']); }
+          else if (expText) r.text(expText, R, y, '#aaa', 'right');
+          lines.forEach((l, k) => r.text(l[0], L, y + 16 + k * 16, l[1]));
         });
       },
     };
@@ -164,6 +192,7 @@
     { label: 'もちもの', run: itemsMenu },
     { label: 'ことだま', run: kotodamaMenu },
     { label: 'そうび', run: equipMenu },
+    { label: 'さくせん', run: tacticMenu },
     { label: 'つよさ', run: () => G.scene.push(createStatusScene()) },
     { label: 'セーブ', run: saveMenu },
     { label: 'とじる' },

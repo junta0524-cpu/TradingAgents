@@ -237,7 +237,7 @@ const { chromium } = require('playwright');
   await ev(() => { GAME.party.healAll(); GAME.scene.push(GAME.scenes.battle(['dog'])); });
   await wait(1200);
   await shot('22_battle_menu');
-  await key('ArrowDown', 60); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 80);  // ベル：ぼうぎょ
+  // ベルは「うまくやって」なので、指示はオオナムチだけ
   await key('ArrowDown', 60); await key('KeyZ', 120);   // オオナムチ：ことだま
   await shot('23_battle_kotodama_list');
   await key('KeyZ', 120);                               // 堅め
@@ -250,19 +250,21 @@ const { chromium } = require('playwright');
   expect('堅めでMPが2減る（レベル2の最大MPは8）', o.mp, 6);
   for (let turn = 0; turn < 20 && (await scenes()) !== 'マップ'; turn++) {
     if ((await ev(() => GAME.scene.top().name)) !== '戦闘') { await key('KeyZ', 150); continue; }
-    await key('KeyZ', 60); await key('KeyZ', 60); await key('KeyZ', 60); await key('KeyZ', 60);
+    await key('KeyZ', 60); await key('KeyZ', 60);
     await page.keyboard.down('Shift'); await wait(1200); await page.keyboard.up('Shift');
   }
   expect('戦いのあと強化が消える', await ev(() => GAME.state.party.every(p => !p.buffs && p.side === undefined)), true);
 
   // 道具屋：傷薬と銅の短刀を買い、干し飯を売る
+  await ev(() => { GAME.state.items = []; });   // 前の戦いの落とし物で数がずれないように
   await placeAt('minamo_shop', 5, 4, 'up'); await wait(200);
   await key('KeyZ', 500); await closeMessages(); await wait(200);
   await shot('25_shop');
   const c0 = await ev(() => GAME.state.copper);
   await key('KeyZ', 150);                       // 買う
   await key('KeyZ', 200); await closeMessages(); // 傷薬
-  await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 200); await closeMessages(); // 銅の短刀
+  for (let i = 0; i < 4; i++) await key('ArrowDown', 60);
+  await key('KeyZ', 200); await closeMessages(); // 銅の短刀（毒消し草・目覚まし香の下）
   await shot('26_shop_buy');
   const bought = await ev(() => ({ c: GAME.state.copper, k: GAME.party.count('kizugusuri'), knife: GAME.party.count('copper_knife') }));
   expect('買い物：銅貨が 8+40 減り、品物が増える', `${c0 - bought.c}/${bought.k}/${bought.knife}`, '48/1/1');
@@ -295,7 +297,7 @@ const { chromium } = require('playwright');
   expect('宿屋：満タン・銅貨-6', `${inn.full}/${c1 - inn.c}`, 'true/6');
 
   // セーブ（記録1）→ 再読込 → つづきから
-  await key('KeyX', 150); for (let i = 0; i < 4; i++) await key('ArrowDown', 50);
+  await key('KeyX', 150); for (let i = 0; i < 5; i++) await key('ArrowDown', 50);
   await key('KeyZ', 150); await key('KeyZ', 300);       // セーブ → 記録1
   if ((await ev(() => GAME.scene.top().name)) === '確認') await key('KeyZ', 300);
   await shot('31_saved');
@@ -333,6 +335,108 @@ const { chromium } = require('playwright');
   await shot('35_all_kotodama');
   for (let i = 0; i < 5 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
   expect('言霊の数', await ev(() => GAME.party.member('oonamuchi').kotodama.length), await ev(() => Object.keys(GAME.DATA.kotodama).length));
+
+  // ===== フェーズ4：状態異常・仲間・作戦 =====
+  await ev(() => { GAME.party.newGame(); GAME.rng.setFixed(true); });
+  // 状態異常のしくみ（確率1でかける）
+  const stat = await ev(() => {
+    const m = GAME.party.member('oonamuchi');
+    const out = {};
+    GAME.status.inflict(m, 'sleep', 1); GAME.status.inflict(m, 'poison', 1);
+    out.tags = GAME.status.tags(m);
+    out.skip = GAME.status.beforeAct(m).skip;
+    const t0 = m.status.sleep; GAME.kotodama.endRound([m], null); out.dec = t0 - (m.status.sleep || 0);
+    GAME.status.inflict(m, 'venom', 1);
+    GAME.kotodama.clearBattleState(m); out.after = GAME.status.tags(m);
+    // 心鎮めは混乱を防ぐ
+    m.mind = 3; out.mind = GAME.status.inflict(m, 'confuse', 1).map(e => e.text).join('');
+    delete m.mind; delete m.status;
+    // 耐性：まどい狐は混乱が効かない
+    const fox = { side: 'enemy', id: 'fox', name: '狐', hp: 10 };
+    out.fox = GAME.status.inflict(fox, 'confuse', 1).map(e => e.text).join('');
+    // 眠りの続くターン（2〜5）
+    const turns = new Set(); for (let i = 0; i < 300; i++) { const u = { side: 'party', name: 'x', hp: 1 }; GAME.status.inflict(u, 'sleep', 1); turns.add(u.status.sleep); }
+    out.turns = [...turns].sort().join(',');
+    return out;
+  });
+  expect('眠り＋毒の印', stat.tags, '眠毒');
+  expect('眠っていると動けない', stat.skip, true);
+  expect('ターンが減る', stat.dec, 1);
+  expect('戦いのあと毒だけ残る（猛毒→毒）', stat.after, '毒');
+  expect('心鎮めで混乱を防ぐ', stat.mind.includes('惑わされなかった'), true);
+  expect('まどい狐に混乱は効かない', stat.fox.includes('効かなかった'), true);
+  expect('眠りは2〜5ターン', stat.turns, '2,3,4,5');
+
+  // 移動中の毒：1歩ごとに1減る（1より下にはならない）
+  await placeAt('field_minamo', 20, 5, 'down'); await wait(200);
+  await ev(() => { GAME.encounter.enabled = false; const m = GAME.party.member('oonamuchi'); m.status = { poison: true }; m.hp = 3; });
+  await hold('ArrowDown', 700);
+  expect('毒で歩くと体力が減るが1で止まる', await ev(() => GAME.party.member('oonamuchi').hp), 1);
+  await ev(() => { const m = GAME.party.member('oonamuchi'); delete m.status; GAME.party.healAll(); GAME.encounter.enabled = true; });
+
+  // 臨時の仲間（デバッグで5章の二人を入れる）→ 4人で歩く
+  await placeAt('minamo', 15, 12, 'down'); await wait(200);
+  await key('F1', 150);
+  for (let i = 0; i < 11; i++) await key('ArrowDown', 40);
+  await key('KeyZ', 200); await key('KeyZ', 300);    // 5章：スクナ・コノハ
+  await closeMessages(); await key('Escape', 150);
+  expect('仲間が4人になる', await ev(() => GAME.state.party.map(p => p.name).join('・')), 'ベル・オオナムチ・スクナ・コノハ');
+  await hold('ArrowDown', 700); await hold('ArrowRight', 500);
+  await shot('36_followers');
+  expect('5人目は加われない', await ev(() => GAME.party.join('kaname')), false);
+
+  // 4人で戦う：指示はオオナムチだけ（ほかは「うまくやって」）
+  await ev(() => GAME.scene.push(GAME.scenes.battle(['fox', 'moth'])));
+  await wait(1300);
+  await shot('37_battle_four');
+  expect('指示を出すのはオオナムチだけ', await ev(() => GAME.scene.top().name === '戦闘'), true);
+  // AI：オオナムチが弱っていたら、スクナが回復する
+  const aiPick = await ev(() => {
+    const st = { party: GAME.state.party, enemies: [{ hp: 5, key: 'e0' }] };
+    const oo = GAME.party.member('oonamuchi'); const hp = oo.hp; oo.hp = 3;
+    const d = GAME.ai.decide(st, GAME.party.member('sukuna')); oo.hp = hp;
+    return `${d.type}:${d.id}:${d.target && d.target.name}`;
+  });
+  expect('うまくやって：スクナが弱った仲間を回復', aiPick.startsWith('kotodama:') && aiPick.endsWith(':オオナムチ'), true);
+  for (let turn = 0; turn < 25 && (await scenes()) !== 'マップ'; turn++) {
+    if ((await ev(() => GAME.scene.top().name)) !== '戦闘') { await key('KeyZ', 150); continue; }
+    await key('KeyZ', 60); await key('KeyZ', 60);
+    await page.keyboard.down('Shift'); await wait(1500); await page.keyboard.up('Shift');
+    if (turn === 1) await shot('38_battle_status');
+  }
+  const fourEnd = await scenes();
+  expect('4人の戦いが終わる（勝ち か 記録へ戻る）', fourEnd, 'マップ');
+
+  // 作戦：オオナムチも「うまくやって」にすると、コマンドを聞かれない
+  await ev(() => { GAME.party.newGame(); GAME.party.setTemps(['kaname', 'kotoshiro']); });
+  await placeAt('minamo', 15, 12, 'down'); await wait(200);
+  await key('KeyX', 150); for (let i = 0; i < 3; i++) await key('ArrowDown', 40);
+  await key('KeyZ', 150);                       // さくせん
+  await key('ArrowDown', 60); await key('KeyZ', 150);   // オオナムチ
+  await shot('39_tactics');
+  await key('ArrowUp', 60); await key('KeyZ', 200); await closeMessages();   // うまくやって
+  for (let i = 0; i < 4 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
+  expect('作戦をうまくやってに', await ev(() => GAME.party.member('oonamuchi').tactic), 'auto');
+  await ev(() => GAME.scene.push(GAME.scenes.battle(['dog', 'dog'])));
+  let askedCommand = false;
+  for (let i = 0; i < 80 && (await scenes()) !== 'マップ'; i++) {
+    const ph = await ev(() => GAME.scene.top().phase);
+    if (ph === 'command') askedCommand = true;
+    if (ph === 'result' || ph === 'gameover') await key('KeyZ', 200);
+    else { await page.keyboard.down('Shift'); await wait(250); await page.keyboard.up('Shift'); }
+  }
+  expect('全員うまくやって：コマンドを聞かれずに終わる', `${await scenes()}/${askedCommand}`, 'マップ/false');
+
+  // 先手（ウズメ）は約1/4、落とし物（コトシロ）は2倍
+  const perks = await ev(() => {
+    GAME.party.setTemps(['uzume', 'hieda']);
+    const st = GAME.battle.create(GAME.party.freshMembers(), ['dog']);
+    let n = 0; for (let i = 0; i < 4000; i++) if (GAME.battle.rollFirstStrike(st)) n++;
+    return (n / 4000).toFixed(2);
+  });
+  console.log('     ウズメの先手の割合：', perks, '（決まりは 0.25）');
+  expect('先手の割合が 0.2〜0.3', Number(perks) > 0.2 && Number(perks) < 0.3, true);
+  await ev(() => GAME.rng.setFixed(false));
 
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

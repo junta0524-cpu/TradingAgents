@@ -10,11 +10,13 @@
   // 仲間1人ぶんの、最初の状態
   function makeMember(id) {
     const B = G.DATA.balance, c = G.DATA.characters[id];
+    const base = c.isBell ? clone(B.BELL) : c.temp ? clone(B.TEMP_PARTY[id]) : G.growth.baseAt(id, 1);
     const m = {
       id, name: c.name, lv: c.fixed ? null : 1, exp: 0,
-      base: c.fixed ? clone(B.BELL) : G.growth.baseAt(id, 1),
+      base,
       equip: clone(c.equip || {}),
       kotodama: (c.kotodama || []).slice(),
+      tactic: c.tactic || 'manual',
     };
     recalc(m);
     m.hp = m.maxHp; m.mp = m.maxMp;
@@ -56,6 +58,25 @@
       return G.state.party.map(m => Object.assign(clone(m), { hp: m.maxHp, mp: m.maxMp }));
     },
     member(id) { return G.state.party.find(m => m.id === id); },
+
+    // ---- 仲間の出入り（臨時の仲間は、その土地の間だけ）----
+    // 加わる（4人まで）。加われたら true
+    join(id) {
+      if (G.party.member(id) || G.state.party.length >= G.DATA.balance.PARTY_MAX) return false;
+      G.state.party.push(makeMember(id));
+      return true;
+    },
+    leave(id) {
+      const m = G.party.member(id);
+      if (!m || G.DATA.characters[id].isBell) return false;
+      G.state.party.splice(G.state.party.indexOf(m), 1);
+      return true;
+    },
+    // 臨時の仲間を全員別れさせてから、指定の仲間を加える（章の切り替え用）
+    setTemps(ids) {
+      G.state.party.filter(m => G.DATA.characters[m.id].temp).forEach(m => G.party.leave(m.id));
+      (ids || []).forEach(id => G.party.join(id));
+    },
 
     // ---- 持ち物 ----
     count(id) { const s = G.state.items.find(x => x.id === id); return s ? s.count : 0; },
