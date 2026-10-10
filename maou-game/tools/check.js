@@ -36,13 +36,14 @@ const { chromium } = require('playwright');
   await page.goto(url);
   await wait(400);
   // フェーズ1〜5の確かめは「4章（ミナモ）にいる状態」で行う（物語の場面は最後にまとめて確かめる）
-  await ev(() => {
+  const patchCh4 = () => ev(() => {
     GAME.party._newGameOrig = GAME.party.newGame;
     GAME.party.newGame = function () {
       GAME.party._newGameOrig();
       Object.assign(GAME.state, { chapter: 4, disguised: true, inhibitShown: true, resume: null, mapId: 'minamo', x: 15, y: 12, dir: 'down' });
     };
   });
+  await patchCh4();
   await shot('01_title');
   await key('KeyZ', 300);
   expect('はじめから → 町', await pos(), 'minamo(15,12)');
@@ -315,7 +316,7 @@ const { chromium } = require('playwright');
   await closeMessages();
   for (let i = 0; i < 4 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
   const savedState = await ev(() => JSON.stringify({ lv: GAME.party.member('oonamuchi').lv, c: GAME.state.copper, m: GAME.state.mapId }));
-  await page.reload(); await wait(500);
+  await page.reload(); await wait(500); await patchCh4();
   await shot('32_title_continue');
   await key('ArrowDown', 60); await key('KeyZ', 200);   // つづきから
   await shot('33_slot_list');
