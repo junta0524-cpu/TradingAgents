@@ -197,13 +197,13 @@ const { chromium } = require('playwright');
   await placeAt('minamo', 15, 22, 'down'); await wait(300);   // 町に入ると記録される
   await hold('ArrowDown', 150); await wait(800);              // 野原へ
   // 阻害ゲージを少なくして、ベルが割って入れないようにしておく
-  await ev(() => { GAME.state.inhibit = 5; GAME.state.party[1].hp = 1; GAME.state.party[1].def = 0; GAME.scene.push(GAME.scenes.battle(['boar', 'boar', 'boar'])); });
+  // ベルは別行動にして、先に敵を倒してしまわないようにする
+  await ev(() => { GAME.state.split = 'away'; GAME.state.inhibit = 5; GAME.state.party[1].hp = 1; GAME.state.party[1].def = 0; GAME.scene.push(GAME.scenes.battle(['boar', 'boar', 'boar'])); });
   await wait(1200);
   for (let t = 0; t < 15; t++) {
     if ((await ev(() => GAME.scene.top().name)) !== '戦闘') break;
     const ph = await ev(() => GAME.scene.names().join());
     await key('ArrowDown', 60); await key('KeyZ', 60);   // ぼうぎょ
-    await key('ArrowDown', 60); await key('KeyZ', 60);
     await page.keyboard.down('Shift'); await wait(1500); await page.keyboard.up('Shift');
     await wait(1200);
     await shot('17_gameover');
