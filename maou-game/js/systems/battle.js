@@ -76,6 +76,7 @@
     return {
       party, enemies, escapeTries: 0, boss: !!opts.boss,
       showCalc: !!opts.showCalc, lastKilled: null, turn: 0, plans: {},
+      protectLeft: G.DATA.balance.INHIBIT.PROTECT_PER_BATTLE,   // ベルが致命傷を止められる残り回数
     };
   }
 
@@ -104,12 +105,29 @@
   const aliveEnemies = st => st.enemies.filter(e => e.hp > 0);
   const charOf = m => G.DATA.characters[m.id] || {};
 
-  // ダメージを与える。ベルは倒れない（HPは1で止まる）
+  // ベルが、仲間への致命の一撃を止められるか（守り手のしくみ・仕様書 7-2）
+  function canProtect(st, target) {
+    if (!st || target.side !== 'party' || charOf(target).isBell || st.protectLeft <= 0) return false;
+    const bell = st.party.find(p => charOf(p).isBell);
+    if (!bell || bell.hp <= 0 || G.status.has(bell, 'sleep') || G.status.has(bell, 'bind')) return false;
+    return G.inhibit.value() >= G.DATA.balance.INHIBIT.PROTECT;
+  }
+
+  // ダメージを与える。ベルは倒れない（HPは1で止まる）。
+  // 仲間が倒れそうなとき、ベルが止めたら「止めた」という文を返す（なければ null）
   function applyDamage(st, target, amount) {
     let hp = target.hp - amount;
     if (target.side === 'party' && charOf(target).isBell && hp < 1) hp = 1;
+    let saved = null;
+    if (hp <= 0 && amount > 0 && canProtect(st, target)) {
+      hp = 1;
+      st.protectLeft--;
+      G.inhibit.drain(G.DATA.balance.INHIBIT.PROTECT);
+      saved = `ベルが割って入り、${target.name}への致命の一撃を止めた。`;
+    }
     target.hp = Math.max(0, hp);
     if (target.hp === 0 && target.side === 'enemy' && st) st.lastKilled = target;
+    return saved;
   }
 
   // 1人ぶんの行動を行い、起きたこと（events）を返す
@@ -139,7 +157,16 @@
       ev.push({ type: 'msg', text: `${actor.name}は身を守っている。` });
       return ev;
     }
-    if (cmd.type === 'kotodama') return ev.concat(G.kotodama.cast(actor, cmd.id, cmd.target, st));
+    if (cmd.type === 'kotodama') {
+      const out = G.kotodama.cast(actor, cmd.id, cmd.target, st);
+      // ベルが言霊を唱えると、阻害ゲージが大きく減る
+      if (charOf(actor).isBell && out.some(e => e.type === 'msg' && e.text.endsWith('を唱えた！'))) {
+        G.inhibit.drain(G.inhibit.kotodamaCost(G.DATA.kotodama[cmd.id]));
+        out.push({ type: 'inhibit' });
+      }
+      return ev.concat(out);
+    }
+    if (cmd.type === 'fullpower') return ev.concat(fullPower(st, actor, cmd.target));
     if (cmd.type === 'item') return ev.concat(G.kotodama.useItem(actor, cmd.id, cmd.target, st));
     // 攻撃：狙った敵が倒れていたら、別の敵へ
     let target = cmd.target;
@@ -173,9 +200,10 @@
         : `攻${r.atk} 守${r.def} → 基本${r.base.toFixed(1)} 幅±${r.width}`;
       ev.push({ type: 'calc', text: `（${detail}${target.defending ? ' 防御½' : ''}${target.guard > 0 ? ' 岩戸' : ''} → ${dmg}）` });
     }
-    applyDamage(st, target, dmg);
+    const saved = applyDamage(st, target, dmg);
     ev.push({ type: 'damage', target, amount: dmg });
     ev.push({ type: 'msg', text: dmg > 0 ? `${target.name}に ${dmg} のダメージ。` : `${target.name}は傷を負わなかった。` });
+    if (saved) ev.push({ type: 'msg', text: saved }, { type: 'inhibit' });
     if (target.hp === 0) {
       ev.push({ type: 'ko', target });
       ev.push({ type: 'msg', text: target.side === 'enemy' ? `${target.name}を倒した。` : `${target.name}は倒れた……。` });
@@ -187,6 +215,21 @@
       const hit = actor.side === 'enemy' && G.DATA.enemies[actor.id].onHit;
       if (hit && G.rng.chance(hit.chance)) G.status.inflict(target, hit.status, 1).filter(e => e.type !== 'msg' || !e.text.endsWith('効かなかった。')).forEach(e => ev.push(e));
     }
+    return ev;
+  }
+
+  // ベルの「本気」：守備力を無視した重い一撃。阻害ゲージが大きく減る
+  function fullPower(st, actor, target) {
+    const I = G.DATA.balance.INHIBIT;
+    if (!target || target.hp <= 0) target = aliveEnemies(st)[0];
+    if (!target) return [];
+    const ev = [{ type: 'msg', text: `${actor.name}は、抑えていた力をほんの少し解いた。` }];
+    const dmg = Math.floor(actor.atk * I.FULL_POWER_MULT) + G.rng.int(0, Math.floor(actor.atk / 2));
+    G.inhibit.drain(I.FULL_POWER);
+    applyDamage(st, target, dmg);
+    ev.push({ type: 'inhibit' }, { type: 'damage', target, amount: dmg });
+    ev.push({ type: 'msg', text: `${target.name}に ${dmg} のダメージ。` });
+    if (target.hp === 0) ev.push({ type: 'ko', target }, { type: 'msg', text: `${target.name}を倒した。` });
     return ev;
   }
 
@@ -233,6 +276,7 @@
   // 自動戦闘（デバッグ用）：味方は全員「うまくやって」、敵はランダムに選んだ組で n 回戦う
   function simulate(n, groups) {
     const result = { wins: 0, loses: 0, crits: 0, attacks: 0, turns: 0, damageTaken: 0 };
+    const inhibitWas = G.state.inhibit;   // 試しの戦いで、本物の阻害ゲージを減らさない
     for (let i = 0; i < n; i++) {
       const members = G.party.freshMembers();
       const group = groups[G.rng.int(0, groups.length - 1)];
@@ -255,6 +299,7 @@
       }
       result.turns += turns;
       if (out === 'win') result.wins++; else result.loses++;
+      G.state.inhibit = inhibitWas;
     }
     return result;
   }

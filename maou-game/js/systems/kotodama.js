@@ -49,9 +49,10 @@
           dmg = Math.floor(dmg * resist);
           if (st && st.showCalc) ev.push({ type: 'calc', text: `（幅${effect.power[0]}〜${effect.power[1]}＋攻×${B.KOTODAMA_ATK_BONUS}=${bonus}　耐性×${resist} → ${dmg}）` });
           if (t.guard > 0) dmg = 0;
-          G.battle.applyDamage(st, t, dmg);
+          const saved = G.battle.applyDamage(st, t, dmg);
           ev.push({ type: 'damage', target: t, amount: dmg });
           ev.push({ type: 'msg', text: resist === 0 ? `${t.name}には効かない！` : (dmg > 0 ? `${t.name}に ${dmg} のダメージ。` : `${t.name}は傷を負わなかった。`) });
+          if (saved) ev.push({ type: 'msg', text: saved }, { type: 'inhibit' });
           if (t.hp === 0) ev = ev.concat(koEvents(t));
           return;
         }

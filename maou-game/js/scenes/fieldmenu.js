@@ -82,7 +82,15 @@
         const id = caster.kotodama[i], k = G.DATA.kotodama[id];
         useOn(k.target, target => {
           const ev = G.kotodama.cast(caster, id, target, null);
-          G.message.show(ev.filter(e => e.type === 'msg').map(e => e.text).join('\n'));
+          const lines = ev.filter(e => e.type === 'msg').map(e => e.text);
+          // ベルが唱えると、移動中でも阻害ゲージが減る
+          if (G.DATA.characters[caster.id].isBell && lines.some(t => t.endsWith('を唱えた！'))) {
+            if (G.inhibit.drain(G.inhibit.kotodamaCost(k))) {
+              G.message.show(lines.join('\n'), () => G.scene.change(G.scenes.exposure()));
+              return;
+            }
+          }
+          G.message.show(lines.join('\n'));
         });
       });
     });

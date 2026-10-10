@@ -24,7 +24,8 @@
   // group：敵の id の配列。opts.boss：逃げられない戦い
   G.scenes.battle = function (group, opts) {
     opts = opts || {};
-    const st = G.battle.create(G.state.party, group, { boss: opts.boss, showCalc: G.debugOpts.showCalc });
+    const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc });
+    const watching = G.state.split === 'watch';   // ベルは画面の端で見守るだけ
     const party = st.party, enemies = st.enemies;
 
     // play / command / sub（言霊・道具の一覧）/ target（敵を選ぶ）/ ally（味方を選ぶ）/ result / gameover
@@ -78,9 +79,14 @@
       if (cmdIndex < 0) { executeTurn(); return; }   // 全員「うまくやって」なら、そのまま進む
       openMenu();
     }
+    // ベルだけ「本気」を選べる（阻害ゲージが大きく減る）
+    let cmdList = COMMANDS;
     function openMenu() {
       const m = party[cmdIndex];
-      menu = new G.ui.Menu(COMMANDS.map(c => ({ label: c.label })), { x: 8, y: CMD_Y, w: 150, title: m.name });
+      cmdList = G.DATA.characters[m.id].isBell
+        ? [COMMANDS[0], { label: '本気', type: 'fullpower' }].concat(COMMANDS.slice(1))
+        : COMMANDS;
+      menu = new G.ui.Menu(cmdList.map(c => ({ label: c.label })), { x: 8, y: CMD_Y - (cmdList.length - 5) * 16, w: 150, title: m.name });
       phase = 'command';
     }
     function setCommand(cmd) { commands[cmdIndex] = cmd; nextMember(); }
@@ -196,7 +202,12 @@
       play(ev, () => { phase = 'result'; });
     }
     function cleanup() { party.forEach(p => G.kotodama.clearBattleState(p)); }
-    function endBattle() { cleanup(); G.scene.pop(); }
+    function endBattle() {
+      cleanup();
+      // 戦いの中で阻害ゲージが尽きていたら、正体露見へ
+      if (G.inhibit.exposed()) { G.scene.change(G.scenes.exposure()); return; }
+      G.scene.pop();
+    }
     function gameOver() {
       cleanup();
       G.party.loadRecord();
@@ -248,11 +259,11 @@
           const res = menu.update();
           if (!res) return;
           if (res.type === 'cancel') { prevMember(); return; }
-          const c = COMMANDS[res.index];
+          const c = cmdList[res.index];
           if (c.type === 'escape') { runEscape(); return; }
           if (c.type === 'defend') { setCommand({ type: 'defend' }); return; }
           if (c.type === 'kotodama' || c.type === 'item') { openSub(c.type); return; }
-          pending = { type: 'attack' };
+          pending = { type: c.type === 'fullpower' ? 'fullpower' : 'attack' };
           targetIndex = 0;
           phase = 'target';
           return;
@@ -274,7 +285,7 @@
           const list = visibleEnemies();
           if (inp.repeat('left') || inp.repeat('up')) targetIndex = (targetIndex - 1 + list.length) % list.length;
           if (inp.repeat('right') || inp.repeat('down')) targetIndex = (targetIndex + 1) % list.length;
-          if (inp.pressed('cancel')) { phase = pending.type === 'attack' ? 'command' : 'sub'; return; }
+          if (inp.pressed('cancel')) { phase = (pending.type === 'attack' || pending.type === 'fullpower') ? 'command' : 'sub'; return; }
           if (inp.pressed('ok')) setCommand(Object.assign({}, pending, { target: list[targetIndex] }));
           return;
         }
@@ -320,6 +331,16 @@
         }
         ctx.restore();
 
+        // 見守るベル（別行動の「見守り」：操作も戦闘もしない）
+        if (watching) {
+          ctx.save(); ctx.translate(10, 136); ctx.scale(2, 2);
+          G.sprite.drawPerson(ctx, 'bell', 'right', 0, false, 0, 0);
+          ctx.restore();
+          r.text('見守っている', 8, 172, '#ddd');
+        }
+        // 左上：阻害ゲージ
+        G.inhibit.drawGauge(8, 8);
+
         // 右上：味方の体力（4人でも収まるよう、1人30ドット）
         const sw = 150, sx = r.W - sw - 8, rowH = party.length > 2 ? 30 : 34;
         G.ui.drawWindow(sx, 8, sw, 12 + party.length * rowH);
@@ -340,7 +361,7 @@
         const choosing = phase === 'command' || phase === 'sub' || phase === 'target' || phase === 'ally';
         if (choosing) {
           menu.draw();
-          if (phase === 'sub' || ((phase === 'target' || phase === 'ally') && pending.type !== 'attack')) {
+          if (phase === 'sub' || ((phase === 'target' || phase === 'ally') && pending.type !== 'attack' && pending.type !== 'fullpower')) {
             if (subMenu) subMenu.draw();
           } else {
             G.ui.drawWindow(162, 232, 310, 80);

@@ -80,9 +80,10 @@
     if (u.hp <= 0 || !u.status) return ev;
     if (has(u, 'venom')) {
       const dmg = Math.max(1, Math.floor(u.maxHp * S().VENOM_RATE));
-      G.battle.applyDamage(st, u, dmg);
+      const saved = G.battle.applyDamage(st, u, dmg);
       ev.push({ type: 'damage', target: u, amount: dmg });
       ev.push({ type: 'msg', text: `猛毒が${u.name}を蝕む。${dmg} のダメージ。` });
+      if (saved) ev.push({ type: 'msg', text: saved }, { type: 'inhibit' });
       if (u.hp === 0) {
         ev.push({ type: 'ko', target: u });
         ev.push({ type: 'msg', text: u.side === 'enemy' ? `${u.name}を倒した。` : `${u.name}は倒れた……。` });

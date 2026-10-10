@@ -28,6 +28,8 @@
     const allies = st.party.filter(p => p.hp > 0);
     const foes = st.enemies.filter(e => e.hp > 0);
     if (!foes.length) return { type: 'defend' };
+    // ベルは自分からは力を使わない（阻害ゲージを守る）。抑えた打撃だけ
+    if ((G.DATA.characters[actor.id] || {}).isBell) return { type: 'attack', target: foes.slice().sort((a, b) => a.hp - b.hp)[0] };
 
     // 1) 危ない仲間がいれば回復（複数なら全体回復を優先）
     const weak = allies.filter(p => p.hp / p.maxHp < LOW_HP).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);

@@ -30,7 +30,11 @@
         G.message.show(`オオナムチが、すべての言霊（${all.length}個）を覚えました。\nまだ作っていない言霊は、一覧で灰色になります。`);
       },
     },
-    { label: '阻害ゲージの増減',       phase: 5 },
+    {
+      label: '阻害ゲージの増減', phase: 5,
+      note: () => (G.state ? `${Math.round(G.state.inhibit)}/${G.DATA.balance.INHIBIT.MAX}` : ''),
+      run: () => G.scene.push(createInhibitMenu()),
+    },
     { label: 'フラグ一覧と切り替え',   phase: 1, run: () => G.scene.push(createFlagList()) },
     {
       label: 'エンカウント ON/OFF', phase: 2,
@@ -61,12 +65,13 @@
           : '乱数の固定をやめました。');
       },
     },
-    { label: '蹂躙戦闘の即時開始',     phase: 5 },
+    { label: '蹂躙戦闘の即時開始', phase: 5, run: () => G.scene.push(createRampagePicker()) },
+    { label: '別行動（試し）', phase: 5, note: () => (!G.state || !G.state.split ? 'なし' : G.state.split === 'away' ? 'ベル不在' : '見守り'), run: () => G.scene.push(createSplitPicker()) },
     { label: '臨時の仲間の入れ替え（試し）', phase: 4, run: () => G.scene.push(createTempPicker()) },
   ];
 
   // いま作っているフェーズ（これより後の項目は灰色）
-  const CURRENT_PHASE = 4;
+  const CURRENT_PHASE = 5;
 
   function buildMenuItems() {
     return ITEMS.map(it => {
@@ -94,6 +99,70 @@
       `勝ち ${r.wins}回　負け ${r.loses}回\n平均 ${(r.turns / n).toFixed(1)}ターン　受けたダメージ 平均${(r.damageTaken / n).toFixed(1)}`,
       `会心 ${r.crits}回／攻撃 ${r.attacks}回（${critPct}％）\n※会心の決まりは 1/64（約1.6％）`,
     ]);
+  }
+
+  // 小さな一覧を出す、デバッグ用の共通の場面
+  function smallPicker(name, title, items, onPick) {
+    const menu = new G.ui.Menu(items.map(s => ({ label: s.label, note: s.note })), { x: 64, y: 60, w: 352, title });
+    return {
+      name, opaque: true,
+      update() {
+        const res = menu.update();
+        if (!res) return;
+        if (res.type === 'cancel') { G.scene.pop(); return; }
+        onPick(items[res.index], menu);
+      },
+      draw() { G.renderer.clear('#000'); menu.draw(); },
+    };
+  }
+
+  function createInhibitMenu() {
+    ensureGame();
+    const I = G.DATA.balance.INHIBIT;
+    const items = [
+      { label: '10 減らす', f: () => G.inhibit.drain(10) },
+      { label: '50 減らす', f: () => G.inhibit.drain(50) },
+      { label: '10 増やす', f: () => G.inhibit.set(G.state.inhibit + 10) },
+      { label: '満タンにする', f: () => G.inhibit.set(I.MAX) },
+      { label: 'ゼロにする（次に歩くか戦い終わると露見）', f: () => G.inhibit.set(0) },
+      { label: '画面に出す／出さない', f: () => { G.state.inhibitShown = !G.state.inhibitShown; } },
+    ];
+    return smallPicker('デバッグ：阻害', '阻害ゲージ', items, (it, menu) => {
+      it.f();
+      menu.title = `阻害ゲージ　いま ${Math.round(G.state.inhibit)}/${I.MAX}${G.state.inhibitShown ? '' : '（表示なし）'}`;
+    });
+  }
+
+  function createRampagePicker() {
+    ensureGame();
+    const items = [
+      { label: '2章：根の洲（消す）', key: 'ch2' },
+      { label: '10章：天津京（止める／打ち払う）', key: 'ch10' },
+      { label: 'クリア後：大軍戦（止める／言霊で薙ぐ）', key: 'free' },
+    ];
+    return smallPicker('デバッグ：蹂躙', 'どの蹂躙戦闘にしますか', items, it => {
+      G.scene.pop();
+      G.scene.push(G.scenes.rampage(it.key, {
+        onEnd: res => {
+          G.scene.pop();
+          G.message.show(`結果：消した ${res.erased}／止めた ${res.stopped}／打ち払った ${res.harmed}／言霊 ${res.kotodama}`);
+        },
+      }));
+    });
+  }
+
+  function createSplitPicker() {
+    ensureGame();
+    const items = [
+      { label: 'なし（ベルと一緒）', v: null },
+      { label: 'ベル不在（オオナムチたちだけで動く）', v: 'away' },
+      { label: 'ベルは見守るだけ（戦いの画面の端にいる）', v: 'watch' },
+    ];
+    return smallPicker('デバッグ：別行動', '別行動', items, it => {
+      G.state.split = it.v;
+      G.scene.pop();
+      G.message.show(`別行動を「${it.label}」にしました。`);
+    });
   }
 
   // 臨時の仲間を章ごとに入れ替える（物語ができるまでの試し用）

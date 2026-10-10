@@ -31,7 +31,7 @@
       map = G.DATA.maps[id];
       if (!map) throw new Error('マップが見つかりません：' + id);
       npcs = (map.npcs || []).map(n => Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }));
-      player = makeEntity(x, y, dir || 'down', 'bell');
+      player = makeEntity(x, y, dir || 'down', leaderLook());
       buildFollowers();
       Object.assign(G.state, { mapId: id, x, y, dir: player.dir });
       G.encounter.reset(map);
@@ -41,7 +41,9 @@
     }
 
     // ---- ついてくる仲間 ----
-    function followerIds() { return G.state.party.filter(m => m.id !== 'bell').map(m => m.id); }
+    // 先頭は、いま一緒に動いている仲間の1人目（ふつうはベル、別行動中はオオナムチ）
+    function leaderLook() { const l = G.party.leader(); return (G.DATA.characters[l.id] || {}).look || 'bell'; }
+    function followerIds() { return G.party.active().slice(1).map(m => m.id); }
     function buildFollowers() {
       followers = followerIds().map(id => makeEntity(player.x, player.y, player.dir, (G.DATA.characters[id] || {}).look || id));
       followers.forEach((f, i) => { f.id = followerIds()[i]; });
@@ -219,7 +221,10 @@
         const inp = G.input;
 
         // 仲間が入れ替わったら、ついてくる列を作り直す
-        if (followers.map(f => f.id).join() !== followerIds().join()) buildFollowers();
+        if (followers.map(f => f.id).join() !== followerIds().join() || player.look !== leaderLook()) {
+          player.look = leaderLook();
+          buildFollowers();
+        }
         if (poisonFlash > 0) poisonFlash--;
         if (player.moving) {
           const speed = inp.held('fast') ? B.DASH_SPEED : B.WALK_SPEED;
@@ -227,6 +232,8 @@
           if (advance(player, speed)) {
             Object.assign(G.state, { x: player.x, y: player.y, dir: player.dir });
             if (G.status.fieldStep().length) poisonFlash = 8;
+            // 探知網の濃い場所では、歩くたびに阻害ゲージが減る。尽きたら正体露見
+            if (G.inhibit.step(map)) { G.scene.change(G.scenes.exposure()); return; }
             if (checkWarp()) return;
             const group = G.encounter.step(map, tileAt(player.x, player.y));
             if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; return; }
@@ -261,10 +268,12 @@
         (map.signs || []).forEach(s => things.push({ y: s.y * T, draw: () =>
           G.sprite.drawObject(ctx, 'sign', s.x * T - cam.x, s.y * T - cam.y) }));
         // 仲間は列の後ろから描き、ベルがいちばん手前になるようにする
+        // 阻害ゲージが少ないと、ベルの輪郭が揺れる
+        const jitter = e => (e.look === 'bell' && G.inhibit.warning() && G.frame % 6 < 2 ? (G.frame % 4 < 2 ? 1 : -1) : 0);
         followers.slice().reverse().forEach((e, k) => things.push({ y: e.py - 0.01 * (k + 1), draw: () =>
-          G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x, e.py - cam.y) }));
+          G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y) }));
         npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () =>
-          G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x, e.py - cam.y) }));
+          G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y) }));
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
 
         if (nameTimer > 0 && !fadeDir && G.scene.top() === this) {
@@ -272,6 +281,7 @@
           G.ui.drawWindow(8, 8, w, 26);
           r.text(map.name, 20, 15, '#fff');
         }
+        if (G.scene.top() === this && !fadeDir) G.inhibit.drawGauge(r.W - 124, 8);
         if (poisonFlash > 0) r.rect(0, 0, r.W, r.H, 'rgba(80,200,60,0.25)');
         if (fade > 0) r.rect(0, 0, r.W, r.H, `rgba(0,0,0,${Math.min(1, fade)})`);
         if (battleFlash > 0 && Math.floor(battleFlash / 4) % 2 === 0) r.rect(0, 0, r.W, r.H, 'rgba(255,255,255,0.7)');

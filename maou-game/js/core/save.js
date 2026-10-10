@@ -48,9 +48,13 @@
     apply(data) {
       G.state = clone(data.state);
       G.flags.data = clone(data.flags || {});
+      if (G.state.inhibit == null) { G.state.inhibit = G.DATA.balance.INHIBIT.MAX; G.state.inhibitShown = true; }
       G.state.party.forEach(m => {
         // 古い記録には作戦がないので、最初の作戦を入れる
         if (!m.tactic) m.tactic = (G.DATA.characters[m.id] || {}).tactic || 'manual';
+        if (G.DATA.characters[m.id].isBell && m.kotodama.length === 0) {   // フェーズ4までの記録のベル
+          m.kotodama = Object.keys(G.DATA.kotodama); m.base.mp = G.DATA.balance.BELL.mp;
+        }
         G.party.recalc(m);
       });
     },

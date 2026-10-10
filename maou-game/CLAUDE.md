@@ -39,6 +39,10 @@
 - 仲間：最大4人。臨時の仲間は「その土地の間だけ同行」（ユーザー決定）。`G.party.join/leave/setTemps`。強さは balance.js の TEMP_PARTY。
 - 作戦：`js/systems/ai.js`（うまくやって／ぜんぶ指示する。ほかはフェーズ10）。ベルと臨時の仲間は最初「うまくやって」。
 - 敵の行動はラウンドの最初に決める（`planEnemies`、先読みで見える）。敵の言霊は `G.DATA.kotodamaEnemy`。
+- 阻害ゲージ：`js/systems/inhibit.js`（`G.state.inhibit`、数字は balance.js の INHIBIT）。ベルの言霊・本気・致命傷の阻止で減る。マップの `detection`（0〜3）で1歩ごとに減る。ゼロで `G.scenes.exposure`。宿屋で半分まで戻る。
+- 守り手：仲間への致命の一撃を、ベルが1戦に1度だけ止める（`applyDamage` が文を返す）。AIのベルは力を使わない。
+- 蹂躙戦闘：`js/scenes/rampage.js`、場面は `js/data/rampage.js`（ch2 消す／ch10 止める・打ち払う／free）。結果は `G.state.vars.rampage_<key>`。
+- 別行動：`G.state.split`（null／'away'／'watch'）。`G.party.active()` がベル以外になる。マップの先頭は `G.party.leader()`。
 - デバッグのフェーズ番号は `js/core/debug.js` の CURRENT_PHASE（フェーズを進めたら上げる）。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。

@@ -12,7 +12,8 @@
   G.DATA.characters = {
     bell: {
       name: 'ベル', look: 'bell', isBell: true, fixed: true, tactic: 'auto',
-      equip: {}, kotodama: [],
+      // ベルは全部の言霊を覚えている（仕様書 第4章）。ただし唱えると阻害ゲージが大きく減る
+      equip: {}, kotodama: 'all',
     },
     oonamuchi: {
       name: 'オオナムチ', look: 'oonamuchi', tactic: 'manual',

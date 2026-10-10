@@ -15,7 +15,7 @@
       id, name: c.name, lv: c.fixed ? null : 1, exp: 0,
       base,
       equip: clone(c.equip || {}),
-      kotodama: (c.kotodama || []).slice(),
+      kotodama: c.kotodama === 'all' ? Object.keys(G.DATA.kotodama) : (c.kotodama || []).slice(),
       tactic: c.tactic || 'manual',
     };
     recalc(m);
@@ -50,14 +50,22 @@
         items: [],        // [{ id, count }]
         party: ['bell', 'oonamuchi'].map(makeMember),
         encounterSteps: null,
+        inhibit: B.INHIBIT.MAX,     // 阻害ゲージ
+        inhibitShown: true,         // 画面に出すか（物語ができたら8章から出す）
+        split: null,                // 別行動：null／'away'（ベルがいない）／'watch'（ベルは見守るだけ）
       };
       G.flags.reset();
     },
     // 自動戦闘などで使う、満タンの仲間
     freshMembers() {
-      return G.state.party.map(m => Object.assign(clone(m), { hp: m.maxHp, mp: m.maxMp }));
+      return G.party.active().map(m => Object.assign(clone(m), { hp: m.maxHp, mp: m.maxMp }));
     },
     member(id) { return G.state.party.find(m => m.id === id); },
+    // いま一緒に動いている仲間（別行動中はベルを除く）
+    active() {
+      return G.state.split ? G.state.party.filter(m => !G.DATA.characters[m.id].isBell) : G.state.party;
+    },
+    leader() { return G.party.active()[0]; },
 
     // ---- 仲間の出入り（臨時の仲間は、その土地の間だけ）----
     // 加わる（4人まで）。加われたら true

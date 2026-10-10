@@ -186,7 +186,8 @@ const { chromium } = require('playwright');
   await ev(() => GAME.party.healAll());
   await placeAt('minamo', 15, 22, 'down'); await wait(300);   // 町に入ると記録される
   await hold('ArrowDown', 150); await wait(800);              // 野原へ
-  await ev(() => { GAME.state.party[1].hp = 1; GAME.state.party[1].def = 0; GAME.scene.push(GAME.scenes.battle(['boar', 'boar', 'boar'])); });
+  // 阻害ゲージを少なくして、ベルが割って入れないようにしておく
+  await ev(() => { GAME.state.inhibit = 5; GAME.state.party[1].hp = 1; GAME.state.party[1].def = 0; GAME.scene.push(GAME.scenes.battle(['boar', 'boar', 'boar'])); });
   await wait(1200);
   for (let t = 0; t < 15; t++) {
     if ((await ev(() => GAME.scene.top().name)) !== '戦闘') break;
@@ -223,7 +224,7 @@ const { chromium } = require('playwright');
   // 移動中に「癒やし」：オオナムチの体力を減らしてから唱える
   await ev(() => { const m = GAME.party.member('oonamuchi'); m.hp = 5; });
   await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150);   // ことだま
-  await key('KeyZ', 150);                                                       // オオナムチが唱える（最初からカーソルがある）
+  await key('ArrowDown', 60); await key('KeyZ', 150);                           // オオナムチが唱える（ベルの下）
   await shot('20_field_kotodama');
   await key('ArrowDown', 60); await key('KeyZ', 150);                           // 癒やし
   await key('ArrowDown', 60); await key('KeyZ', 300);                           // オオナムチに
@@ -377,7 +378,7 @@ const { chromium } = require('playwright');
   // 臨時の仲間（デバッグで5章の二人を入れる）→ 4人で歩く
   await placeAt('minamo', 15, 12, 'down'); await wait(200);
   await key('F1', 150);
-  for (let i = 0; i < 11; i++) await key('ArrowDown', 40);
+  for (let i = 0; i < 12; i++) await key('ArrowDown', 40);
   await key('KeyZ', 200); await key('KeyZ', 300);    // 5章：スクナ・コノハ
   await closeMessages(); await key('Escape', 150);
   expect('仲間が4人になる', await ev(() => GAME.state.party.map(p => p.name).join('・')), 'ベル・オオナムチ・スクナ・コノハ');
@@ -437,6 +438,126 @@ const { chromium } = require('playwright');
   console.log('     ウズメの先手の割合：', perks, '（決まりは 0.25）');
   expect('先手の割合が 0.2〜0.3', Number(perks) > 0.2 && Number(perks) < 0.3, true);
   await ev(() => GAME.rng.setFixed(false));
+
+  // ===== フェーズ5：ベル専用のしくみ =====
+  await ev(() => { GAME.party.newGame(); GAME.rng.setFixed(true); });
+  const g = () => ev(() => Math.round(GAME.state.inhibit * 100) / 100);
+  // ベルの言霊・本気でゲージが減る（火種：8＋MP2×0.5＝9、本気：25）
+  const drains = await ev(() => {
+    const st = GAME.battle.create(GAME.party.active(), ['boar', 'boar']);
+    const bell = st.party[0], out = [];
+    let before = GAME.state.inhibit;
+    GAME.battle.act(st, bell, { type: 'kotodama', id: 'hidane', target: st.enemies[0] });
+    out.push(before - GAME.state.inhibit); before = GAME.state.inhibit;
+    GAME.battle.act(st, bell, { type: 'fullpower', target: st.enemies[1] });
+    out.push(before - GAME.state.inhibit);
+    // AIのベルは力を使わない
+    out.push(GAME.ai.decide(st, bell).type);
+    st.party.forEach(p => GAME.kotodama.clearBattleState(p));
+    return out.join('/');
+  });
+  expect('ベルの言霊で9、本気で25減る・AIのベルは打撃だけ', drains, '9/25/attack');
+
+  // 守り手：オオナムチへの致命の一撃をベルが止める（1回の戦いで1度、ゲージ-10）
+  const protect = await ev(() => {
+    GAME.inhibit.set(100);
+    const st = GAME.battle.create(GAME.party.active(), ['boar']);
+    const oo = st.party[1]; oo.hp = 1;
+    const m1 = GAME.battle.applyDamage(st, oo, 50);
+    const first = `${oo.hp}/${GAME.state.inhibit}/${!!m1}`;
+    oo.hp = 1; GAME.battle.applyDamage(st, oo, 50);
+    st.party.forEach(p => GAME.kotodama.clearBattleState(p));
+    return first + ' → ' + oo.hp;
+  });
+  expect('致命傷を止める（2度目は止められない）', protect, '1/90/true → 0');
+  await ev(() => GAME.party.healAll());
+
+  // 探知網の濃い場所（detection 3）を歩くと減る：1歩0.5
+  await ev(() => { GAME.inhibit.set(100); GAME.DATA.maps.field_minamo.detection = 3; GAME.encounter.enabled = false; });
+  await placeAt('field_minamo', 20, 4, 'down'); await wait(200);
+  for (let i = 0; i < 4; i++) await hold('ArrowDown', 140);
+  const walked = await ev(() => ({ y: GAME.state.y, g: GAME.state.inhibit }));
+  expect('濃い場所を歩くと1歩0.5ずつ減る', 100 - walked.g, (walked.y - 4) * 0.5);
+  await shot('40_gauge_map');
+
+  // 残りが少ないと輪郭が揺れ、ゼロで正体露見 → 記録からやり直し
+  await ev(() => GAME.inhibit.set(1));
+  await shot('41_gauge_low');
+  await hold('ArrowDown', 140); await hold('ArrowDown', 140); await wait(300);
+  expect('ゼロで正体露見', await scenes(), '正体露見');
+  await wait(3000);
+  await shot('42_exposure');
+  await wait(3000); await key('KeyZ', 500);
+  expect('露見のあと記録へ戻る', await scenes(), 'マップ');
+  await ev(() => { delete GAME.DATA.maps.field_minamo.detection; GAME.encounter.enabled = true; });
+
+  // 宿屋で戻る（半分まで）
+  await ev(() => { GAME.inhibit.set(20); GAME.state.copper = 50; });
+  await placeAt('minamo_inn', 5, 4, 'up'); await wait(200);
+  await key('KeyZ', 500); await closeMessages(); await wait(150); await key('KeyZ', 900); await closeMessages(); await wait(300);
+  expect('宿屋で阻害ゲージが半分まで戻る', await g(), 50);
+
+  // 戦闘で、ベルを「ぜんぶ指示する」にすると「本気」が選べる
+  await ev(() => { GAME.party.member('bell').tactic = 'manual'; GAME.scene.push(GAME.scenes.battle(['boar'])); });
+  await wait(1300);
+  await shot('43_bell_commands');
+  await key('ArrowDown', 60); await key('KeyZ', 100); await key('KeyZ', 100);   // ベル：本気 → 敵
+  await key('KeyZ', 100); await key('KeyZ', 100);                               // オオナムチ：こうげき
+  await page.keyboard.down('Shift'); await wait(1500); await page.keyboard.up('Shift');
+  await shot('44_fullpower');
+  expect('本気で阻害ゲージが25減る', await g(), 25);
+  for (let i = 0; i < 20 && (await scenes()) !== 'マップ'; i++) {
+    const ph = await ev(() => GAME.scene.top().phase);
+    if (ph === 'command') { await key('KeyZ', 60); await key('KeyZ', 60); }
+    else if (ph === 'result') await key('KeyZ', 200);
+    else { await page.keyboard.down('Shift'); await wait(300); await page.keyboard.up('Shift'); }
+  }
+  await ev(() => { GAME.party.member('bell').tactic = 'auto'; });
+
+  // 蹂躙戦闘（2章：消す）：10部隊を消して、風と手紙
+  await ev(() => GAME.scene.push(GAME.scenes.rampage('ch2', { onEnd: r => { window.__ramp = r; GAME.scene.pop(); } })));
+  await wait(1200);
+  await shot('45_rampage_start');
+  for (let i = 0; i < 10; i++) {
+    for (let k = 0; k < 30 && (await ev(() => GAME.scene.top().phase)) === 'act'; k++) await wait(100);
+    if ((await ev(() => GAME.scene.top().phase)) !== 'choose') break;
+    await key('KeyZ', 200);
+    if (i === 3) { await wait(300); await shot('46_rampage_fading'); }
+  }
+  for (let k = 0; k < 40 && (await ev(() => GAME.scene.top().phase)) === 'act'; k++) await wait(100);
+  await wait(1700);
+  await shot('47_rampage_after');
+  await key('KeyZ', 900);
+  await shot('48_rampage_letter');
+  await key('KeyZ', 300);
+  expect('2章の蹂躙：10部隊消える・ゲームオーバーなし', await ev(() => window.__ramp && window.__ramp.erased), 10);
+
+  // 蹂躙戦闘（10章：止める）：4つ止めて1つ打ち払う
+  await ev(() => GAME.scene.push(GAME.scenes.rampage('ch10', { onEnd: r => { window.__ramp = r; GAME.scene.pop(); } })));
+  await wait(1200);
+  for (let i = 0; i < 5; i++) {
+    for (let k = 0; k < 30 && (await ev(() => GAME.scene.top().phase)) === 'act'; k++) await wait(100);
+    await key('KeyZ', 150);
+    if (i === 4) await key('ArrowDown', 80);
+    await key('KeyZ', 150);
+    if (i === 1) { await wait(800); await shot('49_rampage_stop'); }
+  }
+  for (let k = 0; k < 40 && (await ev(() => GAME.scene.top().phase)) === 'act'; k++) await wait(100);
+  await wait(1700); await key('KeyZ', 300);
+  expect('10章の蹂躙：止めた4・打ち払った1が記録される', await ev(() => `${GAME.state.vars.rampage_ch10.stopped}/${GAME.state.vars.rampage_ch10.harmed}`), '4/1');
+
+  // 別行動：ベル不在 → オオナムチが先頭、戦いはベル抜き
+  await ev(() => { GAME.state.split = 'away'; });
+  await placeAt('minamo', 15, 12, 'down'); await wait(300);
+  await shot('50_split_map');
+  expect('別行動：先頭はオオナムチ', await ev(() => GAME.scene.top().player.look), 'oonamuchi');
+  await ev(() => GAME.scene.push(GAME.scenes.battle(['dog'])));
+  await wait(1200);
+  expect('別行動：戦いにベルがいない', await ev(() => GAME.scene.top().name === '戦闘' && !GAME.party.active().some(p => p.id === 'bell') && GAME.party.active()[0].id === 'oonamuchi'), true);
+  await ev(() => { GAME.scene.pop(); GAME.state.split = 'watch'; GAME.scene.push(GAME.scenes.battle(['dog'])); });
+  await wait(1200);
+  await shot('51_split_watch');
+  await ev(() => { GAME.scene.pop(); GAME.state.split = null; GAME.rng.setFixed(false); });
 
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

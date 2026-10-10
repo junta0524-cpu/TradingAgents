@@ -74,6 +74,7 @@
         G.state.copper -= cost;
         if (onSleep) onSleep(() => {
           G.party.healAll();
+          G.inhibit.rest();
           G.save.write('auto');
           G.message.show('ぐっすり休んだ。体の疲れがすっかり取れた。\n（自動で記録しました）');
         });
