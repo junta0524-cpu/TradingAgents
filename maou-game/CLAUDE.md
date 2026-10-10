@@ -28,6 +28,9 @@
 - マップ：`js/data/maps/*.js` に文字の並び（rows）で書く。文字の意味は `js/data/tiles.js`。人（npcs）・宝箱（chests）・立て札（signs）・出入口（warps）も同じファイルに書く。新しいマップは index.html に1行足す。
 - 絵：マス目は `js/core/tileset.js`、人物は `js/data/sprites.js` の型紙＋色。宝箱のフラグ名は `chest:マップ名:宝箱名`。
 - セリフの「（仮）」は、小説の文章が届いたら差し替える。
+- 戦闘：計算は `js/systems/battle.js`（画面と分離。自動100回戦闘も同じ計算を使う）、画面は `js/scenes/battle.js`。敵は `js/data/enemies.js`、出る場所はマップの `encounter`。お金は「銅貨」（`G.state.copper`）。
+- ゲームオーバー：ベル以外が倒れると「直前の記録」へ戻る（`G.party.saveRecord/loadRecord`）。フェーズ3の本セーブまでは、敵の出ない場所に入るたびに自動で記録する。
+- 井戸（'w'）は宿屋ができるまでの仮の回復場所。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。
 - 入力は `GAME.input.pressed('ok')` のように命令名で読む。命令名：up/down/left/right/ok/cancel/fast/debug。

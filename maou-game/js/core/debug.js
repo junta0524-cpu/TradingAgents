@@ -6,14 +6,33 @@
 
   const ITEMS = [
     { label: '章・マップへ移動',       phase: 1, run: () => G.scene.push(createMapPicker()) },
-    { label: '全回復',                 phase: 2 },
+    {
+      label: '全回復', phase: 2,
+      run: () => { ensureGame(); G.party.healAll(); G.message.show('仲間の体力をすべて回復しました。'); },
+    },
     { label: 'レベル＋1',              phase: 3 },
     { label: '言霊を全習得',           phase: 3 },
     { label: '阻害ゲージの増減',       phase: 5 },
     { label: 'フラグ一覧と切り替え',   phase: 1, run: () => G.scene.push(createFlagList()) },
-    { label: 'エンカウント ON/OFF',    phase: 2 },
-    { label: '戦闘計算の中身を表示',   phase: 2 },
-    { label: '自動で100回戦闘',        phase: 2 },
+    {
+      label: 'エンカウント ON/OFF', phase: 2,
+      note: () => (G.encounter.enabled ? 'ON' : 'OFF'),
+      run: () => {
+        G.encounter.enabled = !G.encounter.enabled;
+        G.message.show(G.encounter.enabled ? '敵に出会うようにしました。' : '敵に出会わないようにしました。');
+      },
+    },
+    {
+      label: '戦闘計算の中身を表示', phase: 2,
+      note: () => (G.debugOpts.showCalc ? 'ON' : 'OFF'),
+      run: () => {
+        G.debugOpts.showCalc = !G.debugOpts.showCalc;
+        G.message.show(G.debugOpts.showCalc
+          ? '戦闘で、ダメージの計算の中身を灰色の字で出します。'
+          : '計算の中身の表示をやめました。');
+      },
+    },
+    { label: '自動で100回戦闘', phase: 2, run: runAutoBattles },
     {
       label: '乱数の固定', phase: 0,
       note: () => (G.rng.fixed ? 'ON' : 'OFF'),
@@ -28,7 +47,7 @@
   ];
 
   // いま作っているフェーズ（これより後の項目は灰色）
-  const CURRENT_PHASE = 1;
+  const CURRENT_PHASE = 2;
 
   function buildMenuItems() {
     return ITEMS.map(it => {
@@ -39,6 +58,23 @@
         note: ready ? (it.note ? it.note() : '') : `フェーズ${it.phase}〜`,
       };
     });
+  }
+
+  function ensureGame() { if (!G.state) G.party.newGame(); }
+
+  // いまのマップ（敵が出ないなら野原）の敵の組で、100回戦わせて集計する
+  function runAutoBattles() {
+    ensureGame();
+    const here = G.DATA.maps[G.state.mapId];
+    const enc = (here && here.encounter) || G.DATA.maps.field_minamo.encounter;
+    const n = 100;
+    const r = G.battle.simulate(n, enc.groups);
+    const critPct = r.attacks ? (r.crits / r.attacks * 100).toFixed(1) : '0';
+    G.message.show([
+      `自動で${n}回戦いました（いまの仲間の強さ・体力満タン・全員こうげき）。`,
+      `勝ち ${r.wins}回　負け ${r.loses}回\n平均 ${(r.turns / n).toFixed(1)}ターン　受けたダメージ 平均${(r.damageTaken / n).toFixed(1)}`,
+      `会心 ${r.crits}回／攻撃 ${r.attacks}回（${critPct}％）\n※会心の決まりは 1/64（約1.6％）`,
+    ]);
   }
 
   // マップを選んで、そこへ飛ぶ

@@ -1,5 +1,5 @@
 // このファイルの役目：人物のドット絵を型紙（js/data/sprites.js）から作り、向きと歩きの絵を用意する。
-// 宝箱や立て札など、マップ上の小物の絵もここで描く。
+// 宝箱や立て札など、マップ上の小物の絵と、戦闘の敵の絵もここで描く。
 (function () {
   const G = window.GAME = window.GAME || {};
   const T = 16;
@@ -60,12 +60,27 @@
     }),
   };
   const objCache = {};
+  const enemyCache = {};
+
+  // 敵の絵（js/data/enemies.js の型紙）を作る
+  function enemyCanvas(id) {
+    if (!enemyCache[id]) {
+      const d = G.DATA.enemies[id];
+      enemyCache[id] = paint(d.sprite, d.palette, false);
+    }
+    return enemyCache[id];
+  }
 
   G.sprite = {
     // 人物を描く。walk はこれまで歩いた距離（px）。動いていなければ立ち絵
     drawPerson(ctx, lookId, dir, walk, moving, x, y) {
       const step = moving ? CYCLE[Math.floor(walk / 8) % 4] : 0;
       ctx.drawImage(person(lookId, dir, step), Math.round(x), Math.round(y));
+    },
+    // 敵を scale 倍に拡大して描く（ドットはぼかさない）
+    drawEnemy(ctx, id, x, y, scale) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(enemyCanvas(id), Math.round(x), Math.round(y), T * scale, T * scale);
     },
     drawObject(ctx, kind, x, y) {
       if (!objCache[kind]) objCache[kind] = OBJECTS[kind]();

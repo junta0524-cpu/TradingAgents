@@ -1,5 +1,5 @@
 // このファイルの役目：マップ「ミナモ周辺の野原」のデータ。
-// 北の町の印に乗ると、港町ミナモへ戻る。草むらでの戦闘はフェーズ2で入れる。
+// 北の町の印に乗ると、港町ミナモへ戻る。道以外を歩くと敵に出会う（草むらは出会いやすい）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -8,7 +8,11 @@
   G.DATA.maps.field_minamo = {
     name: 'ミナモ周辺の野原',
     outside: '#1f5a24',
-    encounter: 0,                  // フェーズ2で草原の遭遇を入れる
+    // 遭遇：steps 歩ごと（この範囲でランダム）に、groups のどれかの組が出る
+    encounter: {
+      steps: [14, 26],
+      groups: [['dog'], ['dog', 'dog'], ['dog', 'dog', 'dog'], ['boar'], ['centipede'], ['dog', 'centipede']],
+    },
     start: { x: 20, y: 3, dir: 'down' },
     rows: [
       'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
@@ -47,7 +51,7 @@
     ],
     npcs: [],
     chests: [
-      { id: 'grove', x: 9, y: 9, gold: 30 },
+      { id: 'grove', x: 9, y: 9, copper: 30 },
       { id: 'riverside', x: 35, y: 15, item: 'kizugusuri' },
     ],
     signs: [

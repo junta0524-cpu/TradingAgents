@@ -8,7 +8,6 @@
   G.DATA.maps.minamo_guild = {
     name: '冒険者ギルド',
     outside: '#000',
-    encounter: 0,
     start: { x: 7, y: 9, dir: 'up' },
     rows: [
       ' IIIIIIIIIIIIII ',

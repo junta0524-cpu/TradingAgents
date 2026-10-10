@@ -18,6 +18,8 @@
     const B = G.DATA.balance;
     let map, mapId, npcs, player;
     let fade = 0, fadeDir = 0, pendingWarp = null, nameTimer = 0;
+    let battleFlash = 0, pendingBattle = null;
+    const BATTLE_FLASH_FRAMES = 30;
 
     function randWait() { return G.rng.int(B.NPC_WANDER_MIN, B.NPC_WANDER_MAX); }
 
@@ -28,6 +30,9 @@
       npcs = (map.npcs || []).map(n => Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }));
       player = makeEntity(x, y, dir || 'down', 'bell');
       Object.assign(G.state, { mapId: id, x, y, dir: player.dir });
+      G.encounter.reset(map);
+      // 敵の出ない場所（町・建物）に入ったら、直前の記録を取る
+      if (!map.encounter) G.party.saveRecord();
       nameTimer = 120;
     }
 
@@ -108,6 +113,7 @@
       if (chest) { openChest(chest); return; }
       const sign = at(map.signs, fx, fy);
       if (sign) { G.message.show(sign.text); return; }
+      if (tile && tile.heal) G.party.healAll();
       if (tile && tile.check) G.message.show(tile.check);
     }
 
@@ -116,9 +122,9 @@
       if (G.flags.get(key)) { G.message.show('宝箱は、空っぽだ。'); return; }
       G.flags.set(key);
       let got;
-      if (chest.gold) {
-        G.party.addGold(chest.gold);
-        got = `${chest.gold}ゴールドを手に入れた。`;
+      if (chest.copper) {
+        G.party.addCopper(chest.copper);
+        got = `銅貨${chest.copper}枚を手に入れた。`;
       } else {
         G.party.addItem(chest.item, chest.count || 1);
         const item = G.DATA.items[chest.item];
@@ -171,6 +177,11 @@
       update() {
         if (nameTimer > 0) nameTimer--;
         if (fadeDir) { updateFade(); return; }
+        // 敵に出会った：画面を点滅させてから戦闘へ
+        if (battleFlash > 0) {
+          if (--battleFlash === 0) G.scene.push(G.scenes.battle(pendingBattle));
+          return;
+        }
         const inp = G.input;
 
         if (player.moving) {
@@ -178,6 +189,8 @@
           if (advance(player, speed)) {
             Object.assign(G.state, { x: player.x, y: player.y, dir: player.dir });
             if (checkWarp()) return;
+            const group = G.encounter.step(map, tileAt(player.x, player.y));
+            if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; return; }
           }
         }
         if (!player.moving) {
@@ -217,6 +230,7 @@
           r.text(map.name, 20, 15, '#fff');
         }
         if (fade > 0) r.rect(0, 0, r.W, r.H, `rgba(0,0,0,${Math.min(1, fade)})`);
+        if (battleFlash > 0 && Math.floor(battleFlash / 4) % 2 === 0) r.rect(0, 0, r.W, r.H, 'rgba(255,255,255,0.7)');
       },
     };
   };

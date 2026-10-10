@@ -109,6 +109,104 @@ const { chromium } = require('playwright');
   await key('KeyZ', 200);   // 一番上のフラグを切り替え
   await key('KeyX'); await key('KeyX');
 
+  // ===== フェーズ2：戦闘 =====
+  await key('Escape'); await key('Escape');
+  // 式の確認：攻9・守3 → 基本3.75、幅±1 → 2〜4（会心なら 攻9±1）
+  const calc = await ev(() => {
+    const seen = new Set(); let crits = 0; const N = 64000;
+    for (let i = 0; i < N; i++) { const r = GAME.battle.calcPhysical(9, 3); if (r.crit) crits++; else seen.add(r.dmg); }
+    const low = new Set(); for (let i = 0; i < 2000; i++) { const r = GAME.battle.calcPhysical(3, 10, { noCrit: true }); low.add(r.dmg); }
+    return { normal: [...seen].sort().join(','), critPct: (crits / N * 100).toFixed(2), low: [...low].sort().join(',') };
+  });
+  expect('ダメージの幅（攻9 守3）', calc.normal, '2,3,4');
+  expect('基本が2未満なら0〜1', calc.low, '0,1');
+  console.log('     会心の割合（64000回）：', calc.critPct + '％（決まりは約1.56％）');
+  const esc = await ev(() => [0, 1, 2, 3, 9].map(GAME.battle.escapeChance).join(','));
+  expect('逃げやすさ', esc, '0.5,0.5,0.75,0.875,0.875');
+
+  // 町では敵が出ない
+  await placeAt('minamo', 15, 12, 'down'); await wait(200);
+  await hold('ArrowDown', 900); await hold('ArrowUp', 900);
+  expect('町では敵が出ない', await scenes(), 'マップ');
+
+  // 野原で歩くと戦闘になる（次の1歩で出会うようにしておく）
+  await placeAt('field_minamo', 18, 10, 'left'); await wait(200);
+  await ev(() => { GAME.state.encounterSteps = 1; });
+  await hold('ArrowLeft', 150); await wait(900);
+  expect('野原で戦闘になる', (await scenes()).endsWith('戦闘'), true);
+  await shot('12_battle_appear');
+  // コマンドが出るまで待つ
+  for (let i = 0; i < 20 && !(await ev(() => GAME.scene.top().name === '戦闘')); i++) await wait(100);
+  await wait(800);
+  await shot('13_battle_command');
+  // 勝つまで「こうげき」をくり返す（ベルは強い）
+  const copperBefore = await ev(() => GAME.state.copper);
+  for (let turn = 0; turn < 30; turn++) {
+    if ((await scenes()) !== 'マップ > 戦闘') break;
+    await key('KeyZ', 80); await key('KeyZ', 80);   // ベル：こうげき → 敵を選ぶ
+    await key('KeyZ', 80); await key('KeyZ', 80);   // オオナムチ：こうげき → 敵を選ぶ
+    await page.keyboard.down('Shift'); await wait(1500); await page.keyboard.up('Shift');
+    if (turn === 0) await shot('14_battle_turn');
+  }
+  await shot('15_battle_result');
+  for (let i = 0; i < 5 && (await scenes()) !== 'マップ'; i++) await key('KeyZ', 200);
+  expect('勝って地図に戻る', await scenes(), 'マップ');
+  const after = await ev(() => ({ copper: GAME.state.copper, exp: GAME.state.party.map(p => p.exp).join('/') }));
+  console.log('     銅貨', copperBefore, '→', after.copper, '／経験値（ベル/オオナムチ）', after.exp);
+  expect('銅貨が増えた', after.copper > copperBefore, true);
+
+  // ぼうぎょ → ダメージ半分（計算表示ONで確認）
+  await ev(() => { GAME.debugOpts.showCalc = true; GAME.scene.push(GAME.scenes.battle(['dog'])); });
+  await wait(1200);
+  await key('ArrowDown', 80); await key('KeyZ', 80); await key('ArrowDown', 80); await key('KeyZ', 80);
+  await wait(2500);
+  await shot('16_battle_defend_calc');
+  await ev(() => { GAME.debugOpts.showCalc = false; });
+  for (let turn = 0; turn < 20 && (await scenes()) !== 'マップ'; turn++) {
+    const top = await ev(() => GAME.scene.top().name);
+    if (top !== '戦闘') break;
+    await key('KeyZ', 60); await key('KeyZ', 60); await key('KeyZ', 60); await key('KeyZ', 60);
+    await page.keyboard.down('Shift'); await wait(1200); await page.keyboard.up('Shift');
+  }
+  for (let i = 0; i < 5 && (await scenes()) !== 'マップ'; i++) await key('KeyZ', 200);
+
+  // にげる（成功するまで）
+  await ev(() => GAME.scene.push(GAME.scenes.battle(['boar'])));
+  await wait(1200);
+  let escaped = false;
+  for (let t = 0; t < 10; t++) {
+    await key('ArrowUp', 80); await key('KeyZ', 80);   // にげる（一番下）
+    await page.keyboard.down('Shift'); await wait(1000); await page.keyboard.up('Shift');
+    if ((await scenes()) === 'マップ') { escaped = true; break; }
+  }
+  expect('にげる', escaped, true);
+
+  // オオナムチが倒れる → 最後の記録へ戻る（体力満タン）
+  await placeAt('minamo', 15, 22, 'down'); await wait(300);   // 町に入ると記録される
+  await hold('ArrowDown', 150); await wait(800);              // 野原へ
+  await ev(() => { GAME.state.party[1].hp = 1; GAME.state.party[1].def = 0; GAME.scene.push(GAME.scenes.battle(['boar', 'boar', 'boar'])); });
+  await wait(1200);
+  for (let t = 0; t < 15; t++) {
+    if ((await ev(() => GAME.scene.top().name)) !== '戦闘') break;
+    const ph = await ev(() => GAME.scene.names().join());
+    await key('ArrowDown', 60); await key('KeyZ', 60);   // ぼうぎょ
+    await key('ArrowDown', 60); await key('KeyZ', 60);
+    await page.keyboard.down('Shift'); await wait(1500); await page.keyboard.up('Shift');
+    await wait(1200);
+    await shot('17_gameover');
+    await key('KeyZ', 600);
+    if ((await scenes()) === 'マップ') break;
+  }
+  expect('ゲームオーバー → 記録へ戻る', await pos(), 'minamo(15,22)');
+  expect('体力が戻っている', await ev(() => GAME.state.party.map(p => p.hp === p.maxHp).join()), 'true,true');
+
+  // デバッグ：自動で100回戦闘
+  await key('F1', 200);
+  for (let i = 0; i < 8; i++) await key('ArrowDown', 50);
+  await key('KeyZ', 600);
+  await shot('18_debug_auto');
+  await closeMessages(); await key('Escape', 200);
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));

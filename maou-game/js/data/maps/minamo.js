@@ -9,7 +9,6 @@
   G.DATA.maps.minamo = {
     name: '港町ミナモ',
     outside: '#2a5fa8',            // マップの外に見える色
-    encounter: 0,                  // 町は戦闘なし
     start: { x: 15, y: 12, dir: 'down' },
     rows: [
       '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
