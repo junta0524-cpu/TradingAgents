@@ -19,6 +19,7 @@
     let map, mapId, npcs, player;
     let fade = 0, fadeDir = 0, pendingWarp = null, nameTimer = 0;
     let battleFlash = 0, pendingBattle = null;
+    let sleeping = null;   // 宿屋で眠るとき、真っ暗になった瞬間に呼ぶ処理
     const BATTLE_FLASH_FRAMES = 30;
 
     function randWait() { return G.rng.int(B.NPC_WANDER_MIN, B.NPC_WANDER_MAX); }
@@ -31,7 +32,7 @@
       player = makeEntity(x, y, dir || 'down', 'bell');
       Object.assign(G.state, { mapId: id, x, y, dir: player.dir });
       G.encounter.reset(map);
-      // 敵の出ない場所（町・建物）に入ったら、直前の記録を取る
+      // 敵の出ない場所（町・建物）に入ったら、自動で記録する
       if (!map.encounter) G.party.saveRecord();
       nameTimer = 120;
     }
@@ -106,14 +107,17 @@
       const npc = entityAt(fx, fy, player);
       if (npc && npc.data) {
         npc.dir = OPP[player.dir];
-        G.message.show(npc.data.talk || ['……。']);
+        const d = npc.data;
+        G.message.show(d.talk || ['……。'], () => {
+          if (d.shop) G.shop.open(d.shop);
+          else if (d.inn) G.shop.inn(done => { sleeping = done; fadeDir = 1; });
+        });
         return;
       }
       const chest = at(map.chests, fx, fy);
       if (chest) { openChest(chest); return; }
       const sign = at(map.signs, fx, fy);
       if (sign) { G.message.show(sign.text); return; }
-      if (tile && tile.heal) G.party.healAll();
       if (tile && tile.check) G.message.show(tile.check);
     }
 
@@ -143,6 +147,14 @@
     }
     function updateFade() {
       fade += fadeDir / FADE_FRAMES;
+      if (fadeDir > 0 && fade >= 1 && sleeping) {
+        fade = 1;
+        const f = sleeping;
+        sleeping = null;
+        fadeDir = -1;
+        f();
+        return;
+      }
       if (fadeDir > 0 && fade >= 1) {
         fade = 1;
         const w = pendingWarp;
@@ -224,7 +236,7 @@
           G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x, e.py - cam.y) }));
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
 
-        if (nameTimer > 0 && !fadeDir) {
+        if (nameTimer > 0 && !fadeDir && G.scene.top() === this) {
           const w = Math.ceil(r.measure(map.name)) + 24;
           G.ui.drawWindow(8, 8, w, 26);
           r.text(map.name, 20, 15, '#fff');

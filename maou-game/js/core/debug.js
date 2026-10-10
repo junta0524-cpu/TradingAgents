@@ -10,8 +10,26 @@
       label: '全回復', phase: 2,
       run: () => { ensureGame(); G.party.healAll(); G.message.show('仲間の体力をすべて回復しました。'); },
     },
-    { label: 'レベル＋1',              phase: 3 },
-    { label: '言霊を全習得',           phase: 3 },
+    {
+      label: 'レベル＋1', phase: 3,
+      run: () => {
+        ensureGame();
+        const msgs = [];
+        G.state.party.forEach(m => {
+          G.growth.forceLevelUp(m).forEach(u => msgs.push(`${m.name}はレベル${u.lv}になった。\n${u.diffs.join('　')}`));
+        });
+        G.message.show(msgs.length ? msgs : 'これ以上レベルは上がりません。');
+      },
+    },
+    {
+      label: '言霊を全習得', phase: 3,
+      run: () => {
+        ensureGame();
+        const all = Object.keys(G.DATA.kotodama);
+        G.state.party.filter(m => m.lv != null).forEach(m => { m.kotodama = all.slice(); m.mp = m.maxMp; });
+        G.message.show(`オオナムチが、すべての言霊（${all.length}個）を覚えました。\nまだ作っていない言霊は、一覧で灰色になります。`);
+      },
+    },
     { label: '阻害ゲージの増減',       phase: 5 },
     { label: 'フラグ一覧と切り替え',   phase: 1, run: () => G.scene.push(createFlagList()) },
     {
@@ -47,7 +65,7 @@
   ];
 
   // いま作っているフェーズ（これより後の項目は灰色）
-  const CURRENT_PHASE = 2;
+  const CURRENT_PHASE = 3;
 
   function buildMenuItems() {
     return ITEMS.map(it => {
@@ -159,6 +177,7 @@
   }
 
   G.debug = {
+    CURRENT_PHASE,
     toggle() {
       const top = G.scene.top();
       if (top && top.name === 'デバッグ') G.scene.pop();

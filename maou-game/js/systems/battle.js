@@ -87,11 +87,11 @@
     let hp = target.hp - amount;
     if (target.side === 'party' && charOf(target).isBell && hp < 1) hp = 1;
     target.hp = Math.max(0, hp);
-    if (target.hp === 0 && target.side === 'enemy') st.lastKilled = target;
+    if (target.hp === 0 && target.side === 'enemy' && st) st.lastKilled = target;
   }
 
   // 1人ぶんの行動を行い、起きたこと（events）を返す
-  // cmd：{ type: 'attack', target } / { type: 'defend' }
+  // cmd：{ type: 'attack', target } / { type: 'defend' } / { type: 'kotodama', id, target } / { type: 'item', id, target }
   function act(st, actor, cmd) {
     const ev = [];
     if (actor.hp <= 0) return ev;
@@ -105,6 +105,8 @@
       ev.push({ type: 'msg', text: `${actor.name}は身を守っている。` });
       return ev;
     }
+    if (cmd.type === 'kotodama') return G.kotodama.cast(actor, cmd.id, cmd.target, st);
+    if (cmd.type === 'item') return G.kotodama.useItem(actor, cmd.id, cmd.target, st);
     // 攻撃：狙った敵が倒れていたら、別の敵へ
     let target = cmd.target;
     if (!target || target.hp <= 0) target = aliveEnemies(st)[0];
@@ -114,15 +116,18 @@
 
   function attack(st, actor, target, ev) {
     ev.push({ type: 'msg', text: `${actor.name}の攻撃！` });
-    const r = calcPhysical(actor.atk, target.def);
+    const atk = Math.floor(actor.atk * G.kotodama.buffMult(actor, 'atk'));
+    const def = Math.floor(target.def * G.kotodama.buffMult(target, 'def'));
+    const r = calcPhysical(atk, def);
     let dmg = r.dmg;
     if (target.defending) dmg = Math.floor(dmg * B().DEFEND_RATE);
+    if (target.guard > 0) dmg = 0;
     if (r.crit) ev.push({ type: 'msg', text: '会心の一撃！' });
     if (st.showCalc) {
       const detail = r.crit
         ? `会心：攻${r.atk} 幅±${r.width}`
         : `攻${r.atk} 守${r.def} → 基本${r.base.toFixed(1)} 幅±${r.width}`;
-      ev.push({ type: 'calc', text: `（${detail}${target.defending ? ' 防御½' : ''} → ${dmg}）` });
+      ev.push({ type: 'calc', text: `（${detail}${target.defending ? ' 防御½' : ''}${target.guard > 0 ? ' 岩戸' : ''} → ${dmg}）` });
     }
     applyDamage(st, target, dmg);
     ev.push({ type: 'damage', target, amount: dmg });
@@ -149,12 +154,17 @@
     return null;
   }
 
-  // 勝ったときのごほうび
+  // 1ラウンドの終わり（強化の残りを減らす）
+  function endRound(st) {
+    return G.kotodama.endRound(st.party.concat(st.enemies));
+  }
+
+  // 勝ったときのごほうび（経験値は、レベルの上がる仲間で分ける）
   function rewards(st) {
     const b = B();
     const exp = st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].exp, 0);
     const copper = st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0);
-    const alive = st.party.filter(p => p.hp > 0);
+    const alive = st.party.filter(p => p.hp > 0 && !charOf(p).fixed);
     const each = b.EXP_SPLIT ? Math.ceil(exp / Math.max(1, alive.length)) : exp;
     // 落とし物は、最後に倒した敵1体だけが判定
     let drop = null;
@@ -190,5 +200,5 @@
     return result;
   }
 
-  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies };
+  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound };
 })();

@@ -1,5 +1,5 @@
 // このファイルの役目：戦闘の画面。上に敵、下にコマンド、右上に味方の体力を出す。
-// 計算は js/systems/battle.js に任せ、ここは「選ばせる・見せる・待つ」だけを受け持つ。
+// 計算は js/systems/battle.js と js/systems/kotodama.js に任せ、ここは「選ばせる・見せる・待つ」だけを受け持つ。
 // 流れ：現れた → 仲間ごとにコマンドを選ぶ → 素早い順に行動 → 勝ち・負け・逃げるまでくり返す。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -10,11 +10,14 @@
   const LOG_LINES = 4;
   const COMMANDS = [
     { label: 'こうげき', type: 'attack' },
+    { label: 'ことだま', type: 'kotodama' },
+    { label: 'どうぐ', type: 'item' },
     { label: 'ぼうぎょ', type: 'defend' },
     { label: 'にげる', type: 'escape' },
   ];
   const ENEMY_SCALE = 3;
   const ENEMY_BASE_Y = 178;   // 敵の足元の高さ
+  const CMD_Y = 196;          // コマンド窓の上端
 
   G.debugOpts = G.debugOpts || { showCalc: false };
 
@@ -24,12 +27,14 @@
     const st = G.battle.create(G.state.party, group, { boss: opts.boss, showCalc: G.debugOpts.showCalc });
     const party = st.party, enemies = st.enemies;
 
-    let phase = 'play';         // play / command / target / result / gameover
+    // play / command / sub（言霊・道具の一覧）/ target（敵を選ぶ）/ ally（味方を選ぶ）/ result / gameover
+    let phase = 'play';
     const log = [];
     let queue = [], afterPlay = null, waitTimer = 0;
-    let commands = [], cmdIndex = 0, menu = null, targetIndex = 0;
+    let commands = [], cmdIndex = 0, menu = null, subMenu = null, subList = [];
+    let targetIndex = 0, allyIndex = 0, pending = null;
     let flash = null, flashTimer = 0, shake = 0;
-    const fading = {};          // 倒れた敵が消えていく途中
+    const fading = {};
     let gameoverTimer = 0;
 
     // ---- 文章と出来事を順に見せる ----
@@ -46,7 +51,7 @@
       if (waitTimer > 0) {
         if (inp.pressed('ok') || inp.held('fast')) waitTimer = Math.min(waitTimer, inp.held('fast') ? MSG_WAIT_FAST : 1);
         waitTimer--;
-        return true;
+        return;
       }
       if (queue.length) {
         const ev = queue.shift();
@@ -57,14 +62,12 @@
           if (ev.target.side === 'party' && ev.amount > 0) shake = 10;
           waitTimer = 8;
         } else if (ev.type === 'ko' && ev.target.side === 'enemy') { fading[ev.target.key] = 20; }
-        return true;
+        return;
       }
-      if (afterPlay) { const f = afterPlay; afterPlay = null; f(); return true; }
-      return false;
+      if (afterPlay) { const f = afterPlay; afterPlay = null; f(); }
     }
 
     // ---- コマンド選び ----
-    const aliveParty = () => party.filter(p => p.hp > 0);
     function beginInput() {
       party.forEach(p => { p.defending = false; });
       commands = [];
@@ -73,9 +76,10 @@
     }
     function openMenu() {
       const m = party[cmdIndex];
-      menu = new G.ui.Menu(COMMANDS.map(c => ({ label: c.label })), { x: 8, y: 232, w: 150, title: m.name });
+      menu = new G.ui.Menu(COMMANDS.map(c => ({ label: c.label })), { x: 8, y: CMD_Y, w: 150, title: m.name });
       phase = 'command';
     }
+    function setCommand(cmd) { commands[cmdIndex] = cmd; nextMember(); }
     function nextMember() {
       do { cmdIndex++; } while (cmdIndex < party.length && party[cmdIndex].hp <= 0);
       if (cmdIndex >= party.length) executeTurn();
@@ -90,6 +94,41 @@
       openMenu();
     }
 
+    // 言霊・道具の一覧を開く
+    function openSub(kind) {
+      const m = party[cmdIndex];
+      if (kind === 'kotodama') {
+        subList = (m.kotodama || []).map(id => ({ id, d: G.DATA.kotodama[id] }));
+        if (!subList.length) { flashNote(`${m.name}は、言霊を覚えていない。`); return; }
+        subMenu = new G.ui.Menu(subList.map(s => {
+          const ok = G.kotodama.usableIn(s.d, 'battle');
+          const sys = G.DATA.kotodamaSystems[s.d.sys];
+          return {
+            label: `${sys ? sys.short : '・'} ${s.d.name}`,
+            note: ok ? `MP${s.d.mp}` : (s.d.phase ? `フェーズ${s.d.phase}` : '—'),
+            disabled: !ok || m.mp < s.d.mp,
+          };
+        }), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '言霊（MP ' + m.mp + '）' });
+      } else {
+        subList = G.state.items.filter(s => { const d = G.DATA.items[s.id]; return d.type === 'use' && (d.use === 'both' || d.use === 'battle'); })
+          .map(s => ({ id: s.id, d: G.DATA.items[s.id], count: s.count }));
+        if (!subList.length) { flashNote('使える道具を持っていない。'); return; }
+        subMenu = new G.ui.Menu(subList.map(s => ({ label: s.d.name, note: '×' + s.count })), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '道具' });
+      }
+      subMenu.kind = kind;
+      phase = 'sub';
+    }
+    let note = '', noteTimer = 0;
+    function flashNote(text) { note = text; noteTimer = 90; }
+
+    // 一覧で選んだ物の相手を決める
+    function chooseTarget(kind, id, d) {
+      pending = { type: kind, id };
+      if (d.target === 'enemy') { targetIndex = 0; phase = 'target'; }
+      else if (d.target === 'ally') { allyIndex = cmdIndex; phase = 'ally'; }
+      else setCommand(pending);
+    }
+
     // ---- 1ターン ----
     function executeTurn() {
       phase = 'play';
@@ -102,7 +141,11 @@
       const out = G.battle.outcome(st);
       if (out) { finish(out); return; }
       const actor = order.shift();
-      if (!actor) { beginInput(); return; }
+      if (!actor) {
+        // ラウンドの終わり：強化の残りを減らしてから、次のコマンドへ
+        play(G.battle.endRound(st), beginInput);
+        return;
+      }
       if (actor.hp <= 0) { runOrder(order); return; }
       const cmd = actor.side === 'party' ? commands[party.indexOf(actor)] : null;
       play(G.battle.act(st, actor, cmd || { type: 'attack' }), () => runOrder(order));
@@ -121,24 +164,30 @@
     function finish(out) {
       if (out === 'lose') { phase = 'gameover'; gameoverTimer = 0; return; }
       const r = G.battle.rewards(st);
-      r.alive.forEach(p => { p.exp += r.each; });
       G.party.addCopper(r.copper);
       const ev = [{ type: 'msg', text: '敵を退けた！' }];
-      ev.push({ type: 'msg', text: `それぞれ経験値を ${r.each} 手に入れた。` });
+      r.alive.forEach(p => {
+        p.exp += r.each;
+        ev.push({ type: 'msg', text: `${p.name}は経験値を ${r.each} 手に入れた。` });
+      });
       if (r.copper) ev.push({ type: 'msg', text: `銅貨を ${r.copper}枚 手に入れた。` });
       if (r.drop) {
         G.party.addItem(r.drop);
         const item = G.DATA.items[r.drop];
         ev.push({ type: 'msg', text: `${st.lastKilled.name}は、${item ? item.name : r.drop}を落としていった。` });
       }
+      r.alive.forEach(p => {
+        G.growth.checkLevelUp(p).forEach(u => {
+          ev.push({ type: 'msg', text: `${p.name}はレベル${u.lv}になった！` });
+          if (u.diffs.length) ev.push({ type: 'msg', text: u.diffs.join('　') });
+        });
+      });
       play(ev, () => { phase = 'result'; });
     }
-    function endBattle() {
-      party.forEach(p => { delete p.side; delete p.defending; });
-      G.scene.pop();
-    }
+    function cleanup() { party.forEach(p => G.kotodama.clearBattleState(p)); }
+    function endBattle() { cleanup(); G.scene.pop(); }
     function gameOver() {
-      party.forEach(p => { delete p.side; delete p.defending; });
+      cleanup();
       G.party.loadRecord();
       const s = G.state;
       G.scene.change(G.scenes.map(s.mapId, s.x, s.y, s.dir));
@@ -157,6 +206,7 @@
       return Math.round((G.renderer.W - total) / 2 + i * (w + gap));
     }
     const visibleEnemies = () => enemies.filter(e => e.hp > 0);
+    const aliveParty = () => party.filter(p => p.hp > 0);
 
     return {
       name: '戦闘',
@@ -165,6 +215,7 @@
       update() {
         if (flashTimer > 0) flashTimer--;
         if (shake > 0) shake--;
+        if (noteTimer > 0) noteTimer--;
         Object.keys(fading).forEach(k => { if (fading[k] > 0) fading[k]--; });
         const inp = G.input;
 
@@ -182,20 +233,40 @@
           if (res.type === 'cancel') { prevMember(); return; }
           const c = COMMANDS[res.index];
           if (c.type === 'escape') { runEscape(); return; }
-          if (c.type === 'defend') { commands[cmdIndex] = { type: 'defend' }; nextMember(); return; }
+          if (c.type === 'defend') { setCommand({ type: 'defend' }); return; }
+          if (c.type === 'kotodama' || c.type === 'item') { openSub(c.type); return; }
+          pending = { type: 'attack' };
           targetIndex = 0;
           phase = 'target';
+          return;
+        }
+        if (phase === 'sub') {
+          const res = subMenu.update();
+          if (!res) return;
+          if (res.type === 'cancel') { phase = 'command'; return; }
+          if (res.item.disabled) {
+            const s = subList[res.index];
+            flashNote(G.kotodama.usableIn(s.d, 'battle') ? 'MPが足りない。' : 'この言霊は、まだ使えない。');
+            return;
+          }
+          const s = subList[res.index];
+          chooseTarget(subMenu.kind, s.id, s.d);
           return;
         }
         if (phase === 'target') {
           const list = visibleEnemies();
           if (inp.repeat('left') || inp.repeat('up')) targetIndex = (targetIndex - 1 + list.length) % list.length;
           if (inp.repeat('right') || inp.repeat('down')) targetIndex = (targetIndex + 1) % list.length;
-          if (inp.pressed('cancel')) { phase = 'command'; return; }
-          if (inp.pressed('ok')) {
-            commands[cmdIndex] = { type: 'attack', target: list[targetIndex] };
-            nextMember();
-          }
+          if (inp.pressed('cancel')) { phase = pending.type === 'attack' ? 'command' : 'sub'; return; }
+          if (inp.pressed('ok')) setCommand(Object.assign({}, pending, { target: list[targetIndex] }));
+          return;
+        }
+        if (phase === 'ally') {
+          const n = party.length;
+          if (inp.repeat('up') || inp.repeat('left')) allyIndex = (allyIndex - 1 + n) % n;
+          if (inp.repeat('down') || inp.repeat('right')) allyIndex = (allyIndex + 1) % n;
+          if (inp.pressed('cancel')) { phase = 'sub'; return; }
+          if (inp.pressed('ok')) setCommand(Object.assign({}, pending, { target: party[allyIndex] }));
         }
       },
 
@@ -236,24 +307,34 @@
         party.forEach((p, i) => {
           const y = 15 + i * 34;
           const color = p.hp <= 0 ? '#ff5050' : (p.hp < p.maxHp / 4 ? '#ffa040' : '#fff');
-          const mark = (phase === 'command' || phase === 'target') && i === cmdIndex ? '▶' : '';
+          let mark = '';
+          if ((phase === 'command' || phase === 'sub' || phase === 'target') && i === cmdIndex) mark = '▶';
+          if (phase === 'ally' && i === allyIndex && G.ui.blinkOn()) mark = '▶';
           r.text(mark + p.name, sx + 10, y, color);
+          const tags = (p.buffs && p.buffs.def ? '守↑' : '') + (p.buffs && p.buffs.atk ? '攻↑' : '') + (p.guard > 0 ? '岩' : '');
+          if (tags) r.text(tags, sx + sw - 10, y, '#9cf', 'right');
           r.text(`HP ${p.hp}/${p.maxHp}`, sx + 10, y + 16, color);
           r.text(`MP ${p.mp}`, sx + sw - 10, y + 16, color, 'right');
         });
 
         // 下：コマンド／文章
-        if (phase === 'command' || phase === 'target') {
+        const choosing = phase === 'command' || phase === 'sub' || phase === 'target' || phase === 'ally';
+        if (choosing) {
           menu.draw();
-          G.ui.drawWindow(162, 232, 310, 80);
-          if (phase === 'target') {
-            r.text('だれを攻撃しますか', 176, 244, '#ffd866');
-            if (list[targetIndex]) r.text('▶ ' + list[targetIndex].name, 176, 266, '#fff');
+          if (phase === 'sub' || ((phase === 'target' || phase === 'ally') && pending.type !== 'attack')) {
+            if (subMenu) subMenu.draw();
           } else {
+            G.ui.drawWindow(162, 232, 310, 80);
             const groups = {};
             list.forEach(e => { const n = G.DATA.enemies[e.id].name; groups[n] = (groups[n] || 0) + 1; });
             Object.keys(groups).forEach((n, i) => r.text(`${n}　${groups[n]}匹`, 176, 244 + i * 16, '#fff'));
           }
+          if (phase === 'target' || phase === 'ally') {
+            const who = phase === 'target' ? (list[targetIndex] && list[targetIndex].name) : party[allyIndex].name;
+            G.ui.drawWindow(162, 160, 310, 32);
+            r.text(`${phase === 'target' ? 'どの敵に' : 'だれに'}：▶ ${who}`, 176, 170, '#ffd866');
+          }
+          if (noteTimer > 0) { G.ui.drawWindow(162, 160, 310, 32); r.text(note, 176, 170, '#fff'); }
         } else if (phase !== 'gameover') {
           G.ui.drawWindow(8, 232, 464, 80);
           log.forEach((l, i) => r.text(l.text, 22, 244 + i * 16, l.color));
@@ -266,7 +347,7 @@
           if (gameoverTimer > 40) {
             const fallen = party.find(p => p.hp <= 0 && !G.DATA.characters[p.id].isBell);
             r.text(`${fallen ? fallen.name : '仲間'}が倒れた……`, r.W / 2, 130, '#f88', 'center');
-            r.text('最後の記録から、やり直します。', r.W / 2, 160, '#fff', 'center');
+            r.text('直前の記録から、やり直します。', r.W / 2, 160, '#fff', 'center');
             if (gameoverTimer > 60 && G.ui.blinkOn()) r.text('▼', r.W / 2, 190, '#fff', 'center');
           }
         }

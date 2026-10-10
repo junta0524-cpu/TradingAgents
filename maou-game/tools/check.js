@@ -94,13 +94,14 @@ const { chromium } = require('playwright');
   // メニュー（もちもの）
   await key('KeyX', 200); await key('KeyZ', 200);
   await shot('08_items');
-  await key('KeyZ'); await key('KeyX');
+  await key('KeyX'); await key('KeyX');
   expect('メニューを閉じる', await scenes(), 'マップ');
 
   // デバッグ：マップへ移動・フラグ一覧
   await key('F1', 200); await key('KeyZ', 200);
   await shot('09_debug_maps');
-  await key('ArrowDown'); await key('ArrowDown'); await key('KeyZ', 400);
+  for (let i = 0; i < 4; i++) await key('ArrowDown');
+  await key('KeyZ', 400);
   expect('デバッグでマップ移動', await pos(), 'field_minamo(20,3)');
   await key('F1', 200);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
@@ -182,6 +183,7 @@ const { chromium } = require('playwright');
   expect('にげる', escaped, true);
 
   // オオナムチが倒れる → 最後の記録へ戻る（体力満タン）
+  await ev(() => GAME.party.healAll());
   await placeAt('minamo', 15, 22, 'down'); await wait(300);   // 町に入ると記録される
   await hold('ArrowDown', 150); await wait(800);              // 野原へ
   await ev(() => { GAME.state.party[1].hp = 1; GAME.state.party[1].def = 0; GAME.scene.push(GAME.scenes.battle(['boar', 'boar', 'boar'])); });
@@ -206,6 +208,131 @@ const { chromium } = require('playwright');
   await key('KeyZ', 600);
   await shot('18_debug_auto');
   await closeMessages(); await key('Escape', 200);
+
+  // ===== フェーズ3：言霊と成長 =====
+  const oo = () => ev(() => { const m = GAME.party.member('oonamuchi'); return { lv: m.lv, hp: m.hp, maxHp: m.maxHp, mp: m.mp, atk: m.atk, def: m.def }; });
+  await ev(() => { GAME.party.newGame(); GAME.state.copper = 200; });
+  await placeAt('minamo', 15, 12, 'down'); await wait(200);
+  // レベル＋1（デバッグ）：成長表のレベル2＝攻7＋古い短剣3＝10、HP22
+  await key('F1', 150); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 300);
+  await shot('19_levelup');
+  await closeMessages(); await key('Escape', 150);
+  let o = await oo();
+  expect('レベル＋1 → レベル2・攻撃10・最大HP22', `${o.lv}/${o.atk}/${o.maxHp}`, '2/10/22');
+
+  // 移動中に「癒やし」：オオナムチの体力を減らしてから唱える
+  await ev(() => { const m = GAME.party.member('oonamuchi'); m.hp = 5; });
+  await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150);   // ことだま
+  await key('KeyZ', 150);                                                       // オオナムチが唱える（最初からカーソルがある）
+  await shot('20_field_kotodama');
+  await key('ArrowDown', 60); await key('KeyZ', 150);                           // 癒やし
+  await key('ArrowDown', 60); await key('KeyZ', 300);                           // オオナムチに
+  await shot('21_field_heal');
+  await closeMessages();
+  o = await oo();
+  expect('移動中の癒やし：体力が増えMPが3減る', o.hp > 5 && o.mp === 5, true);
+  for (let i = 0; i < 4 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
+
+  // 戦闘で言霊：オオナムチが「堅め」をベルに、ベルはぼうぎょ
+  await ev(() => { GAME.party.healAll(); GAME.scene.push(GAME.scenes.battle(['dog'])); });
+  await wait(1200);
+  await shot('22_battle_menu');
+  await key('ArrowDown', 60); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 80);  // ベル：ぼうぎょ
+  await key('ArrowDown', 60); await key('KeyZ', 120);   // オオナムチ：ことだま
+  await shot('23_battle_kotodama_list');
+  await key('KeyZ', 120);                               // 堅め
+  await key('ArrowUp', 80); await key('KeyZ', 120);    // ベルに
+  await page.keyboard.down('Shift'); await wait(1200); await page.keyboard.up('Shift');
+  await shot('24_battle_katame');
+  const buffed = await ev(() => !!(GAME.party.member('bell').buffs && GAME.party.member('bell').buffs.def) || GAME.scene.top().name !== '戦闘');
+  expect('戦闘で堅め：ベルの守りが上がる', buffed, true);
+  o = await oo();
+  expect('堅めでMPが2減る（レベル2の最大MPは8）', o.mp, 6);
+  for (let turn = 0; turn < 20 && (await scenes()) !== 'マップ'; turn++) {
+    if ((await ev(() => GAME.scene.top().name)) !== '戦闘') { await key('KeyZ', 150); continue; }
+    await key('KeyZ', 60); await key('KeyZ', 60); await key('KeyZ', 60); await key('KeyZ', 60);
+    await page.keyboard.down('Shift'); await wait(1200); await page.keyboard.up('Shift');
+  }
+  expect('戦いのあと強化が消える', await ev(() => GAME.state.party.every(p => !p.buffs && p.side === undefined)), true);
+
+  // 道具屋：傷薬と銅の短刀を買い、干し飯を売る
+  await placeAt('minamo_shop', 5, 4, 'up'); await wait(200);
+  await key('KeyZ', 500); await closeMessages(); await wait(200);
+  await shot('25_shop');
+  const c0 = await ev(() => GAME.state.copper);
+  await key('KeyZ', 150);                       // 買う
+  await key('KeyZ', 200); await closeMessages(); // 傷薬
+  await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 200); await closeMessages(); // 銅の短刀
+  await shot('26_shop_buy');
+  const bought = await ev(() => ({ c: GAME.state.copper, k: GAME.party.count('kizugusuri'), knife: GAME.party.count('copper_knife') }));
+  expect('買い物：銅貨が 8+40 減り、品物が増える', `${c0 - bought.c}/${bought.k}/${bought.knife}`, '48/1/1');
+  await key('KeyX', 150);                       // 買う一覧を閉じる
+  await ev(() => GAME.party.addItem('hoshiii', 2));
+  await key('ArrowDown', 60); await key('KeyZ', 150);   // 売る
+  await shot('27_shop_sell');
+  for (let i = 0; i < 6 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
+
+  // 装備：銅の短刀に替える（レベル2：攻7＋6＝13）
+  await key('KeyX', 150); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 150); // そうび
+  await key('KeyZ', 150);                       // オオナムチ（ベルは選べない）
+  await key('KeyZ', 150);                       // 武器
+  await shot('28_equip');
+  await key('KeyZ', 200);                       // 銅の短刀
+  o = await oo();
+  expect('装備：攻撃13、古い短剣は持ち物へ', `${o.atk}/${await ev(() => GAME.party.count('old_dagger'))}`, '13/1');
+  for (let i = 0; i < 5 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
+
+  // 宿屋：泊まると満タン、銅貨が6減り、自動で記録される
+  await ev(() => { GAME.state.party.forEach(p => { p.hp = 1; }); });
+  await placeAt('minamo_inn', 5, 4, 'up'); await wait(200);
+  const c1 = await ev(() => GAME.state.copper);
+  await key('KeyZ', 500); await closeMessages(); await wait(150);
+  await shot('29_inn_confirm');
+  await key('KeyZ', 900);                       // はい
+  await shot('30_inn_sleep');
+  await closeMessages(); await wait(500);
+  const inn = await ev(() => ({ full: GAME.state.party.every(p => p.hp === p.maxHp), c: GAME.state.copper }));
+  expect('宿屋：満タン・銅貨-6', `${inn.full}/${c1 - inn.c}`, 'true/6');
+
+  // セーブ（記録1）→ 再読込 → つづきから
+  await key('KeyX', 150); for (let i = 0; i < 4; i++) await key('ArrowDown', 50);
+  await key('KeyZ', 150); await key('KeyZ', 300);       // セーブ → 記録1
+  if ((await ev(() => GAME.scene.top().name)) === '確認') await key('KeyZ', 300);
+  await shot('31_saved');
+  await closeMessages();
+  for (let i = 0; i < 4 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
+  const savedState = await ev(() => JSON.stringify({ lv: GAME.party.member('oonamuchi').lv, c: GAME.state.copper, m: GAME.state.mapId }));
+  await page.reload(); await wait(500);
+  await shot('32_title_continue');
+  await key('ArrowDown', 60); await key('KeyZ', 200);   // つづきから
+  await shot('33_slot_list');
+  await key('ArrowDown', 60); await key('KeyZ', 500);   // 記録1（一番上は自動）
+  const loaded = await ev(() => JSON.stringify({ lv: GAME.party.member('oonamuchi').lv, c: GAME.state.copper, m: GAME.state.mapId }));
+  expect('セーブ → 再読込 → つづきから', loaded, savedState);
+
+  // 書き出し・読み込み（文字）
+  let exported = null;
+  page.once('dialog', async d => { exported = d.defaultValue(); await d.accept(); });
+  await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(200);
+  for (let i = 0; i < 3; i++) await key('ArrowDown', 50);
+  await key('KeyZ', 200); await key('ArrowDown', 60); await key('KeyZ', 400);   // 書き出し → 記録1
+  expect('書き出しの文字ができる', !!exported && exported.length > 100, true);
+  await ev(() => localStorage.removeItem('maou_save_2'));
+  page.once('dialog', async d => { await d.accept(exported); });
+  await key('ArrowDown', 60); await key('KeyZ', 400);   // 読み込み
+  await key('ArrowDown', 60); await key('KeyZ', 300);   // 記録2へ
+  await shot('34_imported');
+  await closeMessages();
+  expect('読み込んで記録2に入る', await ev(() => !!GAME.save.read('2') && GAME.save.read('2').state.copper === GAME.save.read('1').state.copper), true);
+
+  // 言霊を全習得（デバッグ）→ 一覧
+  await ev(() => GAME.scene.change(GAME.scenes.map('minamo', 15, 12, 'down'))); await wait(200);
+  await key('F1', 150); for (let i = 0; i < 3; i++) await key('ArrowDown', 50);
+  await key('KeyZ', 300); await closeMessages(); await key('Escape', 150);
+  await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150); await key('KeyZ', 200);
+  await shot('35_all_kotodama');
+  for (let i = 0; i < 5 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
+  expect('言霊の数', await ev(() => GAME.party.member('oonamuchi').kotodama.length), await ev(() => Object.keys(GAME.DATA.kotodama).length));
 
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

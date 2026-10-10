@@ -3,12 +3,13 @@
 (function () {
   const G = window.GAME = window.GAME || {};
 
-  // 設定（フェーズ3でセーブと一緒に保存する予定）
+  // 設定（ブラウザに保存してあれば、それを読む）
   G.settings = G.settings || {
     textSpeed: 'normal',   // slow / normal / fast
     encounter: 'normal',   // normal / low
     sound: true,
   };
+  G.save.loadSettings();
   G.frame = 0;
 
   const STEP = 1000 / 60;

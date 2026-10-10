@@ -1,63 +1,106 @@
-// このファイルの役目：プレイヤー側の「いまの状態」（いる場所・仲間の体力・持ち物・銅貨）を持つ。
-// 「直前の記録」もここ。ゲームオーバーになると、この記録まで戻る。
-// （本格的なセーブはフェーズ3。それまでは町や建物に入るたびに、自動で記録する）
+// このファイルの役目：プレイヤー側の「いまの状態」（いる場所・仲間・持ち物・銅貨）を持つ。
+// 仲間の強さ＝成長表の「素の強さ」＋装備の分。装備やレベルが変わったら recalc で計算し直す。
+// 「直前の記録」は自動保存の枠（js/core/save.js）。ゲームオーバーでは一番新しい記録へ戻る。
 (function () {
   const G = window.GAME = window.GAME || {};
 
   const clone = o => JSON.parse(JSON.stringify(o));
+  const SLOTS = ['weapon', 'armor', 'accessory'];
 
   // 仲間1人ぶんの、最初の状態
-  function makeMember(stats) {
-    const c = G.DATA.characters[stats.id];
-    return {
-      id: stats.id, name: c.name,
-      hp: stats.hp, maxHp: stats.hp, mp: stats.mp, maxMp: stats.mp,
-      atk: stats.atk, def: stats.def, agi: stats.agi, exp: 0,
+  function makeMember(id) {
+    const B = G.DATA.balance, c = G.DATA.characters[id];
+    const m = {
+      id, name: c.name, lv: c.fixed ? null : 1, exp: 0,
+      base: c.fixed ? clone(B.BELL) : G.growth.baseAt(id, 1),
+      equip: clone(c.equip || {}),
+      kotodama: (c.kotodama || []).slice(),
     };
+    recalc(m);
+    m.hp = m.maxHp; m.mp = m.maxMp;
+    return m;
   }
 
-  let record = null;
+  // 素の強さ＋装備 → 実際の強さ
+  function recalc(m) {
+    const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi };
+    SLOTS.forEach(s => {
+      const it = G.DATA.items[m.equip[s]];
+      if (!it) return;
+      t.atk += it.atk || 0; t.def += it.def || 0; t.agi += it.agi || 0;
+    });
+    Object.assign(m, t);
+    if (m.hp != null) m.hp = Math.min(m.hp, m.maxHp);
+    if (m.mp != null) m.mp = Math.min(m.mp, m.maxMp);
+  }
 
   G.party = {
+    SLOTS,
+    SLOT_NAMES: { weapon: '武器', armor: '防具', accessory: '装飾' },
+    recalc,
+
     newGame() {
-      const B = G.DATA.balance;
-      const start = B.START;
+      const B = G.DATA.balance, start = B.START;
       G.state = {
         mapId: start.map,
         x: start.x, y: start.y, dir: start.dir,
         copper: start.copper,
         items: [],        // [{ id, count }]
-        party: B.PARTY.map(makeMember),
+        party: ['bell', 'oonamuchi'].map(makeMember),
         encounterSteps: null,
       };
       G.flags.reset();
-      G.party.saveRecord();
     },
     // 自動戦闘などで使う、満タンの仲間
     freshMembers() {
       return G.state.party.map(m => Object.assign(clone(m), { hp: m.maxHp, mp: m.maxMp }));
     },
+    member(id) { return G.state.party.find(m => m.id === id); },
+
+    // ---- 持ち物 ----
+    count(id) { const s = G.state.items.find(x => x.id === id); return s ? s.count : 0; },
     addItem(id, count) {
       count = count || 1;
       const slot = G.state.items.find(s => s.id === id);
       if (slot) slot.count += count;
       else G.state.items.push({ id, count });
     },
+    removeItem(id, count) {
+      count = count || 1;
+      const slot = G.state.items.find(s => s.id === id);
+      if (!slot) return false;
+      slot.count -= count;
+      if (slot.count <= 0) G.state.items.splice(G.state.items.indexOf(slot), 1);
+      return true;
+    },
     addCopper(n) { G.state.copper += n; },
     healAll() {
       G.state.party.forEach(m => { m.hp = m.maxHp; m.mp = m.maxMp; });
     },
 
-    // ---- 直前の記録 ----
-    saveRecord() {
-      record = { state: clone(G.state), flags: clone(G.flags.data) };
+    // ---- 装備 ----
+    canEquip(m, itemId) {
+      const it = G.DATA.items[itemId];
+      return !!it && SLOTS.includes(it.type) && (!it.who || it.who.includes(m.id));
     },
-    hasRecord() { return !!record; },
-    // 記録まで戻る（遊びやすさのため、体力は満タンにして戻す）
+    // itemId を null にすると外す。外した物は持ち物に戻る
+    equip(m, slot, itemId) {
+      const old = m.equip[slot];
+      if (itemId && !G.party.removeItem(itemId)) return false;
+      if (old) G.party.addItem(old);
+      if (itemId) m.equip[slot] = itemId; else delete m.equip[slot];
+      recalc(m);
+      return true;
+    },
+
+    // ---- 直前の記録（自動保存の枠を使う）----
+    saveRecord() { G.save.write('auto'); },
+    hasRecord() { return !!G.save.latest(); },
+    // 一番新しい記録まで戻る。記録がなければ最初から
     loadRecord() {
-      G.state = clone(record.state);
-      G.flags.data = clone(record.flags);
-      G.party.healAll();
+      const data = G.save.latest();
+      if (data) G.save.apply(data);
+      else G.party.newGame();
     },
   };
 })();

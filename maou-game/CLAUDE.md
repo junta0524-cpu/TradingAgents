@@ -29,8 +29,13 @@
 - 絵：マス目は `js/core/tileset.js`、人物は `js/data/sprites.js` の型紙＋色。宝箱のフラグ名は `chest:マップ名:宝箱名`。
 - セリフの「（仮）」は、小説の文章が届いたら差し替える。
 - 戦闘：計算は `js/systems/battle.js`（画面と分離。自動100回戦闘も同じ計算を使う）、画面は `js/scenes/battle.js`。敵は `js/data/enemies.js`、出る場所はマップの `encounter`。お金は「銅貨」（`G.state.copper`）。
-- ゲームオーバー：ベル以外が倒れると「直前の記録」へ戻る（`G.party.saveRecord/loadRecord`）。フェーズ3の本セーブまでは、敵の出ない場所に入るたびに自動で記録する。
-- 井戸（'w'）は宿屋ができるまでの仮の回復場所。
+- ゲームオーバー：ベル以外が倒れると、一番新しい記録（自動・記録1〜3のうち）へ戻る。敵の出ない場所に入るたび、宿屋に泊まるたびに自動保存。
+- セーブ：`js/core/save.js`（localStorage、`maou_save_auto/1/2/3`、version 付き）。形式を変えたら VERSION を上げる。
+- 言霊：一覧は `js/data/kotodama.js`（仕様書の全54個）。効き目の処理は `js/systems/kotodama.js`（戦闘・移動中で共通）。`phase` が今のフェーズより大きいものは灰色。
+- 成長：`js/systems/growth.js`、表は balance.js の GROWTH/EXP_TABLE。ベルは fixed（レベルなし）。経験値はベル以外で分ける。
+- 装備・道具：`js/data/items.js`、値段は balance.js の PRICES。お店は `js/data/shops.js`、町の人に `shop:` / `inn: true`。
+- 一覧から選ばせるときは `G.ui.choose(items, opts, onSelect)`、はい/いいえは `G.ui.confirm`。
+- デバッグのフェーズ番号は `js/core/debug.js` の CURRENT_PHASE（フェーズを進めたら上げる）。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。
 - 入力は `GAME.input.pressed('ok')` のように命令名で読む。命令名：up/down/left/right/ok/cancel/fast/debug。

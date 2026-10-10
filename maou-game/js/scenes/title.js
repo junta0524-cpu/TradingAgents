@@ -1,5 +1,5 @@
-// このファイルの役目：タイトル画面。題名を表示し、「はじめから」「文字の速さ」を選べる。
-// 「はじめから」で港町ミナモから歩き始める。
+// このファイルの役目：タイトル画面。
+// はじめから／つづきから（記録を選ぶ）／文字の速さ／記録の書き出し・読み込み（文字で持ち運ぶ）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -11,30 +11,63 @@
   ];
   const speedLabel = () => SPEEDS.find(s => s.key === G.settings.textSpeed).label;
 
-  // 文字の速さを選ぶ小さなメニュー
-  function createSpeedScene() {
-    const menu = new G.ui.Menu(SPEEDS.map(s => ({ label: s.label })), {
-      x: 288, y: 190, w: 120, title: '文字の速さ',
-      index: SPEEDS.findIndex(s => s.key === G.settings.textSpeed),
+  function startMap() {
+    const s = G.state;
+    G.scene.change(G.scenes.map(s.mapId, s.x, s.y, s.dir));
+  }
+
+  // 記録の一覧（onlyFilled：記録のある枠だけ選べる）
+  function slotList(onlyFilled) {
+    return G.save.SLOTS.map(s => ({
+      label: G.save.slotName(s), note: G.save.summary(s), disabled: onlyFilled && !G.save.read(s),
+    }));
+  }
+
+  function continueMenu() {
+    G.ui.choose(slotList(true), { x: 8, y: 176, w: 464, title: 'どの記録から始めますか', name: 'つづきから' }, i => {
+      G.save.apply(G.save.read(G.save.SLOTS[i]));
+      startMap();
     });
-    return {
-      name: '文字の速さ',
-      update() {
-        const res = menu.update();
-        if (!res) return;
-        if (res.type === 'select') G.settings.textSpeed = SPEEDS[res.index].key;
-        G.scene.pop();
-      },
-      draw() { menu.draw(); },
-    };
+  }
+
+  function speedMenu() {
+    G.ui.choose(SPEEDS.map(s => ({ label: s.label })), {
+      x: 300, y: 176, w: 120, title: '文字の速さ', name: '文字の速さ',
+      index: SPEEDS.findIndex(s => s.key === G.settings.textSpeed),
+    }, i => { G.settings.textSpeed = SPEEDS[i].key; G.save.saveSettings(); });
+  }
+
+  // 書き出し：記録を文字にして、コピーできる窓に出す
+  function exportMenu() {
+    G.ui.choose(slotList(true), { x: 8, y: 176, w: 464, title: 'どの記録を書き出しますか', name: '書き出し' }, i => {
+      const str = G.save.exportString(G.save.SLOTS[i]);
+      window.prompt('この文字を全部コピーして、メモ帳などに保存してください。', str);
+    });
+  }
+
+  // 読み込み：文字を貼り付けて、どの枠に入れるか選ぶ
+  function importMenu() {
+    const str = window.prompt('書き出した記録の文字を、ここに貼り付けてください。', '');
+    if (!str) return;
+    const data = G.save.importString(str);
+    if (!data) { G.message.show('読み込めませんでした。文字が欠けていないか確かめてください。'); return; }
+    const slots = ['1', '2', '3'];
+    G.ui.choose(slots.map(s => ({ label: G.save.slotName(s), note: G.save.summary(s) })),
+      { x: 8, y: 176, w: 464, title: 'どの枠に入れますか', name: '読み込み' }, i => {
+        G.save.writeData(slots[i], data);
+        G.message.show(`${G.save.slotName(slots[i])}に読み込みました。「つづきから」で遊べます。`);
+      });
   }
 
   G.scenes.title = function () {
     const makeItems = () => [
       { label: 'はじめから' },
+      { label: 'つづきから', disabled: !G.save.any() },
       { label: '文字の速さ', note: speedLabel() },
+      { label: '記録の書き出し', disabled: !G.save.any() },
+      { label: '記録の読み込み' },
     ];
-    const menu = new G.ui.Menu(makeItems(), { x: 168, y: 190, w: 144, cancelable: false });
+    const menu = new G.ui.Menu(makeItems(), { x: 152, y: 176, w: 176, cancelable: false });
 
     return {
       name: 'タイトル',
@@ -42,13 +75,12 @@
       resume() { menu.items = makeItems(); },
       update() {
         const res = menu.update();
-        if (!res || res.type !== 'select') return;
-        if (res.index === 0) {
-          G.party.newGame();
-          const st = G.state;
-          G.scene.change(G.scenes.map(st.mapId, st.x, st.y, st.dir));
-        }
-        else G.scene.push(createSpeedScene());
+        if (!res || res.type !== 'select' || res.item.disabled) return;
+        if (res.index === 0) { G.party.newGame(); startMap(); }
+        else if (res.index === 1) continueMenu();
+        else if (res.index === 2) speedMenu();
+        else if (res.index === 3) exportMenu();
+        else importMenu();
       },
       draw() {
         const r = G.renderer;
@@ -57,11 +89,11 @@
           const t = i / 19;
           r.rect(0, i * 16, r.W, 16, `rgb(${Math.round(40 - 30 * t)}, ${Math.round(6 + 2 * t)}, ${Math.round(14 + 10 * t)})`);
         }
-        r.text('魔王が', r.W / 2, 64, '#c9b8ff', 'center');
-        r.text('仲間になりたそうな顔で', r.W / 2, 86, '#fff', 'center');
-        r.text('こちらを見ている', r.W / 2, 108, '#fff', 'center');
-        r.rect(140, 132, 200, 1, '#a33');
-        r.text('〔フェーズ1：マップと会話〕', r.W / 2, 144, '#888', 'center');
+        r.text('魔王が', r.W / 2, 56, '#c9b8ff', 'center');
+        r.text('仲間になりたそうな顔で', r.W / 2, 78, '#fff', 'center');
+        r.text('こちらを見ている', r.W / 2, 100, '#fff', 'center');
+        r.rect(140, 124, 200, 1, '#a33');
+        r.text('〔フェーズ3：言霊と成長〕', r.W / 2, 136, '#888', 'center');
         menu.draw();
         r.text('F1：デバッグメニュー', r.W - 8, r.H - 18, '#666', 'right');
       },

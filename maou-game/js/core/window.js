@@ -3,7 +3,7 @@
 (function () {
   const G = window.GAME = window.GAME || {};
 
-  const BG = 'rgba(0, 0, 0, 0.78)';
+  const BG = 'rgba(0, 0, 0, 0.96)';   // ほぼ黒（重なった窓の文字が透けないように）
   const BORDER = '#fff';
   const RADIUS = 4;
 
@@ -90,5 +90,41 @@
     }
   }
 
-  G.ui = { drawWindow, blinkOn, Menu };
+  // 選択肢を出して、選ばれたら onSelect(番号) を呼ぶ場面を積む
+  // opts：Menu の設定に加えて
+  //   stay: true … 選んだあとも一覧を閉じない（お店など）
+  //   refresh() … 一覧の中身を作り直す関数（stay のとき、選ぶたびに呼ぶ）
+  //   extra(menu) … 一覧のほかに描きたいもの（所持金など）
+  //   onDisabled(番号) … 灰色の項目を選んだとき
+  function choose(items, opts, onSelect, onCancel) {
+    opts = opts || {};
+    const menu = new Menu(items, opts);
+    G.scene.push({
+      name: opts.name || '選択',
+      resume() { if (opts.refresh) menu.items = opts.refresh(); menu.index = Math.min(menu.index, menu.items.length - 1); },
+      update() {
+        const r = menu.update();
+        if (!r) return;
+        if (r.type === 'cancel') { G.scene.pop(); if (onCancel) onCancel(); return; }
+        if (r.item && r.item.disabled) { if (opts.onDisabled) opts.onDisabled(r.index); return; }
+        if (!opts.stay) G.scene.pop();
+        onSelect(r.index, menu);
+        if (opts.stay && opts.refresh) menu.items = opts.refresh();
+      },
+      draw() { menu.draw(); if (opts.extra) opts.extra(menu); },
+    });
+  }
+
+  // はい／いいえ
+  function confirm(question, onYes, onNo) {
+    choose([{ label: 'はい' }, { label: 'いいえ' }], {
+      x: 360, y: 176, w: 100, name: '確認',
+      extra() {
+        drawWindow(8, 240, 464, 72);
+        G.renderer.wrap(question, 440).slice(0, 3).forEach((l, i) => G.renderer.text(l, 20, 252 + i * 16, '#fff'));
+      },
+    }, i => (i === 0 ? onYes && onYes() : onNo && onNo()), () => onNo && onNo());
+  }
+
+  G.ui = { drawWindow, blinkOn, Menu, choose, confirm };
 })();

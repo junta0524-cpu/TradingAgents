@@ -1,7 +1,7 @@
 // このファイルの役目：マップに使う「マス目の種類」の一覧。
 // マップは文字の並びで書く。ここでは「どの文字がどのマスか」「通れるか」「調べたときの文」を決める。
 // look は絵の種類（絵は js/core/tileset.js が描く）。
-// noEncounter：このマスでは敵に出会わない（道など）。tallGrass：出会いやすい。heal：調べると体力が戻る。
+// noEncounter：このマスでは敵に出会わない（道など）。tallGrass：出会いやすい。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -25,8 +25,7 @@
     'D': { name: '入口',   look: 'door' },
     'd': { name: '戸',     look: 'door',   solid: true, check: '戸は閉まっている。' },
     'o': { name: '樽',     look: 'barrel', solid: true, check: '樽の中には、塩漬けの魚が詰まっている。' },
-    'w': { name: '井戸',   look: 'well',   solid: true, heal: true,
-           check: '冷たい水を飲んだ。体の疲れが抜けていく。\n（仮：宿屋ができるまでの回復場所）' },
+    'w': { name: '井戸',   look: 'well',   solid: true, check: '冷たい水が、底のほうで光っている。' },
     // ---- 屋内 ----
     '_': { name: '床',     look: 'floor' },
     'I': { name: '内壁',   look: 'innerwall', solid: true },
