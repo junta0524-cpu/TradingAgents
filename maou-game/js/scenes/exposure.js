@@ -24,8 +24,7 @@
         if (t > 320 && G.input.pressed('ok')) {
           if (opts.onEnd) { opts.onEnd(); return; }
           G.party.loadRecord();
-          const s = G.state;
-          G.scene.change(G.scenes.map(s.mapId, s.x, s.y, s.dir));
+          G.story.enterSaved();
         }
       },
       draw() {

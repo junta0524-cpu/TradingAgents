@@ -110,6 +110,52 @@
     table(c) { LOOKS.floor(c); fill(c, '#6e4a2a', 1, 3, 14, 10); fill(c, '#8a5a30', 2, 4, 12, 8); },
     mat(c) { LOOKS.floor(c); fill(c, '#8a2a2a', 1, 2, 14, 12); fill(c, '#b04040', 2, 3, 12, 10); },
     void(c) { fill(c, '#000'); },
+    // ---- 魔界（黄泉）：赤みがかった色 ----
+    yomigrass(c) { fill(c, '#4a5a32'); speckle(c, ['#5a6a3a', '#3a4426', '#6a4a2a'], 0.18, 21); },
+    deadtree(c) {
+      LOOKS.yomigrass(c);
+      fill(c, '#2a1a14', 7, 4, 2, 11); fill(c, '#2a1a14', 4, 6, 3, 1); fill(c, '#2a1a14', 9, 3, 3, 1);
+      fill(c, '#2a1a14', 4, 5, 1, 1); fill(c, '#2a1a14', 11, 2, 1, 1);
+    },
+    reddirt(c) { fill(c, '#8a5a3e'); speckle(c, ['#9a6a48', '#704630'], 0.2, 23); },
+    rice(c) {
+      fill(c, '#5a5a2a');
+      for (let i = 0; i < 8; i++) {
+        const x = 1 + (i % 4) * 4, y = 2 + Math.floor(i / 4) * 7;
+        fill(c, '#7a8a2a', x, y + 1, 1, 4); fill(c, '#c8a840', x - 1, y, 2, 2); dot(c, '#e0c050', x + 1, y + 1);
+      }
+    },
+    ridge(c) { fill(c, '#6a4a32'); speckle(c, ['#7a5a3e', '#5a3c28'], 0.18, 25); fill(c, '#5a3c28', 0, 15, T, 1); },
+    sprout(c) { LOOKS.ridge(c); fill(c, '#4aa040', 7, 8, 1, 4); fill(c, '#6ad050', 5, 7, 2, 2); fill(c, '#6ad050', 8, 6, 2, 2); },
+    feast(c) { LOOKS.yomigrass(c); fill(c, '#4a2e1a', 0, 4, T, 9); fill(c, '#7a4e2a', 0, 4, T, 5); fill(c, '#9a6a3a', 0, 4, T, 1); },
+    sakebarrel(c) {
+      LOOKS.yomigrass(c);
+      fill(c, '#3a2414', 3, 2, 10, 13); fill(c, '#6a4024', 4, 2, 8, 13);
+      fill(c, '#1a1a1a', 3, 5, 10, 1); fill(c, '#1a1a1a', 3, 11, 10, 1); fill(c, '#c03030', 6, 7, 4, 3);
+    },
+    awning(c) {
+      for (let x = 0; x < T; x += 4) fill(c, (x / 4) % 2 ? '#e0d0b0' : '#8a2a2a', x, 0, 4, 12);
+      fill(c, '#5a1a1a', 0, 12, T, 2); fill(c, '#3a2a20', 0, 14, T, 2);
+    },
+    darkwall(c) {
+      fill(c, '#2e2228'); speckle(c, ['#3a2c34', '#241a20'], 0.12, 27);
+      fill(c, '#1a1216', 0, 7, T, 1); fill(c, '#1a1216', 0, 15, T, 1); fill(c, '#1a1216', 7, 0, 1, 7); fill(c, '#1a1216', 3, 8, 1, 7);
+    },
+    gate(c) { fill(c, '#1a1216'); fill(c, '#4a2a2a', 2, 0, 12, T); fill(c, '#2a1a1a', 7, 0, 2, T); dot(c, '#c8a040', 6, 8); dot(c, '#c8a040', 9, 8); },
+    darkstone(c) {
+      fill(c, '#3a3036'); speckle(c, ['#443a40', '#30282c'], 0.1, 29);
+      fill(c, '#2c2428', 0, 15, T, 1); fill(c, '#2c2428', 15, 0, 1, T);
+    },
+    carpet(c) { fill(c, '#6a1a22'); fill(c, '#8a2a30', 2, 0, 12, T); fill(c, '#c8a040', 1, 0, 1, T); fill(c, '#c8a040', 14, 0, 1, T); },
+    pillar(c) { LOOKS.darkstone(c); fill(c, '#5a4a52', 3, 0, 10, T); fill(c, '#6e5e66', 4, 0, 3, T); fill(c, '#2a2026', 3, 14, 10, 2); },
+    throne(c) {
+      LOOKS.carpet(c);
+      fill(c, '#2a1a20', 2, 1, 12, 14); fill(c, '#4a2a34', 3, 2, 10, 8); fill(c, '#8a2a30', 4, 9, 8, 4);
+      dot(c, '#c8a040', 3, 1); dot(c, '#c8a040', 12, 1);
+    },
+    bars(c) { LOOKS.darkstone(c); for (let x = 1; x < T; x += 4) fill(c, '#7a7a84', x, 0, 2, T); fill(c, '#5a5a64', 0, 2, T, 2); },
+    railing(c) { LOOKS.redsky(c); fill(c, '#4a3a40', 0, 9, T, 2); for (let x = 1; x < T; x += 5) fill(c, '#4a3a40', x, 9, 2, 7); },
+    redsky(c) { fill(c, '#4a1420'); speckle(c, ['#5a1a26', '#3a1018'], 0.1, 31); },
   };
 
   const cache = {};

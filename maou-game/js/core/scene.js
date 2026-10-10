@@ -29,6 +29,8 @@
     },
     top() { return stack[stack.length - 1]; },
     names() { return stack.map(s => s.name || '?'); },
+    // 名前で場面を探す（上から）
+    find(name) { for (let i = stack.length - 1; i >= 0; i--) if (stack[i].name === name) return stack[i]; return null; },
     update() {
       const top = stack[stack.length - 1];
       if (top && top.update) top.update();

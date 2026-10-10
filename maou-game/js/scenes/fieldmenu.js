@@ -80,6 +80,14 @@
         },
       }, i => {
         const id = caster.kotodama[i], k = G.DATA.kotodama[id];
+        // 言伝：その場に用意された物語の場面があれば、メニューを閉じて流す
+        if (k.effect.kind === 'story') {
+          const ev = G.story.kotozute();
+          if (!ev) { G.message.show('いまは、言葉を届ける相手がいない。'); return; }
+          while (G.scene.top() && G.scene.top().name !== 'マップ') G.scene.pop();
+          G.event.run(ev);
+          return;
+        }
         useOn(k.target, target => {
           const ev = G.kotodama.cast(caster, id, target, null);
           const lines = ev.filter(e => e.type === 'msg').map(e => e.text);

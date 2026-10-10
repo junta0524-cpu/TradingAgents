@@ -51,8 +51,12 @@
         party: ['bell', 'oonamuchi'].map(makeMember),
         encounterSteps: null,
         inhibit: B.INHIBIT.MAX,     // 阻害ゲージ
-        inhibitShown: true,         // 画面に出すか（物語ができたら8章から出す）
+        inhibitShown: false,        // 画面に出すか（章の始まりの場面で切り替える）
         split: null,                // 別行動：null／'away'（ベルがいない）／'watch'（ベルは見守るだけ）
+        chapter: 1,                 // いまの章
+        disguised: false,           // 偽名「ベル」で人間界にいるか（4〜9章）。このときだけ阻害ゲージが動く
+        resume: G.DATA.chapters ? G.DATA.chapters[1].start : null,   // つづきから遊ぶとき、最初に流す場面
+        vars: {},
       };
       G.flags.reset();
     },
@@ -79,6 +83,10 @@
       if (!m || G.DATA.characters[id].isBell) return false;
       G.state.party.splice(G.state.party.indexOf(m), 1);
       return true;
+    },
+    // 仲間をこの顔ぶれ・この順に入れ替える（いる人はそのまま、いない人は新しく加わる）
+    setMembers(ids) {
+      G.state.party = ids.map(id => G.party.member(id) || makeMember(id));
     },
     // 臨時の仲間を全員別れさせてから、指定の仲間を加える（章の切り替え用）
     setTemps(ids) {

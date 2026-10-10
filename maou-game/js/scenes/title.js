@@ -11,10 +11,7 @@
   ];
   const speedLabel = () => SPEEDS.find(s => s.key === G.settings.textSpeed).label;
 
-  function startMap() {
-    const s = G.state;
-    G.scene.change(G.scenes.map(s.mapId, s.x, s.y, s.dir));
-  }
+  function startMap() { G.story.enterSaved(); }
 
   // 記録の一覧（onlyFilled：記録のある枠だけ選べる）
   function slotList(onlyFilled) {
@@ -76,7 +73,7 @@
       update() {
         const res = menu.update();
         if (!res || res.type !== 'select' || res.item.disabled) return;
-        if (res.index === 0) { G.party.newGame(); startMap(); }
+        if (res.index === 0) G.story.newGame();
         else if (res.index === 1) continueMenu();
         else if (res.index === 2) speedMenu();
         else if (res.index === 3) exportMenu();
@@ -93,7 +90,7 @@
         r.text('仲間になりたそうな顔で', r.W / 2, 78, '#fff', 'center');
         r.text('こちらを見ている', r.W / 2, 100, '#fff', 'center');
         r.rect(140, 124, 200, 1, '#a33');
-        r.text('〔フェーズ3：言霊と成長〕', r.W / 2, 136, '#888', 'center');
+        r.text('〔フェーズ6：第一部（1〜3章）〕', r.W / 2, 136, '#888', 'center');
         menu.draw();
         r.text('F1：デバッグメニュー', r.W - 8, r.H - 18, '#666', 'right');
       },

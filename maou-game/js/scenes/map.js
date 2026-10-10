@@ -2,6 +2,8 @@
 // マップの中身（地形・人・宝箱）は js/data/maps/ にあり、ここは「動かし方」だけを書く。
 // 決定キー＝目の前を調べる／話す、Xキー＝メニュー、Shift＝走る。
 // 仲間はベルの後ろを一列についてくる（ぶつからない）。毒の仲間は、歩くたびに少しずつ体力が減る。
+// 物語のしかけ：人の event（話すと場面が流れる）・if/unless/chapter（出る条件）、マップの onEnter（入ったとき）・
+// triggers（踏んだとき）、出入口の requires（フラグが立つまで通れない）、tint（画面の色味）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -22,6 +24,8 @@
     let fade = 0, fadeDir = 0, pendingWarp = null, nameTimer = 0;
     let battleFlash = 0, pendingBattle = null;
     let sleeping = null;   // 宿屋で眠るとき、真っ暗になった瞬間に呼ぶ処理
+    let enterCheck = false; // 入ったときの場面を、まだ確かめていない
+    let script = null;      // 物語の場面で歩かされているとき { dir, left }
     const BATTLE_FLASH_FRAMES = 30;
 
     function randWait() { return G.rng.int(B.NPC_WANDER_MIN, B.NPC_WANDER_MAX); }
@@ -30,22 +34,37 @@
       mapId = id;
       map = G.DATA.maps[id];
       if (!map) throw new Error('マップが見つかりません：' + id);
-      npcs = (map.npcs || []).map(n => Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }));
+      npcs = (map.npcs || []).filter(n => G.flags.check(n)).map(makeNpc);
       player = makeEntity(x, y, dir || 'down', leaderLook());
       buildFollowers();
       Object.assign(G.state, { mapId: id, x, y, dir: player.dir });
       G.encounter.reset(map);
-      // 敵の出ない場所（町・建物）に入ったら、自動で記録する
-      if (!map.encounter) G.party.saveRecord();
+      // 敵の出ない場所（町・建物）に入ったら、自動で記録する（物語の場面の途中は記録しない）
+      if (!map.encounter && !G.event.running && !G.state.resume) G.party.saveRecord();
       nameTimer = 120;
+      enterCheck = !G.event.running;
+    }
+    function makeNpc(n) { return Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }); }
+    // 場面が終わったあと、出る人を条件で入れ替える（いる人はその場に残す）
+    function refreshNpcs() {
+      const want = (map.npcs || []).filter(n => G.flags.check(n));
+      npcs = want.map(n => npcs.find(e => e.data === n) || makeNpc(n));
+    }
+    // 場面を流す（条件つきの一覧から、合う最初のもの）
+    function runFirst(list) {
+      const hit = (list || []).find(o => G.flags.check(o));
+      if (!hit || G.event.running) return false;
+      player.walk = 0; followers.forEach(f => { f.walk = 0; });
+      G.event.run(hit.event);
+      return true;
     }
 
     // ---- ついてくる仲間 ----
     // 先頭は、いま一緒に動いている仲間の1人目（ふつうはベル、別行動中はオオナムチ）
-    function leaderLook() { const l = G.party.leader(); return (G.DATA.characters[l.id] || {}).look || 'bell'; }
+    function leaderLook() { const l = G.party.leader(); return l.look || (G.DATA.characters[l.id] || {}).look || 'bell'; }
     function followerIds() { return G.party.active().slice(1).map(m => m.id); }
     function buildFollowers() {
-      followers = followerIds().map(id => makeEntity(player.x, player.y, player.dir, (G.DATA.characters[id] || {}).look || id));
+      followers = followerIds().map(id => makeEntity(player.x, player.y, player.dir, G.party.member(id).look || (G.DATA.characters[id] || {}).look || id));
       followers.forEach((f, i) => { f.id = followerIds()[i]; });
     }
     // ベルが1歩動き出したら、前の人がいた場所へ1歩ずつ詰める
@@ -83,6 +102,9 @@
       const [dx, dy] = DIRS[dir];
       const nx = e.x + dx, ny = e.y + dy;
       if (blocked(nx, ny, e)) return false;
+      // まだ通れない出入口
+      const w = e === player && at(map.warps, nx, ny);
+      if (w && w.requires && !G.flags.check(w.requires)) { G.message.show(w.blockedText || 'まだ、ここから先へは行けない。'); return false; }
       e.tx = nx; e.ty = ny; e.moving = true;
       return true;
     }
@@ -132,6 +154,8 @@
       if (npc && npc.data) {
         npc.dir = OPP[player.dir];
         const d = npc.data;
+        // 話すと場面が流れる人（doneFlag が立ったあとは、ふつうの会話）
+        if (d.event && !(d.doneFlag && G.flags.get(d.doneFlag))) { G.event.run(d.event); return; }
         G.message.show(d.talk || ['……。'], () => {
           if (d.shop) G.shop.open(d.shop);
           else if (d.inn) G.shop.inn(done => { sleeping = done; fadeDir = 1; });
@@ -142,6 +166,9 @@
       if (chest) { openChest(chest); return; }
       const sign = at(map.signs, fx, fy);
       if (sign) { G.message.show(sign.text); return; }
+      // 調べると場面が流れる場所
+      const spot = (map.spots || []).find(o => o.x === fx && o.y === fy && G.flags.check(o));
+      if (spot) { if (spot.event) G.event.run(spot.event); else G.message.show(spot.text); return; }
       if (tile && tile.check) G.message.show(tile.check);
     }
 
@@ -209,10 +236,29 @@
       // デバッグなどから見えるように
       get mapId() { return mapId; },
       get player() { return player; },
+      resume() { refreshNpcs(); },
+      // 物語の場面から歩かせる（js/systems/event.js の walk）
+      scriptMove(dir, n) { script = { dir, left: n }; if (!n) player.dir = dir; },
+      // 1コマ進める。まだ歩いていれば true
+      tickScript() {
+        if (player.moving) {
+          followers.forEach(f => advance(f, B.WALK_SPEED));
+          if (advance(player, B.WALK_SPEED)) Object.assign(G.state, { x: player.x, y: player.y, dir: player.dir });
+          return true;
+        }
+        if (script && script.left > 0) {
+          script.left--;
+          const fx = player.x, fy = player.y;
+          if (tryMove(player, script.dir)) { followStep(fx, fy); return true; }
+        }
+        script = null; player.walk = 0;
+        return false;
+      },
 
       update() {
         if (nameTimer > 0) nameTimer--;
         if (fadeDir) { updateFade(); return; }
+        if (enterCheck) { enterCheck = false; if (runFirst(map.onEnter)) return; }
         // 敵に出会った：画面を点滅させてから戦闘へ
         if (battleFlash > 0) {
           if (--battleFlash === 0) G.scene.push(G.scenes.battle(pendingBattle));
@@ -235,6 +281,7 @@
             // 探知網の濃い場所では、歩くたびに阻害ゲージが減る。尽きたら正体露見
             if (G.inhibit.step(map)) { G.scene.change(G.scenes.exposure()); return; }
             if (checkWarp()) return;
+            if (runFirst((map.triggers || []).filter(o => o.x === player.x && o.y === player.y))) return;
             const group = G.encounter.step(map, tileAt(player.x, player.y));
             if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; return; }
           }
@@ -275,6 +322,7 @@
         npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () =>
           G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y) }));
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
+        if (map.tint) r.rect(0, 0, r.W, r.H, typeof map.tint === 'function' ? map.tint() : map.tint);
 
         if (nameTimer > 0 && !fadeDir && G.scene.top() === this) {
           const w = Math.ceil(r.measure(map.name)) + 24;

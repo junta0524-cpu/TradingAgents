@@ -73,7 +73,7 @@
     musuhi_omi:     { name: '産霊の大御',   sys: 'iza', mp: 0,  target: 'allies',  use: 'battle', phase: 9 },
 
     // ---- ツクヨミ（静・知）----
-    kotozute:       { name: '言伝',         sys: 'tsuku', mp: 0,  target: 'self',    use: 'field',  phase: 6 },
+    kotozute:       { name: '言伝',         sys: 'tsuku', mp: 0,  target: 'self',    use: 'field',  effect: { kind: 'story' } },   // 声を風に乗せて届ける（物語の場面で使う）
     nemurigasumi:   { name: '眠り霞',       sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'sleep', chance: 0.75 } },
     madowashi:      { name: '惑わし',       sys: 'tsuku', mp: 4,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'confuse', chance: 0.6 } },
     oboro:          { name: '朧',           sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'oboro', chance: 0.8 } },

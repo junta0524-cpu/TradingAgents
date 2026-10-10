@@ -43,6 +43,11 @@
 - 守り手：仲間への致命の一撃を、ベルが1戦に1度だけ止める（`applyDamage` が文を返す）。AIのベルは力を使わない。
 - 蹂躙戦闘：`js/scenes/rampage.js`、場面は `js/data/rampage.js`（ch2 消す／ch10 止める・打ち払う／free）。結果は `G.state.vars.rampage_<key>`。
 - 別行動：`G.state.split`（null／'away'／'watch'）。`G.party.active()` がベル以外になる。マップの先頭は `G.party.leader()`。
+- 物語：場面は `js/data/story/`（`chapters.js` に章の一覧、`ch01.js` などに場面）。流すしくみは `js/systems/event.js`（命令の一覧は先頭のコメント）、章をまたぐのは `js/systems/story.js`。背景の絵は `js/core/backdrop.js`。
+- 章の状態：`G.state.chapter`、`G.state.disguised`（4〜9章の偽名中だけ阻害ゲージが動く）、`G.state.resume`（つづきから遊ぶとき最初に流す場面。章の頭だけ入れる）。場面の途中は自動保存しない。
+- マップのしかけ：人の `event`／`doneFlag`、出る条件 `if`／`unless`／`chapter`（`G.flags.check`）、マップの `onEnter`・`triggers`・`spots`、出入口の `requires`／`blockedText`、`tint`。
+- 言伝：ことだまから唱えると `G.DATA.kotozute` の、その場所の場面が流れる。
+- 1〜3章のベルは名前「ベルイザナ」・見た目 `bell_true`、4章から「ベル」（章の頭の `rename`）。
 - デバッグのフェーズ番号は `js/core/debug.js` の CURRENT_PHASE（フェーズを進めたら上げる）。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。

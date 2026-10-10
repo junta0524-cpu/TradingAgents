@@ -45,6 +45,7 @@
       if (!remaining().length) {
         phase = 'after'; timer = 90;
         log.length = 0;
+        if (opts.noAfter) { phase = 'end'; timer = 60; return; }   // 終わりの文は、物語の場面のほうで流す
         if (cfg.mode === 'stop' || result.stopped) say('兵たちが、ひとりずつ顔を上げた。');
         cfg.after.forEach(say);
         if (cfg.mercyTitle && result.stopped === units.length) say(`称号「${cfg.mercyTitle}」`);
@@ -74,6 +75,7 @@
         const inp = G.input;
         if (timer > 0) { timer--; if (!(inp.pressed('ok') && timer < 50)) return; timer = 0; }
         if (phase === 'intro') { cursor = firstStanding(0); phase = 'choose'; return; }
+        if (phase === 'end') { end(); return; }
 
         if (phase === 'choose') {
           const n = units.length;

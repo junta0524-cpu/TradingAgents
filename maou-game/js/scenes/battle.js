@@ -211,8 +211,7 @@
     function gameOver() {
       cleanup();
       G.party.loadRecord();
-      const s = G.state;
-      G.scene.change(G.scenes.map(s.mapId, s.x, s.y, s.dir));
+      G.story.enterSaved();
     }
 
     // 最初のひとこと

@@ -35,6 +35,14 @@ const { chromium } = require('playwright');
 
   await page.goto(url);
   await wait(400);
+  // フェーズ1〜5の確かめは「4章（ミナモ）にいる状態」で行う（物語の場面は最後にまとめて確かめる）
+  await ev(() => {
+    GAME.party._newGameOrig = GAME.party.newGame;
+    GAME.party.newGame = function () {
+      GAME.party._newGameOrig();
+      Object.assign(GAME.state, { chapter: 4, disguised: true, inhibitShown: true, resume: null, mapId: 'minamo', x: 15, y: 12, dir: 'down' });
+    };
+  });
   await shot('01_title');
   await key('KeyZ', 300);
   expect('はじめから → 町', await pos(), 'minamo(15,12)');
@@ -98,13 +106,13 @@ const { chromium } = require('playwright');
   expect('メニューを閉じる', await scenes(), 'マップ');
 
   // デバッグ：マップへ移動・フラグ一覧
-  await key('F1', 200); await key('KeyZ', 200);
+  await key('F1', 200); await key('ArrowDown', 60); await key('KeyZ', 200);
   await shot('09_debug_maps');
   for (let i = 0; i < 4; i++) await key('ArrowDown');
   await key('KeyZ', 400);
   expect('デバッグでマップ移動', await pos(), 'field_minamo(20,3)');
   await key('F1', 200);
-  for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
+  for (let i = 0; i < 6; i++) await key('ArrowDown', 60);
   await key('KeyZ', 200);
   await shot('10_debug_flags');
   await key('KeyZ', 200);   // 一番上のフラグを切り替え
@@ -132,7 +140,7 @@ const { chromium } = require('playwright');
 
   // 野原で歩くと戦闘になる（次の1歩で出会うようにしておく）
   await placeAt('field_minamo', 18, 10, 'left'); await wait(200);
-  await ev(() => { GAME.state.encounterSteps = 1; });
+  await ev(() => { GAME.state.encounterSteps = 1; GAME.rng.setFixed(true); });   // 混乱などで結果が変わらないよう乱数を固定
   await hold('ArrowLeft', 150); await wait(900);
   expect('野原で戦闘になる', (await scenes()).endsWith('戦闘'), true);
   await shot('12_battle_appear');
@@ -155,6 +163,7 @@ const { chromium } = require('playwright');
   const after = await ev(() => ({ copper: GAME.state.copper, exp: GAME.state.party.map(p => p.exp).join('/') }));
   console.log('     銅貨', copperBefore, '→', after.copper, '／経験値（ベル/オオナムチ）', after.exp);
   expect('銅貨が増えた', after.copper > copperBefore, true);
+  await ev(() => GAME.rng.setFixed(false));
 
   // ぼうぎょ → ダメージ半分（計算表示ONで確認）
   await ev(() => { GAME.debugOpts.showCalc = true; GAME.scene.push(GAME.scenes.battle(['dog'])); });
@@ -205,7 +214,7 @@ const { chromium } = require('playwright');
 
   // デバッグ：自動で100回戦闘
   await key('F1', 200);
-  for (let i = 0; i < 8; i++) await key('ArrowDown', 50);
+  for (let i = 0; i < 9; i++) await key('ArrowDown', 50);
   await key('KeyZ', 600);
   await shot('18_debug_auto');
   await closeMessages(); await key('Escape', 200);
@@ -215,7 +224,8 @@ const { chromium } = require('playwright');
   await ev(() => { GAME.party.newGame(); GAME.state.copper = 200; });
   await placeAt('minamo', 15, 12, 'down'); await wait(200);
   // レベル＋1（デバッグ）：成長表のレベル2＝攻7＋古い短剣3＝10、HP22
-  await key('F1', 150); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 300);
+  await key('F1', 150); for (let i = 0; i < 3; i++) await key('ArrowDown', 60);
+  await key('KeyZ', 300);
   await shot('19_levelup');
   await closeMessages(); await key('Escape', 150);
   let o = await oo();
@@ -330,7 +340,7 @@ const { chromium } = require('playwright');
 
   // 言霊を全習得（デバッグ）→ 一覧
   await ev(() => GAME.scene.change(GAME.scenes.map('minamo', 15, 12, 'down'))); await wait(200);
-  await key('F1', 150); for (let i = 0; i < 3; i++) await key('ArrowDown', 50);
+  await key('F1', 150); for (let i = 0; i < 4; i++) await key('ArrowDown', 50);
   await key('KeyZ', 300); await closeMessages(); await key('Escape', 150);
   await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150); await key('KeyZ', 200);
   await shot('35_all_kotodama');
@@ -378,7 +388,7 @@ const { chromium } = require('playwright');
   // 臨時の仲間（デバッグで5章の二人を入れる）→ 4人で歩く
   await placeAt('minamo', 15, 12, 'down'); await wait(200);
   await key('F1', 150);
-  for (let i = 0; i < 12; i++) await key('ArrowDown', 40);
+  for (let i = 0; i < 13; i++) await key('ArrowDown', 40);
   await key('KeyZ', 200); await key('KeyZ', 300);    // 5章：スクナ・コノハ
   await closeMessages(); await key('Escape', 150);
   expect('仲間が4人になる', await ev(() => GAME.state.party.map(p => p.name).join('・')), 'ベル・オオナムチ・スクナ・コノハ');
@@ -558,6 +568,98 @@ const { chromium } = require('playwright');
   await wait(1200);
   await shot('51_split_watch');
   await ev(() => { GAME.scene.pop(); GAME.state.split = null; GAME.rng.setFixed(false); });
+
+
+  // ===== フェーズ6：第一部（1〜3章）=====
+  // 場面を早送りで流す（Shiftを押しっぱなしにして、決定キーを押し続ける）。until が true になるまで
+  const runThrough = async (until, max = 1500) => {
+    await page.keyboard.down('Shift');
+    for (let i = 0; i < max; i++) {
+      if (await ev(until)) break;
+      await key('KeyZ', 60);
+    }
+    await page.keyboard.up('Shift'); await wait(150);
+  };
+  const atMap = () => GAME.scene.names().join() === 'マップ';
+  await ev(() => { GAME.party.newGame = GAME.party._newGameOrig; GAME.save.SLOTS.forEach(s => localStorage.removeItem('maou_save_' + s)); GAME.scene.change(GAME.scenes.title()); GAME.encounter.enabled = true; });
+  await wait(300);
+  await key('KeyZ', 400);
+  expect('はじめから → 1章の見出し', (await scenes()).includes('イベント'), true);
+  await wait(800); await shot('52_ch1_title');
+  await runThrough(atMap);
+  expect('1章：畑から始まる', await pos(), 'yomi_hani(7,13)');
+  expect('1章：ベルイザナ一人', await ev(() => GAME.state.party.map(p => p.name + ':' + p.look).join()), 'ベルイザナ:bell_true');
+  expect('1章：阻害ゲージは動かない', await ev(() => GAME.inhibit.on()), false);
+  await shot('53_ch1_field');
+  // ハニヤスと話す前は、市場へ行けない
+  await placeAt('yomi_hani', 28, 9, 'right'); await wait(200);
+  await key('ArrowRight', 400);
+  expect('話す前は東へ行けない', (await scenes()).endsWith('メッセージ') && (await ev(() => GAME.state.x)) === 28, true);
+  await closeMessages();
+  // ハニヤスに話す → 街道のオモイカ（背景の絵）
+  await placeAt('yomi_hani', 6, 13, 'down'); await wait(200);
+  await key('KeyZ', 300);
+  await runThrough(() => { const e = GAME.scene.find('イベント'); return !!e && e.bg === 'road'; }, 80);
+  await wait(900); await shot('53b_ch1_road');
+  await runThrough(atMap);
+  expect('ハニヤスのフラグ', await ev(() => GAME.flags.get('ch1_hani')), true);
+  await placeAt('yomi_hani', 28, 9, 'right'); await wait(200);
+  await hold('ArrowRight', 250); await wait(600);
+  expect('市場へ行ける', await pos(), 'yomi_market(1,9)');
+  await shot('54_ch1_market');
+  // 鴉族の店主に台越しに話す → 会談の間
+  await placeAt('yomi_market', 2, 4, 'up'); await wait(200);
+  await key('KeyZ', 300);
+  await runThrough(() => GAME.scene.names().includes('イベント') && GAME.flags.get('ch1_market'));
+  await wait(900); await shot('55_ch1_hall');
+  await runThrough(atMap);
+  expect('市場のフラグ', await ev(() => GAME.flags.get('ch1_market')), true);
+  await placeAt('yomi_market', 11, 1, 'up'); await wait(200);
+  await hold('ArrowUp', 250); await wait(600);
+  expect('宮へ戻る', await pos(), 'yomi_palace(9,11)');
+  await shot('56_ch1_palace');
+  // 広間の奥へ → 四天王 → 騙し討ち → 夕方の畑 → 2章（蹂躙戦闘）
+  await hold('ArrowUp', 900);
+  await runThrough(() => GAME.scene.names().includes('蹂躙戦闘'));
+  await wait(600); await shot('57_ch2_rampage');
+  await runThrough(() => GAME.state.chapter === 3 && GAME.scene.names().join() === 'マップ');
+  expect('2章の蹂躙：10隊すべて消す', await ev(() => GAME.state.vars.rampage_ch2 && GAME.state.vars.rampage_ch2.erased), 10);
+  expect('3章：広間に立つ', await pos(), 'yomi_palace(9,9)');
+  // 3章：牢のタケルに格子越しに話す → ナキメ → 報告
+  await placeAt('yomi_palace', 1, 6, 'left'); await wait(200);
+  await key('ArrowLeft', 600);
+  expect('3章：牢へ入れる', await pos(), 'yomi_prison(6,6)');
+  await placeAt('yomi_prison', 2, 4, 'up'); await wait(200);
+  await shot('58_ch3_prison');
+  await key('KeyZ', 300);
+  await runThrough(atMap);
+  expect('3章：報告のあと広間へ', await pos(), 'yomi_palace(17,6)');
+  await hold('ArrowRight', 400); await wait(500);
+  await runThrough(atMap);
+  expect('3章：露台へ', await pos(), 'yomi_balcony(7,5)');
+  await shot('59_ch3_balcony');
+  // 言伝を唱える（メニュー → ことだま → ベルイザナ → 言伝）
+  const kIdx = await ev(() => GAME.party.member('bell').kotodama.indexOf('kotozute'));
+  await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150); await key('KeyZ', 200);
+  for (let i = 0; i < kIdx; i++) await key('ArrowDown', 30);
+  await key('KeyZ', 300);
+  expect('言伝で場面が始まる', (await scenes()).includes('イベント'), true);
+  await runThrough(() => GAME.state.chapter === 4 && GAME.scene.names().join() === 'マップ');
+  expect('4章：ミナモへ', await pos(), 'minamo(15,12)');
+  expect('4章：ベルとオオナムチ', await ev(() => GAME.state.party.map(p => p.name).join('・')), 'ベル・オオナムチ');
+  expect('4章：阻害ゲージが動く', await ev(() => GAME.inhibit.on()), true);
+  expect('ほかの場所の言伝は何も起きない', await ev(() => GAME.story.kotozute()), null);
+  await shot('60_ch4_minamo');
+  // デバッグ：章へ移動（3章）
+  await key('F1', 150); await key('KeyZ', 200); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 300);
+  await runThrough(atMap);
+  expect('デバッグで3章へ', `${await pos()}/${await ev(() => GAME.state.chapter)}`, 'yomi_palace(9,9)/3');
+  // 2章の途中で記録から再開すると、2章の始まりから流れる
+  await ev(() => GAME.story.jump(2)); await wait(300);
+  expect('2章の記録は場面から再開', await ev(() => GAME.save.read('auto').state.resume), 'ch2_start');
+  await ev(() => { GAME.party.loadRecord(); GAME.story.enterSaved(); }); await wait(300);
+  expect('再開すると場面が流れる', (await scenes()).includes('イベント'), true);
+  await ev(() => GAME.story.jump(4)); await runThrough(atMap);
 
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

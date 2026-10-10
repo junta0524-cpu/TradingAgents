@@ -4,7 +4,7 @@
 (function () {
   const G = window.GAME = window.GAME || {};
 
-  const VERSION = 1;
+  const VERSION = 2;   // 2：章（chapter）と再開する場面（resume）を足した
   const PREFIX = 'maou_save_';
   const SETTINGS_KEY = 'maou_settings';
   const SLOTS = ['auto', '1', '2', '3'];
@@ -25,7 +25,7 @@
     return { version: VERSION, savedAt: Date.now(), state: clone(G.state), flags: clone(G.flags.data) };
   }
   function valid(data) {
-    return data && data.version === VERSION && data.state && data.state.party;
+    return data && data.version >= 1 && data.version <= VERSION && data.state && data.state.party;
   }
 
   // 文字にする（日本語も崩れないように）
@@ -49,6 +49,9 @@
       G.state = clone(data.state);
       G.flags.data = clone(data.flags || {});
       if (G.state.inhibit == null) { G.state.inhibit = G.DATA.balance.INHIBIT.MAX; G.state.inhibitShown = true; }
+      // フェーズ5までの記録は、4章（ミナモ）の途中として読む
+      if (G.state.chapter == null) Object.assign(G.state, { chapter: 4, disguised: true, resume: null });
+      if (!G.state.vars) G.state.vars = {};
       G.state.party.forEach(m => {
         // 古い記録には作戦がないので、最初の作戦を入れる
         if (!m.tactic) m.tactic = (G.DATA.characters[m.id] || {}).tactic || 'manual';

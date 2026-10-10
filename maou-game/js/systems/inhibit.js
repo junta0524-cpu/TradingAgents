@@ -10,9 +10,12 @@
   function exposed() { return !!G.state && G.state.inhibit <= 0; }
   function set(v) { G.state.inhibit = Math.max(0, Math.min(I().MAX, v)); }
 
+  // 偽名で人間界にいる間（4〜9章）だけ、ゲージが動く
+  function on() { return !!G.state && !!G.state.disguised; }
+
   // 減らす。ゼロになったら true
   function drain(amount) {
-    if (!G.state || amount <= 0) return false;
+    if (!on() || amount <= 0) return false;
     set(G.state.inhibit - amount);
     return exposed();
   }
@@ -32,11 +35,11 @@
   }
 
   // 輪郭が揺れるほど減っているか
-  function warning() { return ratio() < I().WARN; }
+  function warning() { return on() && ratio() < I().WARN; }
 
   // 画面の端の小さなゲージ（満タンは青、減ると赤へ）
   function drawGauge(x, y) {
-    if (!G.state || !G.state.inhibitShown || !G.party.member('bell')) return;
+    if (!on() || !G.state.inhibitShown || !G.party.member('bell')) return;
     const r = G.renderer, w = 64, h = 6, t = ratio();
     G.ui.drawWindow(x, y, w + 52, 22);
     r.text('阻害', x + 8, y + 5, '#ccc');
@@ -45,5 +48,5 @@
     r.rect(x + 40, y + 8, Math.round(w * t), h, `rgb(${red}, ${Math.round(90 * t + 40)}, ${blue})`);
   }
 
-  G.inhibit = { value, ratio, exposed, set, drain, kotodamaCost, step, rest, warning, drawGauge };
+  G.inhibit = { on, value, ratio, exposed, set, drain, kotodamaCost, step, rest, warning, drawGauge };
 })();

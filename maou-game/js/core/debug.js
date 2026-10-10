@@ -5,7 +5,8 @@
   const G = window.GAME = window.GAME || {};
 
   const ITEMS = [
-    { label: '章・マップへ移動',       phase: 1, run: () => G.scene.push(createMapPicker()) },
+    { label: '章へ移動',               phase: 6, run: () => G.scene.push(createChapterPicker()) },
+    { label: 'マップへ移動',           phase: 1, run: () => G.scene.push(createMapPicker()) },
     {
       label: '全回復', phase: 2,
       run: () => { ensureGame(); G.party.healAll(); G.message.show('仲間の体力をすべて回復しました。'); },
@@ -71,7 +72,7 @@
   ];
 
   // いま作っているフェーズ（これより後の項目は灰色）
-  const CURRENT_PHASE = 5;
+  const CURRENT_PHASE = 6;
 
   function buildMenuItems() {
     return ITEMS.map(it => {
@@ -188,6 +189,12 @@
       },
       draw() { G.renderer.clear('#000'); menu.draw(); },
     };
+  }
+
+  // 章を選んで、その章の始まりへ飛ぶ
+  function createChapterPicker() {
+    const items = Object.keys(G.DATA.chapters).map(n => ({ label: G.DATA.chapters[n].title, n: Number(n) }));
+    return smallPicker('デバッグ：章', 'どの章の始まりへ移動しますか', items, it => G.story.jump(it.n));
   }
 
   // マップを選んで、そこへ飛ぶ
