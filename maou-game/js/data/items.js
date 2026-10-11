@@ -1,6 +1,6 @@
 // このファイルの役目：道具と装備の一覧（名前・説明・効き目・装備できる人）。
 // 値段は js/data/balance.js の PRICES にある（数字は balance.js に集める決まり）。
-// type：use（使う道具）／weapon（武器）／armor（防具）／accessory（装飾）
+// type：use（使う道具）／weapon（武器）／armor（防具）／accessory（装飾）／key（大事なもの。売れない。read の行を読める）
 // use の effect は言霊と同じ書き方（js/data/kotodama.js の先頭を見る）。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -26,5 +26,8 @@
     // ---- 装飾 ----
     mamori_ishi: { name: '守り石',   type: 'accessory', def: 2, who: ['oonamuchi'], desc: '身を守るという丸い石。' },
     hayate_obi:  { name: '疾風の帯', type: 'accessory', agi: 3, who: ['oonamuchi'], desc: '体が軽くなる帯。' },
+
+    // ---- 大事なもの ----
+    kakikake_tegami: { name: '書きかけの手紙', type: 'key', desc: '兵の懐にあった、書きかけの手紙。', read: () => G.DATA.rampage.ch2.letter },
   };
 })();

@@ -930,6 +930,31 @@ const { chromium } = require('playwright');
   expect('設定：敵は少なめ・音は切（保存される）', await ev(() => `${GAME.settings.encounter}/${GAME.settings.sound}/${JSON.parse(localStorage.getItem('maou_settings')).sound}`), 'low/false/false');
   await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.save.saveSettings(); });
 
+  // ===== 仕上げの追加（手紙・クナドの補助）=====
+  await placeAt('minamo', 15, 12, 'up'); await wait(200);
+  await ev(() => { const o = GAME.message.show; window.__msgs = []; GAME.message.show = (a, b) => { window.__msgs.push(JSON.stringify(a)); return o.call(GAME.message, a, b); }; });
+  expect('2章：手紙の窓のあとで手紙を拾う', await ev(() => JSON.stringify(Object.values(GAME.DATA.events).flat().filter(c => c && c.t === 'item' && c.id === 'kakikake_tegami').length)), '1');
+  await ev(() => { GAME.state.items = []; GAME.event.run([{ t: 'item', id: 'kakikake_tegami' }], () => {}); }); await wait(300);
+  await closeMessages();
+  expect('手紙が大事なものとして持ち物に入る', await ev(() => `${GAME.party.count('kakikake_tegami')}/${GAME.DATA.items.kakikake_tegami.type}`), '1/key');
+  await ev(() => GAME.shop.open('minamo')); await wait(200);
+  await key('ArrowDown', 80); await key('KeyZ', 200); await key('KeyZ', 200);   // 売る → 手紙
+  expect('手紙は売れない', await ev(() => `${GAME.party.count('kakikake_tegami')}/${window.__msgs.some(m => m.includes('手放せない'))}`), '1/true');
+  await closeMessages();
+  for (let i = 0; i < 4 && (await scenes()).includes('お店'); i++) await key('KeyX', 150);
+  await key('KeyX', 250); await key('KeyZ', 200); await key('KeyZ', 250);   // メニュー → もちもの → 手紙
+  expect('持ち物から手紙を読める', await ev(() => window.__msgs.some(m => m.includes('娘に'))), true);
+  await closeMessages();
+  for (let i = 0; i < 4 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 150);
+  const assist = await ev(() => {
+    const cmd = GAME.DATA.events.ch12_battle.concat(GAME.DATA.events.ch12_start).find(c => c.t === 'run' && String(c.fn).includes('nayobi_assist'));
+    const m = GAME.party.member('oonamuchi'), lv = m.lv, out = [];
+    m.lv = GAME.DATA.balance.NAYOBI_LV - 3; cmd.fn(); out.push(GAME.flags.get('nayobi_assist'));
+    m.lv = GAME.DATA.balance.NAYOBI_LV; cmd.fn(); out.push(!!GAME.flags.get('nayobi_assist'));
+    m.lv = lv; return out.join('/');
+  });
+  expect('12章：育ちが足りないとクナドが名呼びを支える', assist, 'true/false');
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));

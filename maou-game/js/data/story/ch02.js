@@ -93,6 +93,7 @@
     N('風だけが、残った。'),
     // 戦いのあと、兵の懐にあった書きかけの手紙（仕様書 7-3）
     { t: 'letter', lines: G.DATA.rampage.ch2.letter },
+    { t: 'item', id: 'kakikake_tegami' },
     // ---- 五 ----
     { t: 'fade', to: 1 },
     { t: 'bg', key: 'scorched', actors: [

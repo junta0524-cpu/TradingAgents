@@ -21,7 +21,10 @@
     }));
   }
   function sellList() {
-    return G.state.items.map(s => ({ label: `${G.DATA.items[s.id].name} ×${s.count}`, note: `${sellPrice(s.id)}枚` }));
+    return G.state.items.map(s => {
+      const key = G.DATA.items[s.id].type === 'key';
+      return { label: `${G.DATA.items[s.id].name} ×${s.count}`, note: key ? '売れない' : `${sellPrice(s.id)}枚`, disabled: key };
+    });
   }
 
   function openBuy(shop) {
@@ -43,6 +46,7 @@
       x: 8, y: 8, w: 300, title: '何を売りますか', stay: true, name: 'お店：売る', rows: 12,
       refresh: sellList,
       extra: drawCopper,
+      onDisabled: () => G.message.show('これは手放せない。'),
     }, i => {
       const s = G.state.items[i];
       if (!s) return;

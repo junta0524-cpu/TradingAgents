@@ -136,6 +136,13 @@
     N('守りも、癒やしも、火も、見破りも。旅の中で、触れた、全ての言霊を。'),
     { t: 'choice', text: '（全てを込めて、名を呼ぶ）', options: [{ label: '「タケル」と呼ぶ', then: [] }] },
     S(OO, '「タケル」'),
+    // 育ちが足りないときは、クナドが境の力で名呼びを支える（仕様書の救済。小説にない場面なので、セリフは足さず注記だけ）
+    { t: 'run', fn: () => { const m = G.party.member('oonamuchi'); G.flags.set('nayobi_assist', !m || m.lv < G.DATA.balance.NAYOBI_LV); } },
+    { t: 'if', flag: 'nayobi_assist', then: [
+      N('（まだ、届かない――）'),
+      { t: 'actors', list: [{ look: 'oonamuchi', x: 220, y: 256, dir: 'right' }, { look: 'takeru', x: 300, y: 276, dir: 'up' }, { look: 'bell_true', x: 180, y: 250, dir: 'right' }, { look: 'kunado', x: 330, y: 250, dir: 'left' }] },
+      N('（クナドが、オオナムチの肩に手を置いた。境の力が、名呼びを支える）'),
+    ] },
     { t: 'fade', to: 0.8, color: 'white' },
     N('掌の下で、何かが、拍動した。微かに、小さく、けれど確かに。心臓が、一度、鳴った。'),
     { t: 'fade', to: 0, color: 'white' },

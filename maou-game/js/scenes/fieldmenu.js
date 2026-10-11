@@ -48,6 +48,7 @@
       const s = G.state.items[i];
       if (!s) return;
       const d = G.DATA.items[s.id];
+      if (d.read) { G.message.show(d.read().join('\n')); return; }
       if (d.type !== 'use' || d.use === 'battle') { G.message.show(d.desc || d.name); return; }
       pickMember(`${d.name}をだれに`, p => p.hp > 0, target => {
         const ev = G.kotodama.useItem(target, s.id, target, null);
