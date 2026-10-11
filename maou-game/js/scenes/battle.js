@@ -375,7 +375,7 @@
         // 見守るベル（別行動の「見守り」：操作も戦闘もしない）
         if (watching) {
           ctx.save(); ctx.translate(10, 136); ctx.scale(2, 2);
-          G.sprite.drawPerson(ctx, 'bell', 'right', 0, false, 0, 0);
+          G.sprite.drawPerson(ctx, (G.party.member('bell') || {}).look || 'bell', 'right', 0, false, 0, 0);
           ctx.restore();
           r.text('見守っている', 8, 172, '#ddd');
         }
@@ -384,7 +384,7 @@
         // 詠唱ゲージ（12章の王戦）
         if (CH) {
           const t = st.chant / CH.max, w = 160;
-          G.ui.drawWindow(8, 34, w + 70, 24);
+          G.ui.drawWindow(8, 34, w + 84, 24);
           r.text('王の詠唱', 16, 40, '#f8a');
           r.rect(80, 44, w, 8, '#222');
           r.rect(80, 44, Math.round(w * t), 8, st.chant >= CH.threshold ? '#ff4060' : '#c070ff');
