@@ -165,6 +165,9 @@
     belltower(c) { fill(c, '#d8d8d0'); fill(c, '#b0b0a8', 2, 0, 12, T); fill(c, '#3a3a40', 5, 3, 6, 5); fill(c, '#c8a040', 6, 5, 4, 3); },
     crest(c) { LOOKS.darkstone(c); fill(c, '#5a5056', 3, 2, 10, 12); fill(c, '#7a7076', 4, 3, 8, 10); speckle(c, ['#8a8086'], 0.2, 83); },
     stairs(c) { fill(c, '#2a2226'); for (let y = 0; y < T; y += 4) fill(c, '#4a4046', 0, y, T, 3); },
+    // ---- クリア後 ----
+    trialdoor(c) { fill(c, '#1a1424'); fill(c, '#3a2a5a', 1, 0, 14, T); fill(c, '#f0e8a0', 7, 2, 2, 12); fill(c, '#a090d0', 3, 6, 10, 1); },
+    altar(c) { LOOKS.darkstone(c); fill(c, '#5a5a7a', 2, 6, 12, 9); fill(c, '#8a8ac0', 3, 4, 10, 3); fill(c, '#e8e8ff', 7, 1, 2, 3); },
     // ---- 魔界（黄泉）：赤みがかった色 ----
     yomigrass(c) { fill(c, '#4a5a32'); speckle(c, ['#5a6a3a', '#3a4426', '#6a4a2a'], 0.18, 21); },
     deadtree(c) {

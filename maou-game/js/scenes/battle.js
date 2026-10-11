@@ -149,7 +149,7 @@
     function chooseTarget(kind, id, d) {
       pending = { type: kind, id };
       if (d.target === 'enemy') { targetIndex = 0; phase = 'target'; }
-      else if (d.target === 'ally') { allyIndex = cmdIndex; phase = 'ally'; }
+      else if (d.target === 'ally' || d.target === 'fallen') { allyIndex = cmdIndex; phase = 'ally'; }
       else setCommand(pending);
     }
 
@@ -167,8 +167,11 @@
       }
       runOrder(G.battle.turnOrder(party.concat(enemies)));
     }
+    // クリア後：仲間が倒れても、ラウンドの終わりまで起こせれば続けられる（生き返し）
+    const lateLose = () => !!(G.state && G.state.cleared);
     function runOrder(order) {
-      const out = st.forceWin ? 'win' : G.battle.outcome(st);
+      let out = st.forceWin ? 'win' : G.battle.outcome(st);
+      if (out === 'lose' && lateLose() && order.length) out = null;
       if (out) { finish(out); return; }
       const actor = order.shift();
       if (!actor) {
@@ -243,6 +246,7 @@
     function cleanup() { party.forEach(p => G.kotodama.clearBattleState(p)); }
     function endBattle() {
       cleanup();
+      if (lateLose()) party.forEach(p => { if (p.hp <= 0) p.hp = 1; });   // クリア後：倒れた仲間は、戦いのあと起き上がる
       // 戦いの中で阻害ゲージが尽きていたら、正体露見へ
       if (G.inhibit.exposed()) { G.scene.change(G.scenes.exposure()); return; }
       G.scene.pop();

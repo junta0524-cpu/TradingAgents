@@ -156,7 +156,9 @@
     { t: 'title', text: '完', sub: '魔王が仲間になりたそうな顔でこちらを見ている' },
     // クリアの記録を残して、タイトルへ
     { t: 'run', fn: () => {
-      Object.assign(G.state, { cleared: true, chapter: 12, resume: null, split: null });
+      // クリア後は、魔界の畑から遊べる（js/data/story/postgame.js）
+      Object.assign(G.state, { cleared: true, chapter: 13, resume: null, split: null, disguised: false, mapId: 'yomi_hani', x: 7, y: 13, dir: 'up' });
+      G.party.healAll();
       G.save.write('auto');
       G.event.running = 0;
       G.scene.change(G.scenes.title());

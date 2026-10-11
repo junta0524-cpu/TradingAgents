@@ -61,6 +61,21 @@
       hieda:     { hp: 32, mp: 45, atk: 7,  def: 7,  agi: 6 },    // 7章：語り部（見破り・後衛）
     },
     PARTY_MAX: 4,
+
+    // ---- クリア後（仕様書 第10章）----
+    POSTGAME: {
+      SYSTEM_REQ: 5,      // 試練の扉に入るには、四系統（守・攻・再生・知）それぞれ、この数の言霊を覚えていること
+      // 師ごとに、手合わせに勝つたび教わる言霊（上から順に）
+      TEACH: {
+        haniyasu: ['kaeshikagami', 'migawari', 'iwato', 'katame_jin', 'kekkai', 'iwagaki', 'hanekaeshi_mai', 'yamamori_omi', 'kokoroshizume_omi'],
+        mikazuchi: ['takeri', 'kaen', 'ikazuchi', 'hibashiri', 'haze', 'takeri_jin', 'hibashiri_mai', 'ikazuchi_jin', 'kaen_omi', 'haze_omi', 'ikazuchi_omi', 'ikari_omi'],
+        nakime: ['iyashi_ren', 'dokubarai', 'mezame', 'michi_iyashi', 'kiyome', 'iyashi_mai', 'ikikaeshi', 'musuhi', 'michi_iyashi_omi', 'musuhi_omi'],
+        nakime_tsuku: ['oboro', 'kuchifuuji', 'madowashi'],                     // ナキメの裏修行（理論）
+        bell: ['nemurigasumi_mai', 'oboro_jin', 'kuchifuuji_mai', 'shibari_omi', 'naabaki_omi'],   // ベルとの特訓（実戦）
+      },
+      HOLD_ROUNDS: 4,     // 手合わせ：このラウンド数を耐えきれば勝ち
+      BELL_FINAL_ROUNDS: 6,
+    },
     DROP_BOOST: 2,        // コトシロがいると、落とし物の確率が何倍になるか
     FIRST_STRIKE: 1 / 4,  // ウズメがいると、先手を取れる確率
 
@@ -89,11 +104,22 @@
         /* 18 */ [ 98,  49,  26,  24,  23],
         /* 19 */ [104,  52,  27,  25,  24],
         /* 20 */ [110,  55,  29,  26,  25],
+        // ---- クリア後（21〜30）----
+        /* 21 */ [117,  58,  31,  27,  26],
+        /* 22 */ [124,  61,  32,  29,  27],
+        /* 23 */ [131,  64,  34,  30,  28],
+        /* 24 */ [138,  67,  35,  32,  29],
+        /* 25 */ [145,  70,  37,  33,  30],
+        /* 26 */ [152,  73,  38,  35,  31],
+        /* 27 */ [159,  76,  40,  36,  32],
+        /* 28 */ [166,  79,  41,  38,  33],
+        /* 29 */ [173,  82,  43,  39,  34],
+        /* 30 */ [180,  85,  44,  41,  35],
       ],
     },
     // そのレベルになるのに必要な経験値の合計（1レベル目は0）
-    EXP_TABLE: [null, 0, 8, 22, 44, 76, 120, 180, 260, 360, 480, 620, 790, 990, 1220, 1480, 1780, 2120, 2500, 2920, 3380],
-    MAX_LEVEL: 20,
+    EXP_TABLE: [null, 0, 8, 22, 44, 76, 120, 180, 260, 360, 480, 620, 790, 990, 1220, 1480, 1780, 2120, 2500, 2920, 3380, 3900, 4480, 5120, 5820, 6580, 7400, 8280, 9220, 10220, 11280],
+    MAX_LEVEL: 30,   // 物語は20まで、クリア後は30まで
 
     // ---- 言霊 ----
     // 言霊の威力＝言霊ごとの幅＋術者の攻撃力×この割合（終盤に物理ばかり強くならないため）

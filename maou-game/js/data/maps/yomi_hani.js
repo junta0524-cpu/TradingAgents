@@ -33,13 +33,16 @@
     ],
     warps: [
       // 11章：西の端は角ヶ原の演武場へ
-      { x: 0, y: 9,  to: 'tsunogahara', tx: 8, ty: 10, dir: 'up', when: { chapter: 11 } },
-      { x: 0, y: 10, to: 'tsunogahara', tx: 9, ty: 10, dir: 'up', when: { chapter: 11 } },
+      { x: 0, y: 9,  to: 'tsunogahara', tx: 8, ty: 10, dir: 'up', when: { chapter: [11, 13] } },
+      { x: 0, y: 10, to: 'tsunogahara', tx: 9, ty: 10, dir: 'up', when: { chapter: [11, 13] } },
       { x: 29, y: 9,  to: 'yomi_market', tx: 1, ty: 9,  dir: 'right', requires: { if: 'ch1_hani' }, blockedText: '（まずは、ハニヤスに声をかけよう）' },
       { x: 29, y: 10, to: 'yomi_market', tx: 1, ty: 10, dir: 'right', requires: { if: 'ch1_hani' }, blockedText: '（まずは、ハニヤスに声をかけよう）' },
     ],
-    onEnter: [{ event: 'ch11_fest', chapter: 11, all: ['train_mika', 'train_naki', 'train_susa'], unless: 'ch11_fest' }],
+    onEnter: [{ event: 'post_intro', chapter: 13, unless: 'post_intro' }, { event: 'ch11_fest', chapter: 11, all: ['train_mika', 'train_naki', 'train_susa'], unless: 'ch11_fest' }],
     npcs: [
+      // クリア後
+      { id: 'kunado13', look: 'kunado', x: 9, y: 11, dir: 'down', move: 'still', chapter: 13, event: 'post_kunado' },
+      { id: 'haniyasu13', look: 'haniyasu', x: 6, y: 14, dir: 'up', move: 'still', chapter: 13, event: 'post_hani' },
       { id: 'haniyasu11', look: 'haniyasu', x: 6, y: 14, dir: 'up', move: 'still', chapter: 11,
         talk: [{ name: 'ハニヤス', text: '「荒らしに来たのではない、と」' }] },
       { id: 'haniyasu', look: 'haniyasu', x: 6, y: 14, dir: 'up', move: 'still', chapter: 1, unless: 'ch1_evening',

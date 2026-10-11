@@ -44,6 +44,8 @@
           prep: { lv: 14, kotodama: ['katame', 'iyashi', 'kokoroshizume', 'hidane', 'miyaburi'], copper: 500 } },
     12: { title: '第十二章　名を呼ぶ者', start: 'ch12_start', flags: CH1.concat(CH3, CH4, CH5, CH6, CH7, CH8, CH9, CH11),
           prep: { lv: 16, kotodama: ['katame', 'iyashi', 'kokoroshizume', 'hidane', 'miyaburi', 'katame_ren', 'sakiyomi'], copper: 600 } },
+    13: { title: 'クリア後', start: 'post_start', flags: CH1.concat(CH3, CH4, CH5, CH6, CH7, CH8, CH9, CH11),
+          prep: { lv: 20, kotodama: ['katame', 'iyashi', 'kokoroshizume', 'hidane', 'miyaburi', 'katame_ren', 'sakiyomi', 'nayobi'], copper: 1000 } },
   };
 
 })();

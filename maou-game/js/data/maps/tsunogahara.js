@@ -28,6 +28,7 @@
       { x: 9, y: 11, to: 'yomi_hani', tx: 1, ty: 10, dir: 'right' },
     ],
     npcs: [
+      { id: 'mika13', look: 'mikazuchi', x: 8, y: 4, dir: 'down', move: 'still', chapter: 13, event: 'post_mika' },
       { id: 'mika', look: 'mikazuchi', x: 8, y: 4, dir: 'down', move: 'still', chapter: 11, event: 'ch11_mika', doneFlag: 'train_mika',
         talk: [{ name: 'ミカヅチ', text: '「鬼族は、立ち上がる者には、何度でも付き合う」' }] },
     ],

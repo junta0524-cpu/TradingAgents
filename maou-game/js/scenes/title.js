@@ -90,7 +90,8 @@
         r.text('仲間になりたそうな顔で', r.W / 2, 78, '#fff', 'center');
         r.text('こちらを見ている', r.W / 2, 100, '#fff', 'center');
         r.rect(140, 124, 200, 1, '#a33');
-        r.text('〔フェーズ8：8〜12章・エピローグ〕', r.W / 2, 136, '#888', 'center');
+        r.text('〔フェーズ9：クリア後〕', r.W / 2, 136, '#888', 'center');
+        if (G.save.SLOTS.some(s => { const d = G.save.read(s); return d && d.state.cleared; })) r.text('★ クリア後の扉が、開いている', r.W / 2, 154, '#f0e8a0', 'center');
         menu.draw();
         r.text('F1：デバッグメニュー', r.W - 8, r.H - 18, '#666', 'right');
       },

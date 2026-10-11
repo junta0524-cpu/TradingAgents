@@ -26,6 +26,7 @@
       { x: 7, y: 9, to: 'yomi_palace', tx: 1, ty: 6, dir: 'right' },
     ],
     npcs: [
+      { id: 'naki13', look: 'nakime', x: 4, y: 6, dir: 'right', move: 'still', chapter: 13, event: 'post_naki' },
       { id: 'naki', look: 'nakime', x: 4, y: 6, dir: 'right', move: 'still', chapter: 11, event: 'ch11_naki', doneFlag: 'train_naki',
         talk: [{ name: 'ナキメ', text: '「焦らないことです。あなたが誰かを失いかけた時、本当の名呼びは、その時、生まれます」' }] },
     ],

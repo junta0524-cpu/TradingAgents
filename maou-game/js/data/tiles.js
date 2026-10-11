@@ -61,6 +61,9 @@
     '5': { name: '鐘楼',     look: 'belltower', solid: true, check: '鐘楼だ。夜警の鐘が、ここで鳴る。' },
     '7': { name: '紋の窪み', look: 'crest', solid: true, check: 'かつて、神の印が刻まれていたはずの窪みだ。今は、削り取られ、粗い漆喰で、塗り潰されている。' },
     'S': { name: '階段',     look: 'stairs' },
+    // ---- クリア後 ----
+    '0': { name: '試練の扉', look: 'trialdoor', solid: true },
+    '8': { name: '祭壇',     look: 'altar', solid: true },
     // ---- 魔界（黄泉）----
     'g': { name: '黄泉の草地', look: 'yomigrass' },
     't': { name: '黒い木',   look: 'deadtree', solid: true },

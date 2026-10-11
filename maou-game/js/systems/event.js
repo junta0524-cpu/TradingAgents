@@ -30,6 +30,9 @@
 //   item  { id, count }         … 道具を手に入れる（「〇〇を手に入れた。」と出る）
 //   pillar{ sys }               … 9章の祈り：その系統の紋を呼ぶ（覚えた言霊が多いほど強く光る。G.state.vars.prayer に足す）
 //   run   { fn }                … 決まった処理を動かす（数えた結果からフラグを決める、など。なるべく使わない）
+//   teach { list }              … クリア後の師：balance.js の POSTGAME.TEACH[list] から、まだ覚えていない言霊を一つ教わる
+//   msgfn { fn }                … その場で作った文を出す（四系統の育ち具合など）
+//   stop                        … この場面をここで終える（天の声の問いをまちがえたとき）
 //   count { key }               … 数を1つ増やす（G.state.vars[key]。選択の結果を後の章で使う）
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -191,6 +194,17 @@
           return;
         }
         case 'run': c.fn(); return;
+        case 'teach': {
+          const m = G.party.member('oonamuchi');
+          const id = m && G.DATA.balance.POSTGAME.TEACH[c.list].find(k => !m.kotodama.includes(k));
+          waiting = true;
+          if (!id) { G.message.show('（もう、教わることはない）'); return; }
+          m.kotodama.push(id);
+          G.message.show(`${m.name}は「${G.DATA.kotodama[id].name}」を覚えた！`);
+          return;
+        }
+        case 'msgfn': waiting = true; G.message.show(c.fn()); return;
+        case 'stop': cmds.splice(i, cmds.length - i); return;
         case 'count': G.state.vars = G.state.vars || {}; G.state.vars[c.key] = (G.state.vars[c.key] || 0) + 1; return;
         case 'chapter':
           cmds.splice(i, cmds.length - i);   // この場面は終わり、次の章の始まりへ

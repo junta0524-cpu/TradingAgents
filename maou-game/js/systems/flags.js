@@ -20,6 +20,10 @@
       if (o.if && !G.flags.get(o.if)) return false;
       if (o.unless && G.flags.get(o.unless)) return false;
       if (o.all && !o.all.every(f => G.flags.get(f))) return false;
+      if (o.knows) {   // オオナムチがその言霊を覚えていること
+        const m = G.state && G.state.party.find(p => p.id === 'oonamuchi');
+        if (!m || !m.kotodama.includes(o.knows)) return false;
+      }
       if (o.member && !(G.state && G.state.party.some(m => m.id === o.member))) return false;
       if (o.chapter != null) {
         const ch = (G.state && G.state.chapter) || 1;

@@ -29,13 +29,16 @@
     warps: [
       { x: 0, y: 9,  to: 'yomi_hani', tx: 28, ty: 9,  dir: 'left' },
       // 11章：東の端は嵐ヶ峰の演武場へ
-      { x: 23, y: 9,  to: 'arashigamine', tx: 8, ty: 10, dir: 'up', when: { chapter: 11 } },
-      { x: 23, y: 10, to: 'arashigamine', tx: 9, ty: 10, dir: 'up', when: { chapter: 11 } },
+      { x: 23, y: 9,  to: 'arashigamine', tx: 8, ty: 10, dir: 'up', when: { chapter: [11, 13] } },
+      { x: 23, y: 10, to: 'arashigamine', tx: 9, ty: 10, dir: 'up', when: { chapter: [11, 13] } },
       { x: 0, y: 10, to: 'yomi_hani', tx: 28, ty: 10, dir: 'left' },
       { x: 11, y: 0, to: 'yomi_palace', tx: 9,  ty: 11, dir: 'up', requires: { if: 'ch1_market' }, blockedText: '（宮へ戻る前に、市場の屋台をのぞいていこう）' },
       { x: 12, y: 0, to: 'yomi_palace', tx: 10, ty: 11, dir: 'up', requires: { if: 'ch1_market' }, blockedText: '（宮へ戻る前に、市場の屋台をのぞいていこう）' },
     ],
     npcs: [
+      // クリア後：魔界の宿と店
+      { id: 'inn13', look: 'oni', x: 4, y: 5, dir: 'left', move: 'still', chapter: 13, inn: true, talk: [{ name: '店主', text: '「王様に似てるねえ、お客さん」' }] },
+      { id: 'shop13', look: 'crow', x: 20, y: 2, dir: 'down', move: 'still', chapter: 13, shop: 'yomi', talk: ['鴉族の屋台は、料理に噂話を一つ添えるのが決まりだ。'] },
       { id: 'crow', look: 'crow', x: 2, y: 2, dir: 'down', move: 'still', chapter: 1,
         event: 'ch1_market', doneFlag: 'ch1_market',
         talk: ['鴉族の屋台は、料理に噂話を一つ添えるのが決まりだ。'] },

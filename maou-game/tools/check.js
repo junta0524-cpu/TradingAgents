@@ -835,6 +835,70 @@ const { chromium } = require('playwright');
   await shot('77_ending_title');
   await ev(() => GAME.rng.setFixed(false));
 
+  // ===== フェーズ9：クリア後 =====
+  // 選択肢で k 番目（0から）を選ぶ
+  const pick = async k => {
+    for (let i = 0; i < 20 && !(await scenes()).endsWith('選択肢'); i++) await key('KeyZ', 120);
+    for (let i = 0; i < k; i++) await key('ArrowDown', 60);
+    await key('KeyZ', 300);
+  };
+  await ev(() => { GAME.rng.setFixed(true); GAME.story.jump(13); }); await wait(300);
+  await runThrough(atMap);
+  expect('クリア後：魔界の畑から', `${await pos()}/${await ev(() => GAME.state.chapter + ':' + GAME.state.cleared)}`, 'yomi_hani(7,13)/13:true');
+  await ev(() => { const o = GAME.party.member('oonamuchi'); while (o.lv < 30) GAME.growth.forceLevelUp(o); GAME.party.healAll(); });
+  expect('クリア後：レベル30まで上がる', await ev(() => GAME.party.member('oonamuchi').lv), 30);
+  // 守：ハニヤスとの手合わせで、言霊を一つ教わる
+  const yamaBefore = await ev(() => GAME.party.member('oonamuchi').kotodama.length);
+  await talk('yomi_hani', 6, 13, 'down');
+  await pick(0);
+  await runThrough(atMap);
+  expect('手合わせに勝つと言霊を一つ教わる', (await ev(() => GAME.party.member('oonamuchi').kotodama.length)) - yamaBefore, 1);
+  // 四系統が足りないと、クナドは案内しない
+  await talk('yomi_hani', 9, 12, 'up');
+  await runThrough(atMap);
+  expect('四系統が足りないと案内されない', await pos(), 'yomi_hani(9,12)');
+  // 四系統をそろえる（テスト用に言霊を足す）→ 案内される
+  await ev(() => { const o = GAME.party.member('oonamuchi'); const T = GAME.DATA.balance.POSTGAME.TEACH; ['haniyasu', 'mikazuchi', 'nakime', 'bell'].forEach(k => T[k].slice(0, 5).forEach(id => { if (!o.kotodama.includes(id)) o.kotodama.push(id); })); });
+  await talk('yomi_hani', 9, 12, 'up');
+  await runThrough(atMap);
+  expect('四系統がそろうと大穴の最深部へ', await pos(), 'oana_soko(12,20)');
+  await shot('78_post_abyss');
+  // 天の声：まちがえると、そこで終わる
+  await talk('oana_soko', 12, 3, 'up');
+  await pick(0);   // 1問目を「頷く」（まちがい）
+  await runThrough(atMap);
+  expect('天の声：まちがえると扉は開かない', await flag('ame_lit'), false);
+  // 正しく答える（誠実な方）
+  await talk('oana_soko', 12, 3, 'up');
+  for (const k of [1, 0, 1, 0, 1, 0]) await pick(k);
+  await runThrough(() => { const e = GAME.scene.find('イベント'); return !!e && e.bg === 'trial'; }, 60);
+  await wait(700); await shot('79_post_trial');
+  await runThrough(atMap);
+  expect('天の声：正しく答えると調和の光', `${await flag('ame_lit')}/${await ev(() => GAME.party.member('oonamuchi').kotodama.includes('chouwa'))}`, 'true/true');
+  // ベルとの最終手合わせ → まことの名
+  await talk('yomi_palace', 9, 4, 'up');
+  await pick(1);
+  await runThrough(atMap);
+  expect('ベルとの最終手合わせで「まことの名」', await ev(() => GAME.party.member('oonamuchi').kotodama.includes('makoto')), true);
+  // 任意の大軍戦（すべて止める → 慈悲の魔王）
+  await talk('tsunogahara', 8, 5, 'up');
+  await pick(1);
+  await runThrough(atMap);
+  expect('大軍戦をすべて止めると称号', await flag('title_mercy'), true);
+  // ツクヨミの社：祭壇と、見破りで見抜く壁
+  await talk('tsukuyomi_yashiro', 3, 4, 'up');
+  await runThrough(atMap);
+  await talk('tsukuyomi_yashiro', 10, 3, 'down');
+  await runThrough(atMap);
+  expect('ツクヨミの社：祭壇で覚え、偽りの壁が消える', `${await ev(() => GAME.party.member('oonamuchi').kotodama.includes('nemurigasumi'))}/${await flag('shrine_open')}`, 'true/true');
+  await shot('80_post_shrine');
+  expect('生き返しが使える', await ev(() => GAME.kotodama.usableIn(GAME.DATA.kotodama.ikikaeshi, 'battle')), true);
+  // タイトルにクリアの印
+  await ev(() => { GAME.save.write('1'); GAME.scene.change(GAME.scenes.title()); }); await wait(300);
+  await shot('81_post_title');
+  expect('記録の一覧に★', await ev(() => GAME.save.summary('1').startsWith('★')), true);
+  await ev(() => GAME.rng.setFixed(false));
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));

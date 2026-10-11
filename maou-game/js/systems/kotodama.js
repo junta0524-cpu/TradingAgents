@@ -41,6 +41,13 @@
           ev.push({ type: 'msg', text: t.hp === t.maxHp && effect.full ? `${t.name}の体力がすべて戻った。` : `${t.name}の体力が ${t.hp - before} 戻った。` });
           return;
         }
+        case 'revive': {
+          if (t.hp > 0) { ev.push({ type: 'msg', text: `${t.name}は、倒れていない。` }); return; }
+          t.hp = Math.max(1, Math.floor(t.maxHp * effect.ratio));
+          ev.push({ type: 'heal', target: t, amount: t.hp });
+          ev.push({ type: 'msg', text: `${t.name}が、起き上がった！` });
+          return;
+        }
         case 'damage': {
           if (t.hp <= 0) return;
           const bonus = Math.floor((user.atk || 0) * B.KOTODAMA_ATK_BONUS);
@@ -133,6 +140,13 @@
         return enemiesOfUser.slice(0, 1);
       }
       case 'enemies': return enemiesOfUser;
+      // 倒れた仲間（生き返し）
+      case 'fallen': {
+        const all = st ? (user.side === 'enemy' ? st.enemies : st.party) : G.state.party;
+        if (chosen && chosen.hp <= 0) return [chosen];
+        return all.filter(p => p.hp <= 0).slice(0, 1);
+      }
+      case 'fallen_all': return (st ? (user.side === 'enemy' ? st.enemies : st.party) : G.state.party).filter(p => p.hp <= 0);
       default: return [];
     }
   }

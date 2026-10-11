@@ -74,7 +74,7 @@
       const hero = d.state.party.find(m => m.lv != null);
       const t = new Date(d.savedAt);
       const pad = n => String(n).padStart(2, '0');
-      return `${map ? map.name : '?'}　${hero ? hero.name + ' Lv' + hero.lv : ''}　${pad(t.getMonth() + 1)}/${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
+      return `${d.state.cleared ? '★' : ''}${map ? map.name : '?'}　${hero ? hero.name + ' Lv' + hero.lv : ''}　${pad(t.getMonth() + 1)}/${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
     },
 
     // ---- 文字での書き出し・読み込み ----

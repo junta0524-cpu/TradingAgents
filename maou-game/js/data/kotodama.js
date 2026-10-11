@@ -14,6 +14,7 @@
 //   { kind: 'cure', statuses: [...] }                                          … 状態異常を治す
 //   { kind: 'mind', turns }（心鎮め）／{ kind: 'reflect', turns }（返し鏡）／{ kind: 'cover', turns }（身代わり）
 //   { kind: 'foresee' }（先読み）／{ kind: 'barrier' }（結界張り：敵に出会いにくくなる）
+//   { kind: 'revive', ratio }（倒れた仲間を起こす。クリア後だけ意味がある）。target: 'fallen'（倒れた1人）／'fallen_all'（倒れた全員）
 // phase：その数字のフェーズで使えるようになる（今はまだ使えない言霊）
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -64,13 +65,13 @@
     dokubarai:      { name: '毒払い',       sys: 'iza', mp: 2,  target: 'ally',    use: 'both',   effect: { kind: 'cure', statuses: ['poison', 'venom'] } },
     mezame:         { name: '目覚め',       sys: 'iza', mp: 2,  target: 'ally',    use: 'battle', effect: { kind: 'cure', statuses: ['sleep', 'bind'] } },
     nayobi:         { name: '名呼び',       sys: 'iza', mp: 0,  target: 'ally',    use: 'battle', phase: 12, special: true },
-    ikikaeshi:      { name: '生き返し',     sys: 'iza', mp: 20, target: 'ally',    use: 'both',   phase: 9 },
-    musuhi:         { name: '産霊',         sys: 'iza', mp: 0,  target: 'allies',  use: 'battle', phase: 9 },
+    ikikaeshi:      { name: '生き返し',     sys: 'iza', mp: 20, target: 'fallen',  use: 'battle', effect: { kind: 'revive', ratio: 0.5 } },
+    musuhi:         { name: '産霊',         sys: 'iza', mp: 30, target: 'fallen_all', use: 'battle', effect: { kind: 'revive', ratio: 0.3 } },
     iyashi_mai:     { name: '癒やしの舞',   sys: 'iza', mp: 6,  target: 'ally',    use: 'both',   effect: { kind: 'heal', power: [50, 70] } },
     kiyome:         { name: '清め',         sys: 'iza', mp: 5,  target: 'allies',  use: 'both',   effect: { kind: 'cure', statuses: ['sleep', 'confuse', 'silence', 'bind', 'poison', 'venom', 'oboro'] } },
     nayobi_jin:     { name: '名呼びの陣',   sys: 'iza', mp: 0,  target: 'allies',  use: 'battle', phase: 12, special: true },
     michi_iyashi_omi: { name: '満ち癒やしの大御', sys: 'iza', mp: 30, target: 'allies', use: 'both', effect: { kind: 'heal', full: true } },
-    musuhi_omi:     { name: '産霊の大御',   sys: 'iza', mp: 0,  target: 'allies',  use: 'battle', phase: 9 },
+    musuhi_omi:     { name: '産霊の大御',   sys: 'iza', mp: 60, target: 'fallen_all', use: 'battle', effect: { kind: 'revive', ratio: 1 } },
 
     // ---- ツクヨミ（静・知）----
     kotozute:       { name: '言伝',         sys: 'tsuku', mp: 0,  target: 'self',    use: 'field',  effect: { kind: 'story' } },   // 声を風に乗せて届ける（物語の場面で使う）
@@ -79,13 +80,13 @@
     oboro:          { name: '朧',           sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'oboro', chance: 0.8 } },
     kuchifuuji:     { name: '口封じ',       sys: 'tsuku', mp: 3,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'silence', chance: 0.7 } },
     miyaburi:       { name: '見破り',       sys: 'tsuku', mp: 1,  target: 'enemy',   use: 'battle', effect: { kind: 'scan' } },
-    naabaki:        { name: '名暴き',       sys: 'tsuku', mp: 6,  target: 'enemy',   use: 'battle', phase: 9 },
+    naabaki:        { name: '名暴き',       sys: 'tsuku', mp: 6,  target: 'enemy',   use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 0.6, turns: 5 } },   // 偽りの名を剥がし、守りを下げる
     shibari:        { name: '縛り',         sys: 'tsuku', mp: 4,  target: 'enemy',   use: 'battle', effect: { kind: 'status', status: 'bind', chance: 0.6 } },
     nemurigasumi_mai: { name: '眠り霞の舞', sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'sleep', chance: 0.65 } },
     oboro_jin:      { name: '朧の陣',       sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'oboro', chance: 0.7 } },
     kuchifuuji_mai: { name: '口封じの舞',   sys: 'tsuku', mp: 8,  target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'silence', chance: 0.6 } },
     sakiyomi:       { name: '先読み',       sys: 'tsuku', mp: 2,  target: 'self',    use: 'battle', effect: { kind: 'foresee' } },
-    naabaki_omi:    { name: '名暴きの大御', sys: 'tsuku', mp: 20, target: 'enemies', use: 'battle', phase: 9 },
+    naabaki_omi:    { name: '名暴きの大御', sys: 'tsuku', mp: 20, target: 'enemies', use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 0.6, turns: 5 } },
     shibari_omi:    { name: '縛りの大御',   sys: 'tsuku', mp: 20, target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'bind', chance: 0.7 } },
 
     // ---- アメノミナカヌシ（根源・調和）----
