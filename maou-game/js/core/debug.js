@@ -72,7 +72,7 @@
   ];
 
   // いま作っているフェーズ（これより後の項目は灰色）
-  const CURRENT_PHASE = 9;
+  const CURRENT_PHASE = 10;
 
   function buildMenuItems() {
     return ITEMS.map(it => {

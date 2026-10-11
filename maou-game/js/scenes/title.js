@@ -1,15 +1,8 @@
 // このファイルの役目：タイトル画面。
-// はじめから／つづきから（記録を選ぶ）／文字の速さ／記録の書き出し・読み込み（文字で持ち運ぶ）。
+// はじめから／つづきから（記録を選ぶ）／設定（js/scenes/settings.js）／記録の書き出し・読み込み（文字で持ち運ぶ）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
-
-  const SPEEDS = [
-    { key: 'slow', label: 'ゆっくり' },
-    { key: 'normal', label: 'ふつう' },
-    { key: 'fast', label: 'はやい' },
-  ];
-  const speedLabel = () => SPEEDS.find(s => s.key === G.settings.textSpeed).label;
 
   function startMap() { G.story.enterSaved(); }
 
@@ -25,13 +18,6 @@
       G.save.apply(G.save.read(G.save.SLOTS[i]));
       startMap();
     });
-  }
-
-  function speedMenu() {
-    G.ui.choose(SPEEDS.map(s => ({ label: s.label })), {
-      x: 300, y: 176, w: 120, title: '文字の速さ', name: '文字の速さ',
-      index: SPEEDS.findIndex(s => s.key === G.settings.textSpeed),
-    }, i => { G.settings.textSpeed = SPEEDS[i].key; G.save.saveSettings(); });
   }
 
   // 書き出し：記録を文字にして、コピーできる窓に出す
@@ -60,11 +46,12 @@
     const makeItems = () => [
       { label: 'はじめから' },
       { label: 'つづきから', disabled: !G.save.any() },
-      { label: '文字の速さ', note: speedLabel() },
+      { label: '設定' },
       { label: '記録の書き出し', disabled: !G.save.any() },
       { label: '記録の読み込み' },
     ];
     const menu = new G.ui.Menu(makeItems(), { x: 152, y: 176, w: 176, cancelable: false });
+    G.sound.bgm('title');
 
     return {
       name: 'タイトル',
@@ -75,7 +62,7 @@
         if (!res || res.type !== 'select' || res.item.disabled) return;
         if (res.index === 0) G.story.newGame();
         else if (res.index === 1) continueMenu();
-        else if (res.index === 2) speedMenu();
+        else if (res.index === 2) G.scenes.openSettings(300, 120);
         else if (res.index === 3) exportMenu();
         else importMenu();
       },
@@ -90,7 +77,7 @@
         r.text('仲間になりたそうな顔で', r.W / 2, 78, '#fff', 'center');
         r.text('こちらを見ている', r.W / 2, 100, '#fff', 'center');
         r.rect(140, 124, 200, 1, '#a33');
-        r.text('〔フェーズ9：クリア後〕', r.W / 2, 136, '#888', 'center');
+        r.text('〔フェーズ10：仕上げ〕', r.W / 2, 136, '#888', 'center');
         if (G.save.SLOTS.some(s => { const d = G.save.read(s); return d && d.state.cleared; })) r.text('★ クリア後の扉が、開いている', r.W / 2, 154, '#f0e8a0', 'center');
         menu.draw();
         r.text('F1：デバッグメニュー', r.W - 8, r.H - 18, '#666', 'right');

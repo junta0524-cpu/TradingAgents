@@ -59,12 +59,12 @@
     }
     update() {
       const inp = G.input, n = this.items.length;
-      if (inp.repeat('up')) this.index = (this.index - 1 + n) % n;
-      if (inp.repeat('down')) this.index = (this.index + 1) % n;
+      if (inp.repeat('up')) { this.index = (this.index - 1 + n) % n; if (G.sound) G.sound.se('cursor'); }
+      if (inp.repeat('down')) { this.index = (this.index + 1) % n; if (G.sound) G.sound.se('cursor'); }
       if (this.index < this.top) this.top = this.index;
       if (this.index >= this.top + this.visible) this.top = this.index - this.visible + 1;
-      if (inp.pressed('ok')) return { type: 'select', index: this.index, item: this.items[this.index] };
-      if (this.cancelable && inp.pressed('cancel')) return { type: 'cancel' };
+      if (inp.pressed('ok')) { if (G.sound) G.sound.se(this.items[this.index] && this.items[this.index].disabled ? 'cancel' : 'ok'); return { type: 'select', index: this.index, item: this.items[this.index] }; }
+      if (this.cancelable && inp.pressed('cancel')) { if (G.sound) G.sound.se('cancel'); return { type: 'cancel' }; }
       return null;
     }
     draw() {

@@ -35,3 +35,17 @@ canvas {
 .ab button { position: absolute; width: 68px; height: 68px; border-radius: 50%; font-weight: bold; }
 .ab .a { right: 0; top: 0; }
 .ab .b { left: 0; bottom: 0; }
+.ab .f { right: 4px; bottom: 0; width: 44px; height: 44px; font-size: 15px; }   /* 押している間、早送り（Shiftと同じ） */
+
+/* スマホ横向き：画面を大きく使い、ボタンは左右の黒い余白に重ねる */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  #pad { position: fixed; left: 0; right: 0; bottom: 0; height: 100%; max-height: none;
+    padding: 0 12px 12px; pointer-events: none; align-items: flex-end; background: none; }
+  #pad button { pointer-events: auto; background: rgba(255,255,255,0.12); }
+  .dpad { width: 144px; height: 144px; }
+  .dpad button { width: 48px; height: 48px; }
+  .dpad .up, .dpad .down { left: 48px; }
+  .dpad .left, .dpad .right { top: 48px; }
+  .ab { width: 130px; height: 120px; }
+  .ab button { width: 58px; height: 58px; }
+}

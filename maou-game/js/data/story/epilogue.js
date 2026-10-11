@@ -9,6 +9,7 @@
   const scene = (key, actors) => [{ t: 'fade', to: 1 }, { t: 'bg', key, actors }, { t: 'fade', to: 0 }];
 
   E.epilogue = [
+    { t: 'bgm', name: 'ending' },
     { t: 'title', text: 'エピローグ', sub: '橋の上で' },
     // ---- 一：根の洲の土 ----
     ...scene('scorched', [{ look: 'takeru', x: 220, y: 256, dir: 'down' }, { look: 'mikazuchi', x: 300, y: 250, dir: 'left' }]),

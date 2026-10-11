@@ -899,6 +899,37 @@ const { chromium } = require('playwright');
   expect('記録の一覧に★', await ev(() => GAME.save.summary('1').startsWith('★')), true);
   await ev(() => GAME.rng.setFixed(false));
 
+  // ===== フェーズ10：仕上げ（作戦・音・設定）=====
+  // 作戦ごとの考え方：体力6割の仲間がいるとき
+  const tac = await ev(() => {
+    GAME.party.newGame();
+    const st = GAME.battle.create(GAME.party.active(), ['boar']);
+    const o = st.party.find(p => p.id === 'oonamuchi');
+    o.kotodama = ['iyashi', 'hidane']; o.mp = o.maxMp;
+    const b = st.party.find(p => p.id === 'bell'); b.hp = Math.ceil(b.maxHp * 0.6);
+    const pickFor = t => { o.tactic = t; const c = GAME.ai.decide(st, o); return c.type === 'kotodama' ? c.id : c.type; };
+    return ['heal', 'save', 'attack', 'life', 'auto'].map(t => t + ':' + pickFor(t)).join(' ');
+  });
+  expect('作戦ごとに動きが変わる', tac, 'heal:iyashi save:attack attack:hidane life:attack auto:attack');
+  // 音：場所ごとに曲が変わる
+  await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(200);
+  const songs = [await ev(() => GAME.sound.current())];
+  await placeAt('minamo', 15, 12, 'down'); await wait(200); songs.push(await ev(() => GAME.sound.current()));
+  await placeAt('field_minamo', 20, 3, 'down'); await wait(200); songs.push(await ev(() => GAME.sound.current()));
+  await ev(() => GAME.scene.push(GAME.scenes.battle(['dog']))); await wait(300); songs.push(await ev(() => GAME.sound.current()));
+  await ev(() => GAME.scene.pop()); await wait(200);
+  await placeAt('yomi_hani', 7, 13, 'up'); await wait(200); songs.push(await ev(() => GAME.sound.current()));
+  expect('曲：タイトル・町・野原・戦闘・魔界', songs.join(','), 'title,town,field,battle,yomi');
+  // 設定：タイトルから開いて、敵の出やすさと音を切り替える
+  await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.scene.change(GAME.scenes.title()); }); await wait(200);
+  await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 200);   // 設定
+  await shot('82_settings');
+  await key('ArrowDown', 60); await key('KeyZ', 150);   // 敵の出やすさ → 少なめ
+  await key('ArrowDown', 60); await key('KeyZ', 150);   // 音 → 切
+  await key('KeyX', 150);
+  expect('設定：敵は少なめ・音は切（保存される）', await ev(() => `${GAME.settings.encounter}/${GAME.settings.sound}/${JSON.parse(localStorage.getItem('maou_settings')).sound}`), 'low/false/false');
+  await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.save.saveSettings(); });
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));
@@ -907,6 +938,19 @@ const { chromium } = require('playwright');
   await mobile.tap('#pad .a');
   await mobile.waitForTimeout(400);
   await mobile.screenshot({ path: path.join(outDir, '11_mobile.png') });
+  // スマホ横画面：ボタンは左右の余白に重なり、画面は大きいまま
+  const land = await browser.newPage({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+  land.on('pageerror', e => errors.push('landscape pageerror: ' + e.message));
+  await land.goto(url);
+  await land.waitForTimeout(400);
+  await land.tap('#pad .a');
+  await land.waitForTimeout(400);
+  await land.screenshot({ path: path.join(outDir, '83_landscape.png') });
+  const lay = await land.evaluate(() => {
+    const c = document.getElementById('game').getBoundingClientRect(), d = document.querySelector('.dpad').getBoundingClientRect(), a = document.querySelector('.ab').getBoundingClientRect();
+    return { canvasH: Math.round(c.height), dpadLeftOfCanvas: d.right <= c.left + 1, abRightOfCanvas: a.left >= c.right - 1 };
+  });
+  expect('横画面：ボタンが画面に重ならない', `${lay.canvasH >= 300}/${lay.dpadLeftOfCanvas}/${lay.abRightOfCanvas}`, 'true/true/true');
 
   console.log(errors.length ? 'エラー:\n' + errors.join('\n') : 'エラーなし');
   console.log(fails.length ? `失敗 ${fails.length} 件` : 'すべて合格');

@@ -44,6 +44,7 @@
       if (!map.encounter && !G.event.running && !G.state.resume) G.party.saveRecord();
       nameTimer = 120;
       enterCheck = !G.event.running;
+      playBgm();
     }
     // 地形の文字。flagTiles（条件で変わるマス。隠し通路など）を上書きしてから使う
     function buildRows() {
@@ -51,6 +52,12 @@
       (map.flagTiles || []).filter(o => G.flags.check(o)).forEach(o => {
         rows[o.y] = rows[o.y].slice(0, o.x) + o.ch + rows[o.y].slice(o.x + 1);
       });
+    }
+    // 曲：マップの bgm、なければ場所から決める（魔界・王都・野原・町）
+    function playBgm() {
+      if (!G.sound) return;
+      const yomi = /^(yomi|tsunogahara|arashigamine|oana|tsukuyomi)/.test(mapId);
+      G.sound.bgm(map.bgm || (yomi ? 'yomi' : /^(amatsu|yasuragi)/.test(mapId) ? 'city' : map.encounter ? 'field' : 'town'));
     }
     function makeNpc(n) { return Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }); }
     // 場面が終わったあと、出る人を条件で入れ替える（いる人はその場に残す）
@@ -219,6 +226,7 @@
       const key = G.flags.chestKey(mapId, chest.id);
       if (G.flags.get(key)) { G.message.show('宝箱は、空っぽだ。'); return; }
       G.flags.set(key);
+      if (G.sound) G.sound.se('chest');
       let got;
       if (chest.copper) {
         G.party.addCopper(chest.copper);
@@ -237,6 +245,7 @@
       if (!w) return false;
       pendingWarp = w;
       fadeDir = 1;
+      if (G.sound) G.sound.se('door');
       return true;
     }
     function updateFade() {
@@ -279,7 +288,7 @@
       // デバッグなどから見えるように
       get mapId() { return mapId; },
       get player() { return player; },
-      resume() { refreshNpcs(); buildRows(); },
+      resume() { refreshNpcs(); buildRows(); if (G.scene.top() === this) playBgm(); },
       // 物語の場面から歩かせる（js/systems/event.js の walk）
       scriptMove(dir, n) { script = { dir, left: n }; if (!n) player.dir = dir; },
       // 1コマ進める。まだ歩いていれば true
@@ -326,7 +335,7 @@
             if (checkWarp()) return;
             if (runFirst((map.triggers || []).filter(o => o.x === player.x && o.y === player.y))) return;
             const group = G.encounter.step(map, tileAt(player.x, player.y));
-            if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; return; }
+            if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; if (G.sound) G.sound.se('encounter'); return; }
           }
         }
         if (!player.moving) {

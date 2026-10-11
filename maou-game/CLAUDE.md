@@ -37,7 +37,7 @@
 - 一覧から選ばせるときは `G.ui.choose(items, opts, onSelect)`、はい/いいえは `G.ui.confirm`。
 - 状態異常：`js/systems/status.js`（名前は `js/data/status.js`、数字は balance.js の STATUS）。毒だけ戦闘後も残る。移動中の毒は1で止まる。
 - 仲間：最大4人。臨時の仲間は「その土地の間だけ同行」（ユーザー決定）。`G.party.join/leave/setTemps`。強さは balance.js の TEMP_PARTY。
-- 作戦：`js/systems/ai.js`（うまくやって／ぜんぶ指示する。ほかはフェーズ10）。ベルと臨時の仲間は最初「うまくやって」。
+- 作戦：`js/systems/ai.js` の STYLE 表（うまくやって／どんどん攻めて／回復まかせた／MP節約で／いのち優先／ぜんぶ指示する）。ベルと臨時の仲間は最初「うまくやって」。
 - 敵の行動はラウンドの最初に決める（`planEnemies`、先読みで見える）。敵の言霊は `G.DATA.kotodamaEnemy`。
 - 阻害ゲージ：`js/systems/inhibit.js`（`G.state.inhibit`、数字は balance.js の INHIBIT）。ベルの言霊・本気・致命傷の阻止で減る。マップの `detection`（0〜3）で1歩ごとに減る。ゼロで `G.scenes.exposure`。宿屋で半分まで戻る。
 - 守り手：仲間への致命の一撃を、ベルが1戦に1度だけ止める（`applyDamage` が文を返す）。AIのベルは力を使わない。
@@ -70,3 +70,6 @@
 - 入力は `GAME.input.pressed('ok')` のように命令名で読む。命令名：up/down/left/right/ok/cancel/fast/debug。
 - 場面は `GAME.scene.change / push / pop`。上に積んだ場面ほど手前に描かれ、操作は一番上だけが受け取る。
 - 動作確認：`node tools/check.js`（Playwright＋Chromiumで index.html を開き、エラーがないか確かめて画面写真を撮る）。
+- 音（フェーズ10）：`js/core/sound.js`（Web Audio で波形から鳴らす。外部の音源なし）。効果音 `G.sound.se('ok')`、曲 `G.sound.bgm('field')`。曲はこのゲームのための短い旋律（`SONGS`）。マップの `bgm`、場面の `bgm` 命令、戦闘・蹂躙・タイトルで切り替え、戦闘のあとは元の曲に戻る。ブラウザの決まりで最初の操作まで鳴らない。
+- 設定（フェーズ10）：`js/scenes/settings.js`（文字の速さ／敵の出やすさ ふつう・少なめ／音の入・切）。タイトルとメニューから開く。`G.settings` に入り localStorage に保存。
+- スマホ：縦画面は下にボタン、横画面はボタンを画面の左右に重ねる（css の横向き用の指定）。「早」ボタンで会話の早送り。

@@ -30,6 +30,8 @@
     }
 
     cfg.intro.forEach(say);
+    const prevBgm = G.sound.current();
+    G.sound.bgm('rampage');
     timer = 60;
 
     function start(u, how) {
@@ -55,6 +57,7 @@
       }
     }
     function end() {
+      if (prevBgm) G.sound.bgm(prevBgm);
       // 10章の「止める／傷つける」の数は、脱出の助けの強さに使う（物語はフェーズ8）
       if (G.state) { G.state.vars = G.state.vars || {}; G.state.vars['rampage_' + key] = result; }
       if (opts.onEnd) opts.onEnd(result);

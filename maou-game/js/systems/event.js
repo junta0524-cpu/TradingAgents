@@ -21,6 +21,7 @@
 //   fade  { to: 1 か 0, color } … 暗くする／明るくする（color: 'white' で白くする）
 //   chapter { n }               … 次の章へ（js/systems/story.js）
 //   save                        … 自動で記録する
+//   bgm   { name }              … 曲を変える（js/core/sound.js の SONGS。null で止める）
 //   battle{ enemies, boss, bg, hook, training, chant } … 決まった敵との戦い（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
 //                                 勝ったかどうかはフラグ last_battle_won に入る（手合わせで使う）
 //   learn { id, kotodama }      … 仲間が言霊を覚える（「〇〇を覚えた！」と出る）
@@ -147,6 +148,7 @@
         case 'wait': timer = c.frames || 30; return;
         case 'fade': fadeTo = c.to; if (c.color) fadeColor = c.color === 'white' ? '255,255,255' : c.color; else if (c.to > 0) fadeColor = '0,0,0'; return;
         case 'save': G.save.write('auto'); return;
+        case 'bgm': G.sound.bgm(c.name); return;
         case 'battle':
           waiting = true;
           G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook, training: c.training, chant: c.chant }));
@@ -155,6 +157,7 @@
           const m = G.party.member(c.id);
           if (!m || m.kotodama.includes(c.kotodama)) return;
           m.kotodama.push(c.kotodama);
+          G.sound.se('learn');
           waiting = true;
           G.message.show(`${m.name}は「${G.DATA.kotodama[c.kotodama].name}」を覚えた！`);
           return;

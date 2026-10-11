@@ -1,5 +1,5 @@
 // このファイルの役目：マップでXキーを押すと開くメニュー。
-// もちもの（使う）／ことだま（唱える）／そうび（付け替え）／さくせん（AI）／つよさ／セーブ（記録）。
+// もちもの（使う）／ことだま（唱える）／そうび（付け替え）／さくせん（AI）／つよさ／セーブ（記録）／せってい。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -141,14 +141,21 @@
   function tacticMenu() {
     pickMember('だれの作戦を変えますか', null, m => {
       const T = G.ai.TACTICS;
-      G.ui.choose(T.map(t => ({ label: t.name, note: t.id === m.tactic ? '←いま' : (t.later ? 'フェーズ10' : ''), disabled: !!t.later })), {
+      G.ui.choose(T.map(t => ({ label: t.name, note: t.id === m.tactic ? '←いま' : '' })), {
         x: 136, y: 56, w: 240, title: `${m.name}の作戦`, name: '作戦を選ぶ', index: Math.max(0, T.findIndex(t => t.id === m.tactic)),
-        extra: () => {
-          G.ui.drawWindow(8, 240, 464, 72);
-          G.renderer.text('うまくやって：自分で考えて、回復・治療・攻撃をする（道具は使わない）', 20, 252, '#ccc');
-          G.renderer.text('ぜんぶ指示する：毎ターン、こちらでコマンドを選ぶ', 20, 268, '#ccc');
+        // 選んでいる作戦の説明（道具はどの作戦でも使わない）
+        extra: menu => {
+          const DESC = {
+            auto: '自分で考えて、回復・治療・攻撃をする',
+            manual: '毎ターン、こちらでコマンドを選ぶ',
+            attack: '攻めの言霊を惜しまず使う。回復は本当に危ないときだけ',
+            heal: '早めに回復し、状態異常も治す。攻めの言霊は使わない',
+            save: 'MPをなるべく使わない。回復は危ないときに安い言霊で',
+            life: '体力が半分を切ったら回復。自分が危なければ身を守る',
+          };
+          G.ui.drawWindow(8, 256, 464, 40);
+          G.renderer.text(DESC[T[menu.index].id] + '（道具は使わない）', 20, 268, '#ccc');
         },
-        onDisabled: () => G.message.show('この作戦は、フェーズ10で作ります。'),
       }, i => { m.tactic = T[i].id; G.message.show(`${m.name}の作戦を「${T[i].name}」にした。`); });
     });
   }
@@ -211,6 +218,7 @@
     { label: 'さくせん', run: tacticMenu },
     { label: 'つよさ', run: () => G.scene.push(createStatusScene()) },
     { label: 'セーブ', run: saveMenu },
+    { label: 'せってい', run: () => G.scenes.openSettings() },
     { label: 'とじる' },
   ];
 

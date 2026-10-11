@@ -19,6 +19,7 @@
     { t: 'party', ids: ['bell'] },
     { t: 'rename', id: 'bell', name: BELL, look: 'bell_true' },
     { t: 'save' },
+    { t: 'bgm', name: 'sad' },
     { t: 'title', text: '第二章', sub: '静かなる迎撃' },
     { t: 'bg', key: 'scorched', actors: ARMY },
     { t: 'fade', to: 0 },

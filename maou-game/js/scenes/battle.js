@@ -37,6 +37,8 @@
     opts = opts || {};
     const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc });
     const CH = opts.chant || null;
+    const prevBgm = G.sound.current();   // 戦いが終わったら、もとの曲へ戻す
+    G.sound.bgm(opts.boss && (group.length === 1 || CH) ? 'boss' : 'battle');
     if (CH) st.chant = 0;
     const watching = G.state.split === 'watch';   // ベルは画面の端で見守るだけ
     const party = st.party, enemies = st.enemies;
@@ -69,11 +71,17 @@
       }
       if (queue.length) {
         const ev = queue.shift();
-        if (ev.type === 'msg') { say(ev.text); waitTimer = MSG_WAIT; }
+        if (ev.type === 'msg') {
+          say(ev.text); waitTimer = MSG_WAIT;
+          if (/を唱えた！$|を放った！$/.test(ev.text)) G.sound.se('spell');
+          else if (/レベル\d+になった！$|を覚えた！$/.test(ev.text)) G.sound.se('levelup');
+        }
+        else if (ev.type === 'heal') G.sound.se('heal');
         else if (ev.type === 'calc') { say(ev.text, '#9ab'); waitTimer = MSG_WAIT / 2; }
         else if (ev.type === 'talk') { G.message.show(ev.list); waitTimer = 2; }   // 物語の場面のセリフ（会話の窓で出す）
         else if (ev.type === 'damage') {
           flash = ev.target; flashTimer = 16;
+          if (ev.amount > 0) G.sound.se(ev.target.side === 'party' ? 'damage' : 'hit');
           if (ev.target.side === 'party' && ev.amount > 0) shake = 10;
           waitTimer = 8;
         } else if (ev.type === 'ko' && ev.target.side === 'enemy') { fading[ev.target.key] = 20; }
@@ -84,7 +92,7 @@
 
     // ---- コマンド選び ----
     // 指示を出す相手：生きていて、「ぜんぶ指示する」で、眠り・縛り・混乱でない仲間
-    const needsInput = p => p.hp > 0 && p.tactic !== 'auto' &&
+    const needsInput = p => p.hp > 0 && p.tactic === 'manual' &&
       !G.status.has(p, 'sleep') && !G.status.has(p, 'bind') && !G.status.has(p, 'confuse');
     function beginInput() {
       party.forEach(p => { p.defending = false; });
@@ -187,7 +195,7 @@
       }
       if (actor.hp <= 0) { runOrder(order); return; }
       let cmd = null;
-      if (actor.side === 'party') cmd = actor.tactic === 'auto' ? G.ai.decide(st, actor) : commands[party.indexOf(actor)];
+      if (actor.side === 'party') cmd = actor.tactic !== 'manual' ? G.ai.decide(st, actor) : commands[party.indexOf(actor)];
       cmd = cmd || { type: 'attack' };
       // 詠唱の戦い：王への打撃は、詠唱が満ちる直前でなければ届かない。届けば決着
       if (CH && actor.side === 'party' && (cmd.type === 'attack' || cmd.type === 'fullpower') && cmd.target && cmd.target.id === CH.enemy) {
@@ -246,6 +254,7 @@
     function cleanup() { party.forEach(p => G.kotodama.clearBattleState(p)); }
     function endBattle() {
       cleanup();
+      if (prevBgm) G.sound.bgm(prevBgm);
       if (lateLose()) party.forEach(p => { if (p.hp <= 0) p.hp = 1; });   // クリア後：倒れた仲間は、戦いのあと起き上がる
       // 戦いの中で阻害ゲージが尽きていたら、正体露見へ
       if (G.inhibit.exposed()) { G.scene.change(G.scenes.exposure()); return; }

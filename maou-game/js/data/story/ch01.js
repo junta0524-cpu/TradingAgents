@@ -158,6 +158,7 @@
 
   // ---- 六・七：騙し討ちと、回廊の言伝（オモイカ。会話だけ）----
   E.ch1_betrayal = [
+    { t: 'bgm', name: 'sad' },
     { t: 'fade', to: 1 },
     { t: 'bg', key: 'hall', actors: HALL },
     { t: 'fade', to: 0 },
