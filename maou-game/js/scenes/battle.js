@@ -228,7 +228,9 @@
     // 最初のひとこと
     const names = {};
     enemies.forEach(e => { const n = G.DATA.enemies[e.id].name; names[n] = (names[n] || 0) + 1; });
-    const appear = Object.keys(names).map(n => names[n] > 1 ? `${n}が${names[n]}匹` : `${n}が`).join('、');
+    // 数え方：敵データの counter（人なら「人」）。書かなければ「匹」
+    const counterOf = n => (Object.values(G.DATA.enemies).find(d => d.name === n) || {}).counter || '匹';
+    const appear = Object.keys(names).map(n => names[n] > 1 ? `${n}が${names[n]}${counterOf(n)}` : `${n}が`).join('、');
     let firstStrike = G.battle.rollFirstStrike(st);
     const opening = [{ type: 'msg', text: `${appear}現れた！` }];
     if (firstStrike) opening.push({ type: 'msg', text: '先手を取った！' });
@@ -378,7 +380,7 @@
             G.ui.drawWindow(162, 232, 310, 80);
             const groups = {};
             list.forEach(e => { const n = G.DATA.enemies[e.id].name; groups[n] = (groups[n] || 0) + 1; });
-            Object.keys(groups).forEach((n, i) => r.text(`${n}　${groups[n]}匹`, 176, 244 + i * 16, '#fff'));
+            Object.keys(groups).forEach((n, i) => r.text(`${n}　${groups[n]}${counterOf(n)}`, 176, 244 + i * 16, '#fff'));
           }
           if (phase === 'target' || phase === 'ally') {
             const who = phase === 'target' ? (list[targetIndex] && list[targetIndex].name) : party[allyIndex].name;

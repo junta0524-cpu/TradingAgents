@@ -5,6 +5,7 @@
 // resist：効きにくさの倍率（0＝効かない／0.5／1.0／1.5）。属性（fire など）と状態異常（sleep など）に使う。
 // actions：行動の重み（{ w: 重み, type: 'attack' } / { w, type: 'kotodama', id }）。書かなければ打撃だけ。
 // onHit：打撃が当たったとき、状態異常にする（{ status, chance }）。
+// counter：数え方（書かなければ「匹」。人の敵は「人」）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -333,7 +334,7 @@
     },
     // 人族の軍の兵（白い腕章）。洗脳された善人なので、倒すのではなく「退ける」
     wansho: {
-      name: '腕章の兵', hp: 30, atk: 18, def: 12, agi: 9, exp: 20, copper: 0,
+      name: '腕章の兵', counter: '人', hp: 30, atk: 18, def: 12, agi: 9, exp: 20, copper: 0,
       palette: { K: '#120e16', H: '#5a5e68', D: '#8a8e98', E: '#2a2a2a', W: '#f0f0f0' },
       sprite: [
         '................',
