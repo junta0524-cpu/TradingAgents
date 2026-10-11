@@ -53,6 +53,14 @@
     'i': { name: '灌木',     look: 'shrub', solid: true },
     'x': { name: '杭',       look: 'stake', solid: true, check: '細い木の杭に、赤い布が巻かれている。' },
     'A': { name: '焼け跡',   look: 'ruin', solid: true, check: '屋根が落ち、壁が煤けている。' },
+    // ---- 王都と院（8〜9章）----
+    '1': { name: '白い家並み', look: 'whitewall', solid: true },
+    '2': { name: '白い屋根', look: 'whiteroof', solid: true },
+    '3': { name: '白い石畳', look: 'whitestone', noEncounter: true },
+    '4': { name: '英雄の像', look: 'statue', solid: true },
+    '5': { name: '鐘楼',     look: 'belltower', solid: true, check: '鐘楼だ。夜警の鐘が、ここで鳴る。' },
+    '7': { name: '紋の窪み', look: 'crest', solid: true, check: 'かつて、神の印が刻まれていたはずの窪みだ。今は、削り取られ、粗い漆喰で、塗り潰されている。' },
+    'S': { name: '階段',     look: 'stairs' },
     // ---- 魔界（黄泉）----
     'g': { name: '黄泉の草地', look: 'yomigrass' },
     't': { name: '黒い木',   look: 'deadtree', solid: true },

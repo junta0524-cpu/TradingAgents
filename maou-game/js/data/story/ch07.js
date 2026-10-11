@@ -377,16 +377,4 @@
     { t: 'chapter', n: 8 },
   ];
 
-  // 8章の入口（物語はフェーズ8で作る）
-  E.ch8_start = [
-    { t: 'fade', to: 1 },
-    { t: 'state', set: { chapter: 8, resume: 'ch8_start', split: null } },
-    { t: 'title', text: '第八章', sub: '（フェーズ8で作ります）' },
-    { t: 'party', ids: ['bell', 'oonamuchi'] },
-    { t: 'goto', map: 'minamo', x: 15, y: 12, dir: 'down' },
-    { t: 'state', set: { resume: null } },
-    { t: 'save' },
-    { t: 'fade', to: 0 },
-    N('（8章からの物語は、次のフェーズ8で作ります。いまは、ミナモの町と野原を歩けます）'),
-  ];
 })();

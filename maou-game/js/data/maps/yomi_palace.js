@@ -30,7 +30,9 @@
     warps: [
       { x: 9,  y: 12, to: 'yomi_market', tx: 11, ty: 1, dir: 'down' },
       { x: 10, y: 12, to: 'yomi_market', tx: 12, ty: 1, dir: 'down' },
-      { x: 0,  y: 6,  to: 'yomi_prison', tx: 6, ty: 6, dir: 'up', requires: { chapter: 3 }, blockedText: '牢へ続く扉だ。' },
+      { x: 0,  y: 6,  to: 'yomi_prison', tx: 6, ty: 6, dir: 'up', when: { chapter: 3 } },
+      { x: 0,  y: 6,  to: 'yomi_sanctum', tx: 6, ty: 8, dir: 'up', when: { chapter: 11 } },
+      { x: 0,  y: 6,  to: 'yomi_palace', tx: 1, ty: 6, dir: 'right', requires: { if: 'never' }, blockedText: '奥へ続く扉だ。' },
       { x: 19, y: 6,  to: 'yomi_balcony', tx: 7, ty: 5, dir: 'up', requires: { chapter: 3, if: 'ch3_report' }, blockedText: '露台へ続く扉だ。' },
     ],
     // 広間の奥へ進むと、四天王との場面（1章）
@@ -55,6 +57,8 @@
       { x: 18, y: 8, event: 'ch1_palace', chapter: 1, unless: 'ch1_palace' }
     ],
     npcs: [
+      { id: 'omoika11', look: 'omoika', x: 9, y: 3, dir: 'down', move: 'still', chapter: 11,
+        talk: [{ name: 'オモイカ', text: '「ようこそ、おいでくださいました」' }] },
       Object.assign({ id: 'mikazuchi', look: 'mikazuchi', x: 7,  y: 4, dir: 'right' }, KING),
       Object.assign({ id: 'nakime',    look: 'nakime',    x: 12, y: 4, dir: 'left' }, KING),
       Object.assign({ id: 'susano',    look: 'susano',    x: 7,  y: 6, dir: 'right' }, KING),

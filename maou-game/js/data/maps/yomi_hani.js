@@ -21,8 +21,8 @@
       'mgrrrrrrhrrrrrrhrrrrrrhrrrrrgm',
       'mghhhhhhhhhhhhhhhhhhhhhhhhhhgm',
       'mggggggguggggggggggggggggggtgm',
-      'mguuuuuuuuuuuuuuuuuuuuuuuuuuuu',
-      'mguuuuuuuuuuuuuuuuuuuuuuuuuuuu',
+      'uguuuuuuuuuuuuuuuuuuuuuuuuuuuu',
+      'uguuuuuuuuuuuuuuuuuuuuuuuuuuuu',
       'mggggggugggggggggggggggggggggm',
       'mgrrrrrsgggggggLLLLLLLggKKggtm',
       'mgrrrrhhgggggggggggggggggggggm',
@@ -32,10 +32,16 @@
       'mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm',
     ],
     warps: [
+      // 11章：西の端は角ヶ原の演武場へ
+      { x: 0, y: 9,  to: 'tsunogahara', tx: 8, ty: 10, dir: 'up', when: { chapter: 11 } },
+      { x: 0, y: 10, to: 'tsunogahara', tx: 9, ty: 10, dir: 'up', when: { chapter: 11 } },
       { x: 29, y: 9,  to: 'yomi_market', tx: 1, ty: 9,  dir: 'right', requires: { if: 'ch1_hani' }, blockedText: '（まずは、ハニヤスに声をかけよう）' },
       { x: 29, y: 10, to: 'yomi_market', tx: 1, ty: 10, dir: 'right', requires: { if: 'ch1_hani' }, blockedText: '（まずは、ハニヤスに声をかけよう）' },
     ],
+    onEnter: [{ event: 'ch11_fest', chapter: 11, all: ['train_mika', 'train_naki', 'train_susa'], unless: 'ch11_fest' }],
     npcs: [
+      { id: 'haniyasu11', look: 'haniyasu', x: 6, y: 14, dir: 'up', move: 'still', chapter: 11,
+        talk: [{ name: 'ハニヤス', text: '「荒らしに来たのではない、と」' }] },
       { id: 'haniyasu', look: 'haniyasu', x: 6, y: 14, dir: 'up', move: 'still', chapter: 1, unless: 'ch1_evening',
         event: 'ch1_hani', doneFlag: 'ch1_hani',
         talk: [{ name: 'ハニヤス', text: '「気づく前に足元を見ろ。土は黙っているが、忘れはせん」' }] },

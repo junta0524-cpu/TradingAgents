@@ -94,6 +94,8 @@
       return G.DATA.tiles[rows[y][x]] || G.DATA.tiles[' '];
     }
     const at = (list, x, y) => (list || []).find(o => o.x === x && o.y === y);
+    // 出入口：同じマスに複数あるときは、when（条件）に合う最初のもの
+    const warpAt = (x, y) => (map.warps || []).find(w => w.x === x && w.y === y && G.flags.check(w.when || null));
     function entityAt(x, y, except) {
       return npcs.concat([player]).find(e => e !== except && ((e.x === x && e.y === y) || (e.tx === x && e.ty === y)));
     }
@@ -111,7 +113,7 @@
       const nx = e.x + dx, ny = e.y + dy;
       if (blocked(nx, ny, e)) return false;
       // まだ通れない出入口
-      const w = e === player && at(map.warps, nx, ny);
+      const w = e === player && warpAt(nx, ny);
       if (w && w.requires && !G.flags.check(w.requires)) { G.message.show(w.blockedText || 'まだ、ここから先へは行けない。'); return false; }
       e.tx = nx; e.ty = ny; e.moving = true;
       return true;
@@ -140,6 +142,18 @@
     function updateNpcs() {
       npcs.forEach(n => {
         if (n.moving) { advance(n, 1); return; }
+        // 見回り：patrol の点を順に歩く（9章の見張り）
+        if (n.data.patrol) {
+          if (--n.wait > 0) return;
+          n.wait = n.data.patrolWait || 24;
+          const pts = n.data.patrol;
+          n.pi = n.pi || 0;
+          let [tx, ty] = pts[n.pi];
+          if (n.x === tx && n.y === ty) { n.pi = (n.pi + 1) % pts.length; [tx, ty] = pts[n.pi]; }
+          const dir = tx > n.x ? 'right' : tx < n.x ? 'left' : ty > n.y ? 'down' : ty < n.y ? 'up' : n.dir;
+          tryMove(n, dir);
+          return;
+        }
         if (n.data.move !== 'wander' || --n.wait > 0) return;
         n.wait = randWait();
         const dir = ['up', 'down', 'left', 'right'][G.rng.int(0, 3)];
@@ -148,6 +162,27 @@
         if (Math.abs(n.x + dx - n.data.x) > R || Math.abs(n.y + dy - n.data.y) > R) return;
         tryMove(n, dir);
       });
+    }
+
+    // 見張りの目：向いている方向の sight マス以内に先頭が入ると、caught の場面が流れる（壁の向こうは見えない）
+    function spotted() {
+      if (G.event.running) return false;
+      for (const n of npcs) {
+        const d = n.data;
+        if (!d.sight || !G.flags.check(d.watchIf || null)) continue;
+        const [dx, dy] = DIRS[n.dir];
+        for (let k = 1; k <= d.sight; k++) {
+          const x = n.x + dx * k, y = n.y + dy * k;
+          const t = tileAt(x, y);
+          if (!t || t.solid) break;
+          if ((player.x === x && player.y === y) || (player.tx === x && player.ty === y)) {
+            player.walk = 0;
+            G.event.run(d.caught);
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     // ---- 調べる・話す ----
@@ -198,7 +233,7 @@
 
     // ---- 出入口 ----
     function checkWarp() {
-      const w = at(map.warps, player.x, player.y);
+      const w = warpAt(player.x, player.y);
       if (!w) return false;
       pendingWarp = w;
       fadeDir = 1;
@@ -303,6 +338,7 @@
           else { player.walk = 0; followers.forEach(f => { f.walk = 0; }); }
         }
         updateNpcs();
+        if (spotted()) return;
       },
 
       draw() {

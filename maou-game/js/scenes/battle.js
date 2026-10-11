@@ -31,9 +31,13 @@
   };
 
   // group：敵の id の配列。opts.boss：逃げられない戦い／opts.bg：背景／opts.roundHook(st)：ラウンドの終わりに出来事を足す
+  // opts.training：手合わせ（負けてもゲームオーバーにならない）。hook で st.forceWin = true にすると、その場で勝ちになる。
+  // opts.chant：詠唱ゲージのある戦い（12章の王戦）。{ enemy, max, perRound, threshold, reduce: { 言霊: 減る量 }, blockText, strikeText, loseText }
   G.scenes.battle = function (group, opts) {
     opts = opts || {};
     const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc });
+    const CH = opts.chant || null;
+    if (CH) st.chant = 0;
     const watching = G.state.split === 'watch';   // ベルは画面の端で見守るだけ
     const party = st.party, enemies = st.enemies;
 
@@ -164,19 +168,36 @@
       runOrder(G.battle.turnOrder(party.concat(enemies)));
     }
     function runOrder(order) {
-      const out = G.battle.outcome(st);
+      const out = st.forceWin ? 'win' : G.battle.outcome(st);
       if (out) { finish(out); return; }
       const actor = order.shift();
       if (!actor) {
         // ラウンドの終わり：強化の残りを減らしてから、次のコマンドへ
         const extra = opts.roundHook ? (opts.roundHook(st) || []) : [];
-        play(G.battle.endRound(st).concat(extra), beginInput);
+        if (CH) {
+          st.chant = Math.min(CH.max, st.chant + CH.perRound);
+          extra.push({ type: 'msg', text: `王の詠唱が、満ちていく……（${Math.round(st.chant / CH.max * 100)}％）` });
+          if (st.chant >= CH.max) { play(G.battle.endRound(st).concat(extra), () => { st.chantLost = true; finish('lose'); }); return; }
+        }
+        play(G.battle.endRound(st).concat(extra), () => (st.forceWin ? finish('win') : beginInput()));
         return;
       }
       if (actor.hp <= 0) { runOrder(order); return; }
       let cmd = null;
       if (actor.side === 'party') cmd = actor.tactic === 'auto' ? G.ai.decide(st, actor) : commands[party.indexOf(actor)];
-      play(G.battle.act(st, actor, cmd || { type: 'attack' }), () => runOrder(order));
+      cmd = cmd || { type: 'attack' };
+      // 詠唱の戦い：王への打撃は、詠唱が満ちる直前でなければ届かない。届けば決着
+      if (CH && actor.side === 'party' && (cmd.type === 'attack' || cmd.type === 'fullpower') && cmd.target && cmd.target.id === CH.enemy) {
+        if (st.chant >= CH.threshold) { st.forceWin = true; play([{ type: 'msg', text: CH.strikeText }], () => finish('win')); return; }
+        play([{ type: 'msg', text: `${actor.name}の攻撃！` }, { type: 'msg', text: CH.blockText }], () => runOrder(order));
+        return;
+      }
+      const ev = G.battle.act(st, actor, cmd);
+      if (CH && actor.side === 'party' && cmd.type === 'kotodama' && CH.reduce[cmd.id] && ev.some(e => e.type === 'msg' && e.text.endsWith('を唱えた！'))) {
+        st.chant = Math.max(0, st.chant - CH.reduce[cmd.id]);
+        ev.push({ type: 'msg', text: '守りの膜が、王の言霊を遮った。詠唱が乱れる。' });
+      }
+      play(ev, () => runOrder(order));
     }
     function runEscape() {
       phase = 'play';
@@ -190,6 +211,13 @@
 
     // ---- 決着 ----
     function finish(out) {
+      G.flags.set('last_battle_won', out === 'win');
+      if (out === 'lose' && opts.training) {
+        // 手合わせ：負けてもやり直しにはならない（倒れた仲間は体力1で起き上がる）
+        party.forEach(p => { if (p.hp <= 0) p.hp = 1; });
+        play([{ type: 'msg', text: '（手合わせは、ここまで。もう一度、挑める）' }], () => { phase = 'result'; });
+        return;
+      }
       if (out === 'lose') { phase = 'gameover'; gameoverTimer = 0; return; }
       const r = G.battle.rewards(st);
       G.party.addCopper(r.copper);
@@ -353,6 +381,15 @@
         }
         // 左上：阻害ゲージ
         G.inhibit.drawGauge(8, 8);
+        // 詠唱ゲージ（12章の王戦）
+        if (CH) {
+          const t = st.chant / CH.max, w = 160;
+          G.ui.drawWindow(8, 34, w + 70, 24);
+          r.text('王の詠唱', 16, 40, '#f8a');
+          r.rect(80, 44, w, 8, '#222');
+          r.rect(80, 44, Math.round(w * t), 8, st.chant >= CH.threshold ? '#ff4060' : '#c070ff');
+          r.rect(80 + Math.round(w * CH.threshold / CH.max), 42, 1, 12, '#fff');
+        }
 
         // 右上：味方の体力（4人でも収まるよう、1人30ドット）
         const sw = 150, sx = r.W - sw - 8, rowH = party.length > 2 ? 30 : 34;
@@ -399,7 +436,7 @@
           r.rect(0, 0, r.W, r.H, `rgba(0,0,0,${a})`);
           if (gameoverTimer > 40) {
             const fallen = party.find(p => p.hp <= 0 && !G.DATA.characters[p.id].isBell);
-            r.text(`${fallen ? fallen.name : '仲間'}が倒れた……`, r.W / 2, 130, '#f88', 'center');
+            r.text(st.chantLost ? CH.loseText : `${fallen ? fallen.name : '仲間'}が倒れた……`, r.W / 2, 130, '#f88', 'center');
             r.text('直前の記録から、やり直します。', r.W / 2, 160, '#fff', 'center');
             if (gameoverTimer > 60 && G.ui.blinkOn()) r.text('▼', r.W / 2, 190, '#fff', 'center');
           }

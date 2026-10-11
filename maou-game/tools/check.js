@@ -579,7 +579,11 @@ const { chromium } = require('playwright');
     await page.keyboard.down('Shift');
     for (let i = 0; i < max; i++) {
       if (await ev(until)) break;
-      if ((await scenes()).endsWith('選択肢')) { await key('ArrowDown', 60); }   // 選択肢は下（正しい方）を選ぶ
+      if ((await scenes()).endsWith('選択肢')) {
+        // 9章の祈りは、まだ灯っていない紋を上から順に。ほかの選択肢は下（正しい方）を選ぶ
+        const n = await ev(() => GAME.state.mapId === 'yasuragi_temple' ? ['yama', 'iza', 'hono', 'tsuku'].filter(s => GAME.flags.get('pray_' + s)).length : 1);
+        for (let k = 0; k < n; k++) await key('ArrowDown', 60);
+      }
       await key('KeyZ', 60);
     }
     await page.keyboard.up('Shift'); await wait(150);
@@ -762,10 +766,73 @@ const { chromium } = require('playwright');
   expect('7章：ウズメとも別れる', await names(), 'ベル・オオナムチ');
   await castKotozute();
   await runThrough(() => GAME.state.chapter === 8 && GAME.scene.names().join() === 'マップ');
-  expect('8章の入口（ミナモ）', await pos(), 'minamo(15,12)');
+  expect('8章：王都 天津京へ', await pos(), 'amatsu(15,18)');
   // デバッグ：6章へ飛ぶと、オオナムチがその章の強さになる
   await ev(() => GAME.story.jump(6)); await runThrough(atMap);
   expect('デバッグで6章へ：レベル7・心鎮めあり', await ev(() => { const o = GAME.party.member('oonamuchi'); return o.lv + '/' + o.kotodama.includes('kokoroshizume'); }), '7/true');
+  await ev(() => GAME.rng.setFixed(false));
+
+  // ===== フェーズ8：8〜12章・エピローグ =====
+  await ev(() => { GAME.rng.setFixed(true); GAME.story.jump(8); }); await wait(300);
+  await runThrough(atMap);
+  expect('8章：天津京、阻害ゲージ70', `${await pos()}/${await ev(() => Math.round(GAME.state.inhibit))}`, 'amatsu(15,18)/70');
+  await shot('70_ch8_city');
+  await walkTo('amatsu', 15, 9, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  expect('8章：討論会で心鎮め', await flag('ch8_debate'), true);
+  await talk('amatsu', 23, 9, 'right');
+  await runThrough(atMap);
+  expect('8章：コトシロと再会', await flag('ch8_meet'), true);
+  await talk('amatsu', 4, 8, 'up');
+  for (let i = 0; i < 10 && !(await scenes()).endsWith('選択肢'); i++) await key('KeyZ', 120);
+  await key('KeyZ', 300);   // 夜まで待つ
+  await runThrough(atMap);
+  expect('8章：夜になる', await flag('amatsu_night'), true);
+  await shot('71_ch8_night');
+  await walkTo('amatsu', 30, 8, 'right', 'ArrowRight', 150);
+  await runThrough(atMap);
+  expect('8章：貧民区でミオとヒナ', `${await pos()}/${await flag('ch8_mio')}`, 'amatsu_slum(24,6)/true');
+  await walkTo('amatsu_slum', 24, 6, 'right', 'ArrowRight', 150);
+  await runThrough(atMap);
+  await castKotozute();
+  await runThrough(() => GAME.state.chapter === 9 && GAME.scene.names().join() === 'マップ');
+  expect('9章：やすらぎの院', await pos(), 'yasuragi(13,18)');
+  await shot('72_ch9_sanatorium');
+  // 見張りに見つかると塀の外へ戻る
+  await ev(() => GAME.scene.change(GAME.scenes.map('yasuragi', 5, 13, 'right'))); await wait(200);
+  await hold('ArrowUp', 150); await wait(400);
+  await runThrough(atMap, 40);
+  expect('9章：見張りに見つかると入口へ', await pos(), 'yasuragi(13,18)');
+  await walkTo('yasuragi', 6, 3, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  expect('9章：大部屋', await flag('ch9_ward'), true);
+  await walkTo('yasuragi', 21, 3, 'up', 'ArrowUp', 150);
+  await runThrough(() => GAME.scene.names().includes('選択肢'));
+  await shot('73_ch9_prayer');
+  await ev(() => { const o = GAME.party.member('oonamuchi'); while (o.lv < 18) GAME.growth.forceLevelUp(o); GAME.party.healAll(); });
+  await runThrough(() => GAME.scene.names().includes('蹂躙戦闘'));
+  expect('9章：四柱が灯る（祈りの強さ>0）', await ev(() => ['yama', 'iza', 'hono', 'tsuku'].every(s => GAME.flags.get('pray_' + s)) && GAME.state.vars.prayer > 0), true);
+  await wait(600); await shot('74_ch10_rampage');
+  expect('10章：正体が露見して魔王の姿に', await ev(() => GAME.party.member('bell').look + '/' + GAME.state.disguised), 'bell_true/false');
+  await runThrough(() => GAME.state.chapter === 11 && GAME.scene.names().join() === 'マップ');
+  expect('10章の蹂躙：5隊とも止めた', await ev(() => GAME.state.vars.rampage_ch10.stopped), 5);
+  expect('11章：魔界の畑から', await pos(), 'yomi_hani(7,13)');
+  await talk('tsunogahara', 8, 5, 'up');
+  await runThrough(atMap);
+  await talk('yomi_sanctum', 5, 6, 'left');
+  await runThrough(atMap);
+  await talk('arashigamine', 8, 5, 'up');
+  await runThrough(atMap);
+  expect('11章：三つの修行（堅め連・先読み）', await ev(() => ['train_mika', 'train_naki', 'train_susa'].every(f => GAME.flags.get(f)) + '/' + ['katame_ren', 'sakiyomi'].every(k => GAME.party.member('oonamuchi').kotodama.includes(k))), 'true/true');
+  await walkTo('yomi_market', 1, 9, 'left', 'ArrowLeft', 150);
+  await runThrough(() => GAME.scene.names().includes('戦闘'));
+  await wait(1200); await shot('75_ch11_takeru');
+  await runThrough(() => GAME.state.chapter === 12 && GAME.scene.names().includes('戦闘'));
+  await wait(1500); await shot('76_ch12_king');
+  await runThrough(() => GAME.scene.names().join() === 'タイトル', 3000);
+  expect('12章：名呼びを覚える', await ev(() => GAME.state.party.find(p => p.id === 'oonamuchi').kotodama.includes('nayobi')), true);
+  expect('エピローグのあと、クリアの記録が残る', await ev(() => !!GAME.save.read('auto').state.cleared), true);
+  await shot('77_ending_title');
   await ev(() => GAME.rng.setFixed(false));
 
   // スマホ縦画面

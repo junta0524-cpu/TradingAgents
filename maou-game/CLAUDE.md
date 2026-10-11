@@ -55,6 +55,12 @@
 - デバッグで章へ飛ぶと、`chapters.js` の `prep`（レベル・言霊・銅貨）にそろえる。
 - 選択肢は場面の `choice`（5章の「心を保つ選択」。頷いた回数は `G.state.vars.ch5_nod`）。
 - マップの `flagTiles`（フラグで変わるマス。7章の抜け道）、`battleBg`（戦いの背景：field/forest/mountain/wild/night）、`spots` の `member`（その仲間がいるときだけ）。
+- 第三部（8〜12章・エピローグ）：天津京（8・9章、宿の主人で昼夜を切り替え、夜だけ貧民区）、やすらぎの院（9章、見張りの `patrol`／`sight`／`caught`）、10章は場面＋蹂躙ch10＋追手の戦い、11章は魔界の拠点（角ヶ原・嵐ヶ峰・聖域で修行、順番自由）、12章は砦の場面とエピローグ。
+- 戦いの追加：`training`（手合わせ。負けてもやり直しにならない。勝ったかは `last_battle_won`）、hook で `st.forceWin`、`chant`（12章の王戦の詠唱ゲージ）。
+- 9章の祈り：場面の `pillar`（覚えた言霊の数で光り方が変わる。合計は `G.state.vars.prayer`）。五柱目は `choice` の `disabled`。
+- 途中でやり直す長い章は、`resume` を途中の場面（`ch10_escape`／`ch11_takeru`／`ch12_battle`）に変えてから `save` する。
+- クリアすると `G.state.cleared = true` の記録が自動の枠に残り、タイトルへ戻る（クリア後はフェーズ9）。
+- 出入口の `when`（同じマスでも章で行き先が変わる。宮の西の扉：3章は牢、11章は聖域）。条件の `all: [...]`（全部のフラグ）。
 - デバッグのフェーズ番号は `js/core/debug.js` の CURRENT_PHASE（フェーズを進めたら上げる）。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。

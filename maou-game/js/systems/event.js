@@ -13,7 +13,7 @@
 //   walk  { dir, steps }        … 歩くマップの先頭を歩かせる（steps: 0 で向きだけ変える）
 //   state { ... }               … いまの状態を書き換える（chapter, disguised など）
 //   flag  { set, value }        … フラグを立てる（value:false で下ろす）
-//   if    { flag, then, else }  … フラグで分ける（not: true で「立っていなければ」）
+//   if    { flag, then, else }  … フラグで分ける（not: true で「立っていなければ」。all: [...] で「全部立っていれば」）
 //   call  { id }                … ほかの場面を続けて流す
 //   rampage { key, noAfter }    … 蹂躙戦闘（js/data/rampage.js）
 //   letter{ lines }             … 手紙の窓
@@ -21,12 +21,15 @@
 //   fade  { to: 1 か 0, color } … 暗くする／明るくする（color: 'white' で白くする）
 //   chapter { n }               … 次の章へ（js/systems/story.js）
 //   save                        … 自動で記録する
-//   battle{ enemies, boss, bg, hook } … 決まった敵との戦い（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
+//   battle{ enemies, boss, bg, hook, training, chant } … 決まった敵との戦い（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
+//                                 勝ったかどうかはフラグ last_battle_won に入る（手合わせで使う）
 //   learn { id, kotodama }      … 仲間が言霊を覚える（「〇〇を覚えた！」と出る）
 //   join  { id } / leave { id } … 仲間が加わる／別れる（quiet: true で知らせを出さない）
 //   choice{ text, options: [{ label, then: [...] }] } … 選択肢（選んだものの then を流す）
 //   inhibit{ drain }            … 阻害ゲージを減らす（物語の場面で力が漏れたとき）
 //   item  { id, count }         … 道具を手に入れる（「〇〇を手に入れた。」と出る）
+//   pillar{ sys }               … 9章の祈り：その系統の紋を呼ぶ（覚えた言霊が多いほど強く光る。G.state.vars.prayer に足す）
+//   run   { fn }                … 決まった処理を動かす（数えた結果からフラグを決める、など。なるべく使わない）
 //   count { key }               … 数を1つ増やす（G.state.vars[key]。選択の結果を後の章で使う）
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -127,7 +130,7 @@
         case 'state': Object.assign(G.state, c.set); return;
         case 'flag': G.flags.set(c.set, c.value !== false); return;
         case 'if': {
-          const on = G.flags.get(c.flag) !== !!c.not;
+          const on = (c.all ? c.all.every(f => G.flags.get(f)) : G.flags.get(c.flag)) !== !!c.not;
           const branch = on ? (c.then || []) : (c.else || []);
           cmds.splice(i, 0, ...branch);
           return;
@@ -143,7 +146,7 @@
         case 'save': G.save.write('auto'); return;
         case 'battle':
           waiting = true;
-          G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook }));
+          G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook, training: c.training, chant: c.chant }));
           return;
         case 'learn': {
           const m = G.party.member(c.id);
@@ -163,8 +166,10 @@
         }
         case 'choice': {
           waiting = true;
-          G.ui.choose(c.options.map(o => ({ label: o.label })), {
+          // disabled: true の選択肢は灰色（選ぶと disabledText を出す）
+          G.ui.choose(c.options.map(o => ({ label: o.label, disabled: !!o.disabled || (o.doneIf && G.flags.get(o.doneIf)) })), {
             x: 8, y: 240 - 22 - c.options.length * 16 - 20, w: 300, title: c.text, name: '選択肢', cancelable: false,
+            onDisabled: k => G.message.show(c.options[k].doneIf && G.flags.get(c.options[k].doneIf) ? 'もう、済んでいる。' : (c.options[k].disabledText || '……。')),
           }, k => { cmds.splice(i, 0, ...(c.options[k].then || [])); waiting = false; });
           return;
         }
@@ -175,6 +180,17 @@
           G.message.show(`${G.DATA.items[c.id].name}${(c.count || 1) > 1 ? 'を' + c.count + 'つ' : 'を'}手に入れた。`);
           return;
         }
+        case 'pillar': {
+          const o = G.party.member('oonamuchi');
+          const n = o ? o.kotodama.filter(id => (G.DATA.kotodama[id] || {}).sys === c.sys).length : 0;
+          G.flags.set('pray_' + c.sys);
+          G.state.vars = G.state.vars || {};
+          G.state.vars.prayer = (G.state.vars.prayer || 0) + n;
+          waiting = true;
+          G.message.show(n >= 2 ? '紋が、強く光った。' : '紋が、淡く光った。');
+          return;
+        }
+        case 'run': c.fn(); return;
         case 'count': G.state.vars = G.state.vars || {}; G.state.vars[c.key] = (G.state.vars[c.key] || 0) + 1; return;
         case 'chapter':
           cmds.splice(i, cmds.length - i);   // この場面は終わり、次の章の始まりへ
