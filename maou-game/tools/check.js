@@ -955,6 +955,34 @@ const { chromium } = require('playwright');
   });
   expect('12章：育ちが足りないとクナドが名呼びを支える', assist, 'true/false');
 
+  // ===== 四すくみ（構え）=====
+  const aff = await ev(() => {
+    const oo = GAME.party.member('oonamuchi'), saveKo = oo.kotodama.slice(), saveMp = oo.mp, out = [];
+    GAME.flags.set('train_susa', false);
+    const st = GAME.battle.create([oo], ['mikazuchi_t', 'susano_t', 'nakime_t']);
+    const [mika, susa, naki] = st.enemies;
+    oo.mp = 99;
+    const cast = (id, t) => GAME.battle.act(st, oo, { type: 'kotodama', id, target: t || oo }).map(e => e.text || '').join('|');
+    const noKnow = cast('katame');
+    out.push(oo.stance, GAME.affinity.mult(oo, mika), noKnow.includes('構え'));      // 山＝土蜘蛛：鬼には効かない／まだ相性は見えない
+    GAME.flags.set('train_susa');
+    const t2 = cast('iyashi');
+    out.push(oo.stance, GAME.affinity.mult(oo, mika), t2.includes('鴉の構え'));       // 生＝鴉：鬼に強い
+    cast('hidane', naki);
+    out.push(oo.stance, GAME.affinity.mult(oo, susa), GAME.affinity.mult(oo, naki));  // 火＝鬼：嵐狼に強く、鴉に弱い
+    out.push(GAME.affinity.mult(mika, oo) === 1, GAME.affinity.mult(naki, oo));       // 構えは受けるときにも効く
+    oo.kotodama = saveKo; oo.mp = saveMp; oo.stance = null;
+    return out.join(',');
+  });
+  expect('四すくみ：言霊の系統で構えが変わり、倍率が決まる', aff, 'tsuchigumo,1,false,karasu,1.5,true,oni,1.5,0.75,true,1.5');
+  // 戦闘画面に種族と弱点が出る
+  await ev(() => { GAME.flags.set('train_susa'); GAME.scene.push(GAME.scenes.battle(['mikazuchi_t'], { training: true })); }); await wait(1200);
+  for (let i = 0; i < 6 && !(await ev(() => GAME.scene.top().phase === 'command')); i++) await key('KeyZ', 300);
+  await shot('91_tribe');
+  expect('戦闘画面：敵の種族と弱点', await ev(() => GAME.affinity.weakTo(GAME.DATA.enemies.mikazuchi_t.tribe)), 'karasu');
+  await ev(() => { GAME.scene.pop(); GAME.state.party.forEach(m => { m.stance = null; }); });
+  await wait(200);
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));

@@ -271,6 +271,13 @@
     enemies.forEach(e => { const n = G.DATA.enemies[e.id].name; names[n] = (names[n] || 0) + 1; });
     // 数え方：敵データの counter（人なら「人」）。書かなければ「匹」
     const counterOf = n => (Object.values(G.DATA.enemies).find(d => d.name === n) || {}).counter || '匹';
+    // 四すくみを教わったあとは、敵の種族と弱点（どの系統の構えで攻めればよいか）を出す
+    const tribeNote = n => {
+      const d = Object.values(G.DATA.enemies).find(x => x.name === n), T = G.DATA.tribes;
+      if (!d || !d.tribe || !G.affinity.known()) return '';
+      const w = G.affinity.weakTo(d.tribe);
+      return `　${T[d.tribe].name}・弱点：${G.DATA.kotodamaSystems[T[w].sys].short}（${T[w].short}）`;
+    };
     const appear = Object.keys(names).map(n => names[n] > 1 ? `${n}が${names[n]}${counterOf(n)}` : `${n}が`).join('、');
     let firstStrike = G.battle.rollFirstStrike(st);
     const opening = [{ type: 'msg', text: `${appear}現れた！` }];
@@ -414,7 +421,7 @@
           if ((phase === 'command' || phase === 'sub' || phase === 'target') && i === cmdIndex) mark = '▶';
           if (phase === 'ally' && i === allyIndex && G.ui.blinkOn()) mark = '▶';
           r.text(mark + p.name, sx + 10, y, color);
-          const tags = G.status.tags(p) + (p.buffs && p.buffs.def ? '守↑' : '') + (p.buffs && p.buffs.atk ? '攻↑' : '') + (p.guard > 0 ? '岩' : '') + (p.reflect > 0 ? '鏡' : '');
+          const tags = G.status.tags(p) + (p.buffs && p.buffs.def ? '守↑' : '') + (p.buffs && p.buffs.atk ? '攻↑' : '') + (p.guard > 0 ? '岩' : '') + (p.reflect > 0 ? '鏡' : '') + (p.stance && G.affinity.known() ? '[' + G.DATA.tribes[p.stance].short + ']' : '');
           if (tags) r.text(tags, sx + sw - 10, y, '#9cf', 'right');
           r.text(`HP ${p.hp}/${p.maxHp}`, sx + 10, y + 16, color);
           r.text(`MP ${p.mp}`, sx + sw - 10, y + 16, color, 'right');
@@ -430,7 +437,7 @@
             G.ui.drawWindow(162, 232, 310, 80);
             const groups = {};
             list.forEach(e => { const n = G.DATA.enemies[e.id].name; groups[n] = (groups[n] || 0) + 1; });
-            Object.keys(groups).forEach((n, i) => r.text(`${n}　${groups[n]}${counterOf(n)}`, 176, 244 + i * 16, '#fff'));
+            Object.keys(groups).forEach((n, i) => r.text(`${n}　${groups[n]}${counterOf(n)}${tribeNote(n)}`, 176, 244 + i * 16, '#fff'));
           }
           if (phase === 'target' || phase === 'ally') {
             const who = phase === 'target' ? (list[targetIndex] && list[targetIndex].name) : party[allyIndex].name;

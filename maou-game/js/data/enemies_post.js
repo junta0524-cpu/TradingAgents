@@ -8,11 +8,11 @@
   Object.assign(G.DATA.enemies, {
     // 師（手合わせ）
     haniyasu_t: {
-      name: 'ハニヤス', counter: '人', hp: 999, atk: 30, def: 50, agi: 6, exp: 60, copper: 0,
+      tribe: 'tsuchigumo', name: 'ハニヤス', counter: '人', hp: 999, atk: 30, def: 50, agi: 6, exp: 60, copper: 0,
       palette: { K: '#120e16', H: '#c8a070', D: '#4a4030', E: '#c08020', W: '#d8c8a0' }, sprite: H,
     },
     nakime_t: {
-      name: 'ナキメ', counter: '人', hp: 999, atk: 26, def: 40, agi: 18, exp: 60, copper: 0,
+      tribe: 'karasu', name: 'ナキメ', counter: '人', hp: 999, atk: 26, def: 40, agi: 18, exp: 60, copper: 0,
       actions: [{ w: 2, type: 'attack' }, { w: 1, type: 'kotodama', id: 'surikomi' }],
       palette: { K: '#120e16', H: '#e8d0c0', D: '#22222e', E: '#c0a020', W: '#6a6a80' }, sprite: H,
     },
@@ -28,7 +28,7 @@
     },
     // 大穴の最深部
     kage_oni: {
-      name: '影鬼', hp: 90, atk: 38, def: 26, agi: 14, exp: 70, copper: 30,
+      tribe: 'oni', name: '影鬼', hp: 90, atk: 38, def: 26, agi: 14, exp: 70, copper: 30,
       drop: { item: 'kizugusuri', rank: 'A' },
       palette: { K: '#06040a', H: '#3a2a4a', D: '#1e1428', E: '#ff4040', W: '#a090c0' }, sprite: H,
     },

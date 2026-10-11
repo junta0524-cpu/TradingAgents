@@ -72,7 +72,7 @@
         hp: d.hp, maxHp: d.hp, atk: d.atk, def: d.def, agi: d.agi, defending: false,
       };
     });
-    const party = partyMembers.map(m => Object.assign(m, { side: 'party', defending: false }));
+    const party = partyMembers.map(m => Object.assign(m, { side: 'party', defending: false, stance: null }));
     return {
       party, enemies, escapeTries: 0, boss: !!opts.boss,
       showCalc: !!opts.showCalc, lastKilled: null, turn: 0, plans: {},
@@ -158,6 +158,9 @@
       return ev;
     }
     if (cmd.type === 'kotodama') {
+      // 唱えた言霊の系統で構えが変わる（四すくみ。js/systems/affinity.js）
+      const stance = (actor.mp >= (G.DATA.kotodama[cmd.id] || {}).mp) ? G.affinity.setStance(actor, cmd.id) : null;
+      if (stance) ev.push({ type: 'msg', text: stance });
       const out = G.kotodama.cast(actor, cmd.id, cmd.target, st);
       // ベルが言霊を唱えると、阻害ゲージが大きく減る
       if (charOf(actor).isBell && out.some(e => e.type === 'msg' && e.text.endsWith('を唱えた！'))) {
@@ -191,14 +194,17 @@
     const def = Math.floor(target.def * G.kotodama.buffMult(target, 'def'));
     const r = calcPhysical(atk, def);
     let dmg = r.dmg;
+    const aff = G.affinity.mult(actor, target);
+    dmg = Math.floor(dmg * aff);
     if (target.defending) dmg = Math.floor(dmg * B().DEFEND_RATE);
     if (target.guard > 0) dmg = 0;
     if (r.crit) ev.push({ type: 'msg', text: '会心の一撃！' });
+    if (G.affinity.note(aff, actor)) ev.push({ type: 'msg', text: G.affinity.note(aff, actor) });
     if (st.showCalc) {
       const detail = r.crit
         ? `会心：攻${r.atk} 幅±${r.width}`
         : `攻${r.atk} 守${r.def} → 基本${r.base.toFixed(1)} 幅±${r.width}`;
-      ev.push({ type: 'calc', text: `（${detail}${target.defending ? ' 防御½' : ''}${target.guard > 0 ? ' 岩戸' : ''} → ${dmg}）` });
+      ev.push({ type: 'calc', text: `（${detail}${aff !== 1 ? ' 相性×' + aff : ''}${target.defending ? ' 防御½' : ''}${target.guard > 0 ? ' 岩戸' : ''} → ${dmg}）` });
     }
     const saved = applyDamage(st, target, dmg);
     ev.push({ type: 'damage', target, amount: dmg });

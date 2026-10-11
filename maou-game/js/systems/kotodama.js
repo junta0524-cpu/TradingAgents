@@ -54,7 +54,10 @@
           let dmg = G.rng.int(effect.power[0], effect.power[1]) + bonus;
           const resist = effect.element ? G.status.resistOf(t, effect.element) : 1;
           dmg = Math.floor(dmg * resist);
-          if (st && st.showCalc) ev.push({ type: 'calc', text: `（幅${effect.power[0]}〜${effect.power[1]}＋攻×${B.KOTODAMA_ATK_BONUS}=${bonus}　耐性×${resist} → ${dmg}）` });
+          const aff = st ? G.affinity.mult(user, t) : 1;   // 四すくみ
+          dmg = Math.floor(dmg * aff);
+          if (G.affinity.note(aff, user)) ev.push({ type: 'msg', text: G.affinity.note(aff, user) });
+          if (st && st.showCalc) ev.push({ type: 'calc', text: `（幅${effect.power[0]}〜${effect.power[1]}＋攻×${B.KOTODAMA_ATK_BONUS}=${bonus}　耐性×${resist}${aff !== 1 ? ' 相性×' + aff : ''} → ${dmg}）` });
           if (t.guard > 0) dmg = 0;
           const saved = G.battle.applyDamage(st, t, dmg);
           ev.push({ type: 'damage', target: t, amount: dmg });
