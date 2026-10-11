@@ -19,7 +19,7 @@
 
   G.scenes.map = function (startMap, startX, startY, startDir) {
     const B = G.DATA.balance;
-    let map, mapId, npcs, player, followers = [];
+    let map, mapId, npcs, player, followers = [], rows = [];
     let poisonFlash = 0;
     let fade = 0, fadeDir = 0, pendingWarp = null, nameTimer = 0;
     let battleFlash = 0, pendingBattle = null;
@@ -35,6 +35,7 @@
       map = G.DATA.maps[id];
       if (!map) throw new Error('マップが見つかりません：' + id);
       npcs = (map.npcs || []).filter(n => G.flags.check(n)).map(makeNpc);
+      buildRows();
       player = makeEntity(x, y, dir || 'down', leaderLook());
       buildFollowers();
       Object.assign(G.state, { mapId: id, x, y, dir: player.dir });
@@ -43,6 +44,13 @@
       if (!map.encounter && !G.event.running && !G.state.resume) G.party.saveRecord();
       nameTimer = 120;
       enterCheck = !G.event.running;
+    }
+    // 地形の文字。flagTiles（条件で変わるマス。隠し通路など）を上書きしてから使う
+    function buildRows() {
+      rows = map.rows.slice();
+      (map.flagTiles || []).filter(o => G.flags.check(o)).forEach(o => {
+        rows[o.y] = rows[o.y].slice(0, o.x) + o.ch + rows[o.y].slice(o.x + 1);
+      });
     }
     function makeNpc(n) { return Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }); }
     // 場面が終わったあと、出る人を条件で入れ替える（いる人はその場に残す）
@@ -82,8 +90,8 @@
 
     // ---- 地形と当たり判定 ----
     function tileAt(x, y) {
-      if (y < 0 || y >= map.rows.length || x < 0 || x >= map.rows[y].length) return null;
-      return G.DATA.tiles[map.rows[y][x]] || G.DATA.tiles[' '];
+      if (y < 0 || y >= rows.length || x < 0 || x >= rows[y].length) return null;
+      return G.DATA.tiles[rows[y][x]] || G.DATA.tiles[' '];
     }
     const at = (list, x, y) => (list || []).find(o => o.x === x && o.y === y);
     function entityAt(x, y, except) {
@@ -221,7 +229,7 @@
     // ---- 画面に映す範囲 ----
     function camera() {
       const r = G.renderer;
-      const mw = map.rows[0].length * T, mh = map.rows.length * T;
+      const mw = rows[0].length * T, mh = rows.length * T;
       const fit = (pos, size, view) => size <= view
         ? -Math.floor((view - size) / 2)
         : Math.max(0, Math.min(size - view, pos + T / 2 - view / 2));
@@ -236,7 +244,7 @@
       // デバッグなどから見えるように
       get mapId() { return mapId; },
       get player() { return player; },
-      resume() { refreshNpcs(); },
+      resume() { refreshNpcs(); buildRows(); },
       // 物語の場面から歩かせる（js/systems/event.js の walk）
       scriptMove(dir, n) { script = { dir, left: n }; if (!n) player.dir = dir; },
       // 1コマ進める。まだ歩いていれば true
@@ -261,7 +269,7 @@
         if (enterCheck) { enterCheck = false; if (runFirst(map.onEnter)) return; }
         // 敵に出会った：画面を点滅させてから戦闘へ
         if (battleFlash > 0) {
-          if (--battleFlash === 0) G.scene.push(G.scenes.battle(pendingBattle));
+          if (--battleFlash === 0) G.scene.push(G.scenes.battle(pendingBattle, { bg: map.battleBg }));
           return;
         }
         const inp = G.input;
@@ -302,10 +310,10 @@
         const cam = camera();
         r.clear(map.outside || '#000');
         const x0 = Math.max(0, Math.floor(cam.x / T)), y0 = Math.max(0, Math.floor(cam.y / T));
-        const x1 = Math.min(map.rows[0].length - 1, Math.floor((cam.x + r.W) / T));
-        const y1 = Math.min(map.rows.length - 1, Math.floor((cam.y + r.H) / T));
+        const x1 = Math.min(rows[0].length - 1, Math.floor((cam.x + r.W) / T));
+        const y1 = Math.min(rows.length - 1, Math.floor((cam.y + r.H) / T));
         for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-          const t = G.DATA.tiles[map.rows[y][x]] || G.DATA.tiles[' '];
+          const t = G.DATA.tiles[rows[y][x]] || G.DATA.tiles[' '];
           G.tileset.draw(ctx, t.look, x * T - cam.x, y * T - cam.y);
         }
         // 小物と人物（下にいるものほど手前）
@@ -322,7 +330,8 @@
         npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () =>
           G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y) }));
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
-        if (map.tint) r.rect(0, 0, r.W, r.H, typeof map.tint === 'function' ? map.tint() : map.tint);
+        const tint = typeof map.tint === 'function' ? map.tint() : map.tint;
+        if (tint) r.rect(0, 0, r.W, r.H, tint);
 
         if (nameTimer > 0 && !fadeDir && G.scene.top() === this) {
           const w = Math.ceil(r.measure(map.name)) + 24;

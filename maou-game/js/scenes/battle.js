@@ -21,7 +21,16 @@
 
   G.debugOpts = G.debugOpts || { showCalc: false };
 
-  // group：敵の id の配列。opts.boss：逃げられない戦い
+  // 戦いの背景（空の上・下、地平、地面2色）。マップの battleBg や物語の場面の bg で選ぶ
+  const BACKS = {
+    field:  [[120, 170, 220], [190, 220, 240], '#7a9a7a', '#4f8a42', '#478039'],
+    forest: [[60, 100, 70], [120, 160, 110], '#3a5a3a', '#2e5a2a', '#284e24'],
+    mountain: [[150, 120, 110], [210, 180, 150], '#6a5a4e', '#5a4a3e', '#4e4034'],
+    wild:   [[170, 140, 90], [230, 200, 140], '#9a8a5a', '#8a7a4a', '#7a6a3e'],
+    night:  [[14, 18, 40], [40, 46, 80], '#2a3040', '#1e2a24', '#18221e'],
+  };
+
+  // group：敵の id の配列。opts.boss：逃げられない戦い／opts.bg：背景／opts.roundHook(st)：ラウンドの終わりに出来事を足す
   G.scenes.battle = function (group, opts) {
     opts = opts || {};
     const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc });
@@ -58,6 +67,7 @@
         const ev = queue.shift();
         if (ev.type === 'msg') { say(ev.text); waitTimer = MSG_WAIT; }
         else if (ev.type === 'calc') { say(ev.text, '#9ab'); waitTimer = MSG_WAIT / 2; }
+        else if (ev.type === 'talk') { G.message.show(ev.list); waitTimer = 2; }   // 物語の場面のセリフ（会話の窓で出す）
         else if (ev.type === 'damage') {
           flash = ev.target; flashTimer = 16;
           if (ev.target.side === 'party' && ev.amount > 0) shake = 10;
@@ -159,7 +169,8 @@
       const actor = order.shift();
       if (!actor) {
         // ラウンドの終わり：強化の残りを減らしてから、次のコマンドへ
-        play(G.battle.endRound(st), beginInput);
+        const extra = opts.roundHook ? (opts.roundHook(st) || []) : [];
+        play(G.battle.endRound(st).concat(extra), beginInput);
         return;
       }
       if (actor.hp <= 0) { runOrder(order); return; }
@@ -303,13 +314,14 @@
         if (shake > 0) ctx.translate((shake % 2 ? 1 : -1) * 3, 0);
 
         // 背景：空と野原
+        const bk = BACKS[opts.bg] || BACKS.field;
         for (let i = 0; i < 10; i++) {
-          const t = i / 9;
-          r.rect(0, i * 16, r.W, 16, `rgb(${Math.round(120 + 70 * t)}, ${Math.round(170 + 50 * t)}, ${Math.round(220 + 20 * t)})`);
+          const t = i / 9, c = bk[0].map((v, k) => Math.round(v + (bk[1][k] - v) * t));
+          r.rect(0, i * 16, r.W, 16, `rgb(${c[0]}, ${c[1]}, ${c[2]})`);
         }
-        r.rect(0, 120, r.W, 12, '#7a9a7a');
-        r.rect(0, 132, r.W, 100, '#4f8a42');
-        r.rect(0, 150, r.W, 82, '#478039');
+        r.rect(0, 120, r.W, 12, bk[2]);
+        r.rect(0, 132, r.W, 100, bk[3]);
+        r.rect(0, 150, r.W, 82, bk[4]);
         r.rect(0, 232, r.W, 88, '#000');
 
         // 敵

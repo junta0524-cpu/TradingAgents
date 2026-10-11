@@ -21,6 +21,13 @@
 //   fade  { to: 1 か 0, color } … 暗くする／明るくする（color: 'white' で白くする）
 //   chapter { n }               … 次の章へ（js/systems/story.js）
 //   save                        … 自動で記録する
+//   battle{ enemies, boss, bg, hook } … 決まった敵との戦い（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
+//   learn { id, kotodama }      … 仲間が言霊を覚える（「〇〇を覚えた！」と出る）
+//   join  { id } / leave { id } … 仲間が加わる／別れる（quiet: true で知らせを出さない）
+//   choice{ text, options: [{ label, then: [...] }] } … 選択肢（選んだものの then を流す）
+//   inhibit{ drain }            … 阻害ゲージを減らす（物語の場面で力が漏れたとき）
+//   item  { id, count }         … 道具を手に入れる（「〇〇を手に入れた。」と出る）
+//   count { key }               … 数を1つ増やす（G.state.vars[key]。選択の結果を後の章で使う）
 (function () {
   const G = window.GAME = window.GAME || {};
 
@@ -134,6 +141,41 @@
         case 'wait': timer = c.frames || 30; return;
         case 'fade': fadeTo = c.to; if (c.color) fadeColor = c.color === 'white' ? '255,255,255' : c.color; else if (c.to > 0) fadeColor = '0,0,0'; return;
         case 'save': G.save.write('auto'); return;
+        case 'battle':
+          waiting = true;
+          G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook }));
+          return;
+        case 'learn': {
+          const m = G.party.member(c.id);
+          if (!m || m.kotodama.includes(c.kotodama)) return;
+          m.kotodama.push(c.kotodama);
+          waiting = true;
+          G.message.show(`${m.name}は「${G.DATA.kotodama[c.kotodama].name}」を覚えた！`);
+          return;
+        }
+        case 'join': case 'leave': {
+          const ok = c.t === 'join' ? G.party.join(c.id) : G.party.leave(c.id);
+          if (!ok || c.quiet) return;
+          const name = G.DATA.characters[c.id].name, temp = G.DATA.characters[c.id].temp;
+          waiting = true;
+          G.message.show(c.t === 'join' ? `${name}が、仲間に加わった。${temp ? '（この土地にいる間だけ、一緒に行く）' : ''}` : `${name}が、仲間から外れた。`);
+          return;
+        }
+        case 'choice': {
+          waiting = true;
+          G.ui.choose(c.options.map(o => ({ label: o.label })), {
+            x: 8, y: 240 - 22 - c.options.length * 16 - 20, w: 300, title: c.text, name: '選択肢', cancelable: false,
+          }, k => { cmds.splice(i, 0, ...(c.options[k].then || [])); waiting = false; });
+          return;
+        }
+        case 'inhibit': G.inhibit.drain(c.drain || 0); return;
+        case 'item': {
+          G.party.addItem(c.id, c.count || 1);
+          waiting = true;
+          G.message.show(`${G.DATA.items[c.id].name}${(c.count || 1) > 1 ? 'を' + c.count + 'つ' : 'を'}手に入れた。`);
+          return;
+        }
+        case 'count': G.state.vars = G.state.vars || {}; G.state.vars[c.key] = (G.state.vars[c.key] || 0) + 1; return;
         case 'chapter':
           cmds.splice(i, cmds.length - i);   // この場面は終わり、次の章の始まりへ
           cmds.push(...resolve(G.story.startScript(c.n)));

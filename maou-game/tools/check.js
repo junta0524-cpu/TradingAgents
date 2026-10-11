@@ -41,6 +41,8 @@ const { chromium } = require('playwright');
     GAME.party.newGame = function () {
       GAME.party._newGameOrig();
       Object.assign(GAME.state, { chapter: 4, disguised: true, inhibitShown: true, resume: null, mapId: 'minamo', x: 15, y: 12, dir: 'down' });
+      GAME.party.member('oonamuchi').kotodama = ['katame', 'iyashi'];
+      GAME.flags.set('ch4_guild'); GAME.flags.set('ch4_dogs');   // 4章の場面は最後にまとめて確かめる
     };
   });
   await patchCh4();
@@ -577,6 +579,7 @@ const { chromium } = require('playwright');
     await page.keyboard.down('Shift');
     for (let i = 0; i < max; i++) {
       if (await ev(until)) break;
+      if ((await scenes()).endsWith('選択肢')) { await key('ArrowDown', 60); }   // 選択肢は下（正しい方）を選ぶ
       await key('KeyZ', 60);
     }
     await page.keyboard.up('Shift'); await wait(150);
@@ -639,15 +642,18 @@ const { chromium } = require('playwright');
   await runThrough(atMap);
   expect('3章：露台へ', await pos(), 'yomi_balcony(7,5)');
   await shot('59_ch3_balcony');
-  // 言伝を唱える（メニュー → ことだま → ベルイザナ → 言伝）
-  const kIdx = await ev(() => GAME.party.member('bell').kotodama.indexOf('kotozute'));
-  await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150); await key('KeyZ', 200);
-  for (let i = 0; i < kIdx; i++) await key('ArrowDown', 30);
-  await key('KeyZ', 300);
+  // 言伝を唱える（メニュー → ことだま → ベル → 言伝）
+  const castKotozute = async () => {
+    const kIdx = await ev(() => GAME.party.member('bell').kotodama.indexOf('kotozute'));
+    await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150); await key('KeyZ', 200);
+    for (let i = 0; i < kIdx; i++) await key('ArrowDown', 30);
+    await key('KeyZ', 300);
+  };
+  await castKotozute();
   expect('言伝で場面が始まる', (await scenes()).includes('イベント'), true);
   await runThrough(() => GAME.state.chapter === 4 && GAME.scene.names().join() === 'マップ');
-  expect('4章：ミナモへ', await pos(), 'minamo(15,12)');
-  expect('4章：ベルとオオナムチ', await ev(() => GAME.state.party.map(p => p.name).join('・')), 'ベル・オオナムチ');
+  expect('4章：ミナモへ', await pos(), 'minamo(15,21)');
+  expect('4章：ベル一人で着く', await ev(() => GAME.state.party.map(p => p.name).join('・')), 'ベル');
   expect('4章：阻害ゲージが動く', await ev(() => GAME.inhibit.on()), true);
   expect('ほかの場所の言伝は何も起きない', await ev(() => GAME.story.kotozute()), null);
   await shot('60_ch4_minamo');
@@ -661,6 +667,106 @@ const { chromium } = require('playwright');
   await ev(() => { GAME.party.loadRecord(); GAME.story.enterSaved(); }); await wait(300);
   expect('再開すると場面が流れる', (await scenes()).includes('イベント'), true);
   await ev(() => GAME.story.jump(4)); await runThrough(atMap);
+
+  // ===== フェーズ7：第二部前半（4〜7章）=====
+  const walkTo = async (id, x, y, dir, k, ms = 250) => { await placeAt(id, x, y, dir); await wait(200); await hold(k, ms); await wait(500); };
+  const talk = async (id, x, y, dir) => { await placeAt(id, x, y, dir); await wait(200); await key('KeyZ', 300); };
+  const flag = f => ev(new Function('return GAME.flags.get(' + JSON.stringify(f) + ')'));
+  const names = () => ev(() => GAME.state.party.map(p => p.name).join('・'));
+  await ev(() => { GAME.rng.setFixed(true); GAME.story.jump(4); }); await wait(300);
+  await runThrough(atMap);
+  expect('4章：ミナモに一人で着く', `${await pos()}/${await names()}`, 'minamo(15,21)/ベル');
+  await walkTo('minamo', 13, 9, 'up', 'ArrowUp');
+  await shot('61_ch4_guild');
+  await runThrough(atMap);
+  expect('4章：オオナムチが加わる（言霊はまだない）', `${await names()}/${await ev(() => GAME.party.member('oonamuchi').kotodama.length)}`, 'ベル・オオナムチ/0');
+  await walkTo('field_minamo', 29, 26, 'down', 'ArrowDown', 150);
+  await runThrough(() => GAME.scene.names().includes('戦闘'));
+  await wait(900); await shot('62_ch4_dogs');
+  await runThrough(() => GAME.scene.names().join() === 'マップ' && GAME.flags.get('ch4_dogs'));
+  expect('4章：野犬戦で堅め・癒やしを覚える', await ev(() => GAME.party.member('oonamuchi').kotodama.join()), 'katame,iyashi');
+  await walkTo('field_minamo', 38, 27, 'right', 'ArrowRight', 150);
+  await runThrough(() => { const e = GAME.scene.find('イベント'); return !!e && e.bg === 'sunset'; });
+  await wait(900); await shot('63_ch4_sunset');
+  await runThrough(() => GAME.state.chapter === 5 && GAME.scene.names().join() === 'マップ');
+  expect('5章：聖の森の道へ', await pos(), 'hijiri_path(13,20)');
+  // 5章
+  await walkTo('hijiri_path', 13, 17, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  expect('5章：スクナが加わる', await names(), 'ベル・オオナムチ・スクナ');
+  await walkTo('hijiri_path', 13, 1, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  await shot('64_ch5_village');
+  await talk('hijiri_village', 25, 13, 'up');
+  await runThrough(atMap);
+  expect('5章：コノハが加わる（4人）', await names(), 'ベル・オオナムチ・スクナ・コノハ');
+  await walkTo('hijiri_village', 14, 3, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  expect('5章：使者の来訪', await flag('ch5_hall'), true);
+  await walkTo('hijiri_path', 27, 6, 'right', 'ArrowRight', 150);
+  await runThrough(atMap);
+  expect('5章：洞窟の魔族', `${await pos()}/${await flag('ch5_cave')}`, 'hijiri_cave(8,6)/true');
+  await shot('65_ch5_cave');
+  await walkTo('hijiri_village', 14, 3, 'up', 'ArrowUp', 150);
+  await runThrough(() => GAME.scene.names().includes('選択肢'));
+  await shot('66_ch5_choice');
+  await key('KeyZ', 300);   // 1回目は「頷く」
+  await runThrough(atMap);
+  expect('5章：心鎮めを覚える（頷いた回数1）', `${await ev(() => GAME.party.member('oonamuchi').kotodama.includes('kokoroshizume'))}/${await ev(() => GAME.state.vars.ch5_nod)}`, 'true/1');
+  expect('5章：夜の森へ', await pos(), 'hijiri_path(27,6)');
+  await castKotozute();
+  await runThrough(() => GAME.state.chapter === 6 && GAME.scene.names().join() === 'マップ');
+  expect('6章：臨時の仲間は別れる', await names(), 'ベル・オオナムチ');
+  // 6章
+  await walkTo('ro_path', 12, 1, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  await shot('67_ch6_village');
+  await talk('ro_village', 7, 5, 'up');
+  await runThrough(atMap);
+  expect('6章：納品の日', await flag('ch6_order'), true);
+  await talk('ro_village', 12, 10, 'up');
+  await runThrough(atMap);
+  expect('6章：コトシロが加わる', await names(), 'ベル・オオナムチ・コトシロ');
+  await talk('ro_village', 3, 5, 'up');
+  await runThrough(atMap);
+  expect('6章：火種を覚える', await ev(() => GAME.party.member('oonamuchi').kotodama.includes('hidane')), true);
+  await talk('ro_village', 12, 14, 'up');
+  await runThrough(atMap);
+  expect('6章：カナメも加わって山道を下る', `${await pos()}/${await names()}`, 'ro_path(12,1)/ベル・オオナムチ・コトシロ・カナメ');
+  await walkTo('ro_path', 12, 19, 'down', 'ArrowDown', 150);
+  await runThrough(() => GAME.state.chapter === 7 && GAME.scene.names().join() === 'マップ');
+  expect('7章：獣ノ原でウズメが加わる', `${await pos()}/${await names()}`, 'kemono_field(1,10)/ベル・オオナムチ・ウズメ');
+  // 7章
+  await walkTo('kemono_field', 13, 10, 'right', 'ArrowRight', 150);
+  await runThrough(atMap);
+  await talk('kemono_field', 24, 16, 'up');
+  await runThrough(atMap);
+  expect('7章：ウズメが抜け道を見つける', await ev(() => GAME.flags.get('ch7_secret') && GAME.scene.top().player && true), true);
+  await walkTo('kemono_field', 30, 10, 'right', 'ArrowRight', 150);
+  await runThrough(atMap);
+  expect('7章：葛の里でヒエダが加わる', await names(), 'ベル・オオナムチ・ウズメ・ヒエダ');
+  await shot('68_ch7_kuzu');
+  await walkTo('kuzu_village', 23, 3, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  expect('7章：夜の里', `${await pos()}/${await flag('ch7_night')}`, 'kuzu_village(23,3)/true');
+  await ev(() => { const o = GAME.party.member('oonamuchi'); while (o.lv < 14) GAME.growth.forceLevelUp(o); GAME.party.healAll(); });
+  const inhBefore = await ev(() => GAME.state.inhibit);
+  await walkTo('kuzu_village', 12, 5, 'down', 'ArrowDown', 150);
+  await runThrough(() => GAME.scene.names().includes('戦闘'));
+  await wait(1200); await shot('69_ch7_watch');
+  expect('7章：夜の井戸はベルが見守る', await ev(() => GAME.state.split), 'watch');
+  await runThrough(() => GAME.scene.names().join() === 'マップ' && GAME.flags.get('ch7_morning'));
+  expect('7章：ヒエダは里に残り、力の滲みで阻害が減る', `${await names()}/${inhBefore - (await ev(() => GAME.state.inhibit))}`, 'ベル・オオナムチ・ウズメ/25');
+  await talk('kuzu_village', 3, 9, 'left');
+  await runThrough(atMap);
+  expect('7章：ウズメとも別れる', await names(), 'ベル・オオナムチ');
+  await castKotozute();
+  await runThrough(() => GAME.state.chapter === 8 && GAME.scene.names().join() === 'マップ');
+  expect('8章の入口（ミナモ）', await pos(), 'minamo(15,12)');
+  // デバッグ：6章へ飛ぶと、オオナムチがその章の強さになる
+  await ev(() => GAME.story.jump(6)); await runThrough(atMap);
+  expect('デバッグで6章へ：レベル7・心鎮めあり', await ev(() => { const o = GAME.party.member('oonamuchi'); return o.lv + '/' + o.kotodama.includes('kokoroshizume'); }), '7/true');
+  await ev(() => GAME.rng.setFixed(false));
 
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

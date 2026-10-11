@@ -9,5 +9,8 @@
       name: 'ミナモの道具屋',
       items: ['kizugusuri', 'hoshiii', 'dokukeshi', 'mezamashi', 'copper_knife', 'leather_armor', 'mamori_ishi', 'hayate_obi'],
     },
+    hijiri: { name: '森の市', items: ['kizugusuri', 'dokukeshi', 'mezamashi', 'copper_knife', 'leather_armor', 'mamori_ishi'] },
+    ro:     { name: '炉ヶ岳の工房', items: ['kizugusuri', 'dokukeshi', 'mezamashi', 'iron_sword', 'chain_mail', 'hayate_obi'] },
+    kuzu:   { name: '葛の里の店', items: ['kizugusuri', 'hoshiii', 'dokukeshi', 'mezamashi', 'chain_mail', 'hayate_obi'] },
   };
 })();

@@ -110,6 +110,53 @@
     table(c) { LOOKS.floor(c); fill(c, '#6e4a2a', 1, 3, 14, 10); fill(c, '#8a5a30', 2, 4, 12, 8); },
     mat(c) { LOOKS.floor(c); fill(c, '#8a2a2a', 1, 2, 14, 12); fill(c, '#b04040', 2, 3, 12, 10); },
     void(c) { fill(c, '#000'); },
+    // ---- 村（第二部）----
+    thatch(c) {
+      fill(c, '#a88a4a');
+      for (let y = 2; y < T; y += 4) fill(c, '#8a6e36', 0, y, T, 1);
+      speckle(c, ['#c0a060', '#7a6030'], 0.15, 41); fill(c, '#6a5228', 0, 15, T, 1);
+    },
+    crops(c) {
+      fill(c, '#6a4a2e');
+      for (let x = 2; x < T; x += 5) for (let y = 2; y < T; y += 6) { fill(c, '#4a8a3a', x, y, 2, 3); dot(c, '#7ac060', x + 1, y - 1); }
+    },
+    stonewall(c) {
+      LOOKS.grass(c);
+      fill(c, '#8a8a84', 0, 5, T, 9);
+      fill(c, '#6a6a64', 0, 9, T, 1); fill(c, '#6a6a64', 5, 5, 1, 4); fill(c, '#6a6a64', 11, 10, 1, 4);
+    },
+    // ---- 森（5章）----
+    moss(c) { fill(c, '#4a6a32'); speckle(c, ['#5a7a3a', '#3a5a28', '#6a8a42'], 0.25, 51); },
+    trunk(c) {
+      fill(c, '#5a3e24'); for (let x = 2; x < T; x += 5) fill(c, '#4a3018', x, 0, 1, T);
+      speckle(c, ['#6a4a2e', '#3e2a16'], 0.1, 53); fill(c, '#3a6a2a', 0, 0, T, 2);
+    },
+    trunkdoor(c) { LOOKS.trunk(c); fill(c, '#2a1a0e', 4, 4, 8, 12); fill(c, '#6a4a22', 5, 5, 6, 11); dot(c, '#e8c860', 9, 10); },
+    cavemouth(c) { LOOKS.rock(c); c.fillStyle = '#0a0806'; c.beginPath(); c.arc(8, 12, 7, Math.PI, 0); c.fill(); fill(c, '#0a0806', 1, 12, 14, 4); },
+    rock(c) { fill(c, '#6a6460'); speckle(c, ['#7a7470', '#5a5450', '#4a4440'], 0.3, 55); fill(c, '#4a4440', 0, 15, T, 1); },
+    cavefloor(c) { fill(c, '#3e3a36'); speckle(c, ['#4a4642', '#34302c'], 0.2, 57); },
+    straw(c) { LOOKS.cavefloor(c); for (let i = 0; i < 9; i++) fill(c, i % 2 ? '#c8a858' : '#a88a40', 1 + i, 4 + (i % 3) * 3, 6, 1); },
+    // ---- 山の里（6章）----
+    stonehouse(c) {
+      fill(c, '#8a8278'); fill(c, '#6a6258', 0, 7, T, 1); fill(c, '#6a6258', 0, 15, T, 1);
+      fill(c, '#6a6258', 4, 0, 1, 7); fill(c, '#6a6258', 11, 8, 1, 7); speckle(c, ['#9a9288', '#7a7268'], 0.1, 61);
+    },
+    furnace(c, f) {
+      LOOKS.stonehouse(c);
+      fill(c, '#2a1a10', 3, 5, 10, 10); fill(c, '#e05a1a', 4, 8, 8, 6); fill(c, '#ffc040', 6, 10, 4, 3);
+    },
+    // ---- 荒野（7章）----
+    dryland(c) { fill(c, '#a8925e'); speckle(c, ['#b8a26e', '#94804e', '#8a7a4a'], 0.2, 71); },
+    shrub(c) {
+      LOOKS.dryland(c);
+      c.fillStyle = '#5a6a2e'; c.beginPath(); c.arc(8, 9, 6, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#7a8a3e'; c.beginPath(); c.arc(7, 8, 3.5, 0, Math.PI * 2); c.fill();
+    },
+    stake(c) { LOOKS.dryland(c); fill(c, '#6a4a2a', 7, 2, 2, 13); fill(c, '#c83030', 6, 5, 4, 2); },
+    ruin(c) {
+      LOOKS.dryland(c);
+      fill(c, '#4a3e34', 1, 6, 6, 9); fill(c, '#2a221c', 9, 9, 6, 6); fill(c, '#1a1612', 3, 4, 2, 3); speckle(c, ['#1a1612'], 0.06, 73);
+    },
     // ---- 魔界（黄泉）：赤みがかった色 ----
     yomigrass(c) { fill(c, '#4a5a32'); speckle(c, ['#5a6a3a', '#3a4426', '#6a4a2a'], 0.18, 21); },
     deadtree(c) {

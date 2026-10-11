@@ -18,8 +18,8 @@
     oonamuchi: {
       name: 'オオナムチ', look: 'oonamuchi', tactic: 'manual',
       equip: { weapon: 'old_dagger', armor: 'patched_cloak' },
-      // 小説では4章の野犬戦で覚える。物語の場面ができるまで（フェーズ7）は最初から使える
-      kotodama: ['katame', 'iyashi'],
+      // 小説どおり、4章の野犬戦で堅め・癒やしを覚える（js/data/story/ch04.js）
+      kotodama: [],
     },
 
     // ---- 臨時の仲間（仕様書 第4章）----

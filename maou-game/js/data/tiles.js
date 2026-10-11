@@ -33,6 +33,26 @@
     'k': { name: '机',     look: 'table',     solid: true },
     'E': { name: '出口',   look: 'mat' },
     ' ': { name: '闇',     look: 'void',      solid: true },
+    // ---- 村（第二部）----
+    'Y': { name: '藁葺き屋根', look: 'thatch', solid: true },
+    'v': { name: '畑',       look: 'crops',  solid: true, check: '細い野菜が植わっている。' },
+    'V': { name: '石垣',     look: 'stonewall', solid: true },
+    // ---- 森（5章）----
+    'p': { name: '苔の道',   look: 'moss', noEncounter: true },
+    'U': { name: '大樹の幹', look: 'trunk', solid: true },
+    'J': { name: '幹の戸口', look: 'trunkdoor', solid: true, check: '幹をくり抜いた家だ。' },
+    'O': { name: '洞窟の入口', look: 'cavemouth' },
+    'R': { name: '岩',       look: 'rock', solid: true },
+    'z': { name: '洞窟の床', look: 'cavefloor' },
+    'l': { name: '藁',       look: 'straw', solid: true, check: '藁が敷かれている。' },
+    // ---- 山の里（6章）----
+    'X': { name: '石の工房', look: 'stonehouse', solid: true },
+    'Z': { name: '炉',       look: 'furnace', solid: true, check: '炉の火が、赤く燃えている。' },
+    // ---- 荒野（7章）----
+    'e': { name: '乾いた土', look: 'dryland' },
+    'i': { name: '灌木',     look: 'shrub', solid: true },
+    'x': { name: '杭',       look: 'stake', solid: true, check: '細い木の杭に、赤い布が巻かれている。' },
+    'A': { name: '焼け跡',   look: 'ruin', solid: true, check: '屋根が落ち、壁が煤けている。' },
     // ---- 魔界（黄泉）----
     'g': { name: '黄泉の草地', look: 'yomigrass' },
     't': { name: '黒い木',   look: 'deadtree', solid: true },

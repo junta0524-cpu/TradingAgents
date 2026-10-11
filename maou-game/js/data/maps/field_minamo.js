@@ -42,13 +42,17 @@
       'T..TTTTTT..,,,,,....-..........TTTTTT..T',
       'T..TTTTTT......F....-..........TTTTTT..T',
       'T...................----------.TTTTTT..T',
-      'T......................................T',
+      'T............................-----------',
       'T......................................T',
       'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
     ],
     warps: [
       { x: 20, y: 2, to: 'minamo', tx: 15, ty: 22, dir: 'up' },
+      // 東の端：ひなた野へ（4章で届け物を受けてから）
+      { x: 39, y: 27, to: 'hinatano', tx: 1, ty: 8, dir: 'right', requires: { if: 'ch4_guild' }, blockedText: '（ひなた野への道。ギルドで届け物の依頼を受けてから行こう）' },
     ],
+    // 4章：ひなた野への荒れ地で、野犬に出会う（オオナムチが堅め・癒やしを覚える）
+    triggers: [29, 30, 31, 32, 33, 34, 35, 36, 37, 38].map(x => ({ x, y: 27, event: 'ch4_dogs', chapter: 4, if: 'ch4_guild', unless: 'ch4_dogs' })),
     npcs: [],
     chests: [
       { id: 'grove', x: 9, y: 9, copper: 30 },
@@ -56,7 +60,7 @@
     ],
     signs: [
       { x: 21, y: 4, text: '北　港町ミナモ' },
-      { x: 30, y: 26, text: '東　ひなた野（この先は、まだ通れない）' },
+      { x: 30, y: 26, text: '東　ひなた野' },
     ],
   };
 })();

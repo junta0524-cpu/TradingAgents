@@ -19,6 +19,7 @@
       if (!o) return true;
       if (o.if && !G.flags.get(o.if)) return false;
       if (o.unless && G.flags.get(o.unless)) return false;
+      if (o.member && !(G.state && G.state.party.some(m => m.id === o.member))) return false;
       if (o.chapter != null) {
         const ch = (G.state && G.state.chapter) || 1;
         if (!([].concat(o.chapter)).includes(ch)) return false;

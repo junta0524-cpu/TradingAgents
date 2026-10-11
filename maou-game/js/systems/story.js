@@ -32,6 +32,15 @@
       const ch = G.DATA.chapters[n];
       G.flags.reset();
       (ch.flags || []).forEach(f => G.flags.set(f));
+      // 4章より後へ飛ぶときは、オオナムチをその章までに育っているはずの強さにそろえる
+      if (n >= 4) {
+        G.party.setMembers(['bell', 'oonamuchi']);
+        const o = G.party.member('oonamuchi'), p = ch.prep || {};
+        while (p.lv && o.lv < p.lv && G.growth.forceLevelUp(o).length) { /* レベルを上げる */ }
+        (p.kotodama || []).forEach(id => { if (!o.kotodama.includes(id)) o.kotodama.push(id); });
+        if (p.copper != null) G.state.copper = Math.max(G.state.copper, p.copper);
+        G.party.healAll();
+      }
       G.event.running = 0;
       G.scene.change({ name: '黒', opaque: true, update() {}, draw() { G.renderer.clear('#000'); } });
       G.event.run(ch.start);

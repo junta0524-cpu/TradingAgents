@@ -48,6 +48,13 @@
 - マップのしかけ：人の `event`／`doneFlag`、出る条件 `if`／`unless`／`chapter`（`G.flags.check`）、マップの `onEnter`・`triggers`・`spots`、出入口の `requires`／`blockedText`、`tint`。
 - 言伝：ことだまから唱えると `G.DATA.kotozute` の、その場所の場面が流れる。
 - 1〜3章のベルは名前「ベルイザナ」・見た目 `bell_true`、4章から「ベル」（章の頭の `rename`）。
+- 第二部（4〜7章）：章ごとに「道（敵が出る）＋集落」。ミナモ→ひなた野（4）、聖の森（5）、炉ヶ岳（6）、獣ノ原・葛の里（7）。章の頭はその土地の入口から始まる。
+- 物語の戦い：場面の `battle` 命令（逃げられない）。`hook(st)` でラウンドの終わりにセリフ（`{type:'talk'}`）や習得を差し込める（4章の野犬戦）。戦いの前に `save` しておくと、倒れたときそこからやり直し。
+- 言霊の習得は場面の `learn`。オオナムチは最初は言霊なし（4章で堅め・癒やし、5章で心鎮め、6章で火種）。
+- 臨時の仲間は場面の `join`／`leave`（その土地の間だけ）。7章の夜の井戸は `state: { split: 'watch' }` でベルが見守る。
+- デバッグで章へ飛ぶと、`chapters.js` の `prep`（レベル・言霊・銅貨）にそろえる。
+- 選択肢は場面の `choice`（5章の「心を保つ選択」。頷いた回数は `G.state.vars.ch5_nod`）。
+- マップの `flagTiles`（フラグで変わるマス。7章の抜け道）、`battleBg`（戦いの背景：field/forest/mountain/wild/night）、`spots` の `member`（その仲間がいるときだけ）。
 - デバッグのフェーズ番号は `js/core/debug.js` の CURRENT_PHASE（フェーズを進めたら上げる）。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
 - 画面は内部 480×320。`GAME.renderer` が整数倍で拡大表示（画面が480より狭いときだけ縮小）。
