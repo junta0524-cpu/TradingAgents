@@ -756,7 +756,7 @@ const { chromium } = require('playwright');
   await wait(1200); await shot('69_ch7_watch');
   expect('7章：夜の井戸はベルが見守る', await ev(() => GAME.state.split), 'watch');
   await runThrough(() => GAME.scene.names().join() === 'マップ' && GAME.flags.get('ch7_morning'));
-  expect('7章：ヒエダは里に残り、力の滲みで阻害が減る', `${await names()}/${inhBefore - (await ev(() => GAME.state.inhibit))}`, 'ベル・オオナムチ・ウズメ/25');
+  expect('7章：ヒエダは里に残り、力の滲みで阻害が減る', `${await names()}/${Math.round(inhBefore - (await ev(() => GAME.state.inhibit)))}`, 'ベル・オオナムチ・ウズメ/25');
   await talk('kuzu_village', 3, 9, 'left');
   await runThrough(atMap);
   expect('7章：ウズメとも別れる', await names(), 'ベル・オオナムチ');
