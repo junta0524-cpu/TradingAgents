@@ -69,6 +69,7 @@
       const suffix = counts[id] > 1 ? LETTERS[seen[id] - 1] : '';
       return {
         key: 'e' + i, id, side: 'enemy', name: d.name + suffix,
+        koText: opts.erase ? `${d.name + suffix}は、消えた。` : null,   // 2章：血を描かず「消える」
         hp: d.hp, maxHp: d.hp, atk: d.atk, def: d.def, agi: d.agi, defending: false,
       };
     });
@@ -118,6 +119,7 @@
   function applyDamage(st, target, amount) {
     let hp = target.hp - amount;
     if (target.side === 'party' && charOf(target).isBell && hp < 1) hp = 1;
+    if (target.side === 'enemy' && (G.DATA.enemies[target.id] || {}).spare && hp < 1) hp = 1;   // 倒れない敵（2章のタケル）
     let saved = null;
     if (hp <= 0 && amount > 0 && canProtect(st, target)) {
       hp = 1;
@@ -148,10 +150,15 @@
     if (actor.side === 'enemy') {
       const plan = st.plans[actor.key] || { type: 'attack' };
       if (plan.type === 'kotodama') return ev.concat(G.kotodama.castEnemy(actor, plan.id, null, st));
-      let target = plan.target;
-      if (!target || target.hp <= 0) target = pickPartyTarget(st.party);
-      if (!target) return ev;
-      return attack(st, actor, target, ev);
+      // hits：1ターンに何回打つか（2章のタケルは2回）
+      const hits = (G.DATA.enemies[actor.id] || {}).hits || 1;
+      for (let h = 0; h < hits; h++) {
+        let target = plan.target;
+        if (!target || target.hp <= 0) target = pickPartyTarget(st.party);
+        if (!target) break;
+        ev = attack(st, actor, target, ev);
+      }
+      return ev;
     }
     if (cmd.type === 'defend') {
       ev.push({ type: 'msg', text: `${actor.name}は身を守っている。` });
@@ -171,6 +178,16 @@
     }
     if (cmd.type === 'fullpower') return ev.concat(fullPower(st, actor, cmd.target));
     if (cmd.type === 'item') return ev.concat(G.kotodama.useItem(actor, cmd.id, cmd.target, st));
+    // 魔王ベルイザナ（偽名でないとき）の攻撃は、敵全体へ2回
+    if (charOf(actor).isBell && !G.state.disguised) {
+      for (let h = 0; h < G.DATA.balance.BELL_TRUE_HITS; h++) {
+        const foes = aliveEnemies(st);
+        if (!foes.length) break;
+        ev.push({ type: 'msg', text: `${actor.name}の攻撃！（敵全体）` });
+        foes.forEach(t => { ev = attack(st, actor, t, ev, true); });
+      }
+      return ev;
+    }
     // 攻撃：狙った敵が倒れていたら、別の敵へ
     let target = cmd.target;
     if (!target || target.hp <= 0) target = aliveEnemies(st)[0];
@@ -178,8 +195,8 @@
     return attack(st, actor, target, ev);
   }
 
-  function attack(st, actor, target, ev) {
-    ev.push({ type: 'msg', text: `${actor.name}の攻撃！` });
+  function attack(st, actor, target, ev, quiet) {
+    if (!quiet) ev.push({ type: 'msg', text: `${actor.name}の攻撃！` });
     // 身代わり：守られている味方への打撃は、守り手が受ける
     if (target.coveredBy && target.coveredBy.hp > 0 && target.coveredBy !== actor && target.side !== actor.side) {
       ev.push({ type: 'msg', text: `${target.coveredBy.name}が、${target.name}の身代わりになった！` });
@@ -212,7 +229,7 @@
     if (saved) ev.push({ type: 'msg', text: saved }, { type: 'inhibit' });
     if (target.hp === 0) {
       ev.push({ type: 'ko', target });
-      ev.push({ type: 'msg', text: target.side === 'enemy' ? `${target.name}を倒した。` : `${target.name}は倒れた……。` });
+      ev.push({ type: 'msg', text: target.side === 'enemy' ? (target.koText || `${target.name}を倒した。`) : `${target.name}は倒れた……。` });
       return ev;
     }
     if (dmg > 0) {

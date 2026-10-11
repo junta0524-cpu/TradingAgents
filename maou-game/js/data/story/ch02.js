@@ -1,10 +1,16 @@
-// このファイルの役目：第二章「静かなる迎撃」の場面。兵の目から見た魔王の迎撃（蹂躙戦闘 第1回）と、ミカヅチの目から見た戦いのあと。
+// このファイルの役目：第二章「静かなる迎撃」の場面。兵の目から見た魔王の迎撃（兵との戦い・勇者タケルとの戦い。ベルイザナの攻撃は敵全体へ2回）と、ミカヅチの目から見た戦いのあと。
 // 文はユーザー提供の小説 第二章（docs/novel/ch02.md）からそのまま取る。ベルのセリフは差し替え表（殺さぬ／それでよい）に従う。
 // 「風だけが、残った。」と手紙の文は js/data/rampage.js と同じ（ユーザー提供の文）。
 (function () {
   const G = window.GAME = window.GAME || {};
   const E = G.DATA.events;
   const { S, N } = G.DATA.storyKit;
+  // 2章のタケル戦：体力が尽きかけたら（spare で1から下がらない）、その場で戦いが終わる
+  const takeruCh2Hook = st => {
+    const t = st.enemies[0];
+    if (t && t.hp <= 1) st.forceWin = true;   // 膝をつく場面は、このあとの小説の文で流れる
+    return [];
+  };
   const BELL = 'ベルイザナ';
 
   // 焼けた丘を進む隊列（背景の上の兵）
@@ -51,8 +57,10 @@
     N('矢が放たれた。'),
     N('それが、最後の音だった。'),
     N('矢は男に届かなかった。届く前に、空中で止まった。止まって、落ちた。乾いた葉が落ちるように。'),
-    // 蹂躙戦闘（ベル一人を操作。どの隊から消すかを選ぶ）
-    { t: 'rampage', key: 'ch2', noAfter: true },
+    // 兵との戦い（ふつうの戦闘。ベルイザナを操作し、攻撃は敵全体へ2回。倒れた兵は消える）
+    { t: 'run', fn: () => { const b = G.party.member('bell'); if (b) { b.prevTactic = b.tactic; b.tactic = 'manual'; } } },
+    { t: 'battle', enemies: ['ch2_yari', 'ch2_yari', 'ch2_yari', 'ch2_yari'], bg: 'wild', erase: true },
+    { t: 'battle', enemies: ['ch2_yumi', 'ch2_yumi', 'ch2_yari', 'ch2_yumi'], bg: 'wild', erase: true },
     { t: 'actors', list: ARMY.slice(12).concat([{ look: 'bell_true', x: 330, y: 230, dir: 'left' }]) },
     N('手前から順に、静かに、隊列が消えていった。'),
     N('男は、歩いていた。手を上げもしない。何かを唱える唇の動きもない。ただ歩き、その歩みの前にいる者が、そこにいなくなる。'),
@@ -73,6 +81,9 @@
     S('タケル', '「魔王ベルイザナ！ これ以上の蛮行は許さん！」'),
     N('澄んだ声だった。迷いのない声だった。兵は、その声に縋った。あの人がいる。英雄がいる。あの人が、なんとかしてくれる。'),
     N('男は、足を止めなかった。'),
+    // 勇者タケルとの戦い（人間界最強。タケルは倒れず、膝をつくところで終わる）
+    { t: 'battle', enemies: ['takeru_ch2'], bg: 'wild', hook: takeruCh2Hook },
+    { t: 'run', fn: () => { const b = G.party.member('bell'); if (b) { b.tactic = b.prevTactic || 'auto'; delete b.prevTactic; G.party.healAll(); } } },
     N('タケルが踏み込んだ。剣が、閃いた。人間界最強の一撃が、まっすぐに男の首筋へ向かう。'),
     N('届かなかった。'),
     N('剣が男の外套に触れる寸前で、タケルの膝が折れた。力が抜けたように、がくりと地面に沈む。剣が手から離れ、からんと音を立てて転がった。'),

@@ -22,7 +22,7 @@
 //   chapter { n }               … 次の章へ（js/systems/story.js）
 //   save                        … 自動で記録する
 //   bgm   { name }              … 曲を変える（js/core/sound.js の SONGS。null で止める）
-//   battle{ enemies, boss, bg, hook, training, chant } … 決まった敵との戦い（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
+//   battle{ enemies, boss, bg, hook, training, chant, erase } … 決まった敵との戦い（erase：倒した敵が消える）（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
 //                                 勝ったかどうかはフラグ last_battle_won に入る（手合わせで使う）
 //   learn { id, kotodama }      … 仲間が言霊を覚える（「〇〇を覚えた！」と出る）
 //   join  { id } / leave { id } … 仲間が加わる／別れる（quiet: true で知らせを出さない）
@@ -157,7 +157,7 @@
         case 'bgm': G.sound.bgm(c.name); return;
         case 'battle':
           waiting = true;
-          G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook, training: c.training, chant: c.chant }));
+          G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook, training: c.training, chant: c.chant, erase: c.erase }));
           return;
         case 'learn': {
           const m = G.party.member(c.id);

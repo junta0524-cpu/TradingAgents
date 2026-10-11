@@ -23,7 +23,7 @@
   }
 
   function koEvents(t) {
-    return [{ type: 'ko', target: t }, { type: 'msg', text: t.side === 'enemy' ? `${t.name}を倒した。` : `${t.name}は倒れた……。` }];
+    return [{ type: 'ko', target: t }, { type: 'msg', text: t.side === 'enemy' ? (t.koText || `${t.name}を倒した。`) : `${t.name}は倒れた……。` }];
   }
 
   // 効き目を起こす。user：使う人、targets：相手の配列

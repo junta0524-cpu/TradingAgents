@@ -1,4 +1,4 @@
-// このファイルの役目：第三部（8〜12章）の敵の一覧。王都の追手、魔界での手合わせの相手、タケル、アマツ王と護衛。
+// このファイルの役目：人の形の敵の一覧。2章の根の洲の兵と勇者タケル、第三部（8〜12章）の王都の追手、魔界での手合わせの相手、タケル、アマツ王と護衛。
 // 書き方は js/data/enemies.js と同じ。人の敵は counter: '人'。手合わせの相手は、倒すのではなく耐えきれば勝ち（場面のほうで決める）。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -27,6 +27,23 @@
   const human = sprite => sprite.map(r => r.replace(/S/g, 'H'));
 
   Object.assign(G.DATA.enemies, {
+    // 2章：根の洲に攻め込んだ人間の軍（ベルイザナの一撃で「消える」。経験値・銅貨はない）
+    ch2_yari: {
+      name: '槍兵', counter: '人', hp: 60, atk: 40, def: 30, agi: 20, exp: 0, copper: 0,
+      palette: { K: '#120e16', H: '#5a5e68', D: '#8a8e98', E: '#2a2a2a', W: '#d8d8e0' },
+      sprite: human(HUMAN),
+    },
+    ch2_yumi: {
+      name: '弓兵', counter: '人', hp: 45, atk: 36, def: 20, agi: 30, exp: 0, copper: 0,
+      palette: { K: '#120e16', H: '#6a5a3a', D: '#7a6a4a', E: '#2a2a2a', W: '#d8d0b0' },
+      sprite: human(HUMAN),
+    },
+    // 2章：勇者タケル（人間界最強。1ターンに2回斬る。倒れず、膝をつくところで戦いが終わる＝spare）
+    takeru_ch2: {
+      name: 'タケル', counter: '人', hp: 600, atk: 230, def: 200, agi: 240, exp: 0, copper: 0, hits: 2, spare: true,
+      palette: { K: '#120e16', H: '#6a4a2a', D: '#c8ccd8', E: '#3a5a8a', W: '#ffffff' },
+      sprite: human(HUMAN),
+    },
     // 10章：王都の追手
     otte: {
       name: '追手の兵', counter: '人', hp: 36, atk: 24, def: 14, agi: 10, exp: 30, copper: 0,

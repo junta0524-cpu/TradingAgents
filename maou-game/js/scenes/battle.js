@@ -31,11 +31,12 @@
   };
 
   // group：敵の id の配列。opts.boss：逃げられない戦い／opts.bg：背景／opts.roundHook(st)：ラウンドの終わりに出来事を足す
+  // opts.erase：倒した敵が「消える」（2章）
   // opts.training：手合わせ（負けてもゲームオーバーにならない）。hook で st.forceWin = true にすると、その場で勝ちになる。
   // opts.chant：詠唱ゲージのある戦い（12章の王戦）。{ enemy, max, perRound, threshold, reduce: { 言霊: 減る量 }, blockText, strikeText, loseText }
   G.scenes.battle = function (group, opts) {
     opts = opts || {};
-    const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc });
+    const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc, erase: opts.erase });
     const CH = opts.chant || null;
     const prevBgm = G.sound.current();   // 戦いが終わったら、もとの曲へ戻す
     G.sound.bgm(opts.boss && (group.length === 1 || CH) ? 'boss' : 'battle');

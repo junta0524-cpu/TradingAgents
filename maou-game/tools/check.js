@@ -627,12 +627,17 @@ const { chromium } = require('playwright');
   await hold('ArrowUp', 250); await wait(600);
   expect('宮へ戻る', await pos(), 'yomi_palace(9,11)');
   await shot('56_ch1_palace');
-  // 広間の奥へ → 四天王 → 騙し討ち → 夕方の畑 → 2章（蹂躙戦闘）
+  // 広間の奥へ → 四天王 → 騙し討ち → 夕方の畑 → 2章（兵との戦い・タケルとの戦い）
   await hold('ArrowUp', 900);
-  await runThrough(() => GAME.scene.names().includes('蹂躙戦闘'));
-  await wait(600); await shot('57_ch2_rampage');
+  await ev(() => { const o = GAME.battle.act; window.__ch2 = []; window.__ch2Act = o; GAME.battle.act = function () { const r = o.apply(this, arguments); r.forEach(e => e.text && window.__ch2.push(e.text)); return r; }; });
+  await runThrough(() => GAME.scene.names().includes('戦闘') && GAME.scene.top().phase === 'command');
+  await wait(300); await shot('57_ch2_battle');
+  expect('2章：兵とはふつうの戦闘（ベルイザナを操作）', await ev(() => `${GAME.party.member('bell').tactic}/${GAME.scene.top().name}`), 'manual/戦闘');
   await runThrough(() => GAME.state.chapter === 3 && GAME.scene.names().join() === 'マップ');
-  expect('2章の蹂躙：10隊すべて消す', await ev(() => GAME.state.vars.rampage_ch2 && GAME.state.vars.rampage_ch2.erased), 10);
+  const ch2log = await ev(() => { GAME.battle.act = window.__ch2Act; return window.__ch2; });
+  expect('2章：攻撃は敵全体へ2回、兵は消える', `${ch2log.filter(l => l.endsWith('の攻撃！（敵全体）')).length >= 3}/${ch2log.filter(l => l.endsWith('は、消えた。')).length}`, 'true/8');
+  expect('2章：タケルとの戦い（1ターンに2回斬る・倒れない）', `${ch2log.filter(l => l === 'タケルの攻撃！').length >= 2}/${ch2log.some(l => l === 'タケルを倒した。')}`, 'true/false');
+  expect('2章のあと：作戦は元に戻る', await ev(() => GAME.party.member('bell').tactic), 'auto');
   expect('3章：広間に立つ', await pos(), 'yomi_palace(9,9)');
   // 3章：牢のタケルに格子越しに話す → ナキメ → 報告
   await placeAt('yomi_palace', 1, 6, 'left'); await wait(200);

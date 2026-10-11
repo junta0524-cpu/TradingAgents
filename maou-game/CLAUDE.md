@@ -41,7 +41,7 @@
 - 敵の行動はラウンドの最初に決める（`planEnemies`、先読みで見える）。敵の言霊は `G.DATA.kotodamaEnemy`。
 - 阻害ゲージ：`js/systems/inhibit.js`（`G.state.inhibit`、数字は balance.js の INHIBIT）。ベルの言霊・本気・致命傷の阻止で減る。マップの `detection`（0〜3）で1歩ごとに減る。ゼロで `G.scenes.exposure`。宿屋で半分まで戻る。
 - 守り手：仲間への致命の一撃を、ベルが1戦に1度だけ止める（`applyDamage` が文を返す）。AIのベルは力を使わない。
-- 蹂躙戦闘：`js/scenes/rampage.js`、場面は `js/data/rampage.js`（ch2 消す／ch10 止める・打ち払う／free）。結果は `G.state.vars.rampage_<key>`。
+- 蹂躙戦闘：`js/scenes/rampage.js`、場面は `js/data/rampage.js`（ch10 止める・打ち払う／free）。結果は `G.state.vars.rampage_<key>`。2章はユーザーの指示で、ふつうの戦闘（`battle` の `erase: true`＝倒した兵は「消える」）に変えた。
 - 別行動：`G.state.split`（null／'away'／'watch'）。`G.party.active()` がベル以外になる。マップの先頭は `G.party.leader()`。
 - 物語：場面は `js/data/story/`（`chapters.js` に章の一覧、`ch01.js` などに場面）。流すしくみは `js/systems/event.js`（命令の一覧は先頭のコメント）、章をまたぐのは `js/systems/story.js`。背景の絵は `js/core/backdrop.js`。
 - 章の状態：`G.state.chapter`、`G.state.disguised`（4〜9章の偽名中だけ阻害ゲージが動く）、`G.state.resume`（つづきから遊ぶとき最初に流す場面。章の頭だけ入れる）。場面の途中は自動保存しない。
@@ -78,3 +78,5 @@
 - 四すくみ：`js/data/tribes.js`（種族と相性）、`js/systems/affinity.js`（倍率）。敵の `tribe`。ベル以外の仲間は、唱えた言霊の系統で「構え」（`stance`、戦いの頭で消える）が決まり、攻めるときも受けるときも balance.js の `AFFINITY` 倍。相性の表示は11章で教わったあと（フラグ `train_susa`）。
 - ベルの強さ（ユーザー決定）：魔王ベルイザナはカンスト（balance.js の `BELL_TRUE`）。4〜9章の冒険者ベル（`G.state.disguised`）だけ、人類最強タケルと同じ強さ（`BELL`）。`G.party.recalc` が disguised を見て切り替え、場面の `state` 命令で disguised を変えると計算し直す（正体を現すと満タン）。
 - 解像度：`js/core/renderer.js` が canvas の中身を「表示の拡大率×画面の細かさ（devicePixelRatio）」の整数倍で描く（`G.renderer.res`、最大6倍）。座標は480×320のまま、`setTransform` で拡大。canvas を直接読み書きする処理（getImageData など）を足すときは注意。
+- 魔王ベルイザナの攻撃（ユーザー決定）：偽名でないときのベルの「こうげき」は、敵全体へ balance.js の `BELL_TRUE_HITS`（2）回。2章はベルを「ぜんぶ指示する」にして操作させ、終わったら元に戻す。
+- 2章のタケル（`takeru_ch2`）：人間界最強（体力600・攻撃230・守り200・素早さ240）。敵の `hits: 2`（1ターンに2回打つ）、`spare: true`（体力が1から下がらない）。hook で体力1になったら勝ち。11章の `takeru_b` は別の数字。
