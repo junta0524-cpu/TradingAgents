@@ -131,7 +131,13 @@
           if (m) { m.scriptMove(c.dir, c.steps || 0); walking = true; }
           return;
         }
-        case 'state': Object.assign(G.state, c.set); return;
+        case 'state': {
+          Object.assign(G.state, c.set);
+          // 偽名を名乗る／正体を現すと、ベルの強さが切り替わる（正体を現したら満タン）
+          const bell = 'disguised' in c.set && G.party.member('bell');
+          if (bell) { G.party.recalc(bell); if (!G.state.disguised) { bell.hp = bell.maxHp; bell.mp = bell.maxMp; } }
+          return;
+        }
         case 'flag': G.flags.set(c.set, c.value !== false); return;
         case 'if': {
           const on = (c.all ? c.all.every(f => G.flags.get(f)) : G.flags.get(c.flag)) !== !!c.not;

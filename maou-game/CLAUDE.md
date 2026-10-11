@@ -76,3 +76,4 @@
 - 大事なもの：道具の `type: 'key'`（売れない。`read` があれば持ち物から読める）。2章の書きかけの手紙 `kakikake_tegami`。
 - 12章の名呼び：オオナムチのレベルが balance.js の `NAYOBI_LV` より低いと、三度目にクナドが手を貸す（フラグ `nayobi_assist`）。小説に場面がないので、セリフは足さず（　）の注記だけ。
 - 四すくみ：`js/data/tribes.js`（種族と相性）、`js/systems/affinity.js`（倍率）。敵の `tribe`。ベル以外の仲間は、唱えた言霊の系統で「構え」（`stance`、戦いの頭で消える）が決まり、攻めるときも受けるときも balance.js の `AFFINITY` 倍。相性の表示は11章で教わったあと（フラグ `train_susa`）。
+- ベルの強さ（ユーザー決定）：魔王ベルイザナはカンスト（balance.js の `BELL_TRUE`）。4〜9章の冒険者ベル（`G.state.disguised`）だけ、人類最強タケルと同じ強さ（`BELL`）。`G.party.recalc` が disguised を見て切り替え、場面の `state` 命令で disguised を変えると計算し直す（正体を現すと満タン）。

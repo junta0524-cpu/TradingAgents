@@ -10,7 +10,7 @@
   // 仲間1人ぶんの、最初の状態
   function makeMember(id) {
     const B = G.DATA.balance, c = G.DATA.characters[id];
-    const base = c.isBell ? clone(B.BELL) : c.temp ? clone(B.TEMP_PARTY[id]) : G.growth.baseAt(id, 1);
+    const base = c.isBell ? clone(B.BELL_TRUE) : c.temp ? clone(B.TEMP_PARTY[id]) : G.growth.baseAt(id, 1);
     const m = {
       id, name: c.name, lv: c.fixed ? null : 1, exp: 0,
       base,
@@ -25,6 +25,8 @@
 
   // 素の強さ＋装備 → 実際の強さ
   function recalc(m) {
+    // ベルは、偽名で力を抑えている間（4〜9章）だけ弱い。それ以外はカンスト
+    if ((G.DATA.characters[m.id] || {}).isBell) m.base = clone(G.state && G.state.disguised ? G.DATA.balance.BELL : G.DATA.balance.BELL_TRUE);
     const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi };
     SLOTS.forEach(s => {
       const it = G.DATA.items[m.equip[s]];

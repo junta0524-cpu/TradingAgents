@@ -248,7 +248,8 @@ const { chromium } = require('playwright');
   for (let i = 0; i < 4 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
 
   // 戦闘で言霊：オオナムチが「堅め」をベルに、ベルはぼうぎょ
-  await ev(() => { GAME.party.healAll(); GAME.scene.push(GAME.scenes.battle(['dog'])); });
+  // 冒険者ベルはタケルと同じ強さで、野犬は一撃で倒れる。オオナムチの番が来るよう3匹にする
+  await ev(() => { GAME.party.healAll(); GAME.scene.push(GAME.scenes.battle(['dog', 'dog', 'dog'])); });
   await wait(1200);
   await shot('22_battle_menu');
   // ベルは「うまくやって」なので、指示はオオナムチだけ
@@ -457,7 +458,7 @@ const { chromium } = require('playwright');
   const g = () => ev(() => Math.round(GAME.state.inhibit * 100) / 100);
   // ベルの言霊・本気でゲージが減る（火種：8＋MP2×0.5＝9、本気：25）
   const drains = await ev(() => {
-    const st = GAME.battle.create(GAME.party.active(), ['boar', 'boar']);
+    const st = GAME.battle.create(GAME.party.active(), ['boar', 'boar', 'boar']);   // 2匹は火種と本気で倒れる。AIの判断用に1匹残す
     const bell = st.party[0], out = [];
     let before = GAME.state.inhibit;
     GAME.battle.act(st, bell, { type: 'kotodama', id: 'hidane', target: st.enemies[0] });
