@@ -28,7 +28,7 @@
 
     // デバッグ：n章の始まりへ飛ぶ（その章までに通るはずの状態にそろえる）
     jump(n) {
-      if (!G.state) G.party.newGame();
+      G.party.newGame();   // まっさらな状態から、その章までに通るはずの状態へそろえる
       const ch = G.DATA.chapters[n];
       G.flags.reset();
       (ch.flags || []).forEach(f => G.flags.set(f));
