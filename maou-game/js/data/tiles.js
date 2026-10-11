@@ -40,7 +40,7 @@
     // ---- 森（5章）----
     'p': { name: '苔の道',   look: 'moss', noEncounter: true },
     'U': { name: '大樹の幹', look: 'trunk', solid: true },
-    'J': { name: '幹の戸口', look: 'trunkdoor', solid: true, check: '幹をくり抜いた家だ。' },
+    'J': { name: '幹の戸口', look: 'trunkdoor' },
     'O': { name: '洞窟の入口', look: 'cavemouth' },
     'R': { name: '岩',       look: 'rock', solid: true },
     'z': { name: '洞窟の床', look: 'cavefloor' },
