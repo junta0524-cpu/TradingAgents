@@ -1,5 +1,6 @@
 // このファイルの役目：ゲーム画面（横480×縦320）に絵や文字を描く道具をまとめる。
 // ブラウザの大きさに合わせて、ドットがぼやけないよう整数倍に拡大する。
+// 文字がにじまないよう、画面の中身は「表示の大きさ×画面の細かさ」の解像度で描く（座標は480×320のまま）。
 (function () {
   const G = window.GAME = window.GAME || {};
 
@@ -13,6 +14,8 @@
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
 
+  const MAX_RES = 6;   // 解像度の上限（480×320 の何倍まで細かく描くか）
+
   // 画面に合わせて拡大率を決める（1以上は整数倍、狭い画面だけ縮小）
   function resize() {
     const box = document.getElementById('screen');
@@ -21,14 +24,21 @@
     s = s >= 1 ? Math.floor(s) : s;
     canvas.style.width = Math.floor(W * s) + 'px';
     canvas.style.height = Math.floor(H * s) + 'px';
+    // 実際の画素の数に合わせて描く細かさを決める（整数倍にしてドットをくっきり保つ）
+    const k = Math.max(1, Math.min(MAX_RES, Math.ceil(s * (window.devicePixelRatio || 1))));
+    if (canvas.width !== W * k) {
+      canvas.width = W * k; canvas.height = H * k;
+      ctx.setTransform(k, 0, 0, k, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+    }
+    G.renderer && (G.renderer.res = k);
   }
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', resize);
-  resize();
 
   G.renderer = {
     W, H, TILE, FONT, FONT_SIZE, LINE_HEIGHT: 16,
-    canvas, ctx, resize,
+    canvas, ctx, resize, res: 1,
 
     clear(color) {
       ctx.fillStyle = color || '#000';
@@ -68,4 +78,5 @@
       return lines;
     },
   };
+  resize();
 })();
