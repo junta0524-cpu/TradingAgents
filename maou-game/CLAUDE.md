@@ -76,7 +76,7 @@
 - 大事なもの：道具の `type: 'key'`（売れない。`read` があれば持ち物から読める）。2章の書きかけの手紙 `kakikake_tegami`。
 - 12章の名呼び：オオナムチのレベルが balance.js の `NAYOBI_LV` より低いと、三度目にクナドが手を貸す（フラグ `nayobi_assist`）。小説に場面がないので、セリフは足さず（　）の注記だけ。
 - 四すくみ：`js/data/tribes.js`（種族と相性）、`js/systems/affinity.js`（倍率）。敵の `tribe`。ベル以外の仲間は、唱えた言霊の系統で「構え」（`stance`、戦いの頭で消える）が決まり、攻めるときも受けるときも balance.js の `AFFINITY` 倍。相性の表示は11章で教わったあと（フラグ `train_susa`）。
-- ベルの強さ（ユーザー決定）：魔王ベルイザナはカンスト（balance.js の `BELL_TRUE`）。4〜9章の冒険者ベル（`G.state.disguised`）だけ、人類最強タケルと同じ強さ（`BELL`）。`G.party.recalc` が disguised を見て切り替え、場面の `state` 命令で disguised を変えると計算し直す（正体を現すと満タン）。
+- ベルの強さ（ユーザー決定）：魔王ベルイザナはカンスト（balance.js の `BELL_TRUE`）。4〜9章の冒険者ベル（`G.state.disguised`）は「その章の推奨レベル（balance.js の `REC_LV`）＋`BELL_OVER`(10)」のオオナムチと同じ強さ（MPは99）。`G.party.recalc` が disguised を見て切り替え、場面の `state` 命令で disguised か chapter を変えると計算し直す（正体を現すと満タン）。
 - 解像度：`js/core/renderer.js` が canvas の中身を「表示の拡大率×画面の細かさ（devicePixelRatio）」の整数倍で描く（`G.renderer.res`、最大6倍）。座標は480×320のまま、`setTransform` で拡大。canvas を直接読み書きする処理（getImageData など）を足すときは注意。
 - 魔王ベルイザナの攻撃（ユーザー決定）：偽名でないときのベルの「こうげき」は、敵全体へ balance.js の `BELL_TRUE_HITS`（2）回。2章はベルを「ぜんぶ指示する」にして操作させ、終わったら元に戻す。
 - 2章のタケル（`takeru_ch2`）：人間界最強（体力600・攻撃230・守り200・素早さ240）。敵の `hits: 2`（1ターンに2回打つ）、`spare: true`（体力が1から下がらない）。hook で体力1になったら勝ち。11章の `takeru_b` は別の数字。

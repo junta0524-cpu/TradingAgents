@@ -134,8 +134,8 @@
         case 'state': {
           Object.assign(G.state, c.set);
           // 偽名を名乗る／正体を現すと、ベルの強さが切り替わる（正体を現したら満タン）
-          const bell = 'disguised' in c.set && G.party.member('bell');
-          if (bell) { G.party.recalc(bell); if (!G.state.disguised) { bell.hp = bell.maxHp; bell.mp = bell.maxMp; } }
+          const bell = ('disguised' in c.set || 'chapter' in c.set) && G.party.member('bell');
+          if (bell) { const was = bell.maxHp; G.party.recalc(bell); if (!G.state.disguised || bell.maxHp > was) { bell.hp = bell.maxHp; bell.mp = bell.maxMp; } }
           return;
         }
         case 'flag': G.flags.set(c.set, c.value !== false); return;

@@ -36,7 +36,7 @@
       if (n >= 4) {
         G.party.setMembers(['bell', 'oonamuchi']);
         // 4〜9章は偽名の冒険者ベル（力を抑えた強さ・阻害ゲージあり）、10章から先は魔王の姿
-        Object.assign(G.state, { disguised: n <= 9, inhibitShown: n <= 9 || G.state.inhibitShown });
+        Object.assign(G.state, { chapter: n, disguised: n <= 9, inhibitShown: n <= 9 || G.state.inhibitShown });
         G.party.recalc(G.party.member('bell'));
         const o = G.party.member('oonamuchi'), p = ch.prep || {};
         while (p.lv && o.lv < p.lv && G.growth.forceLevelUp(o).length) { /* レベルを上げる */ }

@@ -23,10 +23,20 @@
     return m;
   }
 
+  // ベルの素の強さ：魔王の姿はカンスト。偽名の冒険者ベルは「章の推奨レベル＋BELL_OVER」のオオナムチと同じ（MPだけ BELL.mp）
+  function bellBase() {
+    const B = G.DATA.balance, st = G.state || {};
+    if (!st.disguised) return clone(B.BELL_TRUE);
+    const rec = B.REC_LV[st.chapter];
+    if (!rec) return clone(B.BELL);
+    const lv = Math.min(rec + B.BELL_OVER, B.GROWTH.oonamuchi.length - 1);
+    return Object.assign(G.growth.baseAt('oonamuchi', lv), { mp: B.BELL.mp });
+  }
+
   // 素の強さ＋装備 → 実際の強さ
   function recalc(m) {
     // ベルは、偽名で力を抑えている間（4〜9章）だけ弱い。それ以外はカンスト
-    if ((G.DATA.characters[m.id] || {}).isBell) m.base = clone(G.state && G.state.disguised ? G.DATA.balance.BELL : G.DATA.balance.BELL_TRUE);
+    if ((G.DATA.characters[m.id] || {}).isBell) m.base = bellBase();
     const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi };
     SLOTS.forEach(s => {
       const it = G.DATA.items[m.equip[s]];
