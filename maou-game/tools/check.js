@@ -1004,7 +1004,7 @@ const { chromium } = require('playwright');
   await runThrough(atMap, 200);
   await ev(() => { GAME.encounter.enabled = false; });
   await placeAt('yomi_hani', 14, 16, 'down'); await wait(300); await hold('ArrowDown', 200); await wait(400);
-  expect('魔界：11章は畑の南から魔界のフィールドへ', await pos(), 'world_makai(18,14)');
+  expect('魔界：11章は畑の南から魔界のフィールドへ', await pos(), 'world_makai(16,17)');
   await shot('93_world_makai');
   await placeAt('world_makai', 25, 10, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
   expect('魔界：嵐ヶ峰へ入れる', await pos(), 'arashigamine(8,10)');

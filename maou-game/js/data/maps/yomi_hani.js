@@ -33,8 +33,8 @@
     ],
     warps: [
       // 南の端：魔界のフィールドへ（11章とクリア後だけ）,
-      { x: 14, y: 17, to: 'world_makai', tx: 18, ty: 14, dir: 'down', requires: { chapter: [11, 13] }, blockedText: '（畑の外へは、今は出ない）' },
-      { x: 15, y: 17, to: 'world_makai', tx: 18, ty: 14, dir: 'down', requires: { chapter: [11, 13] }, blockedText: '（畑の外へは、今は出ない）' },
+      { x: 14, y: 17, to: 'world_makai', tx: 16, ty: 17, dir: 'right', requires: { chapter: [11, 13] }, blockedText: '（畑の外へは、今は出ない）' },
+      { x: 15, y: 17, to: 'world_makai', tx: 16, ty: 17, dir: 'right', requires: { chapter: [11, 13] }, blockedText: '（畑の外へは、今は出ない）' },
       // 11章：西の端は角ヶ原の演武場へ
       { x: 0, y: 9,  to: 'tsunogahara', tx: 8, ty: 10, dir: 'up', when: { chapter: [11, 13] } },
       { x: 0, y: 10, to: 'tsunogahara', tx: 9, ty: 10, dir: 'up', when: { chapter: [11, 13] } },
