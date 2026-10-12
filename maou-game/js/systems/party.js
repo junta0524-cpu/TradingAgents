@@ -43,6 +43,9 @@
       if (!it) return;
       t.atk += it.atk || 0; t.def += it.def || 0; t.agi += it.agi || 0;
     });
+    // 上限（カンスト）：体力・MPは999、ほかは255（装備を足しても超えない）
+    t.maxHp = Math.min(t.maxHp, 999); t.maxMp = Math.min(t.maxMp, 999);
+    ['atk', 'def', 'agi'].forEach(k => { t[k] = Math.min(t[k], 255); });
     Object.assign(m, t);
     if (m.hp != null) m.hp = Math.min(m.hp, m.maxHp);
     if (m.mp != null) m.mp = Math.min(m.mp, m.maxMp);

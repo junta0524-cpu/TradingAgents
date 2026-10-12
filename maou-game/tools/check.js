@@ -1012,6 +1012,15 @@ const { chromium } = require('playwright');
   await shot('93_world_makai');
   await placeAt('world_makai', 25, 10, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
   expect('魔界：嵐ヶ峰へ入れる', await pos(), 'arashigamine(8,10)');
+  // クリア後：大穴で両世界を行き来、Lv99でカンスト
+  await ev(() => { GAME.story.jump(13); }); await wait(1500);
+  await runThrough(atMap, 200);
+  await ev(() => { GAME.encounter.enabled = false; });
+  await placeAt('world_makai', 15, 11, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
+  expect('クリア後：魔界の大穴から人間界へ', await pos(), 'world_ningen(16,11)');
+  await placeAt('world_ningen', 16, 14, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
+  expect('クリア後：人間界の町にも入れる（ミナモ）', await pos(), 'minamo(15,22)');
+  expect('レベル99でカンスト（装備を足しても255まで）', await ev(() => { const o = GAME.party.member('oonamuchi'); while (GAME.growth.forceLevelUp(o).length) {} return `${o.lv}/${o.maxHp}/${o.maxMp}/${o.atk}/${o.def}`; }), '99/999/999/255/255');
   await ev(() => { GAME.encounter.enabled = true; });
 
   // スマホ縦画面

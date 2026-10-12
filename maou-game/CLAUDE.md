@@ -62,7 +62,7 @@
 - クリアすると `G.state.cleared = true` の記録が自動の枠に残り、タイトルへ戻る（クリア後はフェーズ9）。
 - 出入口の `when`（同じマスでも章で行き先が変わる。宮の西の扉：3章は牢、11章は聖域）。条件の `all: [...]`（全部のフラグ）。
 - クリア後（`chapter: 13`、`G.state.cleared`）：場面は `js/data/story/postgame.js`。師（守＝ハニヤス、攻＝ミカヅチ、再生＝ナキメ、知＝ナキメの裏修行／ツクヨミの社／ベルとの特訓）の手合わせで、balance.js の `POSTGAME.TEACH` の順に言霊を教わる（場面の `teach`）。四系統が `POSTGAME.SYSTEM_REQ` に届くとクナドが大穴の最深部（`oana_soko`）へ。試練の扉で天の声の6問 → 調和の光、ベルとの最終手合わせ → まことの名、ミカヅチから任意の大軍戦。
-- クリア後の戦い：仲間が倒れても、ラウンドの終わりまでに起こせば続く（ベルのAIが「生き返し」を使う）。戦いのあとは体力1で起き上がる。レベル上限は30。
+- クリア後の戦い：仲間が倒れても、ラウンドの終わりまでに起こせば続く（ベルのAIが「生き返し」を使う）。戦いのあとは体力1で起き上がる。レベル上限は99（Lv99でカンスト。能力は体力・MP 999、ほかは255が上限＝`recalc` で頭打ち）。
 - 条件の `knows`（オオナムチがその言霊を覚えていること）。場面の `msgfn`／`stop`。
 - デバッグのフェーズ番号は `js/core/debug.js` の CURRENT_PHASE（フェーズを進めたら上げる）。
 - `js/data/`：データ。`GAME.DATA` の下に入れる。
@@ -81,4 +81,4 @@
 - 魔王ベルイザナの攻撃（ユーザー決定）：偽名でないときのベルの「こうげき」は、敵全体へ balance.js の `BELL_TRUE_HITS`（2）回。2章はベルを「ぜんぶ指示する」にして操作させ、終わったら元に戻す。
 - 2章のタケル（`takeru_ch2`）：人間界最強（体力600・攻撃230・守り200・素早さ240）。敵の `hits: 2`（1ターンに2回打つ）、`spare: true`（体力が1から下がらない）。hook で体力1になったら勝ち。11章の `takeru_b` は別の数字。
 - フィールドマップ（ユーザーのデザイン「人間界と魔界の地図」のゲーム用フィールドどおり）：`world_ningen`（人間界）・`world_makai`（魔界）。32×22マス、1マスが一つの土地。物語の町は小説の名前で置き（ユーザー決定：章立ては小説のまま）、出入口の `requires` の `chapterFrom`／`chapterTo` で、その章から入れる。ほかの地名はユーザーの地図の名前で、マップの `places`（立つと左上に名前）だけ。敵は `encounter.byChapter`（章ごとの組）。人間界へは野原（field_minamo）の西・聖の森の道の南・炉ヶ岳の山道の南・獣ノ原の西・天津京の南から出る。魔界へは11章とクリア後だけ、土蜘蛛族の畑の南から出る。マスは tiles.js の「フィールドマップ」の欄。
-- 参考資料（ユーザーから預かったもの。今は取り入れない＝ユーザー決定）：「ゲーム版」の設計（Google ドライブの CLAUDE.md https://drive.google.com/file/d/15LD_LCrw_0jdL7R3IKuQnwSQKyuAizCf ／ characters.js https://drive.google.com/file/d/1pgpffeR3lut_ADAz3wgoUuRk4yZNNQ_8 ／ maps.js https://drive.google.com/file/d/1X_tZtrUa-0TnnCsOKkvs5VUmE3arxNTk ）。章立て・仲間・地名・手加減システムが今のゲーム（小説）と違う。フィールドマップの地名の位置は maps.js の places に合わせた。
+- ゲーム版の資料の統一（ユーザー決定：ボリュームのある方＝今のゲームに統一）：`docs/game_version_unified/`（CLAUDE.md・characters.js・maps.js）が今のゲームに合わせた統一版。資料から取り入れたのは、クリア後に大穴で両世界を行き来（出入口の `chapterAlso: 13`）、レベル上限99、地名の由来（`places` の `note`）。元の資料：「ゲーム版」の設計（Google ドライブの CLAUDE.md https://drive.google.com/file/d/15LD_LCrw_0jdL7R3IKuQnwSQKyuAizCf ／ characters.js https://drive.google.com/file/d/1pgpffeR3lut_ADAz3wgoUuRk4yZNNQ_8 ／ maps.js https://drive.google.com/file/d/1X_tZtrUa-0TnnCsOKkvs5VUmE3arxNTk ）。章立て・仲間・地名・手加減システムが今のゲーム（小説）と違う。フィールドマップの地名の位置は maps.js の places に合わせた。

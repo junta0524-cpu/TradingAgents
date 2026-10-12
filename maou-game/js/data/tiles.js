@@ -88,7 +88,7 @@
     '6': { name: '森',       look: 'woods' },
     '9': { name: '城',       look: 'castle',   noEncounter: true },
     'j': { name: '村',       look: 'village',  noEncounter: true },
-    'q': { name: '大穴',     look: 'pit',      solid: true, check: '大穴だ。底は見えない。' },
+    'q': { name: '大穴',     look: 'pit',      noEncounter: true },   // 出入口の requires で、クリア後だけ渡れる
     'B': { name: '土地の印', look: 'marker',   noEncounter: true },
     'N': { name: '荒れ地',   look: 'waste',    tallGrass: true },
     '!': { name: '焼け野',   look: 'embers' },

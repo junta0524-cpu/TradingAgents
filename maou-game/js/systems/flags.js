@@ -28,8 +28,10 @@
       const ch = (G.state && G.state.chapter) || 1;
       if (o.chapter != null && !([].concat(o.chapter)).includes(ch)) return false;
       // chapterFrom／chapterTo：その章から／その章まで（フィールドマップの出入口）
-      if (o.chapterFrom != null && ch < o.chapterFrom) return false;
-      if (o.chapterTo != null && ch > o.chapterTo) return false;
+      // chapterAlso：範囲の外でも通す章（クリア後の13章など）
+      const also = o.chapterAlso && [].concat(o.chapterAlso).includes(ch);
+      if (!also && o.chapterFrom != null && ch < o.chapterFrom) return false;
+      if (!also && o.chapterTo != null && ch > o.chapterTo) return false;
       return true;
     },
   };
