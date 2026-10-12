@@ -32,6 +32,27 @@
       drop: { item: 'kizugusuri', rank: 'A' },
       palette: { K: '#06040a', H: '#3a2a4a', D: '#1e1428', E: '#ff4040', W: '#a090c0' }, sprite: H,
     },
+    // ---- やりこみ（Lv40〜99向け。フィールドで、オオナムチのレベルに応じて出る）----
+    zantou: {
+      name: '残党の将', counter: '人', hp: 420, atk: 110, def: 80, agi: 50, exp: 600, copper: 120,
+      drop: { item: 'kizugusuri', rank: 'A' },
+      palette: { K: '#06040a', H: '#4a3a2a', D: '#6a2a2a', E: '#ff6040', W: '#e0d0b0' }, sprite: H,
+    },
+    orochi: {
+      name: '黄泉の大蛇', hp: 900, atk: 170, def: 130, agi: 60, exp: 1500, copper: 200,
+      drop: { item: 'dokukeshi', rank: 'A' },
+      onHit: { status: 'venom', chance: 0.25 },
+      palette: { K: '#06060a', H: '#2a4a3a', D: '#14261e', E: '#ff3030', W: '#a0e0c0' },
+      sprite: G.DATA.enemies.centipede.sprite,
+    },
+    nakui_ou: {
+      name: '名喰いの王', hp: 1600, atk: 230, def: 190, agi: 120, exp: 3500, copper: 400,
+      drop: { item: 'mezamashi', rank: 'A' },
+      actions: [{ w: 3, type: 'attack' }, { w: 1, type: 'kotodama', id: 'mayoi_bi' }],
+      resist: { sleep: 0, confuse: 0 },
+      palette: { K: '#06060e', H: '#8a5ac8', D: '#4a2a8a', E: '#ffe040', W: '#f0d8ff' },
+      sprite: G.DATA.enemies.onibi.sprite,
+    },
     yomi_hebi: {
       name: '黄泉蛇', hp: 110, atk: 34, def: 30, agi: 10, exp: 80, copper: 34,
       drop: { item: 'dokukeshi', rank: 'A' },

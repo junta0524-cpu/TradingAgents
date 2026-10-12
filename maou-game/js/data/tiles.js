@@ -97,5 +97,8 @@
     '&': { name: '高原',     look: 'steppe' },
     '(': { name: '断崖',     look: 'crag',     solid: true },
     ')': { name: '谷',       look: 'valley' },
+    '<': { name: '城',       look: 'yomicastle',  noEncounter: true },   // 魔界の城（地面が魔界の色）
+    '>': { name: '村',       look: 'yomivillage', noEncounter: true },
+    '@': { name: '町',       look: 'yomitown',    noEncounter: true },
   };
 })();

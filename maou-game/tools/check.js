@@ -1020,6 +1020,13 @@ const { chromium } = require('playwright');
   expect('クリア後：魔界の大穴から人間界へ', await pos(), 'world_ningen(16,11)');
   await placeAt('world_ningen', 16, 14, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
   expect('クリア後：人間界の町にも入れる（ミナモ）', await pos(), 'minamo(15,22)');
+  expect('クリア後のやりこみ：レベルに応じて強い敵', await ev(() => {
+    const o = GAME.party.member('oonamuchi'), lv = o.lv, map = GAME.DATA.maps.world_makai, tile = GAME.DATA.tiles['$'], out = [];
+    GAME.encounter.enabled = true;
+    [20, 80].forEach(l => { o.lv = l; GAME.state.encounterSteps = 0; out.push(GAME.encounter.step(map, tile).some(id => ['orochi', 'nakui_ou', 'zantou'].includes(id))); });
+    GAME.encounter.enabled = false; o.lv = lv; return out.join('/');
+  }), 'false/true');
+  await placeAt('world_makai', 16, 17, 'left'); await wait(2500); await shot('94_world_makai_post');
   expect('レベル99でカンスト（装備を足しても255まで）', await ev(() => { const o = GAME.party.member('oonamuchi'); while (GAME.growth.forceLevelUp(o).length) {} return `${o.lv}/${o.maxHp}/${o.maxMp}/${o.atk}/${o.def}`; }), '99/999/999/255/255');
   await ev(() => { GAME.encounter.enabled = true; });
 

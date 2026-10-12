@@ -22,7 +22,13 @@
         6: [['iwatokage'], ['hinezumi', 'hinezumi'], ['yamagarasu']],
         7: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']],
         10: [],
-        13: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']],
+        // クリア後：レベルに応じて強い敵（Lv40〜99のやりこみ）
+        13: { byLevel: [
+          { from: 1, groups: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']] },
+          { from: 35, groups: [['zantou'], ['zantou', 'arano_ookami'], ['zantou', 'zantou']] },
+          { from: 55, groups: [['zantou', 'zantou'], ['orochi'], ['zantou', 'orochi']] },
+          { from: 75, groups: [['orochi', 'orochi'], ['nakui_ou'], ['orochi', 'zantou', 'zantou']] },
+        ] },
       },
     },
     start: { x: 15, y: 13, dir: 'right' },

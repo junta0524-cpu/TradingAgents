@@ -2,6 +2,7 @@
 // マップの encounter に「何歩ごとか（steps）」と「出る敵の組（groups）」を書く。encounter がないマップでは出ない。
 // 道（noEncounter のマス）では数えない。草むらでは多めに数える。
 // byChapter：章ごとに出る組を変える（{ 4: [...], 7: [...] } なら 4〜6章は4の組、7章からは7の組。空の配列なら出ない）。
+// その章の値を { byLevel: [{ from, groups }] } にすると、オオナムチのレベルで組が変わる（クリア後のやりこみ）。
 (function () {
   const G = window.GAME = window.GAME || {};
 
@@ -16,7 +17,14 @@
     if (!enc.byChapter) return enc.groups;
     const ch = G.state.chapter || 1;
     const key = Object.keys(enc.byChapter).map(Number).filter(k => k <= ch).sort((a, b) => b - a)[0];
-    return key != null ? enc.byChapter[key] : enc.groups;
+    const g = key != null ? enc.byChapter[key] : enc.groups;
+    // { byLevel: [{ from: レベル, groups }] }：オオナムチのレベルで組を変える（クリア後のやりこみ）
+    if (g && g.byLevel) {
+      const m = G.party.member('oonamuchi'), lv = (m && m.lv) || 1;
+      const tier = g.byLevel.filter(t => t.from <= lv).sort((a, b) => b.from - a.from)[0];
+      return tier ? tier.groups : null;
+    }
+    return g;
   }
 
   G.encounter = {
