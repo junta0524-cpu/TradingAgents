@@ -993,16 +993,17 @@ const { chromium } = require('playwright');
   await wait(200);
 
   // ===== フィールドマップ（人間界・魔界）=====
-  await ev(() => { GAME.story.jump(6); GAME.encounter.enabled = false; }); await wait(1500);
+  await ev(() => { GAME.story.jump(7); GAME.encounter.enabled = false; }); await wait(1500);
   await placeAt('world_ningen', 8, 6, 'up'); await wait(400); await shot('92_world_ningen');
   await hold('ArrowUp', 200); await wait(400);
   expect('人間界：炉ヶ岳の印に乗ると山道へ', await pos(), 'ro_path(12,19)');
   await hold('ArrowDown', 200); await wait(400);
   expect('人間界：山道の南の端からフィールドへ', await pos(), 'world_ningen(8,6)');
   await placeAt('world_ningen', 26, 12, 'up'); await wait(300); await hold('ArrowUp', 200);
-  expect('人間界：まだの章の町には入れない（6章で天津京）', `${await pos()}/${(await scenes()).includes('メッセージ')}`, 'world_ningen(26,12)/true');
+  const blockedMsg = (await scenes()).includes('メッセージ');
   await closeMessages();
-  expect('章ごとの敵（6章は山の敵）', await ev(() => { GAME.state.encounterSteps = 0; GAME.encounter.enabled = true; const g = GAME.encounter.step(GAME.DATA.maps.world_ningen, GAME.DATA.tiles['.']); GAME.encounter.enabled = false; return ['iwatokage', 'hinezumi', 'yamagarasu'].includes(g[0]); }), true);
+  expect('人間界：まだの章の町には入れない（7章で天津京）', `${await pos()}/${blockedMsg}`, 'world_ningen(26,12)/true');
+  expect('章ごとの敵（7章は獣ノ原の敵）', await ev(() => { GAME.state.encounterSteps = 0; GAME.encounter.enabled = true; const g = GAME.encounter.step(GAME.DATA.maps.world_ningen, GAME.DATA.tiles['.']); GAME.encounter.enabled = false; return ['arano_ookami', 'oosasori'].includes(g[0]); }), true);
   await ev(() => { GAME.story.jump(11); }); await wait(1500);
   await runThrough(atMap, 200);
   await ev(() => { GAME.encounter.enabled = false; });
