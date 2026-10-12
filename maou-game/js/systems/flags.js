@@ -14,7 +14,7 @@
     reset() { G.flags.data = {}; },
     // 宝箱のフラグ名（マップ名＋宝箱の名前）
     chestKey(mapId, chestId) { return `chest:${mapId}:${chestId}`; },
-    // 条件を満たすか（if：立っていること／unless：立っていないこと／chapter：その章のときだけ。数か配列）
+    // 条件を満たすか（if：立っていること／unless：立っていないこと／chapter：その章のときだけ。数か配列／chapterFrom・chapterTo：章の範囲）
     check(o) {
       if (!o) return true;
       if (o.if && !G.flags.get(o.if)) return false;
@@ -25,10 +25,11 @@
         if (!m || !m.kotodama.includes(o.knows)) return false;
       }
       if (o.member && !(G.state && G.state.party.some(m => m.id === o.member))) return false;
-      if (o.chapter != null) {
-        const ch = (G.state && G.state.chapter) || 1;
-        if (!([].concat(o.chapter)).includes(ch)) return false;
-      }
+      const ch = (G.state && G.state.chapter) || 1;
+      if (o.chapter != null && !([].concat(o.chapter)).includes(ch)) return false;
+      // chapterFrom／chapterTo：その章から／その章まで（フィールドマップの出入口）
+      if (o.chapterFrom != null && ch < o.chapterFrom) return false;
+      if (o.chapterTo != null && ch > o.chapterTo) return false;
       return true;
     },
   };

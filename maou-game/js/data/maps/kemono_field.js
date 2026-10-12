@@ -39,6 +39,8 @@
     // 岩陰の抜け道（ウズメが見つけると開く）
     flagTiles: [{ x: 24, y: 15, ch: 'e', if: 'ch7_secret' }],
     warps: [
+      // 西の端：人間界のフィールドへ,
+      { x: 0, y: 10, to: 'world_ningen', tx: 12, ty: 3, dir: 'down' },
       { x: 31, y: 10, to: 'kuzu_village', tx: 1, ty: 8, dir: 'right', requires: { if: 'ch7_uzume' }, blockedText: '（道の先に、小さな集落が見える）' },
     ],
     triggers: [

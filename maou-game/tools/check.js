@@ -989,6 +989,27 @@ const { chromium } = require('playwright');
   await ev(() => { GAME.scene.pop(); GAME.state.party.forEach(m => { m.stance = null; }); });
   await wait(200);
 
+  // ===== フィールドマップ（人間界・魔界）=====
+  await ev(() => { GAME.story.jump(6); GAME.encounter.enabled = false; }); await wait(1500);
+  await placeAt('world_ningen', 8, 6, 'up'); await wait(400); await shot('92_world_ningen');
+  await hold('ArrowUp', 200); await wait(400);
+  expect('人間界：炉ヶ岳の印に乗ると山道へ', await pos(), 'ro_path(12,19)');
+  await hold('ArrowDown', 200); await wait(400);
+  expect('人間界：山道の南の端からフィールドへ', await pos(), 'world_ningen(8,6)');
+  await placeAt('world_ningen', 26, 12, 'up'); await wait(300); await hold('ArrowUp', 200);
+  expect('人間界：まだの章の町には入れない（6章で天津京）', `${await pos()}/${(await scenes()).includes('メッセージ')}`, 'world_ningen(26,12)/true');
+  await closeMessages();
+  expect('章ごとの敵（6章は山の敵）', await ev(() => { GAME.state.encounterSteps = 0; GAME.encounter.enabled = true; const g = GAME.encounter.step(GAME.DATA.maps.world_ningen, GAME.DATA.tiles['.']); GAME.encounter.enabled = false; return ['iwatokage', 'hinezumi', 'yamagarasu'].includes(g[0]); }), true);
+  await ev(() => { GAME.story.jump(11); }); await wait(1500);
+  await runThrough(atMap, 200);
+  await ev(() => { GAME.encounter.enabled = false; });
+  await placeAt('yomi_hani', 14, 16, 'down'); await wait(300); await hold('ArrowDown', 200); await wait(400);
+  expect('魔界：11章は畑の南から魔界のフィールドへ', await pos(), 'world_makai(18,14)');
+  await shot('93_world_makai');
+  await placeAt('world_makai', 25, 10, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
+  expect('魔界：嵐ヶ峰へ入れる', await pos(), 'arashigamine(8,10)');
+  await ev(() => { GAME.encounter.enabled = true; });
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));

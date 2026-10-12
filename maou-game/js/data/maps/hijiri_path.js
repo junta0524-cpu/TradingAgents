@@ -40,6 +40,9 @@
       'TTTTTTTTTTTTTppTTTTTTTTTTTTTTT',
     ],
     warps: [
+      // 南の端：人間界のフィールドへ,
+      { x: 13, y: 21, to: 'world_ningen', tx: 7, ty: 14, dir: 'down' },
+      { x: 14, y: 21, to: 'world_ningen', tx: 7, ty: 14, dir: 'down' },
       { x: 13, y: 0, to: 'hijiri_village', tx: 13, ty: 14, dir: 'up', requires: { if: 'ch5_sukuna' }, blockedText: '（道の先の木陰に、小さな影が座っていた）' },
       { x: 14, y: 0, to: 'hijiri_village', tx: 13, ty: 14, dir: 'up', requires: { if: 'ch5_sukuna' }, blockedText: '（道の先の木陰に、小さな影が座っていた）' },
       { x: 28, y: 6, to: 'hijiri_cave', tx: 8, ty: 6, dir: 'up', requires: { if: 'ch5_hall' }, blockedText: '苔むした岩の陰に、洞窟があった。入口には、結界の気配がある。' },

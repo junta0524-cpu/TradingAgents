@@ -4,6 +4,7 @@
 // 仲間はベルの後ろを一列についてくる（ぶつからない）。毒の仲間は、歩くたびに少しずつ体力が減る。
 // 物語のしかけ：人の event（話すと場面が流れる）・if/unless/chapter（出る条件）、マップの onEnter（入ったとき）・
 // triggers（踏んだとき）、出入口の requires（フラグが立つまで通れない）、tint（画面の色味）。
+// places（フィールドマップで、立った場所の名前を左上に出す）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -382,6 +383,13 @@
           const w = Math.ceil(r.measure(map.name)) + 24;
           G.ui.drawWindow(8, 8, w, 26);
           r.text(map.name, 20, 15, '#fff');
+        }
+        // フィールドマップ：町や土地の上に立つと、その名前を出す（places）
+        const place = (map.places || []).find(p => p.x === player.x && p.y === player.y);
+        if (place && nameTimer <= 0 && !fadeDir && G.scene.top() === this) {
+          const w = Math.ceil(r.measure(place.name)) + 24;
+          G.ui.drawWindow(8, 8, w, 26);
+          r.text(place.name, 20, 15, '#ffd866');
         }
         if (G.scene.top() === this && !fadeDir) G.inhibit.drawGauge(r.W - 124, 8);
         if (poisonFlash > 0) r.rect(0, 0, r.W, r.H, 'rgba(80,200,60,0.25)');

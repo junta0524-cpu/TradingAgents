@@ -204,6 +204,48 @@
       fill(c, '#3a3036'); speckle(c, ['#443a40', '#30282c'], 0.1, 29);
       fill(c, '#2c2428', 0, 15, T, 1); fill(c, '#2c2428', 15, 0, 1, T);
     },
+    // ---- フィールドマップ ----
+    woods(c) {
+      LOOKS.grass(c);
+      [[4, 6], [11, 5], [7, 12]].forEach(([x, y]) => {
+        fill(c, '#5a3a1e', x, y + 2, 1, 2);
+        c.fillStyle = '#1f5a24'; c.beginPath(); c.arc(x + 0.5, y, 3.5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#2f7a32'; c.beginPath(); c.arc(x, y - 0.5, 2, 0, Math.PI * 2); c.fill();
+      });
+    },
+    castle(c) {
+      LOOKS.grass(c);
+      fill(c, '#7a2e2e', 2, 6, 12, 9); fill(c, '#a04040', 2, 6, 12, 2);
+      fill(c, '#7a2e2e', 2, 3, 3, 4); fill(c, '#7a2e2e', 11, 3, 3, 4); fill(c, '#7a2e2e', 6, 1, 4, 6);
+      fill(c, '#ffe4a8', 7, 10, 2, 5); fill(c, '#2a1010', 7, 11, 2, 4);
+    },
+    village(c) {
+      LOOKS.grass(c);
+      [[1, 8], [8, 4]].forEach(([x, y]) => {
+        fill(c, '#a07a48', x, y + 3, 7, 4); fill(c, '#7a5a2e', x - 1, y, 9, 3); fill(c, '#3a2a18', x + 3, y + 4, 2, 3);
+      });
+    },
+    pit(c) {
+      LOOKS.dryland(c);
+      c.fillStyle = '#3a2a1e'; c.beginPath(); c.ellipse(8, 8, 7.5, 6, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#0a0604'; c.beginPath(); c.ellipse(8, 8.5, 5, 3.5, 0, 0, Math.PI * 2); c.fill();
+    },
+    marker(c) {
+      LOOKS.dryland(c);
+      c.fillStyle = '#5a2a6a'; c.beginPath(); c.moveTo(8, 2); c.lineTo(14, 8); c.lineTo(8, 14); c.lineTo(2, 8); c.closePath(); c.fill();
+      c.fillStyle = '#c8a0e0'; c.beginPath(); c.moveTo(8, 5); c.lineTo(11, 8); c.lineTo(8, 11); c.lineTo(5, 8); c.closePath(); c.fill();
+    },
+    waste(c) { fill(c, '#c8b27a'); speckle(c, ['#d8c28a', '#a89058', '#8a7a4a'], 0.25, 91); },
+    embers(c) { fill(c, '#3a2a22'); speckle(c, ['#4a3428', '#2a1e18'], 0.3, 93); dot(c, '#e0704a', 4, 5); dot(c, '#e0704a', 11, 10); dot(c, '#f0a060', 8, 13); },
+    yomiland(c) { fill(c, '#5a3a46'); speckle(c, ['#6a4a56', '#4a2e3a'], 0.22, 95); },
+    redland(c) { fill(c, '#9a4a2a'); speckle(c, ['#aa5a36', '#843c22'], 0.22, 97); },
+    steppe(c) { fill(c, '#8a8a5e'); speckle(c, ['#9a9a6a', '#74744e'], 0.2, 99); fill(c, '#a6a676', 3, 6, 4, 1); fill(c, '#a6a676', 9, 11, 4, 1); },
+    crag(c) {
+      fill(c, '#3c3c4a');
+      c.fillStyle = '#2a2830'; c.beginPath(); c.moveTo(1, 15); c.lineTo(6, 2); c.lineTo(10, 9); c.lineTo(15, 15); c.closePath(); c.fill();
+      fill(c, '#c9a66b', 6, 2, 1, 1);
+    },
+    valley(c) { fill(c, '#4e3b2c'); speckle(c, ['#5e4a38', '#3e2e22'], 0.2, 101); fill(c, '#2e2218', 3, 7, 10, 1); fill(c, '#2e2218', 5, 8, 6, 1); },
     carpet(c) { fill(c, '#6a1a22'); fill(c, '#8a2a30', 2, 0, 12, T); fill(c, '#c8a040', 1, 0, 1, T); fill(c, '#c8a040', 14, 0, 1, T); },
     pillar(c) { LOOKS.darkstone(c); fill(c, '#5a4a52', 3, 0, 10, T); fill(c, '#6e5e66', 4, 0, 3, T); fill(c, '#2a2026', 3, 14, 10, 2); },
     throne(c) {

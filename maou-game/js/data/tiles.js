@@ -83,5 +83,19 @@
     'b': { name: '格子',     look: 'bars',     solid: true, counter: true },
     'n': { name: '手すり',   look: 'railing',  solid: true, check: '遠く、比良坂の方角に、細い光の筋が立っている。' },
     'y': { name: '夜空',     look: 'redsky',   solid: true },
+
+    // ---- フィールドマップ（人間界・魔界の全体の地図。1マスが一つの土地）----
+    '6': { name: '森',       look: 'woods' },
+    '9': { name: '城',       look: 'castle',   noEncounter: true },
+    'j': { name: '村',       look: 'village',  noEncounter: true },
+    'q': { name: '大穴',     look: 'pit',      solid: true, check: '大穴だ。底は見えない。' },
+    'B': { name: '土地の印', look: 'marker',   noEncounter: true },
+    'N': { name: '荒れ地',   look: 'waste',    tallGrass: true },
+    '!': { name: '焼け野',   look: 'embers' },
+    '$': { name: '魔界の野', look: 'yomiland' },
+    '%': { name: '赤土の野', look: 'redland' },
+    '&': { name: '高原',     look: 'steppe' },
+    '(': { name: '断崖',     look: 'crag',     solid: true },
+    ')': { name: '谷',       look: 'valley' },
   };
 })();

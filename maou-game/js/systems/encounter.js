@@ -1,6 +1,7 @@
 // このファイルの役目：歩数で敵と出会う（エンカウント）しくみ。
 // マップの encounter に「何歩ごとか（steps）」と「出る敵の組（groups）」を書く。encounter がないマップでは出ない。
 // 道（noEncounter のマス）では数えない。草むらでは多めに数える。
+// byChapter：章ごとに出る組を変える（{ 4: [...], 7: [...] } なら 4〜6章は4の組、7章からは7の組。空の配列なら出ない）。
 (function () {
   const G = window.GAME = window.GAME || {};
 
@@ -9,6 +10,13 @@
     let n = G.rng.int(enc.steps[0], enc.steps[1]);
     if (G.settings.encounter === 'low') n *= B.ENCOUNTER_LOW_MULT;
     return n;
+  }
+
+  function groupsFor(enc) {
+    if (!enc.byChapter) return enc.groups;
+    const ch = G.state.chapter || 1;
+    const key = Object.keys(enc.byChapter).map(Number).filter(k => k <= ch).sort((a, b) => b - a)[0];
+    return key != null ? enc.byChapter[key] : enc.groups;
   }
 
   G.encounter = {
@@ -29,7 +37,9 @@
       G.state.encounterSteps -= (tile && tile.tallGrass) ? G.DATA.balance.TALL_GRASS_STEPS : 1;
       if (G.state.encounterSteps > 0) return null;
       G.state.encounterSteps = nextSteps(enc);
-      return enc.groups[G.rng.int(0, enc.groups.length - 1)].slice();
+      const groups = groupsFor(enc);
+      if (!groups || !groups.length) return null;
+      return groups[G.rng.int(0, groups.length - 1)].slice();
     },
   };
 })();
