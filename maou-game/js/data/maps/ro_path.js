@@ -40,7 +40,7 @@
     ],
     warps: [
       // 南の端：人間界のフィールドへ,
-      { x: 12, y: 20, to: 'world_ningen', tx: 8, ty: 6, dir: 'down', when: { chapterFrom: 7 } }   // 6章は山を下りる場面（ch6_end）が先,
+      { x: 12, y: 20, to: 'world_ningen', tx: 8, ty: 6, dir: 'down', when: { chapterFrom: 7 } },   // 6章は山を下りる場面（ch6_end）が先
       { x: 12, y: 0, to: 'ro_village', tx: 12, ty: 14, dir: 'up' },
       { x: 13, y: 0, to: 'ro_village', tx: 13, ty: 14, dir: 'up' },
     ],

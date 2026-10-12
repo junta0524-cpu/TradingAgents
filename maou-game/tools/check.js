@@ -257,7 +257,10 @@ const { chromium } = require('playwright');
   await shot('23_battle_kotodama_list');
   await key('KeyZ', 120);                               // 堅め
   await key('ArrowUp', 80); await key('KeyZ', 120);    // ベルに
-  await page.keyboard.down('Shift'); await wait(1200); await page.keyboard.up('Shift');
+  // ラウンドが終わる（次の指示の番か、戦いの終わり）まで早送りで待つ
+  await page.keyboard.down('Shift');
+  for (let i = 0; i < 40 && (await ev(() => GAME.scene.top().name === '戦闘' && GAME.scene.top().phase === 'play')); i++) await wait(100);
+  await page.keyboard.up('Shift');
   await shot('24_battle_katame');
   const buffed = await ev(() => !!(GAME.party.member('bell').buffs && GAME.party.member('bell').buffs.def) || GAME.scene.top().name !== '戦闘');
   expect('戦闘で堅め：ベルの守りが上がる', buffed, true);
