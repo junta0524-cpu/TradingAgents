@@ -1020,6 +1020,12 @@ const { chromium } = require('playwright');
   expect('クリア後：魔界の大穴から人間界へ', await pos(), 'world_ningen(16,11)');
   await placeAt('world_ningen', 16, 14, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
   expect('クリア後：人間界の町にも入れる（ミナモ）', await pos(), 'minamo(15,22)');
+  expect('2章のほかはベルイザナもふつうの1回攻撃', await ev(() => {
+    const bell = GAME.party.member('bell'), st = GAME.battle.create([bell], ['zantou', 'zantou']);
+    const ev = GAME.battle.act(st, bell, { type: 'attack', target: st.enemies[0] });
+    GAME.kotodama.clearBattleState(bell);
+    return `${ev.filter(e => e.text && e.text.includes('の攻撃！')).length}/${st.enemies.filter(e => e.hp < e.maxHp).length}`;
+  }), '1/1');
   expect('クリア後のやりこみ：レベルに応じて強い敵', await ev(() => {
     const o = GAME.party.member('oonamuchi'), lv = o.lv, map = GAME.DATA.maps.world_makai, tile = GAME.DATA.tiles['$'], out = [];
     GAME.encounter.enabled = true;

@@ -178,8 +178,8 @@
     }
     if (cmd.type === 'fullpower') return ev.concat(fullPower(st, actor, cmd.target));
     if (cmd.type === 'item') return ev.concat(G.kotodama.useItem(actor, cmd.id, cmd.target, st));
-    // 魔王ベルイザナ（偽名でないとき）の攻撃は、敵全体へ2回
-    if (charOf(actor).isBell && !G.state.disguised) {
+    // 2章だけの特別：魔王ベルイザナの攻撃は、敵全体へ2回（ユーザー決定。ほかの章はふつうの1回攻撃）
+    if (charOf(actor).isBell && G.state.chapter === G.DATA.balance.BELL_TRUE_HITS_CHAPTER) {
       for (let h = 0; h < G.DATA.balance.BELL_TRUE_HITS; h++) {
         const foes = aliveEnemies(st);
         if (!foes.length) break;
