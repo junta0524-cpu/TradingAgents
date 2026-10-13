@@ -1126,6 +1126,26 @@ const { chromium } = require('playwright');
     const m = JSON.parse(JSON.stringify(GAME.state.party.find(p => p.lv != null)));
     delete m.base.wis; delete m.wis; GAME.party.recalc(m); return m.wis > 0;
   }), true);
+  expect('場面のデータに食い違いがない（行き先・仲間・敵・言霊・道具・呼ぶ場面・背景・曲）', await ev(() => {
+    const D = GAME.DATA, out = [], looks = D.sprites.LOOKS;
+    const walk = (cmds, where) => (cmds || []).forEach(c => {
+      if (!c || typeof c !== 'object') return;
+      const w = where + ':' + c.t;
+      if (c.t === 'goto' && !D.maps[c.map]) out.push(w);
+      if ((c.t === 'join' || c.t === 'leave' || c.t === 'rename' || c.t === 'learn') && !D.characters[c.id]) out.push(w);
+      if (c.t === 'party' && (c.ids || []).some(id => !D.characters[id])) out.push(w);
+      if (c.t === 'battle' && (c.enemies || []).some(e => !D.enemies[e])) out.push(w);
+      if (c.t === 'learn' && [].concat(c.kotodama).some(k => !D.kotodama[k])) out.push(w);
+      if (c.t === 'item' && !D.items[c.id]) out.push(w);
+      if (c.t === 'call' && !D.events[c.id]) out.push(w);
+      if (c.t === 'bg' && ((c.key && !GAME.backdrop.has(c.key)) || (c.actors || []).some(a => !looks[a.look]))) out.push(w);
+      if (c.t === 'bgm' && c.name && !GAME.sound.SONGS[c.name]) out.push(w);
+      walk(c.then, w); walk(c.else, w); (c.options || []).forEach(o => walk(o.then, w));
+    });
+    Object.entries(D.events).forEach(([id, sc]) => walk(sc, id));
+    Object.entries(D.maps).forEach(([id, m]) => ['npcs', 'onEnter', 'triggers', 'spots'].forEach(k => (m[k] || []).forEach(t => { if (typeof t.event === 'string' && !D.events[t.event]) out.push(id + ':' + t.event); })));
+    return out.join('、') || 'なし';
+  }), 'なし');
   expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
     const R = GAME.renderer, room = 440 - R.measure('遊んだ時間 99:59') - 8;
     return GAME.DATA.objectives.filter(o => R.measure('目的：' + o.text) > room).map(o => o.text).join('、') || 'なし';
