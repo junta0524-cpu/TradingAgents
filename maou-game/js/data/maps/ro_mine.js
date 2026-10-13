@@ -13,7 +13,7 @@
     battleBg: 'mountain',
     dark: true,
     fillCh: '坑',
-    encounter: {'steps': [14, 24], 'groups': [['iwatokage'], ['hinezumi', 'hinezumi'], ['iwatokage', 'hinezumi'], ['hinezumi', 'hinezumi', 'hinezumi'], ['iwatokage', 'iwatokage']]},
+    encounter: {'steps': [14, 24], 'groups': [['iwatokage'], ['hinezumi', 'hinezumi'], ['iwatokage', 'hinezumi'], ['hinezumi', 'hinezumi', 'hinezumi'], ['iwatokage', 'iwatokage'], ['hinezumi', 'hinezumi', 'hinezumi', 'hinezumi', 'hinezumi', 'hinezumi']]},
     rows: [
       '杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭',
       '杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭杭坑坑坑坑杭',

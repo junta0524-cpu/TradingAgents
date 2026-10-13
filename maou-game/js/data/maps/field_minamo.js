@@ -11,7 +11,7 @@
     // 遭遇：steps 歩ごと（この範囲でランダム）に、groups のどれかの組が出る
     encounter: {
       steps: [14, 26],
-      groups: [['dog'], ['dog', 'dog'], ['dog', 'dog', 'dog'], ['boar'], ['centipede'], ['dog', 'centipede'], ['moth', 'dog'], ['fox']],
+      groups: [['dog'], ['dog', 'dog'], ['dog', 'dog', 'dog'], ['boar'], ['centipede'], ['dog', 'centipede'], ['moth', 'dog'], ['fox'], ['dog', 'dog', 'dog', 'dog']],
     },
     start: { x: 20, y: 3, dir: 'down' },
     rows: [

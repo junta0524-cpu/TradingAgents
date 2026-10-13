@@ -13,7 +13,7 @@
     tint: () => (G.flags.get('ch5_minato') && G.state.chapter === 5 ? 'rgba(10,20,60,0.45)' : null),
     encounter: {
       steps: [12, 22],
-      groups: [['morigumo'], ['morigumo', 'morigumo'], ['onibi'], ['onibi', 'morigumo'], ['tsuta'], ['tsuta', 'onibi'], ['fox', 'morigumo']],
+      groups: [['morigumo'], ['morigumo', 'morigumo'], ['onibi'], ['onibi', 'morigumo'], ['tsuta'], ['tsuta', 'onibi'], ['fox', 'morigumo'], ['morigumo', 'morigumo', 'morigumo', 'morigumo']],
     },
     rows: [
       'TTTTTTTTTTTTTppTTTTTTTTTTTTTTT',

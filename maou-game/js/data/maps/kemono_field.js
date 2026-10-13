@@ -12,7 +12,7 @@
     battleBg: 'wild',
     encounter: {
       steps: [12, 22],
-      groups: [['arano_ookami'], ['arano_ookami', 'arano_ookami'], ['oosasori'], ['oosasori', 'arano_ookami'], ['arano_ookami', 'arano_ookami', 'arano_ookami']],
+      groups: [['arano_ookami'], ['arano_ookami', 'arano_ookami'], ['oosasori'], ['oosasori', 'arano_ookami'], ['arano_ookami', 'arano_ookami', 'arano_ookami'], ['arano_ookami', 'arano_ookami', 'arano_ookami', 'arano_ookami']],
     },
     rows: [
       'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii',

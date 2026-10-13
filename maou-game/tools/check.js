@@ -455,6 +455,20 @@ const { chromium } = require('playwright');
   console.log('     ウズメの先手の割合：', perks, '（決まりは 0.25）');
   expect('先手の割合が 0.2〜0.3', Number(perks) > 0.2 && Number(perks) < 0.3, true);
   await ev(() => GAME.rng.setFixed(false));
+  // 敵は6体まで（7体以上を渡しても6体）、名前はＡ〜Ｆ。画面のまん中にそろう
+  const six = await ev(() => {
+    const st = GAME.battle.create(GAME.party.freshMembers(), ['dog', 'dog', 'dog', 'dog', 'dog', 'dog', 'dog', 'dog']);
+    return st.enemies.length + ':' + st.enemies[5].name;
+  });
+  expect('敵は6体まで・6体目は野犬Ｆ', six, '6:野犬Ｆ');
+  const blay = await ev(() => {
+    const prev = GAME.sound.current();
+    GAME.scene.push(GAME.scenes.battle(['hinezumi', 'hinezumi', 'hinezumi', 'hinezumi', 'hinezumi', 'hinezumi']));
+    const L = GAME.scene.top().layout(); GAME.scene.pop();
+    const B = GAME.scenes.battle(['na_kui'], { boss: true }).layout(); GAME.sound.bgm(prev);
+    return [(L.xs[0] + L.xs[5] + L.size) / 2, L.xs[0] >= 0 && L.xs[5] + L.size <= 480, B.size, B.xs[0] + B.size / 2].join(',');
+  });
+  expect('6体が画面の中央にそろう・ボス1体は大きく中央', blay, '240,true,64,240');
 
   // ===== フェーズ5：ベル専用のしくみ =====
   await ev(() => { GAME.party.newGame(); GAME.rng.setFixed(true); });

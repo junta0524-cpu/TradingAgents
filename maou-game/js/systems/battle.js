@@ -5,7 +5,7 @@
   const G = window.GAME = window.GAME || {};
 
   const B = () => G.DATA.balance.BATTLE;
-  const LETTERS = 'ＡＢＣＤＥ';
+  const LETTERS = 'ＡＢＣＤＥＦ';
 
   // 物理ダメージ。基本＝(攻撃力−守備力/2)/2、乱数幅＝基本/16+1、基本が2未満なら0〜1
   function calcPhysical(atk, def, opts) {
@@ -60,6 +60,7 @@
   // 戦闘の状態を作る。party は G.state.party の仲間（HPはそのまま書き換える）
   function create(partyMembers, enemyIds, opts) {
     opts = opts || {};
+    enemyIds = enemyIds.slice(0, B().MAX_ENEMIES);
     const counts = {};
     enemyIds.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
     const seen = {};

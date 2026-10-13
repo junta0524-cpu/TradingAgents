@@ -11,7 +11,7 @@
     start: { x: 10, y: 14, dir: 'up' },
     battleBg: 'night',
     tint: 'rgba(20,20,80,0.3)',
-    encounter: { steps: [12, 20], groups: [['na_kui'], ['na_kui', 'na_kui'], ['kage_oni']] },
+    encounter: { steps: [12, 20], groups: [['na_kui'], ['na_kui', 'na_kui'], ['kage_oni'], ['na_kui', 'na_kui', 'na_kui', 'na_kui', 'na_kui']] },
     dark: true,   // 暗い社。柱の燭台が灯っている
     rows: [
       'GGGGGGGGGGGGGGGGGGGGGG',

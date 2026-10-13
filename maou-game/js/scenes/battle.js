@@ -1,4 +1,4 @@
-// このファイルの役目：戦闘の画面。上に敵、下にコマンド、右上に味方の体力を出す。
+// このファイルの役目：戦闘の画面。いちばん上に味方の体力、まん中に敵（6体まで・中央揃え）、下にコマンドを出す。
 // 計算は js/systems/battle.js と js/systems/kotodama.js に任せ、ここは「選ばせる・見せる・待つ」だけを受け持つ。
 // 流れ：現れた → 仲間ごとにコマンドを選ぶ → 素早い順に行動 → 勝ち・負け・逃げるまでくり返す。
 (function () {
@@ -15,8 +15,11 @@
     { label: 'ぼうぎょ', type: 'defend' },
     { label: 'にげる', type: 'escape' },
   ];
-  const ENEMY_SCALE = 3;
-  const ENEMY_BASE_Y = 178;   // 敵の足元の高さ
+  const ENEMY_SCALE = 3;      // 敵の大きさ（16ドットの何倍か）
+  const BOSS_SCALE = 4;       // ボスが1体だけのとき
+  const ENEMY_BASE_Y = 152;   // 敵の足元の高さ
+  const PANEL_W = 114;        // 上の味方の札の幅（4人で画面に収まる）
+  const PANEL_GAP = 4;
   const CMD_Y = 196;          // コマンド窓の上端（ふつうの文字・5項目のとき）
   const CMD_BOTTOM = 312;     // コマンド窓の下端
 
@@ -54,6 +57,10 @@
     let targetIndex = 0, allyIndex = 0, pending = null;
     let flash = null, flashTimer = 0, shake = 0;
     const fading = {};
+    // 演出：fx（数字・斬撃・言霊の光・回復の粒）、hurt（味方の札が赤く光る）、lunge（行動する者が前へ出る）
+    let fx = [];
+    const hurt = new Map(), lunge = new Map();
+    let mode = null, crit = false;   // いまの行動が「打撃」か「言霊（色）」か／次の数字が会心か
     let gameoverTimer = 0;
 
     // ---- 文章と出来事を順に見せる ----
@@ -74,20 +81,39 @@
       }
       if (queue.length) {
         const ev = queue.shift();
+        if (ev.type === 'actor') {   // 行動のはじまり（演出の区切り）
+          mode = null; crit = false;
+          if (ev.actor) lunge.set(ev.actor, 14);
+          return;
+        }
         if (ev.type === 'msg') {
           say(ev.text); waitTimer = MSG_WAIT;
-          if (/を唱えた！$|を放った！$/.test(ev.text)) G.sound.se('spell');
+          if (/を唱えた！$|を放った！$/.test(ev.text)) { G.sound.se('spell'); mode = { spell: spellColor(ev.text) }; }
           else if (/レベル\d+になった！$|を覚えた！$/.test(ev.text)) G.sound.se('levelup');
+          else if (/の攻撃！/.test(ev.text)) mode = 'hit';
+          else if (ev.text === '会心の一撃！') crit = true;
         }
-        else if (ev.type === 'heal') G.sound.se('heal');
+        else if (ev.type === 'heal') {
+          G.sound.se('heal');
+          const c = centerOf(ev.target);
+          if (c) { addFx('sparkle', c, { color: '#9f9' }); if (ev.amount > 0) addFx('num', c, { text: String(ev.amount), color: '#7f7' }); }
+        }
         else if (ev.type === 'calc') { say(ev.text, '#9ab'); waitTimer = MSG_WAIT / 2; }
         else if (ev.type === 'talk') { G.message.show(ev.list); waitTimer = 2; }   // 物語の場面のセリフ（会話の窓で出す）
         else if (ev.type === 'damage') {
           flash = ev.target; flashTimer = 16;
           if (ev.amount > 0) G.sound.se(ev.target.side === 'party' ? 'damage' : 'hit');
-          if (ev.target.side === 'party' && ev.amount > 0) shake = 10;
+          if (ev.target.side === 'party' && ev.amount > 0) { shake = 10; hurt.set(ev.target, 14); }
+          const c = centerOf(ev.target);
+          if (c) {
+            if (mode === 'hit') addFx('slash', c, { color: crit ? '#ffe060' : '#fff' });
+            else if (mode && mode.spell) addFx('burst', c, { color: mode.spell });
+            const color = ev.amount <= 0 ? '#ccc' : crit ? '#ffe060' : ev.target.side === 'party' ? '#ff7070' : '#fff';
+            addFx('num', c, { text: ev.amount > 0 ? String(ev.amount) : 'ミス', color, big: crit });
+          }
+          crit = false;
           waitTimer = 8;
-        } else if (ev.type === 'ko' && ev.target.side === 'enemy') { fading[ev.target.key] = 20; }
+        } else if (ev.type === 'ko' && ev.target.side === 'enemy') { fading[ev.target.key] = 24; }
         return;
       }
       if (afterPlay) { const f = afterPlay; afterPlay = null; f(); }
@@ -196,7 +222,7 @@
           extra.push({ type: 'msg', text: `王の詠唱が、満ちていく……（${Math.round(st.chant / CH.max * 100)}％）` });
           if (st.chant >= CH.max) { play(G.battle.endRound(st).concat(extra), () => { st.chantLost = true; finish('lose'); }); return; }
         }
-        play(G.battle.endRound(st).concat(extra), () => (st.forceWin ? finish('win') : beginInput()));
+        play([{ type: 'actor', actor: null }].concat(G.battle.endRound(st), extra), () => (st.forceWin ? finish('win') : beginInput()));
         return;
       }
       if (actor.hp <= 0) { runOrder(order); return; }
@@ -209,7 +235,7 @@
         play([{ type: 'msg', text: `${actor.name}の攻撃！` }, { type: 'msg', text: CH.blockText }], () => runOrder(order));
         return;
       }
-      const ev = G.battle.act(st, actor, cmd);
+      const ev = [{ type: 'actor', actor }].concat(G.battle.act(st, actor, cmd));
       if (CH && actor.side === 'party' && cmd.type === 'kotodama' && CH.reduce[cmd.id] && ev.some(e => e.type === 'msg' && e.text.endsWith('を唱えた！'))) {
         st.chant = Math.max(0, st.chant - CH.reduce[cmd.id]);
         ev.push({ type: 'msg', text: '守りの膜が、王の言霊を遮った。詠唱が乱れる。' });
@@ -291,13 +317,85 @@
     if (firstStrike) opening.push({ type: 'msg', text: '先手を取った！' });
     play(opening, beginInput);
 
-    // ---- 敵の並び ----
-    // 敵は、右上の体力の窓をよけた左側に並べる
+    // ---- 並び ----
+    // 敵は画面の幅いっぱいを使って中央にそろえる。数が多いほど間をつめる。ボス1体だけなら大きく出す
+    const scale = enemies.length === 1 && (opts.boss || CH) ? BOSS_SCALE : ENEMY_SCALE;
+    const SIZE = 16 * scale;
     function enemyX(i) {
-      const n = enemies.length, w = 16 * ENEMY_SCALE, gap = 24;
-      const total = n * w + (n - 1) * gap;
-      const area = G.renderer.W - 160;
-      return Math.round((area - total) / 2 + i * (w + gap));
+      const n = enemies.length, gap = n <= 3 ? 32 : n <= 5 ? 20 : 12;
+      const total = n * SIZE + (n - 1) * gap;
+      return Math.round((G.renderer.W - total) / 2 + i * (SIZE + gap));
+    }
+    const enemyTop = () => ENEMY_BASE_Y - SIZE;
+    // 上の味方の札：人数に合わせて中央にそろえる
+    const panelH = () => (G.renderer.large() ? 58 : 54);
+    function panelX(i) {
+      const n = party.length, w = Math.min(PANEL_W, Math.floor((G.renderer.W - 12 - (n - 1) * PANEL_GAP) / n));
+      return { x: Math.round((G.renderer.W - (n * w + (n - 1) * PANEL_GAP)) / 2 + i * (w + PANEL_GAP)), w };
+    }
+    // 演出を出す場所（敵なら体のまん中、味方なら札のまん中）
+    function centerOf(u) {
+      if (u.side === 'enemy') { const i = enemies.indexOf(u); return i < 0 ? null : { x: enemyX(i) + SIZE / 2, y: enemyTop() + SIZE / 2, size: SIZE }; }
+      const i = party.indexOf(u);
+      if (i < 0) return null;
+      const p = panelX(i);
+      return { x: p.x + p.w / 2, y: 4 + panelH() / 2, size: 40 };
+    }
+    const FX_LIFE = { num: 40, slash: 14, burst: 30, sparkle: 26 };   // 演出の長さ（コマ数）
+    function addFx(kind, c, o) { fx.push(Object.assign({ kind, x: c.x, y: c.y, size: c.size, t: 0, life: FX_LIFE[kind] }, o)); }
+    // 唱えた言霊の系統の色（文の中の言霊の名前から探す）
+    function spellColor(text) {
+      const K = G.DATA.kotodama, S = G.DATA.kotodamaSystems;
+      const id = Object.keys(K).filter(k => text.includes('は' + K[k].name + 'を')).sort((a, b) => K[b].name.length - K[a].name.length)[0];
+      const sys = id && S[K[id].sys];
+      return sys ? sys.color : '#fff';
+    }
+    function drawFx(ctx) {
+      const r = G.renderer;
+      fx.forEach(f => {
+        const k = f.t / f.life;
+        ctx.save();
+        if (f.kind === 'num') {
+          const y = f.y - 8 - Math.min(f.t, 12) * 1.2;
+          ctx.globalAlpha = f.t > f.life - 10 ? (f.life - f.t) / 10 : 1;
+          const size = f.big ? 18 : 15;
+          r.text(f.text, f.x + 1, y + 1, '#000', 'center', size);
+          r.text(f.text, f.x, y, f.color, 'center', size);
+        } else if (f.kind === 'slash') {
+          // ななめの3本の筋が、上から下へ走る
+          const h = f.size * 0.9, p = Math.min(1, k * 2);
+          ctx.globalAlpha = 1 - Math.max(0, k * 2 - 1);
+          ctx.strokeStyle = f.color; ctx.lineWidth = 2;
+          for (let j = -1; j <= 1; j++) {
+            const ox = f.x + j * 8;
+            ctx.beginPath();
+            ctx.moveTo(ox + h / 2, f.y - h / 2);
+            ctx.lineTo(ox + h / 2 - h * p, f.y - h / 2 + h * p);
+            ctx.stroke();
+          }
+        } else if (f.kind === 'burst') {
+          // 言霊：系統の色の輪が広がり、粒が飛び散る
+          ctx.fillStyle = f.color;
+          ctx.globalAlpha = 0.4 * (1 - k);
+          ctx.beginPath(); ctx.arc(f.x, f.y, f.size * (0.3 + k * 0.3), 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1 - k;
+          ctx.strokeStyle = f.color; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(f.x, f.y, 4 + k * f.size * 0.6, 0, Math.PI * 2); ctx.stroke();
+          for (let j = 0; j < 8; j++) {
+            const a = j * Math.PI / 4 + 0.3, d = k * f.size * 0.75;
+            ctx.fillRect(Math.round(f.x + Math.cos(a) * d) - 2, Math.round(f.y + Math.sin(a) * d) - 2, 4, 4);
+          }
+        } else if (f.kind === 'sparkle') {
+          // 回復：小さな光の粒がのぼっていく
+          ctx.globalAlpha = 1 - k;
+          ctx.fillStyle = f.color;
+          for (let j = 0; j < 6; j++) {
+            const ox = ((j * 37) % 30) - 15, oy = 10 - k * 26 - (j % 3) * 6;
+            ctx.fillRect(Math.round(f.x + ox), Math.round(f.y + oy), 3, 3);
+          }
+        }
+        ctx.restore();
+      });
     }
     const visibleEnemies = () => enemies.filter(e => e.hp > 0);
     const aliveParty = () => party.filter(p => p.hp > 0);
@@ -306,12 +404,16 @@
       name: '戦闘',
       opaque: true,
       get phase() { return phase; },   // 自動チェック用：いまの段階
+      layout: () => ({ xs: enemies.map((e, i) => enemyX(i)), size: SIZE, fx: fx.length }),   // 自動チェック用：敵の並び
 
       update() {
         if (flashTimer > 0) flashTimer--;
         if (shake > 0) shake--;
         if (noteTimer > 0) noteTimer--;
         Object.keys(fading).forEach(k => { if (fading[k] > 0) fading[k]--; });
+        fx.forEach(f => { f.t++; });
+        fx = fx.filter(f => f.t < f.life);
+        [hurt, lunge].forEach(m => m.forEach((v, k) => { if (v > 1) m.set(k, v - 1); else m.delete(k); }));
         const inp = G.input;
 
         if (phase === 'gameover') {
@@ -383,19 +485,28 @@
 
         // 敵
         const list = visibleEnemies();
+        const top = enemyTop();
         enemies.forEach((e, i) => {
-          const f = fading[e.key];
+          const f = fading[e.key], x = enemyX(i);
+          if (e.hp > 0 || f > 0) {
+            // 影
+            ctx.globalAlpha = 0.25;
+            r.rect(x + SIZE * 0.15, ENEMY_BASE_Y - SIZE / 8 - 2, SIZE * 0.7, 4, '#000');
+            ctx.globalAlpha = 1;
+          }
           if (e.hp <= 0 && !(f > 0)) return;
           if (flash === e && flashTimer > 0 && Math.floor(flashTimer / 2) % 2 === 0) return;
-          ctx.globalAlpha = e.hp <= 0 ? f / 20 : 1;
-          G.sprite.drawEnemy(ctx, e.id, enemyX(i), ENEMY_BASE_Y - 16 * ENEMY_SCALE, ENEMY_SCALE);
+          // 倒れた敵：薄れながら沈む／行動する敵：前へ出る
+          const l = lunge.get(e) || 0, dy = e.hp <= 0 ? (24 - f) * 0.8 : Math.round(Math.sin(l / 14 * Math.PI) * 6);
+          ctx.globalAlpha = e.hp <= 0 ? f / 24 : 1;
+          G.sprite.drawEnemy(ctx, e.id, x, top + dy, scale);
           ctx.globalAlpha = 1;
           const tg = e.hp > 0 ? G.status.tags(e) : '';
-          if (tg) r.text(tg, enemyX(i) + 8 * ENEMY_SCALE, ENEMY_BASE_Y + 2, '#ff9', 'center');
+          if (tg) r.text(tg, x + SIZE / 2, top - 14, '#ff9', 'center');
         });
         if (phase === 'target' && list[targetIndex] && G.ui.blinkOn()) {
-          const i = enemies.indexOf(list[targetIndex]);
-          r.text('▼', enemyX(i) + 8 * ENEMY_SCALE, ENEMY_BASE_Y - 16 * ENEMY_SCALE - 4, '#fff', 'center');
+          const e = list[targetIndex], i = enemies.indexOf(e);
+          r.text('▼', enemyX(i) + SIZE / 2, top - (G.status.tags(e) ? 28 : 14), '#fff', 'center');
         }
         ctx.restore();
 
@@ -406,33 +517,48 @@
           ctx.restore();
           r.text('見守っている', 8, 172, '#ddd');
         }
-        // 左上：阻害ゲージ
-        G.inhibit.drawGauge(8, 8);
-        // 詠唱ゲージ（12章の王戦）
-        if (CH) {
-          const t = st.chant / CH.max, w = 160;
-          G.ui.drawWindow(8, 34, w + 84, 24);
-          r.text('王の詠唱', 16, 40, '#f8a');
-          r.rect(80, 44, w, 8, '#222');
-          r.rect(80, 44, Math.round(w * t), 8, st.chant >= CH.threshold ? '#ff4060' : '#c070ff');
-          r.rect(80 + Math.round(w * CH.threshold / CH.max), 42, 1, 12, '#fff');
-        }
-
-        // 右上：味方の体力（4人でも収まるよう、1人30ドット）
-        const big = r.large(), sw = 150, sx = r.W - sw - 8, rowH = big ? 35 : (party.length > 2 ? 30 : 34), hpDy = big ? 17 : 16;
-        G.ui.drawWindow(sx, 8, sw, 12 + party.length * rowH);
+        // いちばん上：味方の札（名前・HP・MPと状態。人数に合わせて中央にそろえる）
+        const big = r.large(), ph = panelH(), lh = big ? 16 : 14;
         party.forEach((p, i) => {
-          const y = 14 + i * rowH;
+          const { x: px, w: pw } = panelX(i);
+          const hit = hurt.get(p) || 0, act = lunge.get(p) || 0;
+          const x = px + (hit ? (hit % 2 ? 2 : -2) : 0), y = 4 - Math.round(Math.sin(act / 14 * Math.PI) * 3);
+          G.ui.drawWindow(x, y, pw, ph);
+          if (hit) { ctx.save(); ctx.globalAlpha = hit / 28; r.rect(x + 3, y + 3, pw - 6, ph - 6, '#f33'); ctx.restore(); }
+          const choosing = (phase === 'command' || phase === 'sub' || phase === 'target') && i === cmdIndex;
+          if (choosing || (phase === 'ally' && i === allyIndex)) {
+            ctx.save(); ctx.strokeStyle = '#ffd866'; ctx.lineWidth = 2; ctx.strokeRect(x + 3, y + 3, pw - 6, ph - 6); ctx.restore();
+          }
           const color = p.hp <= 0 ? '#ff5050' : (p.hp < p.maxHp / 4 ? '#ffa040' : '#fff');
           let mark = '';
-          if ((phase === 'command' || phase === 'sub' || phase === 'target') && i === cmdIndex) mark = '▶';
+          if (choosing) mark = '▶';
           if (phase === 'ally' && i === allyIndex && G.ui.blinkOn()) mark = '▶';
-          r.text(mark + p.name, sx + 10, y, color);
+          r.text(mark + p.name, x + 8, y + 5, color, 'left', null, pw - 16);
+          r.text(`HP ${p.hp}/${p.maxHp}`, x + 8, y + 5 + lh, color, 'left', null, pw - 16);
+          r.text(`MP ${p.mp}`, x + 8, y + 5 + lh * 2, color);
           const tags = G.status.tags(p) + (p.buffs && p.buffs.def ? '守↑' : '') + (p.buffs && p.buffs.atk ? '攻↑' : '') + (p.guard > 0 ? '岩' : '') + (p.reflect > 0 ? '鏡' : '') + (p.stance && G.affinity.known() ? '[' + G.DATA.tribes[p.stance].short + ']' : '');
-          if (tags) r.text(tags, sx + sw - 10, y, '#9cf', 'right');
-          r.text(`HP ${p.hp}/${p.maxHp}`, sx + 10, y + hpDy, color);
-          r.text(`MP ${p.mp}`, sx + sw - 10, y + hpDy, color, 'right');
+          if (tags) r.text(tags, x + pw - 8, y + 5 + lh * 2, '#9cf', 'right', null, pw - 60);
+          // HPの棒
+          const bw = pw - 16, t = Math.max(0, p.hp / p.maxHp);
+          r.rect(x + 8, y + ph - 7, bw, 3, '#333');
+          r.rect(x + 8, y + ph - 7, Math.round(bw * t), 3, p.hp < p.maxHp / 4 ? '#f84' : '#6c6');
         });
+
+        // 札の下の左：阻害ゲージ
+        const gy = 4 + ph + 4;
+        G.inhibit.drawGauge(8, gy);
+        // 詠唱ゲージ（12章の王戦）：まん中の王にかからないよう、左に細く
+        if (CH) {
+          const t = st.chant / CH.max, w = 96, y = gy + 26;
+          G.ui.drawWindow(8, y, w + 84, 24);
+          r.text('王の詠唱', 16, y + 6, '#f8a');
+          r.rect(80, y + 10, w, 8, '#222');
+          r.rect(80, y + 10, Math.round(w * t), 8, st.chant >= CH.threshold ? '#ff4060' : '#c070ff');
+          r.rect(80 + Math.round(w * CH.threshold / CH.max), y + 8, 1, 12, '#fff');
+        }
+
+        // 演出（数字・斬撃・言霊の光）
+        drawFx(ctx);
 
         // 下：コマンド／文章
         const choosing = phase === 'command' || phase === 'sub' || phase === 'target' || phase === 'ally';
