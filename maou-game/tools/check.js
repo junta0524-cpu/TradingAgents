@@ -1086,7 +1086,7 @@ const { chromium } = require('playwright');
     const s = GAME.save.playTime(GAME.state.playFrames);
     GAME.save.write('3'); const sum = GAME.save.summary('3');
     GAME.state.playFrames = f0; localStorage.removeItem('maou_save_3');
-    return [f0 > 0, s, sum.includes('章') && sum.includes('1:15')].join('/');
+    return [f0 > 0, s, /章|クリア後/.test(sum) && sum.includes('1:15')].join('/');
   }), 'true/1:15/true');
 
   // タイトルの「遊び方」

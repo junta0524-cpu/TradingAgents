@@ -44,15 +44,15 @@
     { chapter: 9, unless: 'ch9_ward', text: '見張りに見つからないように、院の大部屋へ' },
     { chapter: 9, unless: 'ch9_temple', text: '院の地下の神殿へ下りる' },
     { chapter: 10, text: '天津京から逃げ、魔界へ帰る' },
-    { chapter: 11, unless: 'train_mika', text: '修行：角ヶ原でミカヅチと手合わせする（順番は自由）' },
-    { chapter: 11, unless: 'train_susa', text: '修行：嵐ヶ峰でスサノと手合わせする（順番は自由）' },
-    { chapter: 11, unless: 'train_naki', text: '修行：宮の聖域でナキメと手合わせする（順番は自由）' },
+    { chapter: 11, unless: 'train_mika', text: '修行：角ヶ原でミカヅチと手合わせ（順番は自由）' },
+    { chapter: 11, unless: 'train_susa', text: '修行：嵐ヶ峰でスサノと手合わせ（順番は自由）' },
+    { chapter: 11, unless: 'train_naki', text: '修行：宮の聖域でナキメと手合わせ（順番は自由）' },
     { chapter: 11, unless: 'ch11_fest', text: '土蜘蛛族の畑へ戻る' },
     { chapter: 11, text: '物語を先へ進める' },
     { chapter: 12, text: '王の詠唱を守りの言霊で遮り、満ちる直前に踏み込む' },
     // ---- クリア後 ----
     { chapter: 13, unless: 'ame_lit', text: '師と手合わせして四系統をそろえ、畑のクナドへ' },
-    { chapter: 13, unless: 'post_bell_win', text: '宮のオモイカに話しかけ、ベルとの最終手合わせに挑む' },
+    { chapter: 13, unless: 'post_bell_win', text: '宮のオモイカに話し、ベルとの最終手合わせに挑む' },
     { chapter: 13, text: '両方の世界を自由に巡る（大穴で行き来できる）' },
   ];
 
