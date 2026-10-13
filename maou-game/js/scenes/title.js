@@ -49,6 +49,7 @@
       { label: '設定' },
       { label: '記録の書き出し', disabled: !G.save.any() },
       { label: '記録の読み込み' },
+      { label: '遊び方' },
     ];
     const menu = new G.ui.Menu(makeItems(), { x: 152, y: 176, w: 176, cancelable: false });
     G.sound.bgm('title');
@@ -64,7 +65,8 @@
         else if (res.index === 1) continueMenu();
         else if (res.index === 2) G.scenes.openSettings(300, 120);
         else if (res.index === 3) exportMenu();
-        else importMenu();
+        else if (res.index === 4) importMenu();
+        else G.message.show(G.DATA.howToPlay);
       },
       draw() {
         const r = G.renderer;

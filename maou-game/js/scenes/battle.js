@@ -448,7 +448,11 @@
           if (noteTimer > 0) { G.ui.drawWindow(162, 160, 310, 32); r.text(note, 176, 170, '#fff'); }
         } else if (phase !== 'gameover') {
           G.ui.drawWindow(8, 232, 464, 80);
-          log.forEach((l, i) => r.text(l.text, 22, 244 + i * 16, l.color));
+          // 設定「文字の大きさ：大きい」のときは、新しい3行を大きな字で出す
+          if (G.settings.textSize === 'large') {
+            const big = G.DATA.balance.TEXT_SIZE_LARGE;
+            log.slice(-3).forEach((l, i) => r.text(l.text, 22, 242 + i * Math.round(big * 1.4), l.color, 'left', big));
+          } else log.forEach((l, i) => r.text(l.text, 22, 244 + i * 16, l.color));
           if (phase === 'result' && G.ui.blinkOn()) r.text('▼', 240, 298, '#fff', 'center');
         }
 

@@ -1056,6 +1056,13 @@ const { chromium } = require('playwright');
   expect('レベル99でカンスト（装備を足しても255まで）', await ev(() => { const o = GAME.party.member('oonamuchi'); while (GAME.growth.forceLevelUp(o).length) {} return `${o.lv}/${o.maxHp}/${o.maxMp}/${o.atk}/${o.def}`; }), '99/999/999/255/255');
   await ev(() => { GAME.encounter.enabled = true; });
 
+  // タイトルの「遊び方」
+  await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
+  for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
+  await key('KeyZ', 400);
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/5');
+  await closeMessages();
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));
