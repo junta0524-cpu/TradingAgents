@@ -27,6 +27,9 @@
   }
 
   // 効き目を起こす。user：使う人、targets：相手の配列
+  // 言霊の強さを決める「賢さ」。敵は書いていなければ攻撃力で代える
+  function wisOf(u) { return u.wis != null ? u.wis : (u.atk || 0); }
+
   function apply(effect, user, targets, st) {
     let ev = [];
     const B = G.DATA.balance;
@@ -34,7 +37,7 @@
       switch (effect.kind) {
         case 'heal': {
           if (t.hp <= 0) { ev.push({ type: 'msg', text: `${t.name}には効かなかった。` }); return; }
-          const amount = effect.full ? t.maxHp : G.rng.int(effect.power[0], effect.power[1]);
+          const amount = effect.full ? t.maxHp : G.rng.int(effect.power[0], effect.power[1]) + Math.floor(wisOf(user) * B.KOTODAMA_HEAL_WIS_BONUS);
           const before = t.hp;
           t.hp = Math.min(t.maxHp, t.hp + amount);
           ev.push({ type: 'heal', target: t, amount: t.hp - before });
@@ -50,14 +53,14 @@
         }
         case 'damage': {
           if (t.hp <= 0) return;
-          const bonus = Math.floor((user.atk || 0) * B.KOTODAMA_ATK_BONUS);
+          const bonus = Math.floor(wisOf(user) * B.KOTODAMA_WIS_BONUS);
           let dmg = G.rng.int(effect.power[0], effect.power[1]) + bonus;
           const resist = effect.element ? G.status.resistOf(t, effect.element) : 1;
           dmg = Math.floor(dmg * resist);
           const aff = st ? G.affinity.mult(user, t) : 1;   // 四すくみ
           dmg = Math.floor(dmg * aff);
           if (G.affinity.note(aff, user)) ev.push({ type: 'msg', text: G.affinity.note(aff, user) });
-          if (st && st.showCalc) ev.push({ type: 'calc', text: `（幅${effect.power[0]}〜${effect.power[1]}＋攻×${B.KOTODAMA_ATK_BONUS}=${bonus}　耐性×${resist}${aff !== 1 ? ' 相性×' + aff : ''} → ${dmg}）` });
+          if (st && st.showCalc) ev.push({ type: 'calc', text: `（幅${effect.power[0]}〜${effect.power[1]}＋賢×${B.KOTODAMA_WIS_BONUS}=${bonus}　耐性×${resist}${aff !== 1 ? ' 相性×' + aff : ''} → ${dmg}）` });
           if (t.guard > 0) dmg = 0;
           const saved = G.battle.applyDamage(st, t, dmg);
           ev.push({ type: 'damage', target: t, amount: dmg });
@@ -82,7 +85,7 @@
           return;
         case 'scan': {
           const st2 = G.status.tags(t);
-          ev.push({ type: 'msg', text: `${t.name}：HP ${t.hp}/${t.maxHp}　攻撃${t.atk}　守備${t.def}　素早さ${t.agi}${st2 ? '　〔' + st2 + '〕' : ''}` });
+          ev.push({ type: 'msg', text: `${t.name}：HP ${t.hp}/${t.maxHp}　攻撃${t.atk}　守備${t.def}　素早さ${t.agi}　賢さ${wisOf(t)}${st2 ? '　〔' + st2 + '〕' : ''}` });
           return;
         }
         case 'status':
@@ -227,5 +230,5 @@
     G.status.afterBattle(m);
   }
 
-  G.kotodama = { implemented, usableIn, buffMult, apply, resolveTargets, cast, castEnemy, useItem, endRound, clearBattleState, charOf };
+  G.kotodama = { wisOf, implemented, usableIn, buffMult, apply, resolveTargets, cast, castEnemy, useItem, endRound, clearBattleState, charOf };
 })();

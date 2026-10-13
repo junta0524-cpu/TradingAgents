@@ -6,10 +6,10 @@
 
   function baseAt(id, lv) {
     const row = B().GROWTH[id][lv];
-    return { hp: row[0], mp: row[1], atk: row[2], def: row[3], agi: row[4] };
+    return { hp: row[0], mp: row[1], atk: row[2], def: row[3], agi: row[4], wis: row[5] };
   }
 
-  const LABELS = { hp: '最大HP', mp: '最大MP', atk: '攻撃', def: '守備', agi: '素早さ' };
+  const LABELS = { hp: '最大HP', mp: '最大MP', atk: '攻撃', def: '守備', agi: '素早さ', wis: '賢さ' };
 
   // 経験値に見合うまでレベルを上げる。上がった分の記録を返す [{ lv, diffs: ['最大HP +4', ...] }]
   function checkLevelUp(m) {

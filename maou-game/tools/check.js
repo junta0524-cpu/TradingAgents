@@ -1097,6 +1097,30 @@ const { chromium } = require('playwright');
     }
     return out.join('、') || 'なし';
   }), 'なし');
+  expect('賢さ：仲間みんなにあり、魔王ベルイザナは255、Lv99で255', await ev(() => {
+    const keep = JSON.stringify(GAME.state);
+    GAME.party.newGame();
+    const out = [GAME.state.party.every(m => m.wis > 0), GAME.party.member('bell').wis, GAME.growth.baseAt('oonamuchi', 99).wis,
+      Object.values(GAME.DATA.balance.TEMP_PARTY).every(t => t.wis > 0)];
+    GAME.state = JSON.parse(keep); GAME.party.member('bell') && GAME.party.recalc(GAME.party.member('bell'));
+    return out.join('/');
+  }), 'true/255/255/true');
+  expect('言霊の強さは賢さで決まる（攻める言霊も、癒やす言霊も）', await ev(() => {
+    const keepInt = GAME.rng.int; GAME.rng.int = a => a;
+    const run = (id, w) => {
+      const st = GAME.battle.create(GAME.party.freshMembers(), ['boar'], {});
+      const u = st.party.find(a => !GAME.DATA.characters[a.id].isBell); u.wis = w; u.mp = 999; u.atk = 50;
+      const e = st.enemies[0]; e.hp = e.maxHp = 9999;
+      if (id === 'iyashi') { u.maxHp = 999; u.hp = 1; GAME.kotodama.cast(u, id, u, st); return u.hp - 1; }
+      GAME.kotodama.cast(u, id, e, st); return 9999 - e.hp;
+    };
+    const r = [run('hidane', 0) < run('hidane', 100), run('iyashi', 0) < run('iyashi', 100)];
+    GAME.rng.int = keepInt; return r.join('/');
+  }), 'true/true');
+  expect('賢さのない古い記録でも、読み込むと賢さが入る', await ev(() => {
+    const m = JSON.parse(JSON.stringify(GAME.state.party.find(p => p.lv != null)));
+    delete m.base.wis; delete m.wis; GAME.party.recalc(m); return m.wis > 0;
+  }), true);
   expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
     const R = GAME.renderer, room = 440 - R.measure('遊んだ時間 99:59') - 8;
     return GAME.DATA.objectives.filter(o => R.measure('目的：' + o.text) > room).map(o => o.text).join('、') || 'なし';

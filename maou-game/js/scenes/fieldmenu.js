@@ -116,16 +116,17 @@
       G.ui.choose(build(), {
         x: 8, y: 8, w: 300, title: `${m.name}の装備`, stay: true, refresh: build, name: 'そうび',
         extra: () => {
-          G.ui.drawWindow(8, 100, 300, 44);
-          G.renderer.text(`攻撃 ${m.atk}　守備 ${m.def}　素早さ ${m.agi}`, 20, 108, '#fff');
-          G.renderer.text(`HP ${m.hp}/${m.maxHp}　MP ${m.mp}/${m.maxMp}`, 20, 124, hpColor(m));
+          G.ui.drawWindow(8, 100, 300, 60);
+          G.renderer.text(`攻撃 ${m.atk}　守備 ${m.def}`, 20, 108, '#fff');
+          G.renderer.text(`素早さ ${m.agi}　賢さ ${m.wis}`, 20, 124, '#fff');
+          G.renderer.text(`HP ${m.hp}/${m.maxHp}　MP ${m.mp}/${m.maxMp}`, 20, 140, hpColor(m));
         },
       }, si => {
         const slot = slots[si];
         const candidates = G.state.items.filter(s => G.DATA.items[s.id].type === slot && G.party.canEquip(m, s.id)).map(s => s.id);
         const options = candidates.map(id => {
           const it = G.DATA.items[id];
-          const stat = it.atk ? `攻+${it.atk}` : it.def ? `守+${it.def}` : it.agi ? `速+${it.agi}` : '';
+          const stat = it.atk ? `攻+${it.atk}` : it.def ? `守+${it.def}` : it.agi ? `速+${it.agi}` : it.wis ? `賢+${it.wis}` : '';
           return { label: it.name, note: stat };
         });
         if (m.equip[slot]) options.push({ label: 'はずす' });
@@ -182,7 +183,8 @@
           const tg = G.status.tags(p);
           const lines = [
             [`HP ${p.hp}/${p.maxHp}　MP ${p.mp}/${p.maxMp}`, hpColor(p)],
-            [`攻撃 ${p.atk}　守備 ${p.def}　素早さ ${p.agi}`, '#fff'],
+            ...(two ? [[`攻撃 ${p.atk}　守備 ${p.def}`, '#fff'], [`素早さ ${p.agi}　賢さ ${p.wis}`, '#fff']]
+              : [[`攻撃 ${p.atk}　守備 ${p.def}　素早さ ${p.agi}　賢さ ${p.wis}`, '#fff']]),
             [`作戦：${tactic}${tg ? '　状態：' + tg : ''}`, '#ccc'],
             [`言霊：${(p.kotodama || []).length}個`, '#ccc'],
           ];

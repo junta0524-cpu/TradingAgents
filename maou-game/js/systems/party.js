@@ -36,16 +36,19 @@
   // 素の強さ＋装備 → 実際の強さ
   function recalc(m) {
     // ベルは、偽名で力を抑えている間（4〜9章）だけ弱い。それ以外はカンスト
-    if ((G.DATA.characters[m.id] || {}).isBell) m.base = bellBase();
-    const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi };
+    const c = G.DATA.characters[m.id] || {};
+    if (c.isBell) m.base = bellBase();
+    // 賢さを足す前の記録：成長表（臨時の仲間は TEMP_PARTY）から賢さだけ補う
+    if (m.base.wis == null) m.base.wis = c.temp ? G.DATA.balance.TEMP_PARTY[m.id].wis : m.lv != null ? G.growth.baseAt(m.id, m.lv).wis : m.base.atk;
+    const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi, wis: m.base.wis };
     SLOTS.forEach(s => {
       const it = G.DATA.items[m.equip[s]];
       if (!it) return;
-      t.atk += it.atk || 0; t.def += it.def || 0; t.agi += it.agi || 0;
+      t.atk += it.atk || 0; t.def += it.def || 0; t.agi += it.agi || 0; t.wis += it.wis || 0;
     });
     // 上限（カンスト）：体力・MPは999、ほかは255（装備を足しても超えない）
     t.maxHp = Math.min(t.maxHp, 999); t.maxMp = Math.min(t.maxMp, 999);
-    ['atk', 'def', 'agi'].forEach(k => { t[k] = Math.min(t[k], 255); });
+    ['atk', 'def', 'agi', 'wis'].forEach(k => { t[k] = Math.min(t[k], 255); });
     Object.assign(m, t);
     if (m.hp != null) m.hp = Math.min(m.hp, m.maxHp);
     if (m.mp != null) m.mp = Math.min(m.mp, m.maxMp);
