@@ -1,4 +1,4 @@
-// このファイルの役目：設定の画面（仕様書 第11章）。文字の速さ（3段階）、敵の出やすさ（ふつう／少なめ）、音（入／切）。
+// このファイルの役目：設定の画面（仕様書 第11章）。文字の速さ（3段階）、敵の出やすさ（ふつう／少なめ）、音（入／切）、会話の文字の大きさ（ふつう／大きい）。
 // タイトルとフィールドのメニューの両方から開く。選ぶたびに切り替わり、ブラウザに保存される。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -13,6 +13,7 @@
       { label: '文字の速さ', note: label(SPEEDS, S.textSpeed) },
       { label: '敵の出やすさ', note: S.encounter === 'low' ? '少なめ' : 'ふつう' },
       { label: '音', note: S.sound ? '入' : '切' },
+      { label: '文字の大きさ', note: S.textSize === 'large' ? '大きい' : 'ふつう' },
       { label: 'もどる' },
     ];
     G.ui.choose(build(), {
@@ -25,6 +26,7 @@
       if (i === 0) { const k = SPEEDS.findIndex(o => o[0] === S.textSpeed); S.textSpeed = SPEEDS[(k + 1) % SPEEDS.length][0]; }
       else if (i === 1) S.encounter = S.encounter === 'low' ? 'normal' : 'low';
       else if (i === 2) { S.sound = !S.sound; G.sound.refresh(); }
+      else if (i === 3) { S.textSize = S.textSize === 'large' ? 'normal' : 'large'; G.message.show('この大きさで、会話の文字を出します。'); }
       else { G.scene.pop(); return; }
       G.save.saveSettings();
     });

@@ -7,6 +7,7 @@
   G.settings = G.settings || {
     textSpeed: 'normal',   // slow / normal / fast
     encounter: 'normal',   // normal / low
+    textSize: 'normal',    // normal / large（会話の文字の大きさ）
     sound: true,
   };
   G.save.loadSettings();

@@ -935,9 +935,13 @@ const { chromium } = require('playwright');
   await shot('82_settings');
   await key('ArrowDown', 60); await key('KeyZ', 150);   // 敵の出やすさ → 少なめ
   await key('ArrowDown', 60); await key('KeyZ', 150);   // 音 → 切
+  await key('ArrowDown', 60); await key('KeyZ', 300);   // 文字の大きさ → 大きい（試しの会話が出る）
+  const bigText = await ev(() => `${GAME.settings.textSize}/${GAME.scene.names().includes('メッセージ')}`);
+  await closeMessages();
+  expect('設定：文字の大きさを大きくできる（試しの会話が出る）', bigText, 'large/true');
   await key('KeyX', 150);
   expect('設定：敵は少なめ・音は切（保存される）', await ev(() => `${GAME.settings.encounter}/${GAME.settings.sound}/${JSON.parse(localStorage.getItem('maou_settings')).sound}`), 'low/false/false');
-  await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.save.saveSettings(); });
+  await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.settings.textSize = 'normal'; GAME.save.saveSettings(); });
 
   // ===== 仕上げの追加（手紙・クナドの補助）=====
   await placeAt('minamo', 15, 12, 'up'); await wait(200);

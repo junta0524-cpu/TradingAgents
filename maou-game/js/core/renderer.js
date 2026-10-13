@@ -6,7 +6,9 @@
 
   const W = 480, H = 320, TILE = 16;
   const FONT_SIZE = 12;
-  const FONT = `${FONT_SIZE}px "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", "Noto Sans JP", sans-serif`;
+  const FONT_FAMILY = '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", "Noto Sans JP", sans-serif';
+  const FONT = `${FONT_SIZE}px ${FONT_FAMILY}`;
+  const fontOf = size => (size ? `${size}px ${FONT_FAMILY}` : FONT);
 
   const NO_LINE_START = '、。，．,.」』）)！？!?…ーっゃゅょ';
 
@@ -49,25 +51,25 @@
       ctx.fillRect(x, y, w, h);
     },
     // 文字を描く。align は 'left' | 'center' | 'right'
-    text(str, x, y, color, align) {
-      ctx.font = FONT;
+    text(str, x, y, color, align, size) {   // size：文字の大きさ（省くとふつう）
+      ctx.font = fontOf(size);
       ctx.textBaseline = 'top';
       ctx.textAlign = align || 'left';
       ctx.fillStyle = color || '#fff';
       ctx.fillText(str, Math.round(x), Math.round(y));
     },
-    measure(str) {
-      ctx.font = FONT;
+    measure(str, size) {
+      ctx.font = fontOf(size);
       return ctx.measureText(str).width;
     },
     // 幅に収まるように文字列を行に分ける（\n は改行）
-    wrap(str, maxWidth) {
+    wrap(str, maxWidth, size) {
       const lines = [];
       String(str).split('\n').forEach(para => {
         let line = '';
         for (const ch of para) {
           // 句読点や閉じかっこは行の頭に来ないよう、前の行にぶら下げる
-          if (line && !NO_LINE_START.includes(ch) && G.renderer.measure(line + ch) > maxWidth) {
+          if (line && !NO_LINE_START.includes(ch) && G.renderer.measure(line + ch, size) > maxWidth) {
             lines.push(line);
             line = '';
           }

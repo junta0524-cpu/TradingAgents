@@ -371,10 +371,13 @@
         // 仲間は列の後ろから描き、ベルがいちばん手前になるようにする
         // 阻害ゲージが少ないと、ベルの輪郭が揺れる
         const jitter = e => (e.look === 'bell' && G.inhibit.warning() && G.frame % 6 < 2 ? (G.frame % 4 < 2 ? 1 : -1) : 0);
-        followers.slice().reverse().forEach((e, k) => things.push({ y: e.py - 0.01 * (k + 1), draw: () =>
-          G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y) }));
-        npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () =>
-          G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y) }));
+        // 偽名の間、オオナムチと一緒にいないベルは、印象が薄れて見える（仕様書 7-1）
+        const partyLooks = G.party.active().map(m => ({ look: G.DATA.characters[m.id] ? m.id : m.look }));
+        const fadeOf = e => (e === player ? G.inhibit.impression(e.look, partyLooks) : 1);
+        followers.slice().reverse().forEach((e, k) => things.push({ y: e.py - 0.01 * (k + 1), draw: () => {
+          ctx.globalAlpha = fadeOf(e); G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y); ctx.globalAlpha = 1; } }));
+        npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () => {
+          ctx.globalAlpha = fadeOf(e); G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y); ctx.globalAlpha = 1; } }));
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
         const tint = typeof map.tint === 'function' ? map.tint() : map.tint;
         if (tint) r.rect(0, 0, r.W, r.H, tint);
