@@ -512,10 +512,10 @@
 
         // 見守るベル（別行動の「見守り」：操作も戦闘もしない）
         if (watching) {
-          ctx.save(); ctx.translate(10, 136); ctx.scale(2, 2);
+          ctx.save(); ctx.translate(10, 118); ctx.scale(2, 2);
           G.sprite.drawPerson(ctx, (G.party.member('bell') || {}).look || 'bell', 'right', 0, false, 0, 0);
           ctx.restore();
-          r.text('見守っている', 8, 172, '#ddd');
+          r.text('見守っている', 8, 152, '#ddd');
         }
         // いちばん上：味方の札（名前・HP・MPと状態。人数に合わせて中央にそろえる）
         const big = r.large(), ph = panelH(), lh = big ? 16 : 14;
@@ -549,7 +549,9 @@
         G.inhibit.drawGauge(8, gy);
         // 詠唱ゲージ（12章の王戦）：まん中の王にかからないよう、左に細く
         if (CH) {
-          const t = st.chant / CH.max, w = 96, y = gy + 26;
+          // 阻害ゲージが出ていなければ、その場所に（王の頭にかからないよう、上に寄せる）
+          const shown = G.inhibit.on() && G.state.inhibitShown && G.party.member('bell');
+          const t = st.chant / CH.max, w = 96, y = gy + (shown ? 26 : 0);
           G.ui.drawWindow(8, y, w + 84, 24);
           r.text('王の詠唱', 16, y + 6, '#f8a');
           r.rect(80, y + 10, w, 8, '#222');

@@ -1041,6 +1041,11 @@ const { chromium } = require('playwright');
   await wait(200);
 
   // ===== フィールドマップ（人間界・魔界）=====
+  // 6章：ミナモから歩いて来るので、里の用が済むまでは山道の南から地図へ戻れる
+  await ev(() => { GAME.story.jump(6); GAME.encounter.enabled = false; }); await wait(1500);
+  await runThrough(atMap, 200);
+  await placeAt('ro_path', 12, 19, 'down'); await wait(300); await hold('ArrowDown', 200); await wait(400);
+  expect('6章：山道の南から地図へ戻れる', await pos(), 'world_ningen(8,6)');
   await ev(() => { GAME.story.jump(7); GAME.encounter.enabled = false; }); await wait(1500);
   await placeAt('world_ningen', 8, 6, 'up'); await wait(400); await shot('92_world_ningen');
   await hold('ArrowUp', 200); await wait(400);
