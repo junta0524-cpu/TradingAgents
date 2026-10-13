@@ -1083,6 +1083,20 @@ const { chromium } = require('playwright');
     GAME.settings.textSize = keep;
     return 312 - m.h >= 60 && 312 - sub.h >= 60;
   }), true);
+  expect('マップのデータに食い違いがない（行の長さ・出入口の行き先・人の立つ場所・場面の名前）', await ev(() => {
+    const D = GAME.DATA, out = [];
+    const solid = (m, x, y) => { const c = (m.rows[y] || '')[x]; return c == null || !D.tiles[c] || D.tiles[c].solid; };
+    for (const [id, m] of Object.entries(D.maps)) {
+      const W = m.rows[0].length;
+      m.rows.forEach((r, y) => { if (r.length !== W) out.push(`${id}:行${y}`); });
+      (m.warps || []).forEach(w => { if (!D.maps[w.to] || solid(D.maps[w.to], w.tx, w.ty)) out.push(`${id}:出入口(${w.x},${w.y})`); });
+      (m.npcs || []).forEach(n => {
+        if (solid(m, n.x, n.y)) out.push(`${id}:人(${n.x},${n.y})`);
+        if (typeof n.event === 'string' && !D.events[n.event]) out.push(`${id}:場面${n.event}`);
+      });
+    }
+    return out.join('、') || 'なし';
+  }), 'なし');
   expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
     const R = GAME.renderer, room = 440 - R.measure('遊んだ時間 99:59') - 8;
     return GAME.DATA.objectives.filter(o => R.measure('目的：' + o.text) > room).map(o => o.text).join('、') || 'なし';
