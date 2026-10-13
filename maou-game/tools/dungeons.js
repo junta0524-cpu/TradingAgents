@@ -20,12 +20,17 @@ async function run(page, expect) {
   const closeMsgs = async () => { for (let i = 0; i < 12 && (await scenes()).includes('メッセージ'); i++) { await page.keyboard.press('KeyZ'); await wait(150); } };
   const KEY = { u: 'ArrowUp', d: 'ArrowDown', l: 'ArrowLeft', r: 'ArrowRight' };
   // 1マス（滑る床なら止まるまで）動く
+  const here = () => ev(() => { const m = GAME.scene.find('マップ'); return m.mapId + ':' + m.player.x + ',' + m.player.y; });
   const step = async k => {
-    const before = await ev(() => { const p = GAME.scene.find('マップ').player; return p.x + ',' + p.y; });
-    await page.keyboard.down(KEY[k]);
-    for (let i = 0; i < 20; i++) { await wait(15); if (await ev(b => { const p = GAME.scene.find('マップ').player; return p.moving || p.x + ',' + p.y !== b; }, before)) break; }
-    await page.keyboard.up(KEY[k]);
-    await idle(); await closeMsgs(); await idle();
+    // 押しても動かなかったとき（キーの取りこぼし）は、もう一度だけ押す
+    for (let tries = 0; tries < 2; tries++) {
+      const before = await here();
+      await page.keyboard.down(KEY[k]);
+      for (let i = 0; i < 20; i++) { await wait(15); if (await ev(b => { const m = GAME.scene.find('マップ'); return m.player.moving || m.mapId + ':' + m.player.x + ',' + m.player.y !== b; }, before)) break; }
+      await page.keyboard.up(KEY[k]);
+      await idle(); await closeMsgs(); await idle();
+      if ((await here()) !== before) return;
+    }
   };
   const face = async k => { await page.keyboard.down(KEY[k]); await wait(20); await page.keyboard.up(KEY[k]); await wait(60); };
   // 道すじを探す（ページの中で、いまの地形から）
