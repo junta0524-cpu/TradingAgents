@@ -11,7 +11,6 @@
   G.DATA.maps.world_ningen = {
     name: '人間界',
     outside: '#2C5FA8',
-    bgm: 'field',
     battleBg: 'field',
     // 敵の組は章ごと（その章の土地の敵）。道・町の上では出ない
     encounter: {

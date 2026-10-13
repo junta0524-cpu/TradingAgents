@@ -40,7 +40,8 @@
     const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc, erase: opts.erase });
     const CH = opts.chant || null;
     const prevBgm = G.sound.current();   // 戦いが終わったら、もとの曲へ戻す
-    G.sound.bgm(opts.boss && (group.length === 1 || CH) ? 'boss' : 'battle');
+    // 曲：12章の王戦＝final、手合わせ＝training、ボス（1体）＝boss、ふつう＝battle
+    G.sound.bgm(CH ? 'final' : opts.training ? 'training' : opts.boss && group.length === 1 ? 'boss' : 'battle');
     if (CH) st.chant = 0;
     const watching = G.state.split === 'watch';   // ベルは画面の端で見守るだけ
     const party = st.party, enemies = st.enemies;
@@ -234,9 +235,10 @@
         play([{ type: 'msg', text: '（手合わせは、ここまで。もう一度、挑める）' }], () => { phase = 'result'; });
         return;
       }
-      if (out === 'lose') { phase = 'gameover'; gameoverTimer = 0; return; }
+      if (out === 'lose') { phase = 'gameover'; gameoverTimer = 0; G.sound.jingle('gameover'); return; }
       const r = G.battle.rewards(st);
       G.party.addCopper(r.copper);
+      G.sound.jingle('victory');   // 勝ったときの短い曲（終わると、戦いのあとでもとの曲へ戻る）
       const ev = [{ type: 'msg', text: '敵を退けた！' }];
       r.alive.forEach(p => {
         p.exp += r.each;

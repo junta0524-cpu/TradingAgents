@@ -61,11 +61,10 @@
       });
       rows = G.gimmick.overlay(mapId, map, rows);
     }
-    // 曲：マップの bgm、なければ場所から決める（魔界・王都・野原・町）
+    // 曲：マップの bgm、なければ js/data/music.js の割り当て。物語の場面が曲を決めているあいだは変えない
     function playBgm() {
-      if (!G.sound) return;
-      const yomi = /^(yomi|tsunogahara|arashigamine|oana|tsukuyomi)/.test(mapId);
-      G.sound.bgm(map.bgm || (yomi ? 'yomi' : /^(amatsu|yasuragi)/.test(mapId) ? 'city' : map.encounter ? 'field' : 'town'));
+      if (!G.sound || (G.event.running && G.event.musicLock > 0)) return;
+      G.sound.bgm(G.musicForMap(mapId, map));
     }
     function makeNpc(n) { return Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }); }
     // 場面が終わったあと、出る人を条件で入れ替える（いる人はその場に残す）
@@ -275,6 +274,7 @@
         const f = sleeping;
         sleeping = null;
         fadeDir = -1;
+        if (G.sound) G.sound.jingle('rest', G.musicForMap(mapId, map));   // 宿屋：一晩休んだ短い曲のあと、場所の曲へ
         f();
         return;
       }

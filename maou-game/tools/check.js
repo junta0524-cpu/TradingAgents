@@ -929,6 +929,22 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.pop()); await wait(200);
   await placeAt('yomi_hani', 7, 13, 'up'); await wait(200); songs.push(await ev(() => GAME.sound.current()));
   expect('曲：タイトル・町・野原・戦闘・魔界', songs.join(','), 'title,town,field,battle,yomi');
+  expect('曲：どのマップ・どの場面にも、ある曲が割り当てられている', await ev(() => {
+    const S = GAME.sound.SONGS, bad = [];
+    Object.entries(GAME.DATA.maps).forEach(([id, m]) => { if (!S[GAME.musicForMap(id, m)]) bad.push(id); });
+    Object.entries(GAME.DATA.music.events).forEach(([id, n]) => { if (!S[n] || !GAME.DATA.events[id]) bad.push(id); });
+    return bad.join('、') || 'なし';
+  }), 'なし');
+  expect('曲：場所ごと（森・山・荒野・洞窟・王都・貧民区・院・宮・大穴・人間界・魔界）', await ev(() => ['hijiri_village', 'ro_path', 'kemono_field', 'ro_mine', 'amatsu', 'amatsu_slum', 'yasuragi', 'yomi_palace', 'oana_jou', 'world_ningen', 'world_makai'].map(id => GAME.musicForMap(id, GAME.DATA.maps[id])).join(',')),
+    'forest,mountain,wild,cave,city,slum,eerie,palace,abyss,world,yomi_world');
+  {
+    // 場面の曲：場面のあいだは場面の曲、終わると場所の曲に戻る
+    await placeAt('hijiri_village', 14, 3, 'up'); await wait(200);
+    await ev(() => GAME.event.run('ch5_cave')); await wait(200);
+    const during = await ev(() => GAME.sound.current());
+    await runThrough(atMap); await wait(300);
+    expect('曲：場面の曲（洞窟の魔族＝sad）→ 終わると森の曲', `${during}/${await ev(() => GAME.sound.current())}`, 'sad/forest');
+  }
   // 設定：タイトルから開いて、敵の出やすさと音を切り替える
   await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.scene.change(GAME.scenes.title()); }); await wait(200);
   await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 200);   // 設定

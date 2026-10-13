@@ -9,7 +9,6 @@
   G.DATA.maps.world_makai = {
     name: '魔界',
     outside: '#2A1418',
-    bgm: 'yomi',
     battleBg: 'wild',
     encounter: {
       steps: [18, 30],

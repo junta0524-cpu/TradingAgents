@@ -47,7 +47,7 @@
     return script.slice();
   }
 
-  function createEventScene(cmds, onDone) {
+  function createEventScene(cmds, onDone, music) {
     let i = 0, waiting = false, timer = 0;
     let bg = null, actors = [], card = null, fadeA = 0, fadeTo = 0, fadeColor = '0,0,0', letter = null, walking = false;
     const self = {
@@ -97,7 +97,13 @@
       },
     };
 
+    // 場面の曲（js/data/music.js）。場面のあいだは、場所の曲に戻さない
+    let locked = false;
+    const lockMusic = name => { if (!locked) { locked = true; G.event.musicLock = (G.event.musicLock || 0) + 1; } G.sound.bgm(name); };
+    if (music) lockMusic(music);
+
     function finish() {
+      if (locked) G.event.musicLock = Math.max(0, (G.event.musicLock || 0) - 1);
       G.event.running = Math.max(0, G.event.running - 1);
       if (G.scene.top() === self) G.scene.pop();
       if (onDone) onDone();
@@ -155,7 +161,7 @@
         case 'wait': timer = c.frames || 30; return;
         case 'fade': fadeTo = c.to; if (c.color) fadeColor = c.color === 'white' ? '255,255,255' : c.color; else if (c.to > 0) fadeColor = '0,0,0'; return;
         case 'save': G.save.write('auto'); return;
-        case 'bgm': G.sound.bgm(c.name); return;
+        case 'bgm': if (c.name) lockMusic(c.name); else G.sound.bgm(null); return;
         case 'battle':
           waiting = true;
           G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook, training: c.training, chant: c.chant, erase: c.erase }));
@@ -234,7 +240,8 @@
     pending: null,    // 言伝などで、メニューを閉じてから流す場面
     run(script, onDone) {
       G.event.running++;
-      G.scene.push(createEventScene(resolve(script), onDone));
+      const music = typeof script === 'string' && G.DATA.music ? G.DATA.music.events[script] : null;
+      G.scene.push(createEventScene(resolve(script), onDone, music));
     },
   };
 })();
