@@ -19,6 +19,8 @@
   function step() {
     if (G.input.pressed('debug')) G.debug.toggle();
     else G.scene.update();
+    // 遊んだ時間（タイトル画面では数えない。古い記録は0から）
+    if (G.state && !G.scene.find('タイトル')) G.state.playFrames = (G.state.playFrames || 0) + 1;
     G.input.endFrame();
     G.frame++;
   }

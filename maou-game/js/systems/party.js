@@ -72,6 +72,7 @@
         disguised: false,           // 偽名「ベル」で人間界にいるか（4〜9章）。このときだけ阻害ゲージが動く
         resume: G.DATA.chapters ? G.DATA.chapters[1].start : null,   // つづきから遊ぶとき、最初に流す場面
         vars: {},
+        playFrames: 0,              // 遊んだ時間（1秒に60ずつ増える。タイトル画面では数えない）
       };
       G.flags.reset();
     },

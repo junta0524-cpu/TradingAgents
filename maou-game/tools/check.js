@@ -1071,6 +1071,23 @@ const { chromium } = require('playwright');
   }), 'true/true/true');
   await placeAt('minamo', 15, 12, 'down'); await wait(300); await key('KeyX', 300); await shot('95_menu_goal');
   for (let i = 0; i < 3 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 150);
+  expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
+    const R = GAME.renderer, room = 440 - R.measure('遊んだ時間 99:59') - 8;
+    return GAME.DATA.objectives.filter(o => R.measure('目的：' + o.text) > room).map(o => o.text).join('、') || 'なし';
+  }), 'なし');
+  expect('記録の一覧の文は、一番長い場所の名前でも窓に収まる', await ev(() => {
+    const R = GAME.renderer, names = Object.values(GAME.DATA.maps).map(m => m.name);
+    const longest = names.sort((a, b) => R.measure(b) - R.measure(a))[0];
+    return R.measure(`★クリア後 ${longest} Lv99 123:45 12/31`) + R.measure('記録1') + 40 <= 440;
+  }), true);
+  expect('遊んだ時間が増え、記録の一覧に章と時間が出る', await ev(() => {
+    const f0 = GAME.state.playFrames;
+    GAME.state.playFrames = 3600 * 75;
+    const s = GAME.save.playTime(GAME.state.playFrames);
+    GAME.save.write('3'); const sum = GAME.save.summary('3');
+    GAME.state.playFrames = f0; localStorage.removeItem('maou_save_3');
+    return [f0 > 0, s, sum.includes('章') && sum.includes('1:15')].join('/');
+  }), 'true/1:15/true');
 
   // タイトルの「遊び方」
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);

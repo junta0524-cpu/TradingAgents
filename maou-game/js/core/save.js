@@ -74,7 +74,13 @@
       const hero = d.state.party.find(m => m.lv != null);
       const t = new Date(d.savedAt);
       const pad = n => String(n).padStart(2, '0');
-      return `${d.state.cleared ? '★' : ''}${map ? map.name : '?'}　${hero ? hero.name + ' Lv' + hero.lv : ''}　${pad(t.getMonth() + 1)}/${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
+      const ch = d.state.chapter >= 13 ? 'クリア後' : (d.state.chapter || 1) + '章';
+      return `${d.state.cleared ? '★' : ''}${ch} ${map ? map.name : '?'} ${hero ? 'Lv' + hero.lv : ''} ${G.save.playTime(d.state.playFrames)} ${pad(t.getMonth() + 1)}/${pad(t.getDate())}`;
+    },
+    // 遊んだ時間を「12:34」（時間:分）の形にする
+    playTime(frames) {
+      const min = Math.floor((frames || 0) / 3600);
+      return `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`;
     },
 
     // ---- 文字での書き出し・読み込み ----

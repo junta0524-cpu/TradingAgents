@@ -39,7 +39,7 @@
     // ---- 第三部 ----
     { chapter: 8, unless: 'ch8_debate', text: '王都の広場の討論会へ行く（円議堂の前）' },
     { chapter: 8, unless: 'ch8_meet', text: '街の東で、コトシロを探す' },
-    { chapter: 8, unless: 'ch8_mio', text: '宿の主人に話して夜を待ち、鐘楼の裏の路地から貧民区へ' },
+    { chapter: 8, unless: 'ch8_mio', text: '宿の主人に話して夜にし、鐘楼裏の路地から貧民区へ' },
     { chapter: 8, unless: 'ch8_done', text: '夜の天津京で、ことだまの「言伝」を唱える' },
     { chapter: 9, unless: 'ch9_ward', text: '見張りに見つからないように、院の大部屋へ' },
     { chapter: 9, unless: 'ch9_temple', text: '院の地下の神殿へ下りる' },
@@ -51,7 +51,7 @@
     { chapter: 11, text: '物語を先へ進める' },
     { chapter: 12, text: '王の詠唱を守りの言霊で遮り、満ちる直前に踏み込む' },
     // ---- クリア後 ----
-    { chapter: 13, unless: 'ame_lit', text: '師との手合わせで言霊を覚え、四系統がそろったら畑のクナドに話しかける' },
+    { chapter: 13, unless: 'ame_lit', text: '師と手合わせして四系統をそろえ、畑のクナドへ' },
     { chapter: 13, unless: 'post_bell_win', text: '宮のオモイカに話しかけ、ベルとの最終手合わせに挑む' },
     { chapter: 13, text: '両方の世界を自由に巡る（大穴で行き来できる）' },
   ];
