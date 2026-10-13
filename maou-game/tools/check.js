@@ -1020,6 +1020,14 @@ const { chromium } = require('playwright');
   expect('クリア後：魔界の大穴から人間界へ', await pos(), 'world_ningen(16,11)');
   await placeAt('world_ningen', 16, 14, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
   expect('クリア後：人間界の町にも入れる（ミナモ）', await pos(), 'minamo(15,22)');
+  expect('敵全体への攻撃では会心が出ない', await ev(() => {
+    const bell = GAME.party.member('bell'), ch = GAME.state.chapter, orig = GAME.rng.chance;
+    GAME.state.chapter = 2; GAME.rng.chance = () => true;   // 会心の判定を必ず当たりにしても出ない
+    const st = GAME.battle.create([bell], ['zantou', 'zantou']);
+    const ev = GAME.battle.act(st, bell, { type: 'attack', target: st.enemies[0] });
+    GAME.rng.chance = orig; GAME.state.chapter = ch; GAME.kotodama.clearBattleState(bell);
+    return ev.some(e => e.text === '会心の一撃！');
+  }), false);
   expect('2章のほかはベルイザナもふつうの1回攻撃', await ev(() => {
     const bell = GAME.party.member('bell'), st = GAME.battle.create([bell], ['zantou', 'zantou']);
     const ev = GAME.battle.act(st, bell, { type: 'attack', target: st.enemies[0] });

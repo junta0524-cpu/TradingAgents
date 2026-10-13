@@ -209,7 +209,7 @@
     }
     const atk = Math.floor(actor.atk * G.kotodama.buffMult(actor, 'atk'));
     const def = Math.floor(target.def * G.kotodama.buffMult(target, 'def'));
-    const r = calcPhysical(atk, def);
+    const r = calcPhysical(atk, def, { noCrit: quiet });   // 敵全体への攻撃では会心が出ない（仕様書 第6章）
     let dmg = r.dmg;
     const aff = G.affinity.mult(actor, target);
     dmg = Math.floor(dmg * aff);
