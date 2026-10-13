@@ -109,6 +109,14 @@
     counter(c) { fill(c, '#5a3a1e'); fill(c, '#8a5a30', 0, 0, T, 6); fill(c, '#a87040', 0, 0, T, 1); },
     table(c) { LOOKS.floor(c); fill(c, '#6e4a2a', 1, 3, 14, 10); fill(c, '#8a5a30', 2, 4, 12, 8); },
     mat(c) { LOOKS.floor(c); fill(c, '#8a2a2a', 1, 2, 14, 12); fill(c, '#b04040', 2, 3, 12, 10); },
+    // ---- 建物の中の家具（拠点の部屋）----
+    bed(c) { LOOKS.floor(c); fill(c, '#5a4030', 1, 1, 14, 14); fill(c, '#e8e0d0', 2, 2, 12, 4); fill(c, '#6a8ab0', 2, 6, 12, 8); fill(c, '#7a9ac0', 2, 6, 12, 2); },
+    shelf(c) { fill(c, '#5a3a1e'); [2, 7, 12].forEach(y => fill(c, '#8a5a30', 1, y, 14, 2)); fill(c, '#c0a070', 2, 4, 3, 3); fill(c, '#7a8a9a', 7, 4, 2, 3); fill(c, '#a04030', 10, 9, 3, 3); fill(c, '#d0c0a0', 3, 9, 4, 3); },
+    hearth(c) { fill(c, '#6a6058'); fill(c, '#4a4038', 1, 1, 14, 14); fill(c, '#2a1e18', 3, 6, 10, 8); fill(c, '#e06020', 5, 9, 6, 4); fill(c, '#f0c040', 7, 10, 2, 2); },
+    jar(c) { LOOKS.floor(c); fill(c, '#4a3a5a', 4, 3, 8, 11); fill(c, '#5a4a6a', 3, 5, 10, 7); fill(c, '#2a2030', 5, 2, 6, 2); fill(c, '#7a6a8a', 5, 6, 2, 4); },
+    books(c) { fill(c, '#4a2e18'); [1, 6, 11].forEach((y, i) => { fill(c, '#6a4428', 0, y + 4, T, 1); for (let k = 0; k < 7; k++) fill(c, ['#a03030', '#305090', '#c0a040', '#307040'][(k + i) % 4], 1 + k * 2, y, 2, 4); }); },
+    earth(c) { fill(c, '#7a6650'); speckle(c, ['#86725a', '#6e5a46'], 0.25, 91); },
+    rug(c) { LOOKS.earth(c); fill(c, '#a08850', 1, 1, 14, 14); for (let y = 2; y < 14; y += 3) fill(c, '#8a7040', 1, y, 14, 1); },
     void(c) { fill(c, '#000'); },
     // ---- 村（第二部）----
     thatch(c) {

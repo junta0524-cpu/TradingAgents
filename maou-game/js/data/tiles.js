@@ -33,6 +33,14 @@
     'k': { name: '机',     look: 'table',     solid: true },
     'E': { name: '出口',   look: 'mat' },
     ' ': { name: '闇',     look: 'void',      solid: true },
+    // ---- 拠点の部屋の家具 ----
+    '[': { name: '寝床',   look: 'bed',    solid: true, check: '使い込まれた寝床だ。' },
+    ']': { name: '棚',     look: 'shelf',  solid: true, check: '器や布が、きちんと並べてある。' },
+    '{': { name: '竈',     look: 'hearth', solid: true, check: '竈に、小さな火が残っている。' },
+    '}': { name: '水甕',   look: 'jar',    solid: true, check: '水甕に、汲みたての水が張ってある。' },
+    '|': { name: '書棚',   look: 'books',  solid: true, check: '古い帳面や巻物が、ぎっしりと詰まっている。' },
+    '+': { name: '土間',   look: 'earth' },
+    '*': { name: '茣蓙',   look: 'rug' },
     // ---- 村（第二部）----
     'Y': { name: '藁葺き屋根', look: 'thatch', solid: true },
     'v': { name: '畑',       look: 'crops',  solid: true, check: '細い野菜が植わっている。' },

@@ -29,15 +29,18 @@
       'TTTTTTTTTTTTTpTTTTTTTTTTTTTT',
     ],
     warps: [
+      // 建物の中（js/data/maps/rooms_hijiri.js）
+      { x: 5, y: 4, to: 'hijiri_inn', tx: 5, ty: 7, dir: 'up' },
+      { x: 23, y: 4, to: 'hijiri_shop', tx: 5, ty: 7, dir: 'up' },
+      { x: 5, y: 10, to: 'hijiri_r1', tx: 5, ty: 7, dir: 'up' },
+      { x: 21, y: 10, to: 'hijiri_r2', tx: 5, ty: 7, dir: 'up' },
+      { x: 26, y: 11, to: 'hijiri_r3', tx: 5, ty: 7, dir: 'up' },
       { x: 13, y: 15, to: 'hijiri_path', tx: 13, ty: 1, dir: 'down' },
       { x: 14, y: 2, to: 'hijiri_hall', tx: 8, ty: 8, dir: 'up', requires: { if: 'ch5_konoha' }, blockedText: '大樹の洞を、そのまま広間にした館だ。いまは、入れない。' },
     ],
     onEnter: [{ event: 'ch5_village', chapter: 5, if: 'ch5_sukuna', unless: 'ch5_village' }],
     npcs: [
       { id: 'konoha', look: 'konoha', x: 25, y: 12, dir: 'up', move: 'still', chapter: 5, unless: 'ch5_konoha', event: 'ch5_konoha' },
-      { id: 'inn', look: 'elf', x: 5, y: 5, dir: 'down', move: 'still', inn: true, talk: ['……。'] },
-      { id: 'shop', look: 'elf2', x: 23, y: 5, dir: 'down', move: 'still', shop: 'hijiri',
-        talk: ['取引は、ただ、そこにあるだけだ。'] },
       { id: 'elf_a', look: 'elf', x: 9, y: 8, dir: 'down', move: 'wander',
         talk: ['ただ、視線だけを寄越す。冷たくもなく、温かくもない。そこに、何も乗っていない目だった。'] },
       { id: 'elf_b', look: 'elf2', x: 18, y: 11, dir: 'left', move: 'wander',

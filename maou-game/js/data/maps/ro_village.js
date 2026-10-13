@@ -30,6 +30,13 @@
       'mmmmmmmmmmm::::mmmmmmmmmmm',
     ],
     warps: [
+      // 建物の中（js/data/maps/rooms_ro.js）
+      { x: 4, y: 3, to: 'ro_r1', tx: 5, ty: 7, dir: 'up' },
+      { x: 21, y: 3, to: 'ro_r2', tx: 5, ty: 7, dir: 'up' },
+      { x: 7, y: 6, to: 'ro_r3', tx: 5, ty: 7, dir: 'up' },
+      { x: 18, y: 6, to: 'ro_r4', tx: 5, ty: 7, dir: 'up' },
+      { x: 5, y: 12, to: 'ro_inn', tx: 5, ty: 7, dir: 'up' },
+      { x: 20, y: 12, to: 'ro_shop', tx: 5, ty: 7, dir: 'up' },
       { x: 11, y: 15, to: 'ro_path', tx: 12, ty: 1, dir: 'down' },
       { x: 12, y: 15, to: 'ro_path', tx: 12, ty: 1, dir: 'down' },
       { x: 13, y: 15, to: 'ro_path', tx: 13, ty: 1, dir: 'down' },
@@ -57,8 +64,6 @@
         talk: ['槌を振る職人たちの腕は力強いのに、目の下に、深い隈がある。誰も笑っていない。'] },
       { id: 'smith2', look: 'dwarf2', x: 8, y: 7, dir: 'right', move: 'wander', chapter: 6,
         talk: ['背の低いがっしりした体格のドワーフたちが、口を結んで、黙々と鉄を打っている。'] },
-      { id: 'inn', look: 'dwarf2', x: 5, y: 13, dir: 'down', move: 'still', inn: true, talk: ['「山の夜は冷える」'] },
-      { id: 'shop', look: 'dwarf', x: 20, y: 13, dir: 'down', move: 'still', shop: 'ro', talk: ['……。'] },
     ],
     chests: [{ id: 'scrap', x: 23, y: 4, item: 'hoshiii' }],
     signs: [],

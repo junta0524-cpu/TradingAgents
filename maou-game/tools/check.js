@@ -792,7 +792,7 @@ const { chromium } = require('playwright');
   await talk('amatsu', 23, 9, 'right');
   await runThrough(atMap);
   expect('8章：コトシロと再会', await flag('ch8_meet'), true);
-  await talk('amatsu', 4, 8, 'up');
+  await talk('amatsu_inn', 5, 4, 'up');
   for (let i = 0; i < 10 && !(await scenes()).endsWith('選択肢'); i++) await key('KeyZ', 120);
   await key('KeyZ', 300);   // 夜まで待つ
   await runThrough(atMap);
@@ -1146,6 +1146,25 @@ const { chromium } = require('playwright');
     Object.entries(D.maps).forEach(([id, m]) => ['npcs', 'onEnter', 'triggers', 'spots'].forEach(k => (m[k] || []).forEach(t => { if (typeof t.event === 'string' && !D.events[t.event]) out.push(id + ':' + t.event); })));
     return out.join('、') || 'なし';
   }), 'なし');
+  expect('拠点の扉は、どれも建物の中へ入れる（入口のマスに出入口がある）', await ev(() => {
+    const D = GAME.DATA, out = [];
+    ['minamo', 'hinatano', 'hijiri_village', 'ro_village', 'kuzu_village', 'amatsu', 'amatsu_slum'].forEach(id => {
+      const m = D.maps[id];
+      m.rows.forEach((r, y) => [...r].forEach((c, x) => {
+        if ('dDJ'.includes(c) && !(m.warps || []).some(w => w.x === x && w.y === y)) out.push(`${id}(${x},${y})`);
+      }));
+    });
+    return out.join('、') || 'なし';
+  }), 'なし');
+  {
+    // クリア後のミナモで、網元の家に歩いて入り、歩いて出る
+    await ev(() => { GAME.state.chapter = 13; GAME.scene.change(GAME.scenes.map('minamo', 23, 9, 'up')); }); await wait(300);
+    await closeMessages();
+    await hold('ArrowUp', 260); await wait(300); await closeMessages();
+    const inside = await pos();
+    await hold('ArrowDown', 700); await wait(300); await closeMessages();
+    expect('建物に歩いて入り、歩いて出る（ミナモ 網元の家）', `${inside}→${await pos()}`, 'minamo_r1(5,7)→minamo(23,9)');
+  }
   expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
     const R = GAME.renderer, room = 440 - R.measure('遊んだ時間 99:59') - 8;
     return GAME.DATA.objectives.filter(o => R.measure('目的：' + o.text) > room).map(o => o.text).join('、') || 'なし';
