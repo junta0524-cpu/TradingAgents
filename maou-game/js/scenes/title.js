@@ -1,5 +1,6 @@
 // このファイルの役目：タイトル画面。
-// はじめから／つづきから（記録を選ぶ）／設定（js/scenes/settings.js）／記録の書き出し・読み込み（文字で持ち運ぶ）。
+// はじめから／つづきから（記録を選ぶ）／設定（js/scenes/settings.js）／記録の書き出し・読み込み（文字で持ち運ぶ）／遊び方／
+// 思い出の帳（見た物語の場面を見返す。js/scenes/memories.js）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -42,6 +43,9 @@
       });
   }
 
+  // 思い出の帳の集めた数（見た場面／全部）
+  const memoNote = () => { const c = G.memories.count(); return `${c.seen}/${c.all}`; };
+
   G.scenes.title = function () {
     const makeItems = () => [
       { label: 'はじめから' },
@@ -50,8 +54,9 @@
       { label: '記録の書き出し', disabled: !G.save.any() },
       { label: '記録の読み込み' },
       { label: '遊び方' },
+      { label: '思い出の帳', note: memoNote() },
     ];
-    const menu = new G.ui.Menu(makeItems(), { x: 152, y: 176, w: 176, cancelable: false });
+    const menu = new G.ui.Menu(makeItems(), { x: 152, y: 168, w: 176, cancelable: false });
     G.sound.bgm('title');
 
     return {
@@ -66,7 +71,8 @@
         else if (res.index === 2) G.scenes.openSettings(300, 120);
         else if (res.index === 3) exportMenu();
         else if (res.index === 4) importMenu();
-        else G.message.show(G.DATA.howToPlay);
+        else if (res.index === 5) G.message.show(G.DATA.howToPlay);
+        else G.scene.push(G.scenes.memories());
       },
       draw() {
         const r = G.renderer;

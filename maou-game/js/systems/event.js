@@ -35,6 +35,9 @@
 //   msgfn { fn }                … その場で作った文を出す（四系統の育ち具合など）
 //   stop                        … この場面をここで終える（天の声の問いをまちがえたとき）
 //   count { key }               … 数を1つ増やす（G.state.vars[key]。選択の結果を後の章で使う）
+//
+// 見返し（思い出の帳。G.event.run(場面, 終わり, { replay: true })）：文・背景・人・暗転・曲・手紙・選択肢だけを流す。
+// 仲間・フラグ・状態・場所・記録・戦い・習得は変えない（戦いは「（戦い）」と出すだけ）。帳にある別の場面を call しても流さない。
 (function () {
   const G = window.GAME = window.GAME || {};
 
@@ -47,12 +50,18 @@
     return script.slice();
   }
 
-  function createEventScene(cmds, onDone, music) {
+  // 見返しのときに飛ばす命令（遊んでいる記録を変えるもの）
+  const REPLAY_SKIP = new Set(['party', 'rename', 'walk', 'state', 'flag', 'save', 'learn', 'join', 'leave', 'inhibit', 'item', 'pillar', 'run', 'teach', 'count', 'msgfn']);
+
+  function createEventScene(cmds, onDone, music, opts) {
+    opts = opts || {};
+    const replay = !!opts.replay;
+    let place = opts.place || '';   // 見返しで背景の絵がないときに出す場所の名前
     let i = 0, waiting = false, timer = 0;
     let bg = null, actors = [], card = null, fadeA = 0, fadeTo = 0, fadeColor = '0,0,0', letter = null, walking = false;
     const self = {
       name: 'イベント',
-      get opaque() { return !!bg || !!card; },
+      get opaque() { return replay || !!bg || !!card; },
       get bg() { return bg; },
       resume() { waiting = false; },
       update() {
@@ -72,6 +81,11 @@
       },
       draw() {
         const r = G.renderer;
+        // 見返し：背景の絵がないところ（歩くマップの場面）は、暗い紙に場所の名前
+        if (replay && !bg) {
+          for (let k = 0; k < 20; k++) r.rect(0, k * 16, r.W, 16, `rgb(${24 + k}, ${18 + k}, ${14 + k})`);
+          if (place) { G.ui.drawWindow(8, 8, Math.min(464, r.measure(place) + 32), 28); r.text(place, 24, 15, '#e8e0c8'); }
+        }
         if (bg) {
           G.backdrop.draw(bg);
           actors.forEach(a => {
@@ -110,6 +124,21 @@
     }
 
     function step(c) {
+      if (replay) {
+        if (REPLAY_SKIP.has(c.t)) return;
+        switch (c.t) {
+          case 'goto': { const m = G.DATA.maps[c.map]; if (m && m.name) place = m.name; return; }
+          case 'call': if (G.memories && G.memories.isListed(c.id)) return; break;   // 帳にある別の場面は、それぞれ見返す
+          case 'if': {   // 遊んでいる記録がなければ、then の方を流す
+            const on = !G.state || (c.all ? c.all.every(f => G.flags.get(f)) : G.flags.get(c.flag)) !== !!c.not;
+            cmds.splice(i, 0, ...((on ? c.then : c.else) || []));
+            return;
+          }
+          case 'battle': waiting = true; G.message.show('（戦い）'); return;
+          case 'rampage': waiting = true; G.message.show('（蹂躙戦闘）'); return;
+          case 'chapter': cmds.splice(i, cmds.length - i); return;
+        }
+      }
       switch (c.t) {
         case 'say': case 'nar': {
           // 続くセリフと語りを、まとめて1回で流す
@@ -152,7 +181,7 @@
           cmds.splice(i, 0, ...branch);
           return;
         }
-        case 'call': cmds.splice(i, 0, ...resolve(c.id)); return;
+        case 'call': if (!replay && G.memories) G.memories.mark(c.id); cmds.splice(i, 0, ...resolve(c.id)); return;
         case 'rampage':
           waiting = true;
           G.scene.push(G.scenes.rampage(c.key, { noAfter: c.noAfter, onEnd: () => { G.scene.pop(); } }));
@@ -186,7 +215,7 @@
         case 'choice': {
           waiting = true;
           // disabled: true の選択肢は灰色（選ぶと disabledText を出す）
-          G.ui.choose(c.options.map(o => ({ label: o.label, disabled: !!o.disabled || (o.doneIf && G.flags.get(o.doneIf)) })), {
+          G.ui.choose(c.options.map(o => ({ label: o.label, disabled: !!o.disabled || (!replay && o.doneIf && G.flags.get(o.doneIf)) })), {
             x: 8, y: 240 - 22 - c.options.length * 16 - 20, w: 300, title: c.text, name: '選択肢', cancelable: false,
             onDisabled: k => G.message.show(c.options[k].doneIf && G.flags.get(c.options[k].doneIf) ? 'もう、済んでいる。' : (c.options[k].disabledText || '……。')),
           }, k => { cmds.splice(i, 0, ...(c.options[k].then || [])); waiting = false; });
@@ -238,10 +267,13 @@
   G.event = {
     running: 0,
     pending: null,    // 言伝などで、メニューを閉じてから流す場面
-    run(script, onDone) {
+    // opts.replay：思い出の帳から見返す（記録を変えない）
+    run(script, onDone, opts) {
+      opts = opts || {};
       G.event.running++;
       const music = typeof script === 'string' && G.DATA.music ? G.DATA.music.events[script] : null;
-      G.scene.push(createEventScene(resolve(script), onDone, music));
+      if (typeof script === 'string' && !opts.replay && G.memories) G.memories.mark(script);
+      G.scene.push(createEventScene(resolve(script), onDone, music, opts));
     },
   };
 })();

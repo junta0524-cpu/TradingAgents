@@ -1277,6 +1277,27 @@ const { chromium } = require('playwright');
   expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/7');
   await closeMessages();
 
+  // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない
+  expect('思い出の帳：一覧の場面はどれも物語にある', await ev(() => GAME.DATA.memories.list.filter(m => !GAME.DATA.events[m.id]).map(m => m.id).join()), '');
+  await ev(() => { localStorage.removeItem('maou_memories'); });
+  await key('ArrowDown', 60); await key('KeyZ', 400);
+  expect('思い出の帳が開く', await scenes(), 'タイトル > 思い出の帳');
+  await shot('94_memories');
+  const memo = await ev(() => {
+    GAME.memories.mark('ch4_guild');
+    const c = GAME.memories.count(), before = JSON.stringify([GAME.state, GAME.flags.data, GAME.scene.names()]);
+    return { c, before };
+  });
+  expect('思い出の帳：見た場面が数に入る', memo.c.seen >= 1 && memo.c.all === await ev(() => GAME.DATA.memories.list.length), true);
+  await ev(() => { window.__memoDone = false; GAME.memories.replay('ch4_guild', () => { window.__memoDone = true; }); });
+  await wait(600); await shot('95_memories_replay');
+  await page.keyboard.down('Shift');
+  for (let i = 0; i < 300 && !(await ev(() => window.__memoDone)); i++) await key('KeyZ', 30);
+  await page.keyboard.up('Shift');
+  expect('思い出の帳：見返しが終わると帳へ戻り、記録は変わらない', await ev(() => JSON.stringify([GAME.state, GAME.flags.data, GAME.scene.names()])) === memo.before && await ev(() => window.__memoDone), true);
+  await key('KeyX', 200);
+  expect('思い出の帳：Xでタイトルへ', await scenes(), 'タイトル');
+
   // スマホ縦画面
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   mobile.on('pageerror', e => errors.push('mobile pageerror: ' + e.message));
