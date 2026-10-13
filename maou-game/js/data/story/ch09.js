@@ -15,9 +15,18 @@
     { t: 'party', ids: ['bell', 'oonamuchi'] },
     { t: 'rename', id: 'bell', name: BELL, look: null },
     { t: 'state', set: { disguised: true, inhibitShown: true } },
-    { t: 'run', fn: () => G.inhibit.set(Math.min(G.state.inhibit, 40)) },
     { t: 'flag', set: 'amatsu_night' },
+    { t: 'goto', map: 'minamo_guild', x: 7, y: 4, dir: 'up' },   // 5〜9章はミナモのギルドの受付から始まる（ユーザー決定）
+    { t: 'fade', to: 0 },
+    S('受付の女', '「次の方」'),
+    N('（行き先：王都　天津京。祝賀の夜。ミナモを出て、人間界の地図を東へ）'),
+    { t: 'state', set: { resume: null } },
     { t: 'save' },
+  ];
+  // 祝賀の夜の天津京に着いたとき（マップの onEnter）：コトシロの場面から、やすらぎの院へ
+  E.ch9_festival = [
+    { t: 'fade', to: 1 },
+    { t: 'run', fn: () => G.inhibit.set(Math.min(G.state.inhibit, 40)) },
     { t: 'bg', key: 'festival', actors: [{ look: 'kotoshiro', x: 240, y: 260, dir: 'down' }] },
     { t: 'fade', to: 0 },
     N('祝賀の夜の天津京は、昼よりも白かった。'),

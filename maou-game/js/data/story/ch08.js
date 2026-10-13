@@ -14,10 +14,18 @@
     { t: 'title', text: '第八章', sub: '白い都の、静かな夜' },
     { t: 'party', ids: ['bell', 'oonamuchi'] },
     { t: 'rename', id: 'bell', name: BELL, look: null },
-    { t: 'state', set: { disguised: true, inhibitShown: true, inhibit: 70 } },
+    { t: 'state', set: { disguised: true, inhibitShown: true } },
     { t: 'flag', set: 'amatsu_night', value: false },
-    { t: 'goto', map: 'amatsu', x: 15, y: 18, dir: 'up' },
+    { t: 'goto', map: 'minamo_guild', x: 7, y: 4, dir: 'up' },   // 5〜9章はミナモのギルドの受付から始まる（ユーザー決定）
     { t: 'fade', to: 0 },
+    S('受付の女', '「次の方」'),
+    N('（行き先：王都　天津京。ミナモを出て、人間界の地図を東へ）'),
+    { t: 'state', set: { resume: null } },
+    { t: 'save' },
+  ];
+  // 天津京に着いたとき（マップの onEnter）。阻害ゲージは王都に入ってから70に
+  E.ch8_arrive = [
+    { t: 'state', set: { inhibit: 70 } },
     N('天津京は、白かった。'),
     N('ベルは城門をくぐったところで、立ち止まった。石畳も、家々の壁も、街路樹を囲む柵も、すべて磨き上げたように白い。ミナモの雑多な賑わいとも、黄泉の市場の混ざり合った匂いとも違う。ここには、匂いがほとんどなかった。'),
     N('人は多い。ただ、誰も大声を出さない。荷車の車輪の音さえ、布でも巻いたように静かだった。'),

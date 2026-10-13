@@ -696,7 +696,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.story.jump(4)); await runThrough(atMap);
 
   // ===== フェーズ7：第二部前半（4〜7章）=====
-  const walkTo = async (id, x, y, dir, k, ms = 250) => { await placeAt(id, x, y, dir); await wait(200); await hold(k, ms); await wait(500); };
+  const walkTo = async (id, x, y, dir, k, ms = 250) => { await placeAt(id, x, y, dir); await ev(() => { if (GAME.state.encounterSteps < 5) GAME.state.encounterSteps = 5; }); await wait(200); await hold(k, ms); await wait(500); };
   const talk = async (id, x, y, dir) => { await placeAt(id, x, y, dir); await wait(200); await key('KeyZ', 300); };
   const flag = f => ev(new Function('return GAME.flags.get(' + JSON.stringify(f) + ')'));
   const names = () => ev(() => GAME.state.party.map(p => p.name).join('・'));
@@ -716,7 +716,13 @@ const { chromium } = require('playwright');
   await runThrough(() => { const e = GAME.scene.find('イベント'); return !!e && e.bg === 'sunset'; });
   await wait(900); await shot('63_ch4_sunset');
   await runThrough(() => GAME.state.chapter === 5 && GAME.scene.names().join() === 'マップ');
-  expect('5章：聖の森の道へ', await pos(), 'hijiri_path(13,20)');
+  expect('5章：ミナモのギルドの受付から始まる', await pos(), 'minamo_guild(7,4)');
+  expect('5章：目的は聖の森へ', await ev(() => GAME.objective()), 'ミナモを出て西の聖の森へ。森の道を北へ');
+  // 受付から歩いて行ける：ギルド → 町の南 → 人間界の地図 → 聖の森
+  await walkTo('minamo_guild', 7, 9, 'down', 'ArrowDown', 150);
+  expect('5章：ギルドを出て町へ', await pos(), 'minamo(13,9)');
+  await walkTo('world_ningen', 7, 14, 'down', 'ArrowDown', 150);
+  expect('5章：人間界の地図から聖の森の道へ', await pos(), 'hijiri_path(13,20)');
   // 5章
   await walkTo('hijiri_path', 13, 17, 'up', 'ArrowUp', 150);
   await runThrough(atMap);
@@ -762,7 +768,10 @@ const { chromium } = require('playwright');
   expect('6章：カナメも加わって山道を下る', `${await pos()}/${await names()}`, 'ro_path(12,1)/ベル・オオナムチ・コトシロ・カナメ');
   await walkTo('ro_path', 12, 19, 'down', 'ArrowDown', 150);
   await runThrough(() => GAME.state.chapter === 7 && GAME.scene.names().join() === 'マップ');
-  expect('7章：獣ノ原でウズメが加わる', `${await pos()}/${await names()}`, 'kemono_field(1,10)/ベル・オオナムチ・ウズメ');
+  expect('7章：ミナモのギルドから', await pos(), 'minamo_guild(7,4)');
+  await walkTo('world_ningen', 12, 3, 'up', 'ArrowUp', 150);
+  await runThrough(atMap);
+  expect('7章：獣ノ原に着くとウズメが加わる', `${await pos()}/${await names()}`, 'kemono_field(1,10)/ベル・オオナムチ・ウズメ');
   // 7章
   await walkTo('kemono_field', 13, 10, 'right', 'ArrowRight', 150);
   await runThrough(atMap);
@@ -789,7 +798,7 @@ const { chromium } = require('playwright');
   expect('7章：ウズメとも別れる', await names(), 'ベル・オオナムチ');
   await castKotozute();
   await runThrough(() => GAME.state.chapter === 8 && GAME.scene.names().join() === 'マップ');
-  expect('8章：王都 天津京へ', await pos(), 'amatsu(15,18)');
+  expect('8章：ミナモのギルドから', await pos(), 'minamo_guild(7,4)');
   // デバッグ：6章へ飛ぶと、オオナムチがその章の強さになる
   await ev(() => GAME.story.jump(6)); await runThrough(atMap);
   expect('デバッグで6章へ：レベル7・心鎮めあり', await ev(() => { const o = GAME.party.member('oonamuchi'); return o.lv + '/' + o.kotodama.includes('kokoroshizume'); }), '7/true');
@@ -797,6 +806,8 @@ const { chromium } = require('playwright');
 
   // ===== フェーズ8：8〜12章・エピローグ =====
   await ev(() => { GAME.rng.setFixed(true); GAME.story.jump(8); }); await wait(300);
+  await runThrough(atMap);
+  await walkTo('world_ningen', 26, 12, 'up', 'ArrowUp', 150);
   await runThrough(atMap);
   expect('8章：天津京、阻害ゲージ70', `${await pos()}/${await ev(() => Math.round(GAME.state.inhibit))}`, 'amatsu(15,18)/70');
   await shot('70_ch8_city');
@@ -819,7 +830,10 @@ const { chromium } = require('playwright');
   await runThrough(atMap);
   await castKotozute();
   await runThrough(() => GAME.state.chapter === 9 && GAME.scene.names().join() === 'マップ');
-  expect('9章：やすらぎの院', await pos(), 'yasuragi(13,18)');
+  expect('9章：ミナモのギルドから', await pos(), 'minamo_guild(7,4)');
+  await walkTo('world_ningen', 26, 12, 'up', 'ArrowUp', 150);
+  await runThrough(() => GAME.scene.top().mapId === 'yasuragi' && GAME.scene.names().join() === 'マップ');
+  expect('9章：天津京に着くと祝賀の夜の場面から、やすらぎの院', await pos(), 'yasuragi(13,18)');
   await shot('72_ch9_sanatorium');
   // 見張りに見つかると塀の外へ戻る
   await ev(() => GAME.scene.change(GAME.scenes.map('yasuragi', 5, 13, 'right'))); await wait(200);

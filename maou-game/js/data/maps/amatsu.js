@@ -34,6 +34,8 @@
       '13333333333333333333333333333331',
       '11111111111111133111111111111111',
     ],
+    // 8章：着いたときの場面／9章：祝賀の夜のコトシロの場面から、やすらぎの院へ
+    onEnter: [{ event: 'ch8_arrive', chapter: 8, unless: 'ch8_arrive' }, { event: 'ch9_festival', chapter: 9, unless: 'ch9_in' }],
     warps: [
       // 建物の中（js/data/maps/rooms_amatsu.js）
       { x: 15, y: 5, to: 'amatsu_hall', tx: 5, ty: 7, dir: 'up' },

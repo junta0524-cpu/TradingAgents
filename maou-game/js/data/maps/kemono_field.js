@@ -38,6 +38,8 @@
     ],
     // 岩陰の抜け道（ウズメが見つけると開く）
     flagTiles: [{ x: 24, y: 15, ch: 'e', if: 'ch7_secret' }],
+    // 7章：ミナモから着くと、ウズメが待っている
+    onEnter: [{ event: 'ch7_arrive', chapter: 7, unless: 'ch7_uzume' }],
     warps: [
       // 南東の岩溝：風の岩溝（寄り道。js/data/maps/kemono_ravine.js）
       { x: 30, y: 19, to: 'kemono_ravine', tx: 3, ty: 15, dir: 'up' },
