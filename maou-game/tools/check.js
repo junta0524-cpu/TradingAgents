@@ -111,7 +111,7 @@ const { chromium } = require('playwright');
   // デバッグ：マップへ移動・フラグ一覧
   await key('F1', 200); await key('ArrowDown', 60); await key('KeyZ', 200);
   await shot('09_debug_maps');
-  for (let i = 0; i < 4; i++) await key('ArrowDown');
+  { const n = await ev(() => Object.keys(GAME.DATA.maps).indexOf('field_minamo')); for (let i = 0; i < n; i++) await key('ArrowDown', 60); }
   await key('KeyZ', 400);
   expect('デバッグでマップ移動', await pos(), 'field_minamo(20,3)');
   await key('F1', 200);
@@ -1162,7 +1162,7 @@ const { chromium } = require('playwright');
     await closeMessages();
     await hold('ArrowUp', 260); await wait(300); await closeMessages();
     const inside = await pos();
-    await hold('ArrowDown', 700); await wait(300); await closeMessages();
+    await hold('ArrowDown', 260); await wait(300); await closeMessages();
     expect('建物に歩いて入り、歩いて出る（ミナモ 網元の家）', `${inside}→${await pos()}`, 'minamo_r1(5,7)→minamo(23,9)');
   }
   expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
