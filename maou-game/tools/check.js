@@ -1020,6 +1020,14 @@ const { chromium } = require('playwright');
   expect('クリア後：魔界の大穴から人間界へ', await pos(), 'world_ningen(16,11)');
   await placeAt('world_ningen', 16, 14, 'up'); await wait(300); await hold('ArrowUp', 200); await wait(400);
   expect('クリア後：人間界の町にも入れる（ミナモ）', await pos(), 'minamo(15,22)');
+  expect('偽名の間、オオナムチのいない場面ではベルの印象が薄れる', await ev(() => {
+    const d = GAME.state.disguised; GAME.state.disguised = true;
+    const alone = GAME.inhibit.impression('bell', [{ look: 'bell' }, { look: 'guild' }]);
+    const withOo = GAME.inhibit.impression('bell', [{ look: 'bell' }, { look: 'oonamuchi' }]);
+    GAME.state.disguised = false; const trueForm = GAME.inhibit.impression('bell', [{ look: 'bell' }]);
+    GAME.state.disguised = d;
+    return `${alone < 1}/${withOo}/${trueForm}`;
+  }), 'true/1/1');
   expect('敵全体への攻撃では会心が出ない', await ev(() => {
     const bell = GAME.party.member('bell'), ch = GAME.state.chapter, orig = GAME.rng.chance;
     GAME.state.chapter = 2; GAME.rng.chance = () => true;   // 会心の判定を必ず当たりにしても出ない

@@ -77,6 +77,7 @@
           actors.forEach(a => {
             const ctx = r.ctx;
             ctx.save(); ctx.translate(a.x, a.y); ctx.scale(2, 2); ctx.imageSmoothingEnabled = false;
+            ctx.globalAlpha = G.inhibit.impression(a.look, actors);   // 偽名の間、オオナムチのいない場面ではベルの印象が薄れる
             G.sprite.drawPerson(ctx, a.look, a.dir || 'down', 0, false, -8, -16);
             ctx.restore();
           });

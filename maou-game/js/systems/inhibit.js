@@ -48,5 +48,13 @@
     r.rect(x + 40, y + 8, Math.round(w * t), h, `rgb(${red}, ${Math.round(90 * t + 40)}, ${blue})`);
   }
 
-  G.inhibit = { on, value, ratio, exposed, set, drain, kotodamaCost, step, rest, warning, drawGauge };
+  // 認識阻害の見え方（仕様書 7-1）：偽名の間、オオナムチのいない場面では、ベルの印象が薄れて見える。
+  // オオナムチだけは影響を受けにくいので、同じ場面にいればベルはくっきり描く。戻り値は描くときの濃さ（1＝くっきり）
+  function impression(look, actors) {
+    if (look !== 'bell' || !G.state || !G.state.disguised) return 1;
+    if ((actors || []).some(a => a.look === 'oonamuchi')) return 1;
+    return I().FADE_ALPHA + I().FADE_SWAY * Math.sin(G.frame / 12);
+  }
+
+  G.inhibit = { on, value, ratio, exposed, set, drain, kotodamaCost, step, rest, warning, drawGauge, impression };
 })();
