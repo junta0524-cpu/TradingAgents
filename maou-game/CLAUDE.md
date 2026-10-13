@@ -85,3 +85,4 @@
 - クリア後のやりこみ：フィールドの `encounter.byChapter[13]` を `{ byLevel: [{ from, groups }] }` にして、オオナムチのレベルで強い敵（`zantou` 残党の将・`orochi` 黄泉の大蛇・`nakui_ou` 名喰いの王。enemies_post.js）が出る。魔界のフィールドの城・村・町は地面が魔界の色のマス（`<` `>` `@`）。
 - 認識阻害の見え方（仕様書 7-1）：偽名の間（4〜9章）、場面にオオナムチがいないと、ベルの姿がうっすら揺らいで描かれる（`G.inhibit.impression`、濃さは balance.js の `INHIBIT.FADE_ALPHA`／`FADE_SWAY`）。オオナムチがいればくっきり。
 - 文字の大きさ（設定）：`G.settings.textSize`（normal／large）。large のとき会話の窓だけ文字が balance.js の `TEXT_SIZE_LARGE`（16）になり、窓が少し高くなる（`js/core/message.js`）。`G.renderer.text/measure/wrap` は最後の引数で文字の大きさを指定できる。マップでも、偽名の間にオオナムチと一緒にいないベルは薄く描く。
+- 1章の話し手（ユーザー決定）：「三倍で済むなら安いものだ」はベルイザナ、「何を――」はオモイカ。「行ってください、どうか――」は小説で「誰の手だったか、分からない」なので名前なしのまま。6章でコトシロが仲間になるのは仕様書（商人・鑑定の加入）どおり。
