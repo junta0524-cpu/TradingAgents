@@ -87,6 +87,17 @@ async function run(page, expect) {
     }
     await idle();
   };
+  // 番人と戦う（調べる→「戦いますか？」はい→勝つまで決定キー）
+  const fight = async (dir, mapId) => {
+    await face(dir); await page.keyboard.press('KeyZ'); await wait(250);
+    for (let i = 0; i < 400; i++) {
+      const s = await scenes();
+      if (s === 'マップ' && i > 3) break;
+      await page.keyboard.press('KeyZ'); await wait(s.includes('戦闘') ? 60 : 150);
+    }
+    await idle();
+    return flag(`gm:${mapId}:nushi`);
+  };
   const place = async (id, x, y, dir) => { await ev(([id, x, y, dir]) => { GAME.scene.change(GAME.scenes.map(id, x, y, dir)); }, [id, x, y, dir]); await wait(250); await closeMsgs(); await idle(); };
   const has = id => ev(id => GAME.party.count(id), id);
   const flag = f => ev(f => GAME.flags.get(f), f);
@@ -97,6 +108,9 @@ async function run(page, expect) {
     const o = GAME.party.member('oonamuchi');
     o.kotodama = ['katame', 'iyashi', 'kokoroshizume', 'hidane', 'miyaburi', 'ikazuchi'];
     o.maxMp = o.mp = 999;
+    // 番人と戦えるだけの強さ（作戦は「うまくやって」で自動）
+    while (o.lv < 70) { o.exp = GAME.DATA.balance.EXP_TABLE[o.lv + 1]; GAME.growth.checkLevelUp(o); }
+    o.hp = o.maxHp; o.mp = o.maxMp = 999; GAME.state.party.forEach(m => { m.tactic = 'auto'; });
   });
 
   // ---- 1. 苔むした地下道 ----
@@ -107,6 +121,8 @@ async function run(page, expect) {
   await goTo(18, 4, '地下道 苔の広間'); await examine('r');
   expect('地下道：苔の広間を滑ってレバーへ→門が開く', await flag('deep_lever'), true);
   await goTo(19, 1, '地下道 宝箱'); await examine('r');
+  await goTo(18, 11, '地下道 門'); 
+  expect('地下道：番人（苔の大蜘蛛）を倒すと、宝の部屋へ入れる', await fight('u', 'hijiri_deep'), true);
   await goTo(20, 10, '地下道 門の奥'); await examine('u');
   await goTo(2, 5, '地下道 蔦の前'); await examine('u');
   await goTo(4, 2, '地下道 蔦の奥'); await examine('u');
@@ -136,6 +152,8 @@ async function run(page, expect) {
   expect('坑道：鍵を手に入れる', await has('koudou_kagi'), 1);
   await goTo(5, 4, '坑道 鍵の扉'); await examine('l');
   expect('坑道：鍵で扉が開き、鍵はなくなる', `${await flag('gm:ro_mine:door')}/${await has('koudou_kagi')}`, 'true/0');
+  await goTo(4, 4, '坑道 扉');
+  expect('坑道：番人（岩喰らい）を倒す', await fight('l', 'ro_mine'), true);
   await goTo(2, 4, '坑道 宝物庫'); await examine('l');
   expect('坑道：鋼の剣', await has('hagane_ken'), 1);
   await place('ro_mine', 17, 14, 'up'); await examine('u');
@@ -151,6 +169,8 @@ async function run(page, expect) {
   await goTo(2, 1, '岩溝 鍵の部屋'); await examine('l');
   expect('岩溝：風の迷路を抜けて鍵', await has('iwamizo_kagi'), 1);
   await goTo(14, 1, '岩溝 扉の前'); await examine('l');
+  await goTo(13, 1, '岩溝 扉');
+  expect('岩溝：番人（風の大鷲）を倒す', await fight('l', 'kemono_ravine'), true);
   await goTo(10, 1, '岩溝 宝'); await examine('l');
   expect('岩溝：鍵の扉の奥で風切りの外套', await has('kazekiri_gaitou'), 1);
   await goTo(3, 15, '岩溝 帰り道');
@@ -172,6 +192,8 @@ async function run(page, expect) {
   expect('上層：灯籠を順番ちがいで灯すと消える', await ev(() => GAME.scene.find('マップ').gimmickState.seq.moon || 0), 0);
   for (const [x, y, d] of [[14, 2, 'r'], [11, 2, 'd'], [8, 2, 'l'], [11, 2, 'u']]) { await goTo(x, y, '上層 灯籠'); await examine(d); }
   expect('上層：月の道すじ（東→南→西→北）で灯すと北の門が開く', await flag('oana_moon'), true);
+  await goTo(16, 1, '上層 門');
+  expect('上層：番人（氷門の番人）を倒す', await fight('u', 'oana_jou'), true);
   await goTo(16, 0, '上層 下への石段');
   expect('上層：石段から中層へ', await pos(), 'oana_chuu(12,2)');
 
@@ -186,6 +208,8 @@ async function run(page, expect) {
   await goTo(18, 2, '中層 大岩の前'); await examine('r');
   await goTo(22, 4, '中層 大岩の奥'); await examine('d');
   expect('中層：見破り（偽の壁）と雷（大岩）の奥の宝', `${await has('yomiishi_ken')}/${await has('akatsuki_yoroi')}`, '1/1');
+  await goTo(12, 15, '中層 門');
+  expect('中層：番人（大穴の主）を倒す', await fight('d', 'oana_chuu'), true);
   await goTo(12, 16, '中層 最深部への石段');
   expect('中層：門の先の石段から、大穴の最深部へ', await pos(), 'oana_soko(12,19)');
   // ひびの床から落ちると中層へ

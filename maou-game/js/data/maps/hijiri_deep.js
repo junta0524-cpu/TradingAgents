@@ -40,6 +40,7 @@
     gimmicks: [
       {'type': 'seal', 'id': 'wisp', 'x': 6, 'y': 11, 'ch': '霊', 'need': 'kokoroshizume', 'text': '青白い火の玉が、通路の前で荒ぶっている。近づけない。', 'done': '火の玉は静まり、ふっと消えていった。'},
       {'type': 'seal', 'id': 'vine', 'x': 2, 'y': 4, 'ch': '蔦', 'need': 'hidane', 'text': '太い蔦が、幾重にも絡み合って道をふさいでいる。火があれば……。', 'done': '蔦は、ぱちぱちと音を立てて燃え落ちた。'},
+      {'type': 'guardian', 'id': 'nushi', 'x': 18, 'y': 10, 'enemies': ['koke_ookumo'], 'text': '苔に覆われた大きな影が、宝のある部屋をふさいでいる。赤い目が、こちらを見た。', 'win': '大蜘蛛は、苔の中へ崩れ落ちた。'},
       {'type': 'lever', 'id': 'lever', 'x': 19, 'y': 4, 'flag': 'deep_lever', 'once': true, 'text': '苔に埋もれたレバーを倒した。遠くで、門の上がる音がした。', 'doneText': 'レバーは、倒れたままだ。'},
     ],
     chests: [

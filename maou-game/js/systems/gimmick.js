@@ -1,5 +1,6 @@
 // このファイルの役目：ダンジョンのしかけ（マップの gimmicks）。押せる岩・穴埋め・重しの床・レバーと門・
-// 言霊で開く道（火種で蔦を焼く など）・鍵の扉・灯籠を順に灯す謎・暗闇と燭台・滑る床・流れる床・熱い床・落とし穴。
+// 言霊で開く道（火種で蔦を焼く など）・鍵の扉・灯籠を順に灯す謎・暗闇と燭台・滑る床・流れる床・熱い床・落とし穴・
+// 番人（奥の宝を守る強い敵。調べると「戦いますか？」。倒すまで道をふさぐ）。
 // 地形の文字は js/data/tiles.js、数字は balance.js の GIMMICK。歩く画面（js/scenes/map.js）から呼ばれる。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -38,7 +39,8 @@
   function objectAt(st, x, y) {
     const b = st.boulders.find(o => o.x === x && o.y === y);
     if (b) return { type: 'boulder', ref: b };
-    return list(st.map).find(g => g.x === x && g.y === y && ['lever', 'lantern', 'torch'].includes(g.type)) || null;
+    return list(st.map).find(g => g.x === x && g.y === y && (['lever', 'lantern', 'torch'].includes(g.type)
+      || (g.type === 'guardian' && !G.flags.get(flagOf(st.mapId, g))))) || null;
   }
   const blocks = (st, x, y) => !!objectAt(st, x, y);
 
@@ -154,6 +156,17 @@
         });
         return true;
       }
+      case 'guardian': {
+        if (done) return false;
+        // 戦う前に記録する（負けたら、ここからやり直し）
+        G.message.show(g.text, () => G.ui.confirm('戦いますか？', () => G.event.run([
+          { t: 'save' },
+          { t: 'battle', enemies: g.enemies, bg: g.bg || st.map.battleBg },
+          { t: 'flag', set: f },
+          { t: 'nar', text: g.win || '番人は崩れ落ち、道が開いた。' },
+        ], () => api.rebuild())));
+        return true;
+      }
       default:
         return false;
     }
@@ -191,6 +204,7 @@
       }
     });
     st.boulders.forEach(b => draw('boulder', b.x, b.y));
+    list(st.map).forEach(g => { if (g.type === 'guardian' && !G.flags.get(flagOf(st.mapId, g))) draw('guardian', g.x, g.y); });
     return out;
   }
 
