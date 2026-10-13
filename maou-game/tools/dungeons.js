@@ -226,7 +226,7 @@ async function run(page, expect) {
   await place('field_minamo', 7, 26, 'up');
   await goTo(7, 22, '野原 木立の奥'); for (const k of 'll') await step(k);
   await goTo(4, 22, '野原 埋めた穴'); await examine('u');
-  expect('野原：木立の岩を穴へ押し込み、宝箱（守り石）', await has('mamori_ishi'), 1);
+  expect('野原：木立の岩を穴へ押し込み、宝箱（守りの玉）', await has('mamori_ishi'), 1);
   await place('hijiri_path', 5, 2, 'left'); await examine('l');
   await place('hijiri_path', 4, 2, 'left'); await examine('l');
   await place('hijiri_path', 9, 18, 'left'); await examine('l');
