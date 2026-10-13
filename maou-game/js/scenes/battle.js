@@ -17,7 +17,8 @@
   ];
   const ENEMY_SCALE = 3;
   const ENEMY_BASE_Y = 178;   // 敵の足元の高さ
-  const CMD_Y = 196;          // コマンド窓の上端
+  const CMD_Y = 196;          // コマンド窓の上端（ふつうの文字・5項目のとき）
+  const CMD_BOTTOM = 312;     // コマンド窓の下端
 
   G.debugOpts = G.debugOpts || { showCalc: false };
 
@@ -109,7 +110,8 @@
       cmdList = G.DATA.characters[m.id].isBell
         ? [COMMANDS[0], { label: '本気', type: 'fullpower' }].concat(COMMANDS.slice(1))
         : COMMANDS;
-      menu = new G.ui.Menu(cmdList.map(c => ({ label: c.label })), { x: 8, y: CMD_Y - (cmdList.length - 5) * 16, w: 150, title: m.name });
+      menu = new G.ui.Menu(cmdList.map(c => ({ label: c.label })), { x: 8, y: CMD_Y, w: 150, title: m.name });
+      menu.y = CMD_BOTTOM - menu.h;   // 下の端をそろえる（項目の数や文字の大きさで高さが変わる）
       phase = 'command';
     }
     function setCommand(cmd) { commands[cmdIndex] = cmd; nextMember(); }
@@ -142,11 +144,13 @@
             disabled: !ok || m.mp < s.d.mp,
           };
         }), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '言霊（MP ' + m.mp + '）' });
+        subMenu.y = CMD_BOTTOM - subMenu.h;
       } else {
         subList = G.state.items.filter(s => { const d = G.DATA.items[s.id]; return d.type === 'use' && (d.use === 'both' || d.use === 'battle'); })
           .map(s => ({ id: s.id, d: G.DATA.items[s.id], count: s.count }));
         if (!subList.length) { flashNote('使える道具を持っていない。'); return; }
         subMenu = new G.ui.Menu(subList.map(s => ({ label: s.d.name, note: '×' + s.count })), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '道具' });
+        subMenu.y = CMD_BOTTOM - subMenu.h;
       }
       subMenu.kind = kind;
       phase = 'sub';
@@ -413,7 +417,7 @@
         }
 
         // 右上：味方の体力（4人でも収まるよう、1人30ドット）
-        const sw = 150, sx = r.W - sw - 8, rowH = party.length > 2 ? 30 : 34;
+        const big = r.large(), sw = 150, sx = r.W - sw - 8, rowH = big ? 35 : (party.length > 2 ? 30 : 34), hpDy = big ? 17 : 16;
         G.ui.drawWindow(sx, 8, sw, 12 + party.length * rowH);
         party.forEach((p, i) => {
           const y = 14 + i * rowH;
@@ -424,8 +428,8 @@
           r.text(mark + p.name, sx + 10, y, color);
           const tags = G.status.tags(p) + (p.buffs && p.buffs.def ? '守↑' : '') + (p.buffs && p.buffs.atk ? '攻↑' : '') + (p.guard > 0 ? '岩' : '') + (p.reflect > 0 ? '鏡' : '') + (p.stance && G.affinity.known() ? '[' + G.DATA.tribes[p.stance].short + ']' : '');
           if (tags) r.text(tags, sx + sw - 10, y, '#9cf', 'right');
-          r.text(`HP ${p.hp}/${p.maxHp}`, sx + 10, y + 16, color);
-          r.text(`MP ${p.mp}`, sx + sw - 10, y + 16, color, 'right');
+          r.text(`HP ${p.hp}/${p.maxHp}`, sx + 10, y + hpDy, color);
+          r.text(`MP ${p.mp}`, sx + sw - 10, y + hpDy, color, 'right');
         });
 
         // 下：コマンド／文章

@@ -1071,6 +1071,18 @@ const { chromium } = require('playwright');
   }), 'true/true/true');
   await placeAt('minamo', 15, 12, 'down'); await wait(300); await key('KeyX', 300); await shot('95_menu_goal');
   for (let i = 0; i < 3 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 150);
+  expect('文字を大きくすると、メニューや戦闘の字も大きくなる（ふつう12→14）', await ev(() => {
+    const keep = GAME.settings.textSize, R = GAME.renderer, out = [R.baseSize()];
+    GAME.settings.textSize = 'large'; out.push(R.baseSize(), new GAME.ui.Menu([{ label: 'a' }]).lineH);
+    GAME.settings.textSize = keep; return out.join('/');
+  }), '12/14/18');
+  expect('文字を大きくしても、戦いのコマンド窓は画面に収まる（ベルの6項目でも）', await ev(() => {
+    const keep = GAME.settings.textSize; GAME.settings.textSize = 'large';
+    const m = new GAME.ui.Menu([1, 2, 3, 4, 5, 6].map(i => ({ label: 'x' + i })), { title: 'ベル', w: 150 });
+    const sub = new GAME.ui.Menu([1, 2, 3, 4, 5, 6].map(i => ({ label: 'x' + i })), { title: '言霊', rows: 5, w: 310 });
+    GAME.settings.textSize = keep;
+    return 312 - m.h >= 60 && 312 - sub.h >= 60;
+  }), true);
   expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
     const R = GAME.renderer, room = 440 - R.measure('遊んだ時間 99:59') - 8;
     return GAME.DATA.objectives.filter(o => R.measure('目的：' + o.text) > room).map(o => o.text).join('、') || 'なし';

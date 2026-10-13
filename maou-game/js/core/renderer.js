@@ -8,7 +8,9 @@
   const FONT_SIZE = 12;
   const FONT_FAMILY = '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", "Noto Sans JP", sans-serif';
   const FONT = `${FONT_SIZE}px ${FONT_FAMILY}`;
-  const fontOf = size => (size ? `${size}px ${FONT_FAMILY}` : FONT);
+  // 大きさを省いたときの文字：設定「文字の大きさ：大きい」なら balance.js の UI_TEXT_SIZE_LARGE、ふつうは FONT_SIZE
+  const baseSize = () => (G.settings && G.settings.textSize === 'large' && G.DATA && G.DATA.balance ? G.DATA.balance.UI_TEXT_SIZE_LARGE : FONT_SIZE);
+  const fontOf = size => `${size || baseSize()}px ${FONT_FAMILY}`;
 
   const NO_LINE_START = '、。，．,.」』）)！？!?…ーっゃゅょ';
 
@@ -40,7 +42,8 @@
 
   G.renderer = {
     W, H, TILE, FONT, FONT_SIZE, LINE_HEIGHT: 16,
-    canvas, ctx, resize, res: 1,
+    canvas, ctx, resize, res: 1, baseSize,
+    large() { return baseSize() !== FONT_SIZE; },
 
     clear(color) {
       ctx.fillStyle = color || '#000';
@@ -51,12 +54,14 @@
       ctx.fillRect(x, y, w, h);
     },
     // 文字を描く。align は 'left' | 'center' | 'right'
-    text(str, x, y, color, align, size) {   // size：文字の大きさ（省くとふつう）
+    // size：文字の大きさ（省くと設定どおり）。maxWidth：この幅を超えるときは横に縮めて収める
+    text(str, x, y, color, align, size, maxWidth) {
       ctx.font = fontOf(size);
       ctx.textBaseline = 'top';
       ctx.textAlign = align || 'left';
       ctx.fillStyle = color || '#fff';
-      ctx.fillText(str, Math.round(x), Math.round(y));
+      if (maxWidth > 0) ctx.fillText(str, Math.round(x), Math.round(y), maxWidth);
+      else ctx.fillText(str, Math.round(x), Math.round(y));
     },
     measure(str, size) {
       ctx.font = fontOf(size);

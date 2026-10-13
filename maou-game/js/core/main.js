@@ -29,7 +29,7 @@
     const r = G.renderer;
     r.clear('#200');
     r.text('エラーが起きました。この画面を写真に撮って知らせてください。', 8, 8, '#f66');
-    r.wrap(String(crashed), r.W - 16).slice(0, 16).forEach((line, i) => r.text(line, 8, 32 + i * 16, '#fcc'));
+    r.wrap(String(crashed), r.W - 16, 12).slice(0, 16).forEach((line, i) => r.text(line, 8, 32 + i * 16, '#fcc', 'left', 12));
   }
 
   function loop(now) {

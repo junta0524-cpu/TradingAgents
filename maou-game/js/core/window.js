@@ -50,9 +50,10 @@
       this.index = opts.index || 0;
       this.rows = opts.rows || 0;   // 一度に見せる行数（0＝全部）。多いときは上下に流れる
       this.top = 0;
-      this.lineH = 16;
       this.pad = 8;
     }
+    // 1行の高さ（文字を大きくしたときは少し広げる）
+    get lineH() { return G.renderer.large() ? 18 : 16; }
     get visible() { return this.rows ? Math.min(this.rows, this.items.length) : this.items.length; }
     get h() {
       return this.pad * 2 + this.visible * this.lineH + (this.title ? this.lineH + 4 : 0);
@@ -72,7 +73,7 @@
       drawWindow(this.x, this.y, this.w, this.h);
       let ty = this.y + this.pad;
       if (this.title) {
-        r.text(this.title, this.x + this.pad, ty, '#ffd866');
+        r.text(this.title, this.x + this.pad, ty, '#ffd866', 'left', null, this.w - this.pad * 2);
         ty += this.lineH + 4;
       }
       const visibleItems = this.items.slice(this.top, this.top + this.visible);
@@ -80,7 +81,9 @@
         const i = this.top + k;
         const y = ty + k * this.lineH;
         const color = it.disabled ? '#777' : '#fff';
-        r.text(it.label, this.x + this.pad + 14, y + 1, color);
+        // 右の小さな文字と重ならないよう、長い名前は横に縮める
+        const noteW = it.note ? r.measure(it.note) + 8 : 0;
+        r.text(it.label, this.x + this.pad + 14, y + 1, color, 'left', null, this.w - this.pad * 2 - 14 - noteW);
         if (it.note) r.text(it.note, this.x + this.w - this.pad, y + 1, it.disabled ? '#666' : '#aaa', 'right');
         if (i === this.index && blinkOn()) r.text('▶', this.x + this.pad, y + 1, '#fff');
       });

@@ -159,9 +159,9 @@
         ctx.restore();
 
         // 文
-        G.ui.drawWindow(156, 278, 316, 38);
-        log.slice(-2).forEach((l, i) => r.text(l, 168, 284 + i * 14, '#eee'));
-        if (phase === 'choose') { G.ui.drawWindow(8, 278, 144, 38); r.text('部隊を選ぶ', 18, 284, '#ffd866'); r.text('上下・決定', 18, 298, '#aaa'); }
+        G.ui.drawWindow(156, 274, 316, 42);
+        log.slice(-2).forEach((l, i) => r.text(l, 168, 281 + i * 16, '#eee', 'left', null, 296));
+        if (phase === 'choose') { G.ui.drawWindow(8, 274, 144, 42); r.text('部隊を選ぶ', 18, 281, '#ffd866'); r.text('上下・決定', 18, 297, '#aaa'); }
         if (phase === 'how') howMenu.draw();
         if (phase === 'after' && G.ui.blinkOn()) r.text('▼', 462, 300, '#fff', 'center');
 

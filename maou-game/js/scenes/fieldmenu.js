@@ -240,8 +240,10 @@
         const goal = G.objective && G.objective();
         const r = G.renderer;
         G.ui.drawWindow(8, 280, 464, 32);
-        if (goal) r.text('目的：' + goal, 20, 290, '#ffd866');
-        r.text('遊んだ時間 ' + G.save.playTime(G.state.playFrames), 460, 290, '#ccc', 'right');
+        const time = '遊んだ時間 ' + G.save.playTime(G.state.playFrames);
+        // 文字を大きくしたときは、目的の文を横に縮めて遊んだ時間と重ならないようにする
+        if (goal) r.text('目的：' + goal, 20, 290, '#ffd866', 'left', null, 440 - r.measure(time) - 8);
+        r.text(time, 460, 290, '#ccc', 'right');
       },
     };
   };
