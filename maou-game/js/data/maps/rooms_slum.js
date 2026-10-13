@@ -76,7 +76,7 @@
       { x: 6, y: 8, to: 'amatsu_slum', tx: 15, ty: 5, dir: 'down' },
     ],
     npcs: [
-      { id: 'slum_r3_p1', look: 'dwarf2', x: 8, y: 5, dir: 'left', move: 'still', talk: ["「靴でも鍋でも、直せるものは直す」", "「ここじゃ、新しい物はめったに手に入らない」"] },
+      { id: 'slum_r3_p1', look: 'dwarf2', x: 8, y: 5, dir: 'left', move: 'still', shop: 'slum', talk: ["「靴でも鍋でも、直せるものは直す」", "「ここじゃ、新しい物はめったに手に入らない」"] },
     ],
     chests: [],
     signs: [],

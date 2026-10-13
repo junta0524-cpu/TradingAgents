@@ -50,7 +50,7 @@
       {'type': 'lantern', 'seq': 'moon', 'order': 1, 'x': 11, 'y': 3},
       {'type': 'lantern', 'seq': 'moon', 'order': 2, 'x': 7, 'y': 2},
       {'type': 'lantern', 'seq': 'moon', 'order': 3, 'x': 11, 'y': 1},
-      {'type': 'guardian', 'id': 'nushi', 'x': 16, 'y': 0, 'enemies': ['hyoumon_bannin'], 'text': '氷の鎧をまとった番人が、下への石段の前に立っている。', 'win': '番人の鎧が砕け、石段への道が開いた。'},
+      {'type': 'guardian', 'id': 'nushi', 'x': 16, 'y': 0, 'enemies': ['hyoumon_bannin'], 'reward': 'hyoumon_hitai', 'text': '氷の鎧をまとった番人が、下への石段の前に立っている。', 'win': '番人の鎧が砕け、石段への道が開いた。'},
     ],
     chests: [
       {'id': 'east', 'x': 21, 'y': 4, 'copper': 800},

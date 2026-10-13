@@ -13,8 +13,10 @@
     G.renderer.text(`銅貨 ${G.state.copper}枚`, 462, 16, '#fff', 'right');
   }
 
+  // 並べる品（{ id, from } はその章から）
+  const stock = shop => shop.items.filter(e => typeof e === 'string' || (G.state.chapter || 1) >= (e.from || 0)).map(e => (typeof e === 'string' ? e : e.id));
   function buyList(shop) {
-    return shop.items.map(id => ({
+    return stock(shop).map(id => ({
       label: G.DATA.items[id].name,
       note: `${price(id)}枚`,
       disabled: G.state.copper < price(id),
@@ -27,14 +29,26 @@
     });
   }
 
+  // 選んでいる品の説明（装備なら、能力と、オオナムチがいま着けている物）
+  function drawInfo(id) {
+    const it = G.DATA.items[id], r = G.renderer;
+    if (!it) return;
+    G.ui.drawWindow(8, 232, 464, 80);
+    const equip = G.party.SLOTS.includes(it.type);
+    const o = G.party.member('oonamuchi');
+    const head = equip ? `${G.equipNote(it)}${o && o.equip[it.type] ? `　（いま：${G.DATA.items[o.equip[it.type]].name}）` : ''}` : '';
+    const lines = [head, [equip ? G.equipEffects(it) : '', it.desc].filter(Boolean).join('　')].filter(Boolean);
+    lines.flatMap(l => r.wrap(l, 440)).slice(0, 3).forEach((l, i) => r.text(l, 20, 242 + i * 20, i === 0 && equip ? '#ffd866' : '#fff'));
+  }
+
   function openBuy(shop) {
     G.ui.choose(buyList(shop), {
-      x: 8, y: 8, w: 300, title: '何を買いますか', stay: true, name: 'お店：買う',
+      x: 8, y: 8, w: 300, title: '何を買いますか', stay: true, name: 'お店：買う', rows: 10,
       refresh: () => buyList(shop),
-      extra: drawCopper,
+      extra: menu => { drawCopper(); drawInfo(stock(shop)[menu.index]); },
       onDisabled: () => G.message.show('銅貨が足りない。'),
     }, i => {
-      const id = shop.items[i];
+      const id = stock(shop)[i];
       G.state.copper -= price(id);
       G.party.addItem(id);
       G.message.show(`${G.DATA.items[id].name}を買った。`);

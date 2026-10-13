@@ -102,7 +102,9 @@
       HOLD_ROUNDS: 4,     // 手合わせ：このラウンド数を耐えきれば勝ち
       BELL_FINAL_ROUNDS: 6,
     },
-    DROP_BOOST: 2,        // コトシロがいると、落とし物の確率が何倍になるか
+    DROP_BOOST: 2,
+    EXP_BOOST: 1.25,      // 装飾「黄金の稲穂」：経験値が何倍になるか
+    COPPER_BOOST: 1.5,    // 装飾「福の鈴」：銅貨が何倍になるか        // コトシロがいると、落とし物の確率が何倍になるか
     FIRST_STRIKE: 1 / 4,  // ウズメがいると、先手を取れる確率
 
     // 成長表：レベルごとの「素の強さ」（装備の分は含まない）。試作はレベル20まで
@@ -238,6 +240,13 @@
       // 寄り道のダンジョンで見つかる品（店では売っていない。売るときの値段のもと）
       hagane_ken: 300, yomiishi_ken: 900, morimori_gaitou: 200, kazekiri_gaitou: 320, akatsuki_yoroi: 1000,
       kotonoha_juzu: 240, hoshimi_magatama: 800,
+      // 増やした武器・防具・装飾（店で売る品と、宝・番人のごほうびの売り値のもと）
+      kashi_tsue: 55, seirei_tsue: 170, kaze_tanto: 230, iwakurai_kiba: 460, kurogane_katana: 520, shirogane_ken: 560,
+      kotodama_tsue: 640, onigane_tachi: 980, akatsuki_ken: 2400,
+      mori_koromo: 140, kumoginu: 300, hagane_doumaru: 340, juuhi_dougi: 280, tsugihagi_kawa: 160, shirogane_yoroi: 620,
+      inori_houi: 560, onigane_yoroi: 1100,
+      dokuyoke: 80, mezame_suzu: 120, tama_no_o: 200, chikara_ude: 200, inochi_ishi: 240, kokoro_kagami: 260,
+      owashi_hane: 500, fuku_suzu: 900, tsukikage_obi: 700, hyoumon_hitai: 900, kogane_inaho: 1500, nushi_shinzou: 2500,
     },
     SELL_RATE: 0.5,
     INN_PRICE: 6,      // 宿屋の一晩の値段

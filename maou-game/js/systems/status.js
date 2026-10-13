@@ -15,6 +15,8 @@
       const d = G.DATA.enemies[u.id];
       if (d && d.resist && d.resist[id] != null) return d.resist[id];
     }
+    // 仲間：装備の resist（毒除けのお守り など）
+    if (u.resist && u.resist[id] != null) return u.resist[id];
     return 1;
   }
 

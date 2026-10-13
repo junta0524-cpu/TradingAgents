@@ -11,7 +11,7 @@
   function calcPhysical(atk, def, opts) {
     opts = opts || {};
     const rng = G.rng;
-    const crit = !opts.noCrit && rng.chance(B().CRIT_RATE);
+    const crit = !opts.noCrit && rng.chance(B().CRIT_RATE + (opts.critBonus || 0));
     let base, width, dmg;
     if (crit) {
       // 会心：守備力を無視して攻撃力相当
@@ -101,7 +101,8 @@
     return all[G.rng.int(0, all.length - 1)];
   }
 
-  const hasPerk = (st, perk) => st.party.some(p => p.hp > 0 && charOf(p).perk === perk);
+  // 仲間の得意（ウズメの先手など）と、装備の効き目（大鷲の羽飾り・黄金の稲穂・福の鈴）
+  const hasPerk = (st, perk) => st.party.some(p => p.hp > 0 && (charOf(p).perk === perk || (p.perks || []).includes(perk)));
 
   const aliveEnemies = st => st.enemies.filter(e => e.hp > 0);
   const charOf = m => G.DATA.characters[m.id] || {};
@@ -209,7 +210,7 @@
     }
     const atk = Math.floor(actor.atk * G.kotodama.buffMult(actor, 'atk'));
     const def = Math.floor(target.def * G.kotodama.buffMult(target, 'def'));
-    const r = calcPhysical(atk, def, { noCrit: quiet });   // 敵全体への攻撃では会心が出ない（仕様書 第6章）
+    const r = calcPhysical(atk, def, { noCrit: quiet, critBonus: actor.crit || 0 });   // 敵全体への攻撃では会心が出ない（仕様書 第6章）
     let dmg = r.dmg;
     const aff = G.affinity.mult(actor, target);
     dmg = Math.floor(dmg * aff);
@@ -284,8 +285,8 @@
   // 勝ったときのごほうび（経験値は、レベルの上がる仲間で分ける）
   function rewards(st) {
     const b = B();
-    const exp = st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].exp, 0);
-    const copper = st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0);
+    const exp = Math.floor(st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].exp, 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1));
+    const copper = Math.floor(st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0) * (hasPerk(st, 'copperBoost') ? G.DATA.balance.COPPER_BOOST : 1));
     const alive = st.party.filter(p => p.hp > 0 && !charOf(p).fixed);
     const each = b.EXP_SPLIT ? Math.ceil(exp / Math.max(1, alive.length)) : exp;
     // 落とし物は、最後に倒した敵1体だけが判定

@@ -40,11 +40,16 @@
     if (c.isBell) m.base = bellBase();
     // 賢さを足す前の記録：成長表（臨時の仲間は TEMP_PARTY）から賢さだけ補う
     if (m.base.wis == null) m.base.wis = c.temp ? G.DATA.balance.TEMP_PARTY[m.id].wis : m.lv != null ? G.growth.baseAt(m.id, m.lv).wis : m.base.atk;
-    const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi, wis: m.base.wis };
+    // 装備の特別な効き目：resist（状態異常の効きやすさ）・crit（会心）・perks（先手・経験値・銅貨）
+    const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi, wis: m.base.wis, resist: {}, crit: 0, perks: [] };
     SLOTS.forEach(s => {
       const it = G.DATA.items[m.equip[s]];
       if (!it) return;
       t.atk += it.atk || 0; t.def += it.def || 0; t.agi += it.agi || 0; t.wis += it.wis || 0;
+      t.maxHp += it.hp || 0; t.maxMp += it.mp || 0;
+      t.crit += it.crit || 0;
+      Object.entries(it.resist || {}).forEach(([k, v]) => { t.resist[k] = Math.min(t.resist[k] == null ? 1 : t.resist[k], v); });
+      if (it.perk) t.perks.push(it.perk);
     });
     // 上限（カンスト）：体力・MPは999、ほかは255（装備を足しても超えない）
     t.maxHp = Math.min(t.maxHp, 999); t.maxMp = Math.min(t.maxMp, 999);

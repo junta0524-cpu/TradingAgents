@@ -105,6 +105,22 @@
     });
   }
 
+  // 装備を替えたときの強さの変化を描く（いまの装備 → 選んでいる品）
+  function drawCompare(m, slot, id) {
+    const r = G.renderer, tmp = JSON.parse(JSON.stringify(m));
+    tmp.equip[slot] = id; G.party.recalc(tmp);
+    G.ui.drawWindow(8, 192, 464, 86);
+    const rows = [['攻撃', 'atk'], ['守備', 'def'], ['素早さ', 'agi'], ['賢さ', 'wis'], ['最大HP', 'maxHp'], ['最大MP', 'maxMp']];
+    rows.forEach(([n, k], i) => {
+      const x = 20 + (i % 3) * 150, y = 200 + Math.floor(i / 3) * 18, a = m[k], b = tmp[k];
+      r.text(`${n} ${a}→`, x, y, '#ccc');
+      r.text(String(b), x + r.measure(`${n} ${a}→`) + 2, y, b > a ? '#7f7' : b < a ? '#f77' : '#fff');
+    });
+    const it = G.DATA.items[id];
+    const text = it ? [G.equipEffects(it), it.desc].filter(Boolean).join('　') : '外すと、何も身につけない。';
+    r.wrap(text, 440).slice(0, 2).forEach((l, i) => r.text(l, 20, 238 + i * 18, '#ffd866'));
+  }
+
   // ---- そうび ----
   function equipMenu() {
     pickMember('だれの装備を変えますか', p => p.lv != null, m => {
@@ -126,12 +142,15 @@
         const candidates = G.state.items.filter(s => G.DATA.items[s.id].type === slot && G.party.canEquip(m, s.id)).map(s => s.id);
         const options = candidates.map(id => {
           const it = G.DATA.items[id];
-          const stat = [['atk', '攻'], ['def', '守'], ['agi', '速'], ['wis', '賢']].filter(([k]) => it[k]).map(([k, n]) => `${n}+${it[k]}`).join(' ');
-          return { label: it.name, note: stat };
+          return { label: it.name, note: G.equipNote(it) };
         });
         if (m.equip[slot]) options.push({ label: 'はずす' });
         if (!options.length) { G.message.show(`${G.party.SLOT_NAMES[slot]}にできる物を持っていない。`); return; }
-        G.ui.choose(options, { x: 136, y: 56, w: 240, title: `${G.party.SLOT_NAMES[slot]}を選ぶ`, name: '装備を選ぶ' }, oi => {
+        G.ui.choose(options, {
+          x: 136, y: 40, w: 240, title: `${G.party.SLOT_NAMES[slot]}を選ぶ`, name: '装備を選ぶ', rows: 6,
+          // 選んでいる品に替えたら、強さがどう変わるか（上がる＝緑、下がる＝赤）と、特別な効き目
+          extra: menu => drawCompare(m, slot, candidates[menu.index] || null),
+        }, oi => {
           const id = candidates[oi] || null;
           G.party.equip(m, slot, id);
         });

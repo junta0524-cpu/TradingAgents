@@ -63,7 +63,7 @@
       {'type': 'lantern', 'seq': 'tsuki', 'order': 1, 'x': 12, 'y': 12},
       {'type': 'lantern', 'seq': 'tsuki', 'order': 2, 'x': 19, 'y': 9},
     ],
-    chests: [{ id: 'moon', x: 1, y: 13, item: 'hayate_obi' }],
+    chests: [{ id: 'moon', x: 1, y: 13, item: 'kogane_inaho' }],
     signs: [
       {'x': 6, 'y': 14, 'text': '古い石碑がある。\n「細い月は西の空に。満ちた月は天の真ん中に。欠けゆく月は東に」'},
     ],

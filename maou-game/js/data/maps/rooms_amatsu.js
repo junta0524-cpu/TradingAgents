@@ -59,7 +59,7 @@
   };
 
   G.DATA.maps.amatsu_r1 = {
-    name: '天津京　白い家',
+    name: '天津京　武具屋',
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -78,6 +78,7 @@
       { x: 6, y: 8, to: 'amatsu', tx: 4, ty: 16, dir: 'down' },
     ],
     npcs: [
+      { id: 'amatsu_shop', look: 'merchant', x: 2, y: 5, dir: 'right', move: 'still', shop: 'amatsu', talk: ['「いらっしゃいませ。どれも、王都の確かな品です」'] },
       { id: 'amatsu_r1_p1', look: 'villager', x: 8, y: 5, dir: 'left', move: 'still', talk: ["「通りの白は、毎朝みんなで磨くんです」", "「汚れていると、念のため、と言われますから」"] },
     ],
     chests: [],

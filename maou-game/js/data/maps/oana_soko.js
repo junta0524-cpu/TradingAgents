@@ -58,7 +58,7 @@
       {'type': 'lever', 'id': 'vault', 'x': 24, 'y': 1, 'flag': 'soko_vault', 'once': true, 'text': '岩に埋もれたレバーを倒した。遠く南のほうで、門の上がる音がした。', 'doneText': 'レバーは、倒れたままだ。'},
     ],
     chests: [
-      { id: 'deep1', x: 2, y: 2, item: 'chain_mail' },
+      { id: 'deep1', x: 2, y: 2, item: 'akatsuki_ken' },
       { id: 'deep2', x: 23, y: 19, copper: 500 },
     ],
     signs: [],

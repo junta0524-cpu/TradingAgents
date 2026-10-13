@@ -46,7 +46,7 @@
     gimmicks: [
       {'type': 'lever', 'id': 'wind', 'x': 22, 'y': 14, 'flag': 'ravine_lever', 'text': '古いレバーを動かした。岩溝の奥で、風の向きが変わる音がした。'},
       {'type': 'lock', 'id': 'door', 'x': 13, 'y': 1, 'ch': '扉', 'key': 'iwamizo_kagi', 'text': '岩をくりぬいた扉だ。鍵がかかっている。'},
-      {'type': 'guardian', 'id': 'nushi', 'x': 12, 'y': 1, 'enemies': ['kaze_oowashi'], 'text': '岩溝の風が、一羽の大鷲のまわりで渦を巻いている。', 'win': '大鷲は、風に乗って谷の向こうへ飛び去った。'},
+      {'type': 'guardian', 'id': 'nushi', 'x': 12, 'y': 1, 'enemies': ['kaze_oowashi'], 'reward': 'owashi_hane', 'text': '岩溝の風が、一羽の大鷲のまわりで渦を巻いている。', 'win': '大鷲は、風に乗って谷の向こうへ飛び去った。'},
     ],
     chests: [
       {'id': 'key', 'x': 1, 'y': 1, 'item': 'iwamizo_kagi'},

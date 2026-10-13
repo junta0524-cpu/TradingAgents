@@ -1165,6 +1165,29 @@ const { chromium } = require('playwright');
     await hold('ArrowDown', 260); await wait(300); await closeMessages();
     expect('建物に歩いて入り、歩いて出る（ミナモ 網元の家）', `${inside}→${await pos()}`, 'minamo_r1(5,7)→minamo(23,9)');
   }
+  expect('武器・防具・装飾：店の品と宝の品がすべてあり、店の品には値段がある', await ev(() => {
+    const D = GAME.DATA, out = [];
+    Object.entries(D.shops).forEach(([k, sh]) => sh.items.forEach(e => { const id = typeof e === 'string' ? e : e.id; if (!D.items[id] || !D.balance.PRICES[id]) out.push(`${k}:${id}`); }));
+    const n = t => Object.values(D.items).filter(it => it.type === t).length;
+    return (out.join('、') || 'なし') + `/${n('weapon') >= 14}/${n('armor') >= 14}/${n('accessory') >= 16}`;
+  }), 'なし/true/true/true');
+  expect('装備の特別な効き目：最大HP・MP、毒除け、会心、黄金の稲穂（経験値）', await ev(() => {
+    const keep = JSON.stringify(GAME.state);
+    GAME.party.newGame();
+    const o = GAME.party.member('oonamuchi'), hp0 = o.maxHp;
+    ['nushi_shinzou', 'kumoginu', 'iwakurai_kiba'].forEach(id => { GAME.party.addItem(id); GAME.party.equip(o, GAME.DATA.items[id].type, id); });
+    const r = [o.maxHp - hp0, GAME.status.resistOf(o, 'poison'), o.crit];
+    GAME.party.addItem('kogane_inaho'); GAME.party.equip(o, 'accessory', 'kogane_inaho');
+    const st = GAME.battle.create(GAME.party.freshMembers(), ['onigane' in GAME.DATA.enemies ? 'onigane' : 'kage_oni'], {});
+    r.push(GAME.battle.rewards(st).exp === Math.floor(GAME.DATA.enemies.kage_oni.exp * GAME.DATA.balance.EXP_BOOST));
+    GAME.state = JSON.parse(keep);
+    return r.join('/');
+  }), '200/0/0.08/true');
+  expect('魔界の市場は、11章から鬼鋼の品が並ぶ', await ev(() => {
+    const keep = GAME.state.chapter, ids = () => GAME.DATA.shops.yomi.items.filter(e => typeof e === 'string' || GAME.state.chapter >= e.from).length;
+    GAME.state.chapter = 3; const a = ids(); GAME.state.chapter = 11; const b = ids(); GAME.state.chapter = keep;
+    return `${a}/${b}`;
+  }), '8/11');
   expect('目的の文は、遊んだ時間と重ならない長さ', await ev(() => {
     const R = GAME.renderer, room = 440 - R.measure('遊んだ時間 99:59') - 8;
     return GAME.DATA.objectives.filter(o => R.measure('目的：' + o.text) > room).map(o => o.text).join('、') || 'なし';
