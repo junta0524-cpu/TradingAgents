@@ -12,6 +12,7 @@
     battleBg: 'night',
     tint: 'rgba(20,20,80,0.3)',
     encounter: { steps: [12, 20], groups: [['na_kui'], ['na_kui', 'na_kui'], ['kage_oni']] },
+    dark: true,   // 暗い社。柱の燭台が灯っている
     rows: [
       'GGGGGGGGGGGGGGGGGGGGGG',
       'GffffffffffffffffffffG',
@@ -25,12 +26,13 @@
       'GffffffffffffffffffffG',
       'GffffffffffffffffffffG',
       'GfffPffffffffffffPfffG',
-      'GffffffffffffffffffffG',
-      'GffffffffffffffffffffG',
-      'GffffffffffffffffffffG',
+      'GGfffffffffffffffffffG',
+      'Gf門ffffffffffffffffffG',
+      'GGfffffffffffffffffffG',
       'GGGGGGGGGGSSGGGGGGGGGG',
     ],
     flagTiles: [
+      {'x': 2, 'y': 13, 'ch': 'f', 'if': 'tsuku_moon'},
       { x: 10, y: 4, ch: 'G', unless: 'shrine_open' },
       { x: 11, y: 4, ch: 'G', unless: 'shrine_open' },
     ],
@@ -48,7 +50,22 @@
       { x: 11, y: 4, text: '古い壁だ。何かが、偽りの形をしている気がする。', unless: 'shrine_open' },
     ],
     npcs: [],
+    // しかけ（js/systems/gimmick.js）：柱の燭台（はじめから灯っている）、隅の燭台（火種）、灯籠の謎（西→真ん中→東）
+    gimmicks: [
+      {'type': 'torch', 'id': 'p1', 'x': 4, 'y': 7, 'lit': true},
+      {'type': 'torch', 'id': 'p2', 'x': 17, 'y': 7, 'lit': true},
+      {'type': 'torch', 'id': 'p3', 'x': 4, 'y': 11, 'lit': true},
+      {'type': 'torch', 'id': 'p4', 'x': 17, 'y': 11, 'lit': true},
+      {'type': 'torch', 'id': 'c1', 'x': 1, 'y': 1},
+      {'type': 'torch', 'id': 'c2', 'x': 20, 'y': 1},
+      {'type': 'sequence', 'id': 'tsuki', 'flag': 'tsuku_moon', 'done': '三つの灯籠に、月の光が宿った。南西の門が、静かに開いた。', 'wrong': '灯りが、ふっと消えた。月の満ち欠けと、順がちがうらしい。'},
+      {'type': 'lantern', 'seq': 'tsuki', 'order': 0, 'x': 2, 'y': 9},
+      {'type': 'lantern', 'seq': 'tsuki', 'order': 1, 'x': 12, 'y': 12},
+      {'type': 'lantern', 'seq': 'tsuki', 'order': 2, 'x': 19, 'y': 9},
+    ],
     chests: [{ id: 'moon', x: 1, y: 13, item: 'hayate_obi' }],
-    signs: [],
+    signs: [
+      {'x': 6, 'y': 14, 'text': '古い石碑がある。\n「細い月は西の空に。満ちた月は天の真ん中に。欠けゆく月は東に」'},
+    ],
   };
 })();

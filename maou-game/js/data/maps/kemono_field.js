@@ -16,13 +16,13 @@
     },
     rows: [
       'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii',
-      'ieeeeeeeeeeeeeeeeeeeeeeeeeeeeeei',
-      'iexee..eeeeeeeiieeeeeeeeeeeeeeei',
-      'iexeeeeeeAAeAeeeeeeeeeiieeeeeeei',
-      'iexeeeiieAeeeAeeeeeeeeiieeeeeeei',
-      'iexeeeiieeeAeeeeeeee..eeeeeeeeei',
-      'iexeeeeeeAeeeAAeeeeee..eeeeeeeei',
-      'iexeeeeeeeAAeeeeeiieeeeeeeeeeeei',
+      'ieeeeeeeeeeeeeeeeeeeeeeeeeee↓e↓i',
+      'iexee..eeeeeeeiieeeeeeeeeeee↓e↓i',
+      'iexeeeeeeAAeAeeeeeeeeeiieeee↓↑↓i',
+      'iexeeeiieAeeeAeeeeeeeeiieeee↓↑↓i',
+      'iexeeeiieeeAeeeeeeee..eeeeee↓↑↓i',
+      'iexeeeeeeAeeeAAeeeeee..eeeee↓↑↓i',
+      'iexeeeeeeeAAeeeeeiieeeeeeeee↓↑↓i',
       'ieeeeeeeeeeeeeeeeiieeeeeeeeeeeei',
       'iexe-------------------------eei',
       '-----eeeeeeeeeeeeeeeeeeeeeee----',
@@ -56,6 +56,8 @@
       { id: 'ruin', x: 10, y: 4, item: 'kizugusuri' },
       { id: 'shrub', x: 29, y: 2, copper: 120 },
     ],
-    signs: [],
+    signs: [
+      {'x': 27, 'y': 9, 'text': '北東の岩場から、強い風が吹き下ろしている。真ん中だけ、風が上へ吹き上げているようだ。'},
+    ],
   };
 })();

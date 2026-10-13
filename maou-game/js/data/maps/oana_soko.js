@@ -34,15 +34,16 @@
       'RzzzzzzzzzzzzzzzzzRRRRzzzR',
       'RzzRRRRRRzzzzzzzzzRRRRzzzR',
       'RzzRRRRRRzzzzzzzzzRRRRzzzR',
-      'RzzzzzzzzzzzzzzzzzzzzzzzzR',
-      'RzzzzzzzzzzzzzzzzzzzzzzzzR',
-      'RzzzzzzzzzzzzzzzzzzzzzzzzR',
+      'RzzzzzzzzzzzzzzzzzzzzRRRRR',
+      'Rzzzzzzzzzzzzzzzzzzzz門zzzR',
+      'RzzzzzzzzzzzzzzzzzzzzRzzzR',
       'RRRRRRRRRRRRzzRRRRRRRRRRRR',
     ],
     warps: [
       { x: 12, y: 21, to: 'yomi_hani', tx: 9, ty: 12, dir: 'down' },
       { x: 13, y: 21, to: 'yomi_hani', tx: 9, ty: 12, dir: 'down' },
     ],
+    flagTiles: [{ x: 21, y: 19, ch: 'z', if: 'soko_vault' }],   // レバーで開く南東の蔵
     spots: [
       { x: 12, y: 2, event: 'post_door', unless: 'ame_lit' },
       { x: 13, y: 2, event: 'post_door', unless: 'ame_lit' },
@@ -51,6 +52,10 @@
     ],
     npcs: [
       { id: 'kunado', look: 'kunado', x: 15, y: 3, dir: 'left', move: 'still', talk: [{ name: 'クナド', text: '「お通りください」' }] },
+    ],
+    // しかけ（js/systems/gimmick.js）：北東の隅のレバーで、南東の蔵の門が開く
+    gimmicks: [
+      {'type': 'lever', 'id': 'vault', 'x': 24, 'y': 1, 'flag': 'soko_vault', 'once': true, 'text': '岩に埋もれたレバーを倒した。遠く南のほうで、門の上がる音がした。', 'doneText': 'レバーは、倒れたままだ。'},
     ],
     chests: [
       { id: 'deep1', x: 2, y: 2, item: 'chain_mail' },

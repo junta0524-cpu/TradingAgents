@@ -191,6 +191,35 @@ async function run(page, expect) {
   // ひびの床から落ちると中層へ
   await place('oana_jou', 5, 11, 'down'); await step('d'); await closeMsgs(); await idle();
   expect('上層：ひびの床を踏むと、中層へ落ちる', await pos(), 'oana_chuu(12,10)');
+
+  // ---- 物語の道すじのダンジョンの寄り道 ----
+  await place('field_minamo', 7, 26, 'up');
+  await goTo(7, 22, '野原 木立の奥'); for (const k of 'll') await step(k);
+  await goTo(4, 22, '野原 埋めた穴'); await examine('u');
+  expect('野原：木立の岩を穴へ押し込み、宝箱（守り石）', await has('mamori_ishi'), 1);
+  await place('hijiri_path', 5, 2, 'left'); await examine('l');
+  await place('hijiri_path', 4, 2, 'left'); await examine('l');
+  await place('hijiri_path', 9, 18, 'left'); await examine('l');
+  await step('l'); await examine('l');
+  expect('森の道：火の玉（心鎮め）と蔦（火種）が守る宝箱', `${await flag('gm:hijiri_path:wisp')}/${await flag('gm:hijiri_path:vine')}/${await has('dokukeshi')}`, 'true/true/1');
+  await place('ro_path', 22, 13, 'up'); const hpR = await ev(() => GAME.party.member('oonamuchi').hp);
+  await step('u'); await step('u'); await examine('u');
+  expect('山道：焼けた岩を渡って宝箱（体力が減る）', `${(await ev(() => GAME.party.member('oonamuchi').hp)) < hpR}/${await flag('chest:ro_path:crag')}`, 'true/true');
+  await ev(() => GAME.state.party.forEach(m => { m.hp = m.maxHp; }));
+  await place('kemono_field', 29, 8, 'up'); await step('u');
+  expect('獣ノ原：上へ吹く風に乗る', await pos(), 'kemono_field(29,3)');
+  await examine('u');
+  expect('獣ノ原：風の上の宝箱', await flag('chest:kemono_field:shrub'), true);
+  await step('l');
+  expect('獣ノ原：わきの風で吹き下ろされて出られる', await pos(), 'kemono_field(28,8)');
+  await place('tsukuyomi_yashiro', 10, 13, 'up');
+  for (const [x, y, d] of [[3, 9, 'l'], [12, 11, 'd'], [18, 9, 'r']]) { await goTo(x, y, '社 灯籠'); await examine(d); }
+  expect('ツクヨミの社：三つの灯籠（西→真ん中→東）で南西の門が開く', await flag('tsuku_moon'), true);
+  await goTo(2, 12, '社 門の前'); await goTo(2, 13, '社 門'); await examine('l');
+  expect('ツクヨミの社：門の奥の宝箱', await flag('chest:tsukuyomi_yashiro:moon'), true);
+  await place('oana_soko', 23, 1, 'right'); await examine('r');
+  await goTo(22, 19, '最深部 南東の蔵'); await examine('r');
+  expect('大穴の最深部：北東のレバーで南東の蔵が開く', `${await flag('soko_vault')}/${await flag('chest:oana_soko:deep2')}`, 'true/true');
   await ev(() => { GAME.encounter.enabled = true; });
 }
 

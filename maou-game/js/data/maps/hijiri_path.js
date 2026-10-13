@@ -19,7 +19,7 @@
       'TTTTTTTTTTTTTppTTTTTTTTTTTTTTT',
       'TTTTTTTTTTTTTppTTTTTTTTTTTTTTT',
       'TTT,,,,......pp.......,,,,TTTT',
-      'TT,,TTT......pp......TTT,,,TTT',
+      'TT,TTTT......pp......TTT,,,TTT',
       'TT,,TTT...F..pp......TTT,,,TTT',
       'TT.......,,,.pp..,,,.......RRT',
       'TTT......,,,.pppppppppppppppOT',
@@ -35,7 +35,7 @@
       'TTT..........pp....TTT.....TTT',
       'TTTTTTT......pp....TTT...TTTTT',
       'TTTTTTT,,,...pp...,,,....TTTTT',
-      'TTTTTTT,,,...pp...,,,..TTTTTTT',
+      'TTTTTTTT,,...pp...,,,..TTTTTTT',
       'TTTTTTTTTT...pp...TTTTTTTTTTTT',
       'TTTTTTTTTTTTTppTTTTTTTTTTTTTTT',
     ],
@@ -53,6 +53,11 @@
     ],
     npcs: [
       { id: 'sukuna', look: 'sukuna', x: 12, y: 15, dir: 'right', move: 'still', chapter: 5, unless: 'ch5_sukuna', event: 'ch5_sukuna' },
+    ],
+    // しかけ（js/systems/gimmick.js）：北西の宝箱は心鎮め、南西の宝箱は火種（6章で覚える）で開く
+    gimmicks: [
+      {'type': 'seal', 'id': 'wisp', 'x': 4, 'y': 2, 'ch': '霊', 'need': 'kokoroshizume', 'text': '青白い火の玉が、宝箱のそばで荒ぶっている。', 'done': '火の玉は静まり、ふっと消えていった。'},
+      {'type': 'seal', 'id': 'vine', 'x': 8, 'y': 18, 'ch': '蔦', 'need': 'hidane', 'text': '太い蔦が、木の根元を覆っている。火があれば……。', 'done': '蔦は、ぱちぱちと音を立てて燃え落ちた。'},
     ],
     chests: [
       { id: 'grove', x: 3, y: 2, item: 'kizugusuri' },
