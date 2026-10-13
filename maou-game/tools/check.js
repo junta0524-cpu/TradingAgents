@@ -1056,6 +1056,22 @@ const { chromium } = require('playwright');
   expect('レベル99でカンスト（装備を足しても255まで）', await ev(() => { const o = GAME.party.member('oonamuchi'); while (GAME.growth.forceLevelUp(o).length) {} return `${o.lv}/${o.maxHp}/${o.maxMp}/${o.atk}/${o.def}`; }), '99/999/999/255/255');
   await ev(() => { GAME.encounter.enabled = true; });
 
+  // メニューの「いまの目的」
+  expect('どの章にも、いまの目的がある', await ev(() => {
+    const ch = GAME.state.chapter, fl = Object.assign({}, GAME.flags.data), miss = [];
+    for (let c = 1; c <= 13; c++) { GAME.state.chapter = c; GAME.flags.reset(); if (!GAME.objective()) miss.push(c); }
+    GAME.state.chapter = ch; GAME.flags.data = fl; return miss.join(',') || 'なし';
+  }), 'なし');
+  expect('目的は進み具合で変わる（4章：ギルド→野原→ひなた野）', await ev(() => {
+    const ch = GAME.state.chapter, fl = Object.assign({}, GAME.flags.data), out = [];
+    GAME.state.chapter = 4; GAME.flags.reset(); out.push(GAME.objective().includes('ギルド'));
+    GAME.flags.set('ch4_guild'); out.push(GAME.objective().includes('野原'));
+    GAME.flags.set('ch4_dogs'); out.push(GAME.objective().includes('届け物'));
+    GAME.state.chapter = ch; GAME.flags.data = fl; return out.join('/');
+  }), 'true/true/true');
+  await placeAt('minamo', 15, 12, 'down'); await wait(300); await key('KeyX', 300); await shot('95_menu_goal');
+  for (let i = 0; i < 3 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 150);
+
   // タイトルの「遊び方」
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);

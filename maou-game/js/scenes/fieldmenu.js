@@ -234,7 +234,16 @@
         if (res.type === 'cancel' || !it.run) { G.scene.pop(); return; }
         it.run();
       },
-      draw() { menu.draw(); drawPartyMini(); },
+      draw() {
+        menu.draw(); drawPartyMini();
+        // いまの目的（js/data/objectives.js）
+        const goal = G.objective && G.objective();
+        if (goal) {
+          const r = G.renderer;
+          G.ui.drawWindow(8, 280, 464, 32);
+          r.text('目的：' + goal, 20, 290, '#ffd866');
+        }
+      },
     };
   };
 })();
