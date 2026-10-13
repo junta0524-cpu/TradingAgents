@@ -11,7 +11,7 @@
     start: { x: 8, y: 6, dir: 'up' },
     rows: [
       'RRRRRRRRRRRRRRRRRR',
-      'RzzzzzzzzzzzzzzzzR',
+      'RSzzzzzzzzzzzzzzzR',
       'RzllzzllzzzllzzllR',
       'RzzzzzzzzzzzzzzzzR',
       'RzzzzzzzzzzzzzzzzR',
@@ -20,6 +20,8 @@
       '        OO        ',
     ],
     warps: [
+      // 奥の石段：苔むした地下道（寄り道。js/data/maps/hijiri_deep.js）
+      { x: 1, y: 1, to: 'hijiri_deep', tx: 4, ty: 13, dir: 'up' },
       { x: 8, y: 7, to: 'hijiri_path', tx: 27, ty: 6, dir: 'left' },
       { x: 9, y: 7, to: 'hijiri_path', tx: 27, ty: 6, dir: 'left' },
     ],

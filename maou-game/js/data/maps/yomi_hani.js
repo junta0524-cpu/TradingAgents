@@ -28,10 +28,12 @@
       'mgrrrrhhgggggggggggggggggggggm',
       'mgrrrrhhgggggggLLLLLLLggKggggm',
       'mgrrrrhhggggggggggggggggggggtm',
-      'mtggggggggggggggggggggggggggtm',
+      'mtggggggggggggggggggggggggggOm',
       'mmmmmmmmmmmmmmuummmmmmmmmmmmmm',
     ],
     warps: [
+      // 東の縦穴：大穴の上層（クリア後の寄り道。js/data/maps/oana_jou.js）
+      { x: 28, y: 16, to: 'oana_jou', tx: 11, ty: 16, dir: 'up', requires: { chapter: 13 }, blockedText: '大穴へ下りる、細い縦穴だ。今は、下りる時ではない。' },
       // 南の端：魔界のフィールドへ（11章とクリア後だけ）,
       { x: 14, y: 17, to: 'world_makai', tx: 16, ty: 17, dir: 'right', requires: { chapter: [11, 13] }, blockedText: '（畑の外へは、今は出ない）' },
       { x: 15, y: 17, to: 'world_makai', tx: 16, ty: 17, dir: 'right', requires: { chapter: [11, 13] }, blockedText: '（畑の外へは、今は出ない）' },

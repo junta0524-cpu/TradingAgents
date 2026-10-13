@@ -1,0 +1,218 @@
+// このファイルの役目：作る人用の自動チェック。寄り道のダンジョン（しかけのある5つ）を、キー操作で最後まで解いてみる。
+// 道すじは、その時のマップ（開いた門・岩の位置）を読んで探す（滑る床・流れる床・ひびの床も考える）。
+// 使い方：NODE_PATH=$(npm root -g) node tools/dungeons.js　（tools/check.js からも呼ぶ）
+const { chromium } = require('playwright');
+
+async function run(page, expect) {
+  const wait = ms => page.waitForTimeout(ms);
+  const ev = (f, a) => page.evaluate(f, a);
+  const scenes = () => ev(() => GAME.scene.names().join('>'));
+  const pos = () => ev(() => { const m = GAME.scene.find('マップ'); return `${m.mapId}(${m.player.x},${m.player.y})`; });
+  // 落ち着くまで待つ（歩き・滑り・場面の切り替えが終わる）
+  const idle = async () => {
+    let last = '', same = 0;
+    for (let i = 0; i < 80 && same < 3; i++) {
+      await wait(50);
+      const s = await ev(() => { const m = GAME.scene.find('マップ'); return GAME.scene.names().join('>') + (m ? `${m.mapId}${m.player.x},${m.player.y}${m.player.moving}` : ''); });
+      if (s === last) same++; else { same = 0; last = s; }
+    }
+  };
+  const closeMsgs = async () => { for (let i = 0; i < 12 && (await scenes()).includes('メッセージ'); i++) { await page.keyboard.press('KeyZ'); await wait(150); } };
+  const KEY = { u: 'ArrowUp', d: 'ArrowDown', l: 'ArrowLeft', r: 'ArrowRight' };
+  // 1マス（滑る床なら止まるまで）動く
+  const step = async k => {
+    const before = await ev(() => { const p = GAME.scene.find('マップ').player; return p.x + ',' + p.y; });
+    await page.keyboard.down(KEY[k]);
+    for (let i = 0; i < 20; i++) { await wait(15); if (await ev(b => { const p = GAME.scene.find('マップ').player; return p.moving || p.x + ',' + p.y !== b; }, before)) break; }
+    await page.keyboard.up(KEY[k]);
+    await idle(); await closeMsgs(); await idle();
+  };
+  const face = async k => { await page.keyboard.down(KEY[k]); await wait(20); await page.keyboard.up(KEY[k]); await wait(60); };
+  // 道すじを探す（ページの中で、いまの地形から）
+  const route = (tx, ty) => ev(([tx, ty]) => {
+    const m = GAME.scene.find('マップ'), rows = m.rows, map = GAME.DATA.maps[m.mapId], st = m.gimmickState;
+    const D = GAME.DATA.tiles;
+    const wall = new Set();
+    (map.chests || []).concat(map.signs || []).forEach(o => wall.add(o.x + ',' + o.y));
+    (map.gimmicks || []).forEach(g => { if (['lever', 'torch', 'lantern'].includes(g.type)) wall.add(g.x + ',' + g.y); });
+    st.boulders.forEach(b => wall.add(b.x + ',' + b.y));
+    (map.warps || []).forEach(w => { if (!(w.x === tx && w.y === ty)) wall.add(w.x + ',' + w.y); });
+    (map.npcs || []).filter(n => GAME.flags.check(n)).forEach(n => wall.add(n.x + ',' + n.y));
+    const tile = (x, y) => (rows[y] && rows[y][x] != null ? D[rows[y][x]] : null);
+    const solid = (x, y) => { const t = tile(x, y); return !t || t.solid || t.hurt || wall.has(x + ',' + y); };
+    const DIR = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] }, FL = { up: 'u', down: 'd', left: 'l', right: 'r' };
+    const move = (x, y, k) => {
+      let [dx, dy] = DIR[k];
+      if (solid(x + dx, y + dy) && !(x + dx === tx && y + dy === ty && tile(tx, ty) && !tile(tx, ty).solid)) return null;
+      x += dx; y += dy;
+      for (let n = 0; n < 400; n++) {
+        const t = tile(x, y);
+        if (t.fall) return null;
+        if (t.flow) [dx, dy] = DIR[FL[t.flow]];
+        else if (!t.slide) return [x, y];
+        if (solid(x + dx, y + dy)) return [x, y];
+        x += dx; y += dy;
+      }
+      return [x, y];
+    };
+    const p = m.player, start = p.x + ',' + p.y, prev = { [start]: null }, q = [[p.x, p.y]];
+    while (q.length) {
+      const [x, y] = q.shift();
+      if (x === tx && y === ty) break;
+      for (const k of 'udlr') {
+        const n = move(x, y, k);
+        if (!n) continue;
+        const key = n.join(',');
+        if (!(key in prev)) { prev[key] = [x + ',' + y, k]; q.push(n); }
+      }
+    }
+    let cur = tx + ',' + ty, out = '';
+    if (!(cur in prev)) return null;
+    while (prev[cur]) { out = prev[cur][1] + out; cur = prev[cur][0]; }
+    return out;
+  }, [tx, ty]);
+  const goTo = async (tx, ty, label) => {
+    const r = await route(tx, ty);
+    if (r == null) { expect(`${label}：道がある`, `${await pos()}→(${tx},${ty})`, '道あり'); return false; }
+    for (const k of r) await step(k);
+    return true;
+  };
+  // 調べる（確認「はい」まで）
+  const examine = async dir => {
+    await face(dir); await page.keyboard.press('KeyZ'); await wait(250);
+    for (let i = 0; i < 12; i++) {
+      const s = await scenes();
+      if (s === 'マップ') break;
+      await page.keyboard.press('KeyZ'); await wait(200);   // 確認は最初が「はい」
+    }
+    await idle();
+  };
+  const place = async (id, x, y, dir) => { await ev(([id, x, y, dir]) => { GAME.scene.change(GAME.scenes.map(id, x, y, dir)); }, [id, x, y, dir]); await wait(250); await closeMsgs(); await idle(); };
+  const has = id => ev(id => GAME.party.count(id), id);
+  const flag = f => ev(f => GAME.flags.get(f), f);
+
+  // 準備：クリア後、オオナムチが必要な言霊を覚えている。敵は出ない
+  await ev(() => {
+    GAME.party.newGame(); GAME.state.chapter = 13; GAME.state.cleared = true; GAME.encounter.enabled = false;
+    const o = GAME.party.member('oonamuchi');
+    o.kotodama = ['katame', 'iyashi', 'kokoroshizume', 'hidane', 'miyaburi', 'ikazuchi'];
+    o.maxMp = o.mp = 999;
+  });
+
+  // ---- 1. 苔むした地下道 ----
+  await place('hijiri_cave', 1, 2, 'up'); await step('u');
+  expect('寄り道：洞窟の奥の石段から、苔むした地下道へ', await pos(), 'hijiri_deep(4,13)');
+  await goTo(6, 12, '地下道'); await examine('u');
+  expect('地下道：心鎮めで火の玉が静まる', await flag('gm:hijiri_deep:wisp'), true);
+  await goTo(18, 4, '地下道 苔の広間'); await examine('r');
+  expect('地下道：苔の広間を滑ってレバーへ→門が開く', await flag('deep_lever'), true);
+  await goTo(19, 1, '地下道 宝箱'); await examine('r');
+  await goTo(20, 10, '地下道 門の奥'); await examine('u');
+  await goTo(2, 5, '地下道 蔦の前'); await examine('u');
+  await goTo(4, 2, '地下道 蔦の奥'); await examine('u');
+  expect('地下道：門の奥と、蔦（火種で焼く）の奥の宝', `${await has('morimori_gaitou')}/${await has('kotonoha_juzu')}/${await has('kizugusuri')}`, '1/1/2');
+
+  // ---- 2. 古い坑道 ----
+  await place('ro_path', 2, 17, 'left'); await step('l');
+  expect('寄り道：山道の岩陰から、古い坑道へ', await pos(), 'ro_mine(12,16)');
+  for (const k of 'uuuu') await step(k);              // 岩1を押して上の穴へ
+  expect('坑道：岩を押して1つ目の穴を埋める', await flag('gm:ro_mine:fill:12,11'), true);
+  await goTo(9, 13, '坑道 岩2の左'); for (const k of 'rr') await step(k);
+  await goTo(12, 14, '坑道 岩2の下'); for (const k of 'uuu') await step(k);
+  expect('坑道：2つ目の穴も埋まり、北へ行ける', await flag('gm:ro_mine:fill:12,10'), true);
+  const hp0 = await ev(() => GAME.party.member('oonamuchi').hp);
+  await goTo(12, 7, '坑道 焼けた岩の広間');
+  for (const k of 'uulll') await step(k);              // わざと焼けた岩を踏む
+  expect('坑道：焼けた岩を踏むと体力が減る', (await ev(() => GAME.party.member('oonamuchi').hp)) < hp0, true);
+  await ev(() => GAME.state.party.forEach(m => { m.hp = m.maxHp; }));
+  await place('ro_mine', 16, 4, 'right');
+  for (const x of [17, 18, 19]) { await step('r'); await examine('r'); }
+  expect('坑道：崩れた足場を堅めで固めて渡れる', `${await flag('gm:ro_mine:gap')}/${await flag('gm:ro_mine:gap3')}`, 'true/true');
+  await goTo(23, 1, '坑道 東の棟のレバー'); await examine('r');
+  expect('坑道：レバーで焼けた岩の床が冷える', await flag('mine_cool'), true);
+  await goTo(22, 2, '坑道 岩3の上'); for (const k of 'ddddd') await step(k);
+  expect('坑道：岩を重しの床に乗せると門が開く', await flag('gm:ro_mine:plate'), true);
+  await goTo(24, 14, '坑道 鍵の宝箱'); await examine('d');
+  expect('坑道：鍵を手に入れる', await has('koudou_kagi'), 1);
+  await goTo(5, 4, '坑道 鍵の扉'); await examine('l');
+  expect('坑道：鍵で扉が開き、鍵はなくなる', `${await flag('gm:ro_mine:door')}/${await has('koudou_kagi')}`, 'true/0');
+  await goTo(2, 4, '坑道 宝物庫'); await examine('l');
+  expect('坑道：鋼の剣', await has('hagane_ken'), 1);
+  await place('ro_mine', 17, 14, 'up'); await examine('u');
+  expect('坑道：燭台に火種で火を灯す', await flag('gm:ro_mine:t2'), true);
+
+  // ---- 3. 風の岩溝 ----
+  await place('kemono_field', 30, 18, 'down'); await step('d');
+  expect('寄り道：獣ノ原の岩溝から、風の岩溝へ', await pos(), 'kemono_ravine(3,15)');
+  const noLever = await route(22, 1);
+  expect('岩溝：レバーを倒す前は、上の通路へ行けない', noLever, null);
+  await goTo(21, 14, '岩溝 レバー'); await examine('r');
+  expect('岩溝：レバーで東の風が上向きに', await flag('ravine_lever'), true);
+  await goTo(2, 1, '岩溝 鍵の部屋'); await examine('l');
+  expect('岩溝：風の迷路を抜けて鍵', await has('iwamizo_kagi'), 1);
+  await goTo(14, 1, '岩溝 扉の前'); await examine('l');
+  await goTo(10, 1, '岩溝 宝'); await examine('l');
+  expect('岩溝：鍵の扉の奥で風切りの外套', await has('kazekiri_gaitou'), 1);
+  await goTo(3, 15, '岩溝 帰り道');
+  expect('岩溝：帰りの風に乗って入口へ戻れる', await pos(), 'kemono_ravine(3,15)');
+
+  // ---- 4. 大穴　上層 ----
+  await place('yomi_hani', 27, 16, 'right'); await step('r');
+  expect('寄り道：魔界の畑の縦穴から、大穴の上層へ（クリア後）', await pos(), 'oana_jou(11,16)');
+  await goTo(11, 6, '上層 氷の広間');
+  expect('上層：凍った床を滑って抜ける', await pos(), 'oana_jou(11,6)');
+  await goTo(10, 5, '上層 石台A');
+  expect('上層：光る石台で東の島へ', await pos(), 'oana_jou(20,2)');
+  await goTo(21, 3, '上層 東の宝箱'); await examine('d');
+  await goTo(18, 4, '上層 石台B');
+  await goTo(2, 4, '上層 西の島'); await examine('l');
+  expect('上層：星見の勾玉', await has('hoshimi_magatama'), 1);
+  // 灯籠：まちがえると消える
+  await goTo(8, 2, '上層 西の灯籠の前'); await examine('l');
+  expect('上層：灯籠を順番ちがいで灯すと消える', await ev(() => GAME.scene.find('マップ').gimmickState.seq.moon || 0), 0);
+  for (const [x, y, d] of [[14, 2, 'r'], [11, 2, 'd'], [8, 2, 'l'], [11, 2, 'u']]) { await goTo(x, y, '上層 灯籠'); await examine(d); }
+  expect('上層：月の道すじ（東→南→西→北）で灯すと北の門が開く', await flag('oana_moon'), true);
+  await goTo(16, 0, '上層 下への石段');
+  expect('上層：石段から中層へ', await pos(), 'oana_chuu(12,2)');
+
+  // ---- 5. 大穴　中層 ----
+  await goTo(10, 11, '中層 岩1の右'); for (const k of 'lll') await step(k);
+  await goTo(6, 12, '中層 岩1の下'); for (const k of 'uu') await step(k);
+  await goTo(13, 12, '中層 岩2の左'); for (const k of 'rrr') await step(k);
+  await goTo(17, 13, '中層 岩2の下'); for (const k of 'uuu') await step(k);
+  expect('中層：二つの重しの床に岩を乗せると、南の門が開く', `${await flag('gm:oana_chuu:p1')}/${await flag('gm:oana_chuu:p2')}`, 'true/true');
+  await goTo(6, 2, '中層 偽の壁の前'); await examine('l');
+  await goTo(2, 1, '中層 隠し部屋'); await examine('l');
+  await goTo(18, 2, '中層 大岩の前'); await examine('r');
+  await goTo(22, 4, '中層 大岩の奥'); await examine('d');
+  expect('中層：見破り（偽の壁）と雷（大岩）の奥の宝', `${await has('yomiishi_ken')}/${await has('akatsuki_yoroi')}`, '1/1');
+  await goTo(12, 16, '中層 最深部への石段');
+  expect('中層：門の先の石段から、大穴の最深部へ', await pos(), 'oana_soko(12,19)');
+  // ひびの床から落ちると中層へ
+  await place('oana_jou', 5, 11, 'down'); await step('d'); await closeMsgs(); await idle();
+  expect('上層：ひびの床を踏むと、中層へ落ちる', await pos(), 'oana_chuu(12,10)');
+  await ev(() => { GAME.encounter.enabled = true; });
+}
+
+module.exports = { run };
+
+if (require.main === module) {
+  (async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ viewport: { width: 960, height: 640 } });
+    const errors = [], fails = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.goto('file://' + require('path').resolve(__dirname, '..', 'index.html'));
+    await page.waitForTimeout(400);
+    const expect = (label, got, want) => {
+      const ok = got === want;
+      console.log(`${ok ? 'OK ' : 'NG '} ${label}: ${got}${ok ? '' : '（期待：' + want + '）'}`);
+      if (!ok) fails.push(label);
+    };
+    await run(page, expect);
+    console.log(errors.length ? 'エラー：' + errors.join(' / ') : 'エラーなし');
+    console.log(fails.length ? `失敗 ${fails.length} 件` : 'すべて合格');
+    await browser.close();
+    process.exit(fails.length || errors.length ? 1 : 0);
+  })();
+}

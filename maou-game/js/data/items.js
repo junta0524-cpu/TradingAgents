@@ -24,10 +24,21 @@
     chain_mail:    { name: '鎖帷子',         type: 'armor', def: 8, who: ['oonamuchi'], desc: '細い鎖を編んだ帷子。' },
 
     // ---- 装飾 ----
+    // ---- ダンジョンの寄り道で見つかる品（js/data/maps/hijiri_deep.js など）----
+    hagane_ken:      { name: '鋼の剣',       type: 'weapon',    atk: 16, who: ['oonamuchi'], desc: '古い坑道に眠っていた、よく鍛えられた剣。' },
+    yomiishi_ken:    { name: '黄泉石の剣',   type: 'weapon',    atk: 32, who: ['oonamuchi'], desc: '大穴の黒い石を削り出した剣。ひやりと重い。' },
+    morimori_gaitou: { name: '森守りの外套', type: 'armor',     def: 5, wis: 3, who: ['oonamuchi'], desc: '苔の匂いのする外套。心が静まる。' },
+    kazekiri_gaitou: { name: '風切りの外套', type: 'armor',     def: 7, agi: 5, who: ['oonamuchi'], desc: '風を受け流す、軽い外套。' },
+    akatsuki_yoroi:  { name: '暁の鎧',       type: 'armor',     def: 18, wis: 4, who: ['oonamuchi'], desc: '夜明けの色をした鎧。' },
+    kotonoha_juzu:   { name: '言の葉の数珠', type: 'accessory', wis: 5, who: ['oonamuchi'], desc: '言葉を紡ぐ者が身につけた、古い数珠。' },
+    hoshimi_magatama:{ name: '星見の勾玉',   type: 'accessory', wis: 12, def: 3, who: ['oonamuchi'], desc: '夜空の光を閉じこめた勾玉。' },
+
     mamori_ishi: { name: '守り石',   type: 'accessory', def: 2, who: ['oonamuchi'], desc: '身を守るという丸い石。' },
     hayate_obi:  { name: '疾風の帯', type: 'accessory', agi: 3, who: ['oonamuchi'], desc: '体が軽くなる帯。' },
 
     // ---- 大事なもの ----
+    koudou_kagi:  { name: '坑道の鍵', type: 'key', desc: '古い坑道の、鉄の扉の鍵。' },
+    iwamizo_kagi: { name: '岩溝の鍵', type: 'key', desc: '風の岩溝の、岩の扉の鍵。' },
     kakikake_tegami: { name: '書きかけの手紙', type: 'key', desc: '兵の懐にあった、書きかけの手紙。', read: () => G.DATA.rampage.ch2.letter },
   };
 })();

@@ -126,7 +126,7 @@
         const candidates = G.state.items.filter(s => G.DATA.items[s.id].type === slot && G.party.canEquip(m, s.id)).map(s => s.id);
         const options = candidates.map(id => {
           const it = G.DATA.items[id];
-          const stat = it.atk ? `攻+${it.atk}` : it.def ? `守+${it.def}` : it.agi ? `速+${it.agi}` : it.wis ? `賢+${it.wis}` : '';
+          const stat = [['atk', '攻'], ['def', '守'], ['agi', '速'], ['wis', '賢']].filter(([k]) => it[k]).map(([k, n]) => `${n}+${it[k]}`).join(' ');
           return { label: it.name, note: stat };
         });
         if (m.equip[slot]) options.push({ label: 'はずす' });

@@ -73,6 +73,14 @@
     },
     PARTY_MAX: 4,
 
+    // ---- ダンジョンのしかけ（js/systems/gimmick.js）----
+    GIMMICK: {
+      HURT_STEP: 3,       // 熱い床：1歩ごとに減る体力（1より下にはならない）
+      DARK_RADIUS: 2.5,   // 暗闇：先頭のまわりの見える広さ（マス）
+      TORCH_RADIUS: 3.5,  // 火の点いた燭台のまわりの見える広さ（マス）
+      DARK_ALPHA: 0.94,   // 暗闇の濃さ
+    },
+
     // ---- 四すくみ（js/data/tribes.js）：構えが敵の種族に強いと×STRONG、弱いと×WEAK ----
     AFFINITY: { STRONG: 1.5, WEAK: 0.75 },
 
@@ -227,6 +235,9 @@
       leather_armor: 50, chain_mail: 150,
       mamori_ishi: 30, hayate_obi: 60,
       old_dagger: 2, patched_cloak: 2,
+      // 寄り道のダンジョンで見つかる品（店では売っていない。売るときの値段のもと）
+      hagane_ken: 300, yomiishi_ken: 900, morimori_gaitou: 200, kazekiri_gaitou: 320, akatsuki_yoroi: 1000,
+      kotonoha_juzu: 240, hoshimi_magatama: 800,
     },
     SELL_RATE: 0.5,
     INN_PRICE: 6,      // 宿屋の一晩の値段

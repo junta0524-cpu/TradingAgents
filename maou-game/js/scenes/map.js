@@ -5,6 +5,7 @@
 // 物語のしかけ：人の event（話すと場面が流れる）・if/unless/chapter（出る条件）、マップの onEnter（入ったとき）・
 // triggers（踏んだとき）、出入口の requires（フラグが立つまで通れない）、tint（画面の色味）。
 // places（フィールドマップで、立った場所の名前を左上に出す。note があれば下の行に由来）。
+// ダンジョンのしかけ（gimmicks：岩・レバー・言霊で開く道・滑る床など）は js/systems/gimmick.js。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -27,6 +28,9 @@
     let sleeping = null;   // 宿屋で眠るとき、真っ暗になった瞬間に呼ぶ処理
     let enterCheck = false; // 入ったときの場面を、まだ確かめていない
     let script = null;      // 物語の場面で歩かされているとき { dir, left }
+    let gst = null;         // しかけの状態（js/systems/gimmick.js）
+    let forced = null;      // 滑る床・流れる床で、勝手に進む向き
+    let hurtFlash = 0;
     const BATTLE_FLASH_FRAMES = 30;
 
     function randWait() { return G.rng.int(B.NPC_WANDER_MIN, B.NPC_WANDER_MAX); }
@@ -35,6 +39,8 @@
       mapId = id;
       map = G.DATA.maps[id];
       if (!map) throw new Error('マップが見つかりません：' + id);
+      gst = G.gimmick.init(id, map);
+      forced = null;
       npcs = (map.npcs || []).filter(n => G.flags.check(n)).map(makeNpc);
       buildRows();
       player = makeEntity(x, y, dir || 'down', leaderLook());
@@ -53,6 +59,7 @@
       (map.flagTiles || []).filter(o => G.flags.check(o)).forEach(o => {
         rows[o.y] = rows[o.y].slice(0, o.x) + o.ch + rows[o.y].slice(o.x + 1);
       });
+      rows = G.gimmick.overlay(mapId, map, rows);
     }
     // 曲：マップの bgm、なければ場所から決める（魔界・王都・野原・町）
     function playBgm() {
@@ -111,6 +118,7 @@
       const t = tileAt(x, y);
       if (!t || t.solid) return true;
       if (at(map.chests, x, y) || at(map.signs, x, y)) return true;
+      if (G.gimmick.blocks(gst, x, y)) return true;
       return !!entityAt(x, y, self);
     }
 
@@ -119,6 +127,8 @@
       e.dir = dir;
       const [dx, dy] = DIRS[dir];
       const nx = e.x + dx, ny = e.y + dy;
+      // 岩を押す（先頭だけ）
+      if (e === player && !forced) G.gimmick.push(gimmickApi, dir, nx, ny);
       if (blocked(nx, ny, e)) return false;
       // まだ通れない出入口
       const w = e === player && warpAt(nx, ny);
@@ -193,6 +203,14 @@
       return false;
     }
 
+    // しかけ（js/systems/gimmick.js）から使う、この画面の道具
+    const gimmickApi = {
+      get st() { return gst; }, get map() { return map; }, get player() { return player; },
+      tileAt,
+      occupied: (x, y) => !!(at(map.chests, x, y) || at(map.signs, x, y) || G.gimmick.blocks(gst, x, y) || entityAt(x, y)),
+      rebuild: () => { buildRows(); refreshNpcs(); },
+    };
+
     // ---- 調べる・話す ----
     function interact() {
       const [dx, dy] = DIRS[player.dir];
@@ -213,6 +231,7 @@
         });
         return;
       }
+      if (G.gimmick.interact(gimmickApi, fx, fy)) return;
       const chest = at(map.chests, fx, fy);
       if (chest) { openChest(chest); return; }
       const sign = at(map.signs, fx, fy);
@@ -289,6 +308,8 @@
       // デバッグなどから見えるように
       get mapId() { return mapId; },
       get player() { return player; },
+      get rows() { return rows; },          // いまの地形（隠し通路・しかけを重ねたもの。テスト用）
+      get gimmickState() { return gst; },
       resume() { refreshNpcs(); buildRows(); if (G.scene.top() === this) playBgm(); },
       // 物語の場面から歩かせる（js/systems/event.js の walk）
       scriptMove(dir, n) { script = { dir, left: n }; if (!n) player.dir = dir; },
@@ -335,9 +356,30 @@
             if (G.inhibit.step(map)) { G.scene.change(G.scenes.exposure()); return; }
             if (checkWarp()) return;
             if (runFirst((map.triggers || []).filter(o => o.x === player.x && o.y === player.y))) return;
+            // しかけ：熱い床・落とし穴・滑る床・流れる床
+            const gs = G.gimmick.afterStep(gimmickApi, player.dir);
+            if (gs.hurt) hurtFlash = 8;
+            if (gs.fall) {
+              const f = gs.fall;
+              player.walk = 0;
+              G.message.show(f.text || '足もとが崩れた！', () => { pendingWarp = { to: f.map, tx: f.x, ty: f.y, dir: f.dir || 'down' }; fadeDir = 1; });
+              return;
+            }
+            forced = gs.slide || null;
+            if (forced) return;
             const group = G.encounter.step(map, tileAt(player.x, player.y));
             if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; if (G.sound) G.sound.se('encounter'); return; }
           }
+        }
+        // 滑る床・流れる床：止まるまで勝手に進む
+        if (!player.moving && forced) {
+          const fx = player.x, fy = player.y, dir = forced;
+          forced = null;
+          if (tryMove(player, dir)) { followStep(fx, fy); forced = dir; }
+          if (forced) { updateNpcs(); return; }
+          // 止まったマスで、出会いを確かめる
+          const group = G.encounter.step(map, tileAt(player.x, player.y));
+          if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; if (G.sound) G.sound.se('encounter'); return; }
         }
         if (!player.moving) {
           if (inp.pressed('cancel')) { G.scene.push(G.scenes.fieldMenu()); return; }
@@ -378,9 +420,12 @@
           ctx.globalAlpha = fadeOf(e); G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y); ctx.globalAlpha = 1; } }));
         npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () => {
           ctx.globalAlpha = fadeOf(e); G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y); ctx.globalAlpha = 1; } }));
+        G.gimmick.things(gst, ctx, cam, T).forEach(t => things.push(t));
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
         const tint = typeof map.tint === 'function' ? map.tint() : map.tint;
         if (tint) r.rect(0, 0, r.W, r.H, tint);
+        G.gimmick.drawDark(r, gst, player, cam, T);
+        if (hurtFlash > 0) { hurtFlash--; r.rect(0, 0, r.W, r.H, 'rgba(220,60,30,0.25)'); }
 
         if (nameTimer > 0 && !fadeDir && G.scene.top() === this) {
           const w = Math.ceil(r.measure(map.name)) + 24;

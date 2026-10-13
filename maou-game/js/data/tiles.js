@@ -92,6 +92,33 @@
     'n': { name: '手すり',   look: 'railing',  solid: true, check: '遠く、比良坂の方角に、細い光の筋が立っている。' },
     'y': { name: '夜空',     look: 'redsky',   solid: true },
 
+    // ---- ダンジョンのしかけ（js/systems/gimmick.js）----
+    // hole：岩を押し込むと埋まる穴（fillCh／マップの fillCh の床になる）。fall：踏むと下の階へ落ちる（マップの fallTo）
+    // slide：止まるまで滑る。flow：その向きへ流される。hurt：1歩ごとに体力が減る
+    '穴': { name: '穴',       look: 'hole',      solid: true, hole: true, check: '深い穴だ。何かで埋められそうだ。' },
+    '落': { name: 'ひびの床', look: 'crackfloor', fall: true },
+    '滑': { name: 'ぬめる苔', look: 'slick',     slide: true, noEncounter: true },
+    '氷': { name: '凍った床', look: 'ice',       slide: true, noEncounter: true },
+    '↑': { name: '流れ', look: 'flowup',    flow: 'up',    noEncounter: true },
+    '↓': { name: '流れ', look: 'flowdown',  flow: 'down',  noEncounter: true },
+    '←': { name: '流れ', look: 'flowleft',  flow: 'left',  noEncounter: true },
+    '→': { name: '流れ', look: 'flowright', flow: 'right', noEncounter: true },
+    '熱': { name: '焼けた岩', look: 'hotrock',  hurt: true },
+    '門': { name: '鉄の門',   look: 'gatebars', solid: true, check: '鉄の門だ。どこかで開ける仕掛けがありそうだ。' },
+    '蔦': { name: '絡み合った蔦', look: 'vines', solid: true },
+    '崩': { name: '崩れた足場',   look: 'gap',   solid: true },
+    '橋': { name: '固めた足場',   look: 'bridge', noEncounter: true },
+    '霊': { name: '荒ぶる火の玉', look: 'wisp',  solid: true },
+    '偽': { name: '岩壁',         look: 'rock',  solid: true },
+    '幻': { name: '黒い岩壁',     look: 'yomirock', solid: true },
+    '巌': { name: '大岩',         look: 'rock',  solid: true },
+    '扉': { name: '鍵の扉',       look: 'lockdoor', solid: true },
+    '台': { name: '光る石台',     look: 'pad',   noEncounter: true },
+    '坑': { name: '坑道の床',     look: 'minefloor' },
+    '杭': { name: '坑道の柱',     look: 'minewall', solid: true },
+    '黒': { name: '黒い岩肌',     look: 'yomirock', solid: true },
+    '闇': { name: '大穴の床',     look: 'pitfloor' },
+
     // ---- フィールドマップ（人間界・魔界の全体の地図。1マスが一つの土地）----
     '6': { name: '森',       look: 'woods' },
     '9': { name: '城',       look: 'castle',   noEncounter: true },

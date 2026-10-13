@@ -1212,6 +1212,25 @@ const { chromium } = require('playwright');
   });
   expect('横画面：ボタンが画面に重ならない', `${lay.canvasH >= 300}/${lay.dpadLeftOfCanvas}/${lay.abRightOfCanvas}`, 'true/true/true');
 
+  // 寄り道のダンジョン：しかけのデータの食い違いと、キー操作で最後まで解けるか（tools/dungeons.js）
+  expect('しかけのデータに食い違いがない（言霊・鍵・宝の品・岩と床の位置）', await page.evaluate(() => {
+    const D = GAME.DATA, out = [];
+    Object.entries(D.maps).forEach(([id, m]) => {
+      (m.gimmicks || []).forEach(g => {
+        const t = c => D.tiles[c];
+        if (g.type === 'seal' && (!D.kotodama[g.need] || !t(g.ch))) out.push(`${id}:${g.id}`);
+        if (g.type === 'lock' && (!D.items[g.key] || !t(g.ch))) out.push(`${id}:${g.id}`);
+        if (['boulder', 'plate'].includes(g.type) && t(m.rows[g.y][g.x]).solid) out.push(`${id}:${g.id}`);
+        if (g.type === 'lantern' && !(m.gimmicks || []).some(o => o.type === 'sequence' && o.id === g.seq)) out.push(`${id}:${g.seq}`);
+      });
+      (m.chests || []).forEach(c => { if (c.item && !D.items[c.item]) out.push(`${id}:${c.item}`); });
+      if (m.fallTo && !D.maps[m.fallTo.map]) out.push(`${id}:fallTo`);
+    });
+    return out.join('、') || 'なし';
+  }), 'なし');
+  await page.evaluate(() => { GAME.rng.setFixed && GAME.rng.setFixed(false); });
+  await require('./dungeons.js').run(page, expect);
+
   console.log(errors.length ? 'エラー:\n' + errors.join('\n') : 'エラーなし');
   console.log(fails.length ? `失敗 ${fails.length} 件` : 'すべて合格');
   await browser.close();
