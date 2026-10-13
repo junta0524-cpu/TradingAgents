@@ -1117,6 +1117,11 @@ const { chromium } = require('playwright');
     const r = [run('hidane', 0) < run('hidane', 100), run('iyashi', 0) < run('iyashi', 100)];
     GAME.rng.int = keepInt; return r.join('/');
   }), 'true/true');
+  expect('敵にも賢さがあり、状態を変える言霊の効きやすさは賢さの差で上下する（0.5〜1.5倍）', await ev(() => {
+    const E = GAME.DATA.enemies, k = GAME.kotodama;
+    const all = Object.values(E).every(e => e.wis > 0);
+    return [all, E.nakui_ou.wis > E.dog.wis, k.statusWisMult({ wis: 255 }, { wis: 3 }), k.statusWisMult({ wis: 3 }, { wis: 255 }), k.statusWisMult({ wis: 20 }, { wis: 20 })].join('/');
+  }), 'true/true/1.5/0.5/1');
   expect('賢さのない古い記録でも、読み込むと賢さが入る', await ev(() => {
     const m = JSON.parse(JSON.stringify(GAME.state.party.find(p => p.lv != null)));
     delete m.base.wis; delete m.wis; GAME.party.recalc(m); return m.wis > 0;

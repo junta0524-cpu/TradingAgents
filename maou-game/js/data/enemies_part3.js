@@ -29,54 +29,54 @@
   Object.assign(G.DATA.enemies, {
     // 2章：根の洲に攻め込んだ人間の軍（ベルイザナの一撃で「消える」。経験値・銅貨はない）
     ch2_yari: {
-      name: '槍兵', counter: '人', hp: 60, atk: 40, def: 30, agi: 20, exp: 0, copper: 0,
+      name: '槍兵', counter: '人', hp: 60, atk: 40, def: 30, agi: 20, wis: 15, exp: 0, copper: 0,
       palette: { K: '#120e16', H: '#5a5e68', D: '#8a8e98', E: '#2a2a2a', W: '#d8d8e0' },
       sprite: human(HUMAN),
     },
     ch2_yumi: {
-      name: '弓兵', counter: '人', hp: 45, atk: 36, def: 20, agi: 30, exp: 0, copper: 0,
+      name: '弓兵', counter: '人', hp: 45, atk: 36, def: 20, agi: 30, wis: 15, exp: 0, copper: 0,
       palette: { K: '#120e16', H: '#6a5a3a', D: '#7a6a4a', E: '#2a2a2a', W: '#d8d0b0' },
       sprite: human(HUMAN),
     },
     // 2章：勇者タケル（人間界最強。1ターンに2回斬る。倒れず、膝をつくところで戦いが終わる＝spare）
     takeru_ch2: {
-      name: 'タケル', counter: '人', hp: 600, atk: 230, def: 200, agi: 240, exp: 0, copper: 0, hits: 2, spare: true,
+      name: 'タケル', counter: '人', hp: 600, atk: 230, def: 200, agi: 240, wis: 120, exp: 0, copper: 0, hits: 2, spare: true,
       palette: { K: '#120e16', H: '#6a4a2a', D: '#c8ccd8', E: '#3a5a8a', W: '#ffffff' },
       sprite: human(HUMAN),
     },
     // 10章：王都の追手
     otte: {
-      name: '追手の兵', counter: '人', hp: 36, atk: 24, def: 14, agi: 10, exp: 30, copper: 0,
+      name: '追手の兵', counter: '人', hp: 36, atk: 24, def: 14, agi: 10, wis: 15, exp: 30, copper: 0,
       palette: { K: '#120e16', H: '#d8b088', D: '#8a8e98', E: '#2a2a2a', W: '#f0f0f0' },
       sprite: human(HUMAN),
     },
     // 11章：手合わせの相手（耐えきれば勝ち）
     mikazuchi_t: {
-      tribe: 'oni', name: 'ミカヅチ', counter: '人', hp: 999, atk: 26, def: 40, agi: 8, exp: 40, copper: 0,
+      tribe: 'oni', name: 'ミカヅチ', counter: '人', hp: 999, atk: 26, def: 40, agi: 8, wis: 14, exp: 40, copper: 0,
       palette: { K: '#120e16', H: '#c8705a', D: '#6a2a2a', E: '#e8c040', W: '#f0e0c0' },
       sprite: human(HUMAN),
     },
     susano_t: {
-      tribe: 'arashi', name: 'スサノ', counter: '人', hp: 120, atk: 24, def: 18, agi: 22, exp: 50, copper: 0,
+      tribe: 'arashi', name: 'スサノ', counter: '人', hp: 120, atk: 24, def: 18, agi: 22, wis: 22, exp: 50, copper: 0,
       palette: { K: '#120e16', H: '#8a8a9a', D: '#4a4a5a', E: '#d0c040', W: '#f0f0f0' },
       sprite: human(HUMAN),
     },
     // 11章：タケル（規定のターンを過ぎ、体力が半分以下になれば勝ち。削り切ってもよい）
     takeru_b: {
-      name: 'タケル', counter: '人', hp: 160, atk: 34, def: 22, agi: 16, exp: 150, copper: 0,
+      name: 'タケル', counter: '人', hp: 160, atk: 34, def: 22, agi: 16, wis: 22, exp: 150, copper: 0,
       palette: { K: '#120e16', H: '#6a4a2a', D: '#c8ccd8', E: '#3a5a8a', W: '#ffffff' },
       sprite: human(HUMAN),
     },
     // 12章：アマツ王（武力は低い。詠唱が満ちる直前に核心へ踏み込むと決着）と護衛
     amatsu_king: {
-      name: 'アマツ王', counter: '人', hp: 200, atk: 6, def: 99, agi: 4, exp: 200, copper: 0,
+      name: 'アマツ王', counter: '人', hp: 200, atk: 6, def: 99, agi: 4, wis: 60, exp: 200, copper: 0,
       actions: [{ w: 2, type: 'kotodama', id: 'kangen' }, { w: 1, type: 'attack' }],
       resist: { sleep: 0, confuse: 0, silence: 0 },
       palette: { K: '#120e16', H: '#e8e0c0', D: '#f4f4f4', E: '#4a4a4a', W: '#c8c0a0' },
       sprite: human(HUMAN),
     },
     goei: {
-      name: '王の護衛', counter: '人', hp: 60, atk: 24, def: 18, agi: 9, exp: 40, copper: 0,
+      name: '王の護衛', counter: '人', hp: 60, atk: 24, def: 18, agi: 9, wis: 15, exp: 40, copper: 0,
       palette: { K: '#120e16', H: '#d8b088', D: '#d8d8e0', E: '#2a2a2a', W: '#c8a040' },
       sprite: human(HUMAN),
     },

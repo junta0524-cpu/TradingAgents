@@ -70,7 +70,7 @@
       return {
         key: 'e' + i, id, side: 'enemy', name: d.name + suffix,
         koText: opts.erase ? `${d.name + suffix}は、消えた。` : null,   // 2章：血を描かず「消える」
-        hp: d.hp, maxHp: d.hp, atk: d.atk, def: d.def, agi: d.agi, defending: false,
+        hp: d.hp, maxHp: d.hp, atk: d.atk, def: d.def, agi: d.agi, wis: d.wis, defending: false,
       };
     });
     const party = partyMembers.map(m => Object.assign(m, { side: 'party', defending: false, stance: null }));

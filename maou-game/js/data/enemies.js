@@ -13,7 +13,7 @@
   G.DATA.enemies = {
     // 毒の鱗粉をまく蛾（仮の敵）
     moth: {
-      name: '毒蛾', hp: 10, atk: 8, def: 4, agi: 9, exp: 5, copper: 3,
+      name: '毒蛾', hp: 10, atk: 8, def: 4, agi: 9, wis: 4, exp: 5, copper: 3,
       drop: { item: 'dokukeshi', rank: 'B' },
       actions: [{ w: 3, type: 'attack' }, { w: 1, type: 'kotodama', id: 'doku_rinpun' }],
       onHit: { status: 'poison', chance: 0.25 },
@@ -40,7 +40,7 @@
     },
     // 人を惑わす狐火の主（仮の敵）
     fox: {
-      name: 'まどい狐', hp: 14, atk: 10, def: 5, agi: 11, exp: 7, copper: 5,
+      name: 'まどい狐', hp: 14, atk: 10, def: 5, agi: 11, wis: 14, exp: 7, copper: 5,
       drop: { item: 'mezamashi', rank: 'C' },
       actions: [{ w: 2, type: 'attack' }, { w: 1, type: 'kotodama', id: 'mayoi_bi' }, { w: 1, type: 'kotodama', id: 'surikomi' }],
       resist: { sleep: 0.5, confuse: 0 },
@@ -66,7 +66,7 @@
     },
     // 小説 第四章：ミナモからひなた野への荒れ地に出る
     dog: {
-      name: '野犬', hp: 9, atk: 9, def: 3, agi: 7, exp: 3, copper: 2,
+      name: '野犬', hp: 9, atk: 9, def: 3, agi: 7, wis: 3, exp: 3, copper: 2,
       drop: { item: 'kizugusuri', rank: 'C' },
       palette: { K: '#1a1410', H: '#8a7a62', D: '#5e5240', E: '#e8c040', W: '#f0f0e8' },
       sprite: [
@@ -90,7 +90,7 @@
     },
     // 仮の敵（名前・強さはあとで変えてよい）
     boar: {
-      name: '荒れ猪', hp: 16, atk: 12, def: 6, agi: 3, exp: 6, copper: 4,
+      name: '荒れ猪', hp: 16, atk: 12, def: 6, agi: 3, wis: 3, exp: 6, copper: 4,
       drop: { item: 'hoshiii', rank: 'B' },
       palette: { K: '#1a1210', H: '#6e4a32', D: '#3e2a1c', E: '#e04030', W: '#f0e8d8' },
       sprite: [
@@ -113,7 +113,7 @@
       ],
     },
     centipede: {
-      name: '大ムカデ', hp: 12, atk: 10, def: 8, agi: 5, exp: 5, copper: 3,
+      name: '大ムカデ', hp: 12, atk: 10, def: 8, agi: 5, wis: 3, exp: 5, copper: 3,
       drop: { item: 'kizugusuri', rank: 'B' },
       palette: { K: '#140a08', H: '#a8402a', D: '#6a2418', E: '#f0e040', W: '#e8d8a0' },
       sprite: [
@@ -137,7 +137,7 @@
     },
     // ---- 5章：聖の森 ----
     morigumo: {
-      name: '森蜘蛛', hp: 18, atk: 13, def: 6, agi: 9, exp: 9, copper: 6,
+      name: '森蜘蛛', hp: 18, atk: 13, def: 6, agi: 9, wis: 5, exp: 9, copper: 6,
       drop: { item: 'dokukeshi', rank: 'B' },
       onHit: { status: 'poison', chance: 0.2 },
       resist: { fire: 1.5 },
@@ -162,7 +162,7 @@
       ],
     },
     onibi: {
-      name: '迷い火', hp: 14, atk: 11, def: 5, agi: 12, exp: 10, copper: 7,
+      name: '迷い火', hp: 14, atk: 11, def: 5, agi: 12, wis: 16, exp: 10, copper: 7,
       drop: { item: 'mezamashi', rank: 'B' },
       actions: [{ w: 2, type: 'attack' }, { w: 1, type: 'kotodama', id: 'mayoi_bi' }],
       resist: { fire: 0, sleep: 0 },
@@ -187,7 +187,7 @@
       ],
     },
     tsuta: {
-      name: '絡み蔦', hp: 24, atk: 12, def: 9, agi: 4, exp: 11, copper: 6,
+      name: '絡み蔦', hp: 24, atk: 12, def: 9, agi: 4, wis: 4, exp: 11, copper: 6,
       drop: { item: 'kizugusuri', rank: 'B' },
       onHit: { status: 'bind', chance: 0.2 },
       resist: { fire: 1.5, sleep: 0.5 },
@@ -213,7 +213,7 @@
     },
     // ---- 6章：炉ヶ岳 ----
     iwatokage: {
-      name: '岩蜥蜴', hp: 34, atk: 18, def: 16, agi: 5, exp: 18, copper: 10,
+      name: '岩蜥蜴', hp: 34, atk: 18, def: 16, agi: 5, wis: 5, exp: 18, copper: 10,
       drop: { item: 'kizugusuri', rank: 'B' },
       resist: { fire: 0.5 },
       palette: { K: '#141210', H: '#7a7266', D: '#4e4840', E: '#f0c040', W: '#c8c0b0' },
@@ -237,7 +237,7 @@
       ],
     },
     hinezumi: {
-      name: '火鼠', hp: 22, atk: 17, def: 9, agi: 14, exp: 16, copper: 9,
+      name: '火鼠', hp: 22, atk: 17, def: 9, agi: 14, wis: 8, exp: 16, copper: 9,
       drop: { item: 'hoshiii', rank: 'B' },
       resist: { fire: 0 },
       palette: { K: '#1a0a06', H: '#d85a2a', D: '#a83a1a', E: '#ffe060', W: '#ffd0a0' },
@@ -261,7 +261,7 @@
       ],
     },
     yamagarasu: {
-      name: '山鴉', hp: 26, atk: 16, def: 10, agi: 16, exp: 17, copper: 9,
+      name: '山鴉', hp: 26, atk: 16, def: 10, agi: 16, wis: 15, exp: 17, copper: 9,
       drop: { item: 'mezamashi', rank: 'B' },
       actions: [{ w: 3, type: 'attack' }, { w: 1, type: 'kotodama', id: 'surikomi' }],
       palette: { K: '#06060a', H: '#2a2a3a', D: '#16161e', E: '#f0d040', W: '#6a6a80' },
@@ -286,7 +286,7 @@
     },
     // ---- 7章：獣ノ原 ----
     arano_ookami: {
-      name: '荒野の狼', hp: 40, atk: 24, def: 12, agi: 15, exp: 26, copper: 14,
+      name: '荒野の狼', hp: 40, atk: 24, def: 12, agi: 15, wis: 6, exp: 26, copper: 14,
       drop: { item: 'kizugusuri', rank: 'A' },
       palette: { K: '#141210', H: '#9a8a6a', D: '#6a5e46', E: '#f04030', W: '#f0f0e8' },
       sprite: [
@@ -309,7 +309,7 @@
       ],
     },
     oosasori: {
-      name: '大蠍', hp: 46, atk: 22, def: 20, agi: 7, exp: 28, copper: 15,
+      name: '大蠍', hp: 46, atk: 22, def: 20, agi: 7, wis: 6, exp: 28, copper: 15,
       drop: { item: 'dokukeshi', rank: 'A' },
       onHit: { status: 'venom', chance: 0.15 },
       palette: { K: '#140a06', H: '#a8783a', D: '#6a4a22', E: '#f0e040', W: '#e8d8a0' },
@@ -334,7 +334,7 @@
     },
     // 人族の軍の兵（白い腕章）。洗脳された善人なので、倒すのではなく「退ける」
     wansho: {
-      name: '腕章の兵', counter: '人', hp: 30, atk: 18, def: 12, agi: 9, exp: 20, copper: 0,
+      name: '腕章の兵', counter: '人', hp: 30, atk: 18, def: 12, agi: 9, wis: 12, exp: 20, copper: 0,
       palette: { K: '#120e16', H: '#5a5e68', D: '#8a8e98', E: '#2a2a2a', W: '#f0f0f0' },
       sprite: [
         '................',

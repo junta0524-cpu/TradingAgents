@@ -30,6 +30,12 @@
   // 言霊の強さを決める「賢さ」。敵は書いていなければ攻撃力で代える
   function wisOf(u) { return u.wis != null ? u.wis : (u.atk || 0); }
 
+  // 状態を変える言霊の効きやすさ：唱える側と受ける側の賢さの差で、balance.js の STATUS_WIS の幅まで上下する
+  function statusWisMult(user, t) {
+    const S = G.DATA.balance.STATUS_WIS;
+    return Math.max(S.MIN, Math.min(S.MAX, 1 + (wisOf(user) - wisOf(t)) * S.RATE));
+  }
+
   function apply(effect, user, targets, st) {
     let ev = [];
     const B = G.DATA.balance;
@@ -89,7 +95,7 @@
           return;
         }
         case 'status':
-          ev = ev.concat(G.status.inflict(t, effect.status, effect.chance));
+          ev = ev.concat(G.status.inflict(t, effect.status, effect.chance * statusWisMult(user, t)));
           return;
         case 'cure':
           if (t.hp <= 0) return;
@@ -230,5 +236,5 @@
     G.status.afterBattle(m);
   }
 
-  G.kotodama = { wisOf, implemented, usableIn, buffMult, apply, resolveTargets, cast, castEnemy, useItem, endRound, clearBattleState, charOf };
+  G.kotodama = { wisOf, statusWisMult, implemented, usableIn, buffMult, apply, resolveTargets, cast, castEnemy, useItem, endRound, clearBattleState, charOf };
 })();
