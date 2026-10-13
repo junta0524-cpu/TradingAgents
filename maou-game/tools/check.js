@@ -1183,6 +1183,21 @@ const { chromium } = require('playwright');
     GAME.state = JSON.parse(keep);
     return r.join('/');
   }), '200/0/0.08/true');
+  expect('全部の装備を着けて外すと、強さ・持ち物が元どおり（数でない値もない）', await ev(() => {
+    const keep = JSON.stringify(GAME.state), D = GAME.DATA, bad = [];
+    GAME.party.newGame();
+    const o = GAME.party.member('oonamuchi'), K = ['atk', 'def', 'agi', 'wis', 'maxHp', 'maxMp'];
+    Object.entries(D.items).filter(([, it]) => GAME.party.SLOTS.includes(it.type)).forEach(([id, it]) => {
+      GAME.party.equip(o, it.type, null);
+      const before = K.map(k => o[k]).join(), n = GAME.party.count(id);
+      GAME.party.addItem(id); GAME.party.equip(o, it.type, id);
+      if (K.some(k => !Number.isFinite(o[k])) || o.hp > o.maxHp) bad.push(id);
+      GAME.party.equip(o, it.type, null);
+      if (K.map(k => o[k]).join() !== before || GAME.party.count(id) !== n + 1) bad.push(id);
+    });
+    GAME.state = JSON.parse(keep);
+    return bad.join('、') || 'なし';
+  }), 'なし');
   expect('魔界の市場は、11章から鬼鋼の品が並ぶ', await ev(() => {
     const keep = GAME.state.chapter, ids = () => GAME.DATA.shops.yomi.items.filter(e => typeof e === 'string' || GAME.state.chapter >= e.from).length;
     GAME.state.chapter = 3; const a = ids(); GAME.state.chapter = 11; const b = ids(); GAME.state.chapter = keep;
