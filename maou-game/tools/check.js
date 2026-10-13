@@ -1279,6 +1279,7 @@ const { chromium } = require('playwright');
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない
   expect('思い出の帳：一覧の場面はどれも物語にある', await ev(() => GAME.DATA.memories.list.filter(m => !GAME.DATA.events[m.id]).map(m => m.id).join()), '');
+  for (let i = 0; i < 30 && (await scenes()).includes('メッセージ'); i++) await key('KeyZ', 150);   // 遊び方の7ページを閉じきる
   await ev(() => { localStorage.removeItem('maou_memories'); });
   await key('ArrowDown', 60); await key('KeyZ', 400);
   expect('思い出の帳が開く', await scenes(), 'タイトル > 思い出の帳');
