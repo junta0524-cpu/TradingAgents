@@ -89,6 +89,7 @@ async function run(page, expect) {
   };
   // 番人と戦う（調べる→「戦いますか？」はい→勝つまで決定キー）
   const fight = async (dir, mapId) => {
+    await ev(() => GAME.state.party.forEach(m => { m.hp = m.maxHp; m.mp = m.maxMp; m.status = {}; }));
     await face(dir); await page.keyboard.press('KeyZ'); await wait(250);
     for (let i = 0; i < 400; i++) {
       const s = await scenes();
@@ -109,7 +110,7 @@ async function run(page, expect) {
     o.kotodama = ['katame', 'iyashi', 'kokoroshizume', 'hidane', 'miyaburi', 'ikazuchi'];
     o.maxMp = o.mp = 999;
     // 番人と戦えるだけの強さ（作戦は「うまくやって」で自動）
-    while (o.lv < 70) { o.exp = GAME.DATA.balance.EXP_TABLE[o.lv + 1]; GAME.growth.checkLevelUp(o); }
+    while (o.lv < 99) { o.exp = GAME.DATA.balance.EXP_TABLE[o.lv + 1]; GAME.growth.checkLevelUp(o); }
     o.hp = o.maxHp; o.mp = o.maxMp = 999; GAME.state.party.forEach(m => { m.tactic = 'auto'; });
   });
 
