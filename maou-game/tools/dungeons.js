@@ -161,7 +161,7 @@ async function run(page, expect) {
   await goTo(4, 4, '坑道 扉');
   expect('坑道：番人（岩喰らい）を倒す', await fight('l', 'ro_mine'), true);
   await goTo(2, 4, '坑道 宝物庫'); await examine('l');
-  expect('坑道：鋼の剣', await has('hagane_ken'), 1);
+  expect('坑道：天之尾羽張（宝物庫の剣）', await has('hagane_ken'), 1);
   await place('ro_mine', 17, 14, 'up'); await examine('u');
   expect('坑道：燭台に火種で火を灯す', await flag('gm:ro_mine:t2'), true);
 

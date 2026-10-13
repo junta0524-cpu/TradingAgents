@@ -226,7 +226,7 @@ const { chromium } = require('playwright');
   const oo = () => ev(() => { const m = GAME.party.member('oonamuchi'); return { lv: m.lv, hp: m.hp, maxHp: m.maxHp, mp: m.mp, atk: m.atk, def: m.def }; });
   await ev(() => { GAME.party.newGame(); GAME.state.copper = 200; });
   await placeAt('minamo', 15, 12, 'down'); await wait(200);
-  // レベル＋1（デバッグ）：成長表のレベル2＝攻7＋古い短剣3＝10、HP22
+  // レベル＋1（デバッグ）：成長表のレベル2＝攻7＋石椎3＝10、HP22
   await key('F1', 150); for (let i = 0; i < 3; i++) await key('ArrowDown', 60);
   await key('KeyZ', 300);
   await shot('19_levelup');
@@ -273,7 +273,7 @@ const { chromium } = require('playwright');
   }
   expect('戦いのあと強化が消える', await ev(() => GAME.state.party.every(p => !p.buffs && p.side === undefined)), true);
 
-  // 道具屋：傷薬と銅の短刀を買い、干し飯を売る
+  // 道具屋：傷薬と頭椎の大刀（copper_knife）を買い、干し飯を売る
   await ev(() => { GAME.state.items = []; });   // 前の戦いの落とし物で数がずれないように
   await placeAt('minamo_shop', 5, 4, 'up'); await wait(200);
   await key('KeyZ', 500); await closeMessages(); await wait(200);
@@ -282,7 +282,7 @@ const { chromium } = require('playwright');
   await key('KeyZ', 150);                       // 買う
   await key('KeyZ', 200); await closeMessages(); // 傷薬
   for (let i = 0; i < 4; i++) await key('ArrowDown', 60);
-  await key('KeyZ', 200); await closeMessages(); // 銅の短刀（毒消し草・目覚まし香の下）
+  await key('KeyZ', 200); await closeMessages(); // 頭椎の大刀（毒消し草・目覚まし香の下）
   await shot('26_shop_buy');
   const bought = await ev(() => ({ c: GAME.state.copper, k: GAME.party.count('kizugusuri'), knife: GAME.party.count('copper_knife') }));
   expect('買い物：銅貨が 8+40 減り、品物が増える', `${c0 - bought.c}/${bought.k}/${bought.knife}`, '48/1/1');
@@ -292,14 +292,14 @@ const { chromium } = require('playwright');
   await shot('27_shop_sell');
   for (let i = 0; i < 6 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
 
-  // 装備：銅の短刀に替える（レベル2：攻7＋6＝13）
+  // 装備：頭椎の大刀に替える（レベル2：攻7＋6＝13）
   await key('KeyX', 150); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 150); // そうび
   await key('KeyZ', 150);                       // オオナムチ（ベルは選べない）
   await key('KeyZ', 150);                       // 武器
   await shot('28_equip');
-  await key('KeyZ', 200);                       // 銅の短刀
+  await key('KeyZ', 200);                       // 頭椎の大刀
   o = await oo();
-  expect('装備：攻撃13、古い短剣は持ち物へ', `${o.atk}/${await ev(() => GAME.party.count('old_dagger'))}`, '13/1');
+  expect('装備：攻撃13、石椎（はじめの武器）は持ち物へ', `${o.atk}/${await ev(() => GAME.party.count('old_dagger'))}`, '13/1');
   for (let i = 0; i < 5 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
 
   // 宿屋：泊まると満タン、銅貨が6減り、自動で記録される
