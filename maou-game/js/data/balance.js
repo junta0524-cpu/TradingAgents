@@ -234,6 +234,7 @@
     PRICES: {
       kizugusuri: 8, hoshiii: 4, dokukeshi: 6, mezamashi: 10,
       copper_knife: 40, iron_sword: 120,
+      kotomuke_tama: 300, nagomi_hire: 600, kotomuke_kagami: 1200,   // 目覚めさせた人の数で届く品（店にはない。売ると半分）
       leather_armor: 50, chain_mail: 150,
       mamori_ishi: 30, hayate_obi: 60,
       old_dagger: 2, patched_cloak: 2,
@@ -250,6 +251,15 @@
     },
     SELL_RATE: 0.5,
     INN_PRICE: 6,      // 宿屋の一晩の値段
+
+    // ---- 目覚めさせる（ユーザー決定：洗脳された人の敵は、弱らせて心鎮め・名呼びで目を覚まさせられる）----
+    AWAKEN: {
+      HP_RATE: 0.25,     // 体力がこの割合より少なくなると「揺」（揺らいでいる）。心鎮め・名呼びが届く
+      EXP_RATE: 0.5,     // 目覚めさせた敵の経験値は、倒したときのこの倍
+      INHIBIT: 3,        // 偽名の間、目覚めさせると阻害ゲージがこれだけ戻る（力ではなく言葉で止めたから）
+      // 目覚めさせた人の数が届くと、品が届く（数の多い順に並べない。少ない順）
+      REWARDS: [{ n: 5, item: 'kotomuke_tama' }, { n: 15, item: 'nagomi_hire' }, { n: 30, item: 'kotomuke_kagami' }],
+    },
 
     // ---- 戦闘の式（仕様書 第6章）----
     BATTLE: {

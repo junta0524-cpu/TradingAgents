@@ -335,7 +335,32 @@
     // 人族の軍の兵（白い腕章）。洗脳された善人なので、倒すのではなく「退ける」
     wansho: {
       name: '腕章の兵', counter: '人', hp: 30, atk: 18, def: 12, agi: 9, wis: 12, exp: 20, copper: 0,
+      awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
       palette: { K: '#120e16', H: '#5a5e68', D: '#8a8e98', E: '#2a2a2a', W: '#f0f0f0' },
+      sprite: [
+        '................',
+        '......KKKK......',
+        '.....KDDDDK.....',
+        '.....KDDDDK.....',
+        '.....KHEEHK.....',
+        '......KHHK......',
+        '....KKDDDDKK....',
+        '...KDDWWDDDDK.K.',
+        '...KDDDDDDDDKKWK',
+        '...KHKDDDDKHK.K.',
+        '...KK.KDDK.KK.K.',
+        '......KDDK....K.',
+        '.....KD..DK.....',
+        '.....KH..HK.....',
+        '.....KK..KK.....',
+        '................',
+      ],
+    },
+    // 8・9章の人間界の地図を見回る兵（白い腕章）。洗脳された人なので、目を覚まさせられる
+    junkai: {
+      name: '巡回の兵', counter: '人', hp: 64, atk: 28, def: 18, agi: 12, wis: 16, exp: 44, copper: 10,
+      awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
+      palette: { K: '#120e16', H: '#d8b088', D: '#4a5a7a', E: '#2a2a2a', W: '#f0f0f0' },
       sprite: [
         '................',
         '......KKKK......',

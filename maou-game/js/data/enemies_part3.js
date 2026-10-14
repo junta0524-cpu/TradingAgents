@@ -30,11 +30,13 @@
     // 2章：根の洲に攻め込んだ人間の軍（ベルイザナの一撃で「消える」。経験値・銅貨はない）
     ch2_yari: {
       name: '槍兵', counter: '人', hp: 60, atk: 40, def: 30, agi: 20, wis: 15, exp: 0, copper: 0,
+      awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
       palette: { K: '#120e16', H: '#5a5e68', D: '#8a8e98', E: '#2a2a2a', W: '#d8d8e0' },
       sprite: human(HUMAN),
     },
     ch2_yumi: {
       name: '弓兵', counter: '人', hp: 45, atk: 36, def: 20, agi: 30, wis: 15, exp: 0, copper: 0,
+      awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
       palette: { K: '#120e16', H: '#6a5a3a', D: '#7a6a4a', E: '#2a2a2a', W: '#d8d0b0' },
       sprite: human(HUMAN),
     },
@@ -47,6 +49,7 @@
     // 10章：王都の追手
     otte: {
       name: '追手の兵', counter: '人', hp: 36, atk: 24, def: 14, agi: 10, wis: 15, exp: 30, copper: 0,
+      awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
       palette: { K: '#120e16', H: '#d8b088', D: '#8a8e98', E: '#2a2a2a', W: '#f0f0f0' },
       sprite: human(HUMAN),
     },
@@ -77,6 +80,7 @@
     },
     goei: {
       name: '王の護衛', counter: '人', hp: 60, atk: 24, def: 18, agi: 9, wis: 15, exp: 40, copper: 0,
+      awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
       palette: { K: '#120e16', H: '#d8b088', D: '#d8d8e0', E: '#2a2a2a', W: '#c8a040' },
       sprite: human(HUMAN),
     },

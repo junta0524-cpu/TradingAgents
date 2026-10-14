@@ -61,6 +61,10 @@
 
     dokuyoke:        { name: '毒除けの比礼', type: 'accessory', resist: { poison: 0 }, who: ['oonamuchi'], desc: '肩にかける細い布。身につけていると、毒にかからない。' },
     mezame_suzu:     { name: '目覚めの鈴釧',   type: 'accessory', resist: { sleep: 0 }, who: ['oonamuchi'], desc: '鈴のついた腕輪（すずくしろ）。澄んだ音が、眠りを払う。' },
+    // 目覚めさせた人の数で届く品（balance.js の AWAKEN.REWARDS）。古事記の「言向け和す」（言葉で向き合い、和らげる）から
+    kotomuke_tama:   { name: '言向けの勾玉', type: 'accessory', wis: 4, mp: 10, who: ['oonamuchi'], desc: '目を覚ました人たちから託された勾玉。古事記の「言向け和す」（刃ではなく言葉で和らげる）の名を持つ。' },
+    nagomi_hire:     { name: '和しの比礼',   type: 'accessory', resist: { confuse: 0, sleep: 0.5 }, def: 3, who: ['oonamuchi'], desc: '心を和らげる比礼。惑わしにかからず、眠りにもかかりにくい。' },
+    kotomuke_kagami: { name: '言向け和す鏡', type: 'accessory', wis: 10, mp: 30, def: 4, who: ['oonamuchi'], desc: '三十人の目を覚ました言葉が、澄んだ鏡になった。古事記の「言向け和す」から。' },
     tama_no_o:       { name: '魂の緒',       type: 'accessory', mp: 20, who: ['oonamuchi'], desc: '言葉の力を蓄える、細い組紐。' },
     chikara_ude:     { name: '力の釧',     type: 'accessory', atk: 5, who: ['oonamuchi'], desc: '鉱山の里で作られた、太い腕輪（くしろ）。' },
     inochi_ishi:     { name: '命の勾玉',       type: 'accessory', hp: 30, who: ['oonamuchi'], desc: '握ると、体の奥が温かくなる勾玉。' },

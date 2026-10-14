@@ -20,6 +20,8 @@
         5: [['morigumo'], ['onibi'], ['tsuta'], ['morigumo', 'onibi']],
         6: [['iwatokage'], ['hinezumi', 'hinezumi'], ['yamagarasu']],
         7: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']],
+        // 8・9章：王都のまわりを白い腕章の兵が見回る（洗脳された人。弱らせて心鎮めで目を覚まさせられる）
+        8: [['arano_ookami'], ['oosasori'], ['junkai'], ['junkai', 'junkai'], ['junkai', 'arano_ookami'], ['wansho', 'wansho', 'junkai']],
         10: [],
         // クリア後：レベルに応じて強い敵（Lv40〜99のやりこみ）
         13: { byLevel: [

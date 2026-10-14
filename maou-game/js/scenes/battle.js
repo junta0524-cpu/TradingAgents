@@ -56,7 +56,9 @@
     let commands = [], cmdIndex = 0, menu = null, subMenu = null, subList = [];
     let targetIndex = 0, allyIndex = 0, pending = null;
     let flash = null, flashTimer = 0, shake = 0;
-    const fading = {};
+    const fading = {}, risen = {};   // risen：目を覚まして消える敵（沈まずに、のぼる）
+    // 倒れた・目覚めたと文が出た敵（計算では先に体力が0になるので、文が出るまでは立っているように描く）
+    const gone = {};
     // 演出：fx（数字・斬撃・言霊の光・回復の粒）、hurt（味方の札が赤く光る）、lunge（行動する者が前へ出る）
     let fx = [];
     const hurt = new Map(), lunge = new Map();
@@ -113,7 +115,14 @@
           }
           crit = false;
           waitTimer = 8;
-        } else if (ev.type === 'ko' && ev.target.side === 'enemy') { fading[ev.target.key] = 24; }
+        } else if (ev.type === 'ko' && ev.target.side === 'enemy') { fading[ev.target.key] = 24; gone[ev.target.key] = true; }
+        else if (ev.type === 'awaken') {   // 目を覚ました敵：光の粒に包まれて、のぼるように消える
+          fading[ev.target.key] = 24; risen[ev.target.key] = true; gone[ev.target.key] = true;
+          const c = centerOf(ev.target);
+          if (c) { addFx('burst', c, { color: '#fff4c0' }); addFx('sparkle', c, { color: '#fff4c0' }); }
+          G.sound.se('heal');
+          waitTimer = 12;
+        }
         return;
       }
       if (afterPlay) { const f = afterPlay; afterPlay = null; f(); }
@@ -185,6 +194,11 @@
     let note = '', noteTimer = 0;
     function flashNote(text) { note = text; noteTimer = 90; }
 
+    // 心鎮めなど（awaken のある言霊）は、味方のほかに、揺らいでいる人の敵も選べる
+    const allyTargets = () => {
+      const k = pending && pending.type === 'kotodama' && G.DATA.kotodama[pending.id];
+      return party.concat(k && k.awaken ? enemies.filter(G.battle.wavering) : []);
+    };
     // 一覧で選んだ物の相手を決める
     function chooseTarget(kind, id, d) {
       pending = { type: kind, id };
@@ -276,6 +290,10 @@
         const item = G.DATA.items[r.drop];
         ev.push({ type: 'msg', text: `${st.lastKilled.name}は、${item ? item.name : r.drop}を落としていった。` });
       }
+      // 目覚めさせた人の数
+      const woke = enemies.filter(e => e.awakened).length;
+      if (woke) ev.push({ type: 'msg', text: `${woke}人が、目を覚ました。（これまでに${G.state.awakened}人）` });
+      G.battle.awakenRewards().forEach(g => ev.push({ type: 'msg', text: `目を覚ました人が${g.n}人になった。${G.DATA.items[g.item].name}が届いた。` }));
       r.alive.forEach(p => {
         G.growth.checkLevelUp(p).forEach(u => {
           ev.push({ type: 'msg', text: `${p.name}はレベル${u.lv}になった！` });
@@ -405,6 +423,7 @@
       opaque: true,
       get phase() { return phase; },   // 自動チェック用：いまの段階
       layout: () => ({ xs: enemies.map((e, i) => enemyX(i)), size: SIZE, fx: fx.length }),   // 自動チェック用：敵の並び
+      get st() { return st; },   // 自動チェック用：戦いの状態（敵の体力など）
 
       update() {
         if (flashTimer > 0) flashTimer--;
@@ -459,11 +478,12 @@
           return;
         }
         if (phase === 'ally') {
-          const n = party.length;
+          const list = allyTargets(), n = list.length;
+          if (allyIndex >= n) allyIndex = 0;
           if (inp.repeat('up') || inp.repeat('left')) allyIndex = (allyIndex - 1 + n) % n;
           if (inp.repeat('down') || inp.repeat('right')) allyIndex = (allyIndex + 1) % n;
           if (inp.pressed('cancel')) { phase = 'sub'; return; }
-          if (inp.pressed('ok')) setCommand(Object.assign({}, pending, { target: party[allyIndex] }));
+          if (inp.pressed('ok')) setCommand(Object.assign({}, pending, { target: list[allyIndex] }));
         }
       },
 
@@ -487,26 +507,32 @@
         const list = visibleEnemies();
         const top = enemyTop();
         enemies.forEach((e, i) => {
-          const f = fading[e.key], x = enemyX(i);
-          if (e.hp > 0 || f > 0) {
+          const f = fading[e.key], x = enemyX(i), down = e.hp <= 0 && gone[e.key];
+          if (!down || f > 0) {
             // 影
             ctx.globalAlpha = 0.25;
             r.rect(x + SIZE * 0.15, ENEMY_BASE_Y - SIZE / 8 - 2, SIZE * 0.7, 4, '#000');
             ctx.globalAlpha = 1;
           }
-          if (e.hp <= 0 && !(f > 0)) return;
+          if (down && !(f > 0)) return;
           if (flash === e && flashTimer > 0 && Math.floor(flashTimer / 2) % 2 === 0) return;
           // 倒れた敵：薄れながら沈む／行動する敵：前へ出る
-          const l = lunge.get(e) || 0, dy = e.hp <= 0 ? (24 - f) * 0.8 : Math.round(Math.sin(l / 14 * Math.PI) * 6);
-          ctx.globalAlpha = e.hp <= 0 ? f / 24 : 1;
+          const l = lunge.get(e) || 0, dy = down ? (24 - f) * (risen[e.key] ? -0.6 : 0.8) : Math.round(Math.sin(l / 14 * Math.PI) * 6);
+          ctx.globalAlpha = down ? f / 24 : 1;
           G.sprite.drawEnemy(ctx, e.id, x, top + dy, scale);
           ctx.globalAlpha = 1;
-          const tg = e.hp > 0 ? G.status.tags(e) : '';
+          const tg = e.hp > 0 ? G.status.tags(e) + (G.battle.wavering(e) ? '揺' : '') : '';
           if (tg) r.text(tg, x + SIZE / 2, top - 14, '#ff9', 'center');
         });
         if (phase === 'target' && list[targetIndex] && G.ui.blinkOn()) {
           const e = list[targetIndex], i = enemies.indexOf(e);
-          r.text('▼', enemyX(i) + SIZE / 2, top - (G.status.tags(e) ? 28 : 14), '#fff', 'center');
+          r.text('▼', enemyX(i) + SIZE / 2, top - (G.status.tags(e) || G.battle.wavering(e) ? 28 : 14), '#fff', 'center');
+        }
+        // 心鎮めの相手に、揺らいでいる敵を選んでいるとき
+        const at = phase === 'ally' && allyTargets()[allyIndex];
+        if (at && at.side === 'enemy' && G.ui.blinkOn()) {
+          const i = enemies.indexOf(at);
+          r.text('▼', enemyX(i) + SIZE / 2, top - 28, '#ffd866', 'center');
         }
         ctx.restore();
 
@@ -575,7 +601,8 @@
             Object.keys(groups).forEach((n, i) => r.text(`${n}　${groups[n]}${counterOf(n)}${tribeNote(n)}`, 176, 244 + i * 16, '#fff'));
           }
           if (phase === 'target' || phase === 'ally') {
-            const who = phase === 'target' ? (list[targetIndex] && list[targetIndex].name) : party[allyIndex].name;
+            const tgt = allyTargets()[allyIndex];
+            const who = phase === 'target' ? (list[targetIndex] && list[targetIndex].name) : (tgt ? tgt.name + (tgt.side === 'enemy' ? '（目を覚まさせる）' : '') : '');
             G.ui.drawWindow(162, 160, 310, 32);
             r.text(`${phase === 'target' ? 'どの敵に' : 'だれに'}：▶ ${who}`, 176, 170, '#ffd866');
           }

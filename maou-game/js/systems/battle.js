@@ -1,6 +1,7 @@
 // このファイルの役目：戦闘の「計算」だけを受け持つ（画面は js/scenes/battle.js）。
 // ダメージ・会心・行動順・逃走・狙われ率は、仕様書 第6章の式どおり。数字は balance.js の BATTLE。
 // 画面と切り離してあるので、デバッグの「自動で100回戦闘」でもそのまま使える。
+// 目覚めさせる：人の敵（敵データの awaken）は、弱ると「揺」になり、心鎮め・名呼びで目を覚まして去る（balance.js の AWAKEN）。
 (function () {
   const G = window.GAME = window.GAME || {};
 
@@ -283,10 +284,39 @@
     return hasPerk(st, 'firstStrike') && G.rng.chance(G.DATA.balance.FIRST_STRIKE);
   }
 
-  // 勝ったときのごほうび（経験値は、レベルの上がる仲間で分ける）
+  // ---- 目覚めさせる ----
+  const AW = () => G.DATA.balance.AWAKEN;
+  // 揺らいでいるか（洗脳された人の敵で、体力が少ない）
+  function wavering(e) {
+    const d = e && e.side === 'enemy' && G.DATA.enemies[e.id];
+    return !!(d && d.awaken && e.hp > 0 && e.hp <= e.maxHp * AW().HP_RATE);
+  }
+  // 心鎮め・名呼びが敵に届いたとき
+  function tryAwaken(st, t) {
+    const d = G.DATA.enemies[t.id] || {};
+    if (!d.awaken) return [{ type: 'msg', text: `${t.name}には、言葉が届かない。` }];
+    if (!wavering(t)) return [{ type: 'msg', text: `（${t.name}の目は、まだ虚ろだ。もっと弱らせてから）` }];
+    t.hp = 0;
+    t.awakened = true;
+    G.state.awakened = (G.state.awakened || 0) + 1;
+    const ev = [{ type: 'awaken', target: t }, { type: 'msg', text: d.awakenText || `（${t.name}は、武器を下ろした）` }];
+    if (G.state.disguised && G.inhibit.on()) { G.inhibit.set(Math.min(G.DATA.balance.INHIBIT.MAX, G.inhibit.value() + AW().INHIBIT)); ev.push({ type: 'inhibit' }); }
+    return ev;
+  }
+  // 目覚めさせた人の数で届く品（まだもらっていないものを、もらったことにして返す）
+  function awakenRewards() {
+    const n = G.state.awakened || 0, got = [];
+    G.state.vars = G.state.vars || {};
+    AW().REWARDS.forEach(r => {
+      if (n >= r.n && !G.state.vars['awaken_reward_' + r.n]) { G.state.vars['awaken_reward_' + r.n] = true; G.party.addItem(r.item); got.push(r); }
+    });
+    return got;
+  }
+
+  // 勝ったときのごほうび（経験値は、レベルの上がる仲間で分ける。目覚めさせた敵は AWAKEN.EXP_RATE 倍）
   function rewards(st) {
     const b = B();
-    const exp = Math.floor(st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].exp, 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1));
+    const exp = Math.floor(st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].exp * (e.awakened ? AW().EXP_RATE : 1), 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1));
     const copper = Math.floor(st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0) * (hasPerk(st, 'copperBoost') ? G.DATA.balance.COPPER_BOOST : 1));
     const alive = st.party.filter(p => p.hp > 0 && !charOf(p).fixed);
     const each = b.EXP_SPLIT ? Math.ceil(exp / Math.max(1, alive.length)) : exp;
@@ -329,5 +359,5 @@
     return result;
   }
 
-  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike };
+  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike, wavering, tryAwaken, awakenRewards };
 })();

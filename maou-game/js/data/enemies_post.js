@@ -35,6 +35,7 @@
     // ---- やりこみ（Lv40〜99向け。フィールドで、オオナムチのレベルに応じて出る）----
     zantou: {
       name: '残党の将', counter: '人', hp: 420, atk: 110, def: 80, agi: 50, wis: 70, exp: 600, copper: 120,
+      awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
       drop: { item: 'kizugusuri', rank: 'A' },
       palette: { K: '#06040a', H: '#4a3a2a', D: '#6a2a2a', E: '#ff6040', W: '#e0d0b0' }, sprite: H,
     },

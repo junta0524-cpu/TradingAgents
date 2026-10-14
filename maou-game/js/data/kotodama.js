@@ -34,7 +34,7 @@
     katame_ren:     { name: '堅め連',       sys: 'yama', mp: 5,  target: 'allies',  use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 1.5, turns: 5 } },
     kaeshikagami:   { name: '返し鏡',       sys: 'yama', mp: 6,  target: 'ally',    use: 'battle', effect: { kind: 'reflect', turns: 3 } },
     iwato:          { name: '岩戸',         sys: 'yama', mp: 8,  target: 'ally',    use: 'battle', effect: { kind: 'guard', turns: 2 } },
-    kokoroshizume:  { name: '心鎮め',       sys: 'yama', mp: 3,  target: 'ally',    use: 'battle', effect: { kind: 'mind', turns: 5 } },
+    kokoroshizume:  { name: '心鎮め',       sys: 'yama', mp: 3,  target: 'ally',    use: 'battle', effect: { kind: 'mind', turns: 5 }, awaken: true },   // awaken：揺らいでいる人の敵にも唱えられ、目を覚まさせる
     migawari:       { name: '身代わり',     sys: 'yama', mp: 5,  target: 'ally',    use: 'battle', effect: { kind: 'cover', turns: 3 } },
     kekkai:         { name: '結界張り',     sys: 'yama', mp: 6,  target: 'self',    use: 'field',  effect: { kind: 'barrier' } },
     katame_jin:     { name: '堅めの陣',     sys: 'yama', mp: 9,  target: 'allies',  use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 1.75, turns: 5 } },
@@ -64,7 +64,7 @@
     michi_iyashi:   { name: '満ち癒やし',   sys: 'iza', mp: 8,  target: 'ally',    use: 'both',   effect: { kind: 'heal', full: true } },
     dokubarai:      { name: '毒払い',       sys: 'iza', mp: 2,  target: 'ally',    use: 'both',   effect: { kind: 'cure', statuses: ['poison', 'venom'] } },
     mezame:         { name: '目覚め',       sys: 'iza', mp: 2,  target: 'ally',    use: 'battle', effect: { kind: 'cure', statuses: ['sleep', 'bind'] } },
-    nayobi:         { name: '名呼び',       sys: 'iza', mp: 0,  target: 'ally',    use: 'battle', phase: 12, special: true },
+    nayobi:         { name: '名呼び',       sys: 'iza', mp: 0,  target: 'enemy',   use: 'battle', effect: { kind: 'awaken' }, awaken: true },   // 12章で覚える。揺らいでいる人の敵の目を覚まさせる（物語の名呼びは場面で起きる）
     ikikaeshi:      { name: '生き返し',     sys: 'iza', mp: 20, target: 'fallen',  use: 'battle', effect: { kind: 'revive', ratio: 0.5 } },
     musuhi:         { name: '産霊',         sys: 'iza', mp: 30, target: 'fallen_all', use: 'battle', effect: { kind: 'revive', ratio: 0.3 } },
     iyashi_mai:     { name: '癒やしの舞',   sys: 'iza', mp: 6,  target: 'ally',    use: 'both',   effect: { kind: 'heal', power: [50, 70] } },

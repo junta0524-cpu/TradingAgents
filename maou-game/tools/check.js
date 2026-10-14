@@ -469,6 +469,33 @@ const { chromium } = require('playwright');
     return [(L.xs[0] + L.xs[5] + L.size) / 2, L.xs[0] >= 0 && L.xs[5] + L.size <= 480, B.size, B.xs[0] + B.size / 2].join(',');
   });
   expect('6体が画面の中央にそろう・ボス1体は大きく中央', blay, '240,true,64,240');
+  // 目覚めさせる：人の敵は弱ると「揺」、心鎮め・名呼びで目を覚まして去る（経験値は半分、阻害ゲージが少し戻る、人数で品）
+  const aw = await ev(() => {
+    const keep = { aw: GAME.state.awakened, vars: JSON.stringify(GAME.state.vars || {}), items: JSON.stringify(GAME.state.items), dis: GAME.state.disguised, inh: GAME.state.inhibit, shown: GAME.state.inhibitShown };
+    Object.assign(GAME.state, { awakened: 0, vars: {}, disguised: true, inhibitShown: true, inhibit: 50 });
+    const st = GAME.battle.create(GAME.party.freshMembers(), ['wansho', 'wansho', 'dog']);
+    const oo = st.party.find(p => p.id === 'oonamuchi'); oo.mp = 99;
+    const [a, b2, d] = st.enemies, msgs = evs => evs.filter(e => e.type === 'msg').map(e => e.text).pop();
+    const out = [];
+    out.push(GAME.battle.wavering(a));                                                         // 元気なうちは揺らがない
+    out.push(msgs(GAME.battle.act(st, oo, { type: 'kotodama', id: 'kokoroshizume', target: a })).includes('まだ虚ろ'));
+    a.hp = 5; out.push(GAME.battle.wavering(a));
+    out.push(msgs(GAME.battle.act(st, oo, { type: 'kotodama', id: 'kokoroshizume', target: a })));
+    out.push(`${a.hp}/${!!a.awakened}/${GAME.state.awakened}/${Math.round(GAME.state.inhibit)}`);
+    d.hp = 1; out.push(GAME.battle.wavering(d) + ':' + msgs(GAME.battle.act(st, oo, { type: 'kotodama', id: 'kokoroshizume', target: d })).includes('届かない'));
+    b2.hp = 0; d.hp = 0;
+    const full = st.enemies.reduce((s, e) => s + GAME.DATA.enemies[e.id].exp, 0);
+    out.push(GAME.battle.rewards(st).exp === Math.floor(full - GAME.DATA.enemies.wansho.exp * (1 - GAME.DATA.balance.AWAKEN.EXP_RATE)));
+    GAME.state.awakened = 5;
+    out.push(GAME.battle.awakenRewards().map(r => r.item).join() + '/' + GAME.battle.awakenRewards().length);
+    const st2 = GAME.battle.create(GAME.party.freshMembers(), ['junkai']); st2.enemies[0].hp = 3;
+    out.push(GAME.kotodama.usableIn(GAME.DATA.kotodama.nayobi, 'battle') + ':' + !!GAME.battle.tryAwaken(st2, st2.enemies[0]).find(e => e.type === 'awaken'));
+    Object.assign(GAME.state, { awakened: keep.aw, vars: JSON.parse(keep.vars), items: JSON.parse(keep.items), disguised: keep.dis, inhibit: keep.inh, inhibitShown: keep.shown });
+    return out.join(' | ');
+  });
+  expect('目覚めさせる：揺らぎ・心鎮め・数・経験値半分・品・名呼び', aw, 'false | true | true | （腕章の兵Ａは、武器を下ろした） | 0/true/1/53 | false:true | true | kotomuke_tama/0 | true:true');
+  expect('目覚めさせられる人の敵（腕章・巡回・槍・弓・追手・護衛・残党）', await ev(() => Object.keys(GAME.DATA.enemies).filter(k => GAME.DATA.enemies[k].awaken).sort().join()), 'ch2_yari,ch2_yumi,goei,junkai,otte,wansho,zantou');
+  expect('8・9章の人間界の地図に巡回の兵', await ev(() => GAME.DATA.maps.world_ningen.encounter.byChapter[8].some(g => g.includes('junkai'))), true);
 
   // ===== フェーズ5：ベル専用のしくみ =====
   await ev(() => { GAME.party.newGame(); GAME.rng.setFixed(true); });
@@ -1274,12 +1301,12 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/7');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/8');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない
   expect('思い出の帳：一覧の場面はどれも物語にある', await ev(() => GAME.DATA.memories.list.filter(m => !GAME.DATA.events[m.id]).map(m => m.id).join()), '');
-  for (let i = 0; i < 30 && (await scenes()).includes('メッセージ'); i++) await key('KeyZ', 150);   // 遊び方の7ページを閉じきる
+  for (let i = 0; i < 30 && (await scenes()).includes('メッセージ'); i++) await key('KeyZ', 150);   // 遊び方のページを閉じきる
   await ev(() => { localStorage.removeItem('maou_memories'); });
   await key('ArrowDown', 60); await key('KeyZ', 400);
   expect('思い出の帳が開く', await scenes(), 'タイトル > 思い出の帳');

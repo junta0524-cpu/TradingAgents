@@ -103,6 +103,8 @@
           return;
         case 'mind':
           if (t.hp <= 0) return;
+          // 揺らいでいる人の敵に唱えると、目を覚まさせる（js/systems/battle.js の tryAwaken）
+          if (t.side === 'enemy' && user.side !== 'enemy' && st) { ev = ev.concat(G.battle.tryAwaken(st, t)); return; }
           t.mind = effect.turns;
           if (G.status.has(t, 'confuse')) ev = ev.concat(G.status.cure(t, ['confuse']));
           ev.push({ type: 'msg', text: `${t.name}の心が静かに澄んだ。` });
@@ -126,6 +128,10 @@
               : p.target ? `${p.target.name}を狙っている` : '攻撃しようとしている';
             ev.push({ type: 'msg', text: `${e.name}は${what}。` });
           });
+          return;
+        case 'awaken':   // 名呼び：揺らいでいる人の敵の目を覚まさせる
+          if (t.hp <= 0 || !st) return;
+          ev = ev.concat(G.battle.tryAwaken(st, t));
           return;
         case 'barrier':
           G.state.barrier = B.BARRIER_STEPS;
