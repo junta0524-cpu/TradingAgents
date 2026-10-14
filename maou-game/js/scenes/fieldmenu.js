@@ -1,5 +1,5 @@
 // このファイルの役目：マップでXキーを押すと開くメニュー。
-// もちもの（使う）／ことだま（唱える）／そうび（付け替え）／さくせん（AI）／つよさ／セーブ（記録）／せってい／いらい（寄り道の依頼）。
+// もちもの（使う）／ことだま（唱える）／そうび（付け替え）／さくせん（AI）／つよさ／セーブ（記録）／せってい／けんぶん（見聞録）／いらい（寄り道の依頼）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
@@ -241,6 +241,7 @@
     { label: 'つよさ', run: () => G.scene.push(createStatusScene()) },
     { label: 'セーブ', run: saveMenu },
     { label: 'せってい', run: () => G.scenes.openSettings() },
+    { label: 'けんぶん', run: () => G.scene.push(G.scenes.kenbun()) },   // 見聞録（敵・言霊・品の図鑑）
     { label: 'いらい', run: () => G.scenes.openRequestList() },   // 受けている寄り道の依頼
     { label: 'とじる' },
   ];

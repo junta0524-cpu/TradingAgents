@@ -198,6 +198,7 @@
     if (user.mp < k.mp) return [{ type: 'msg', text: `${user.name}は${k.name}を唱えようとした。しかし、MPが足りない！` }];
     if (G.status.has(user, 'silence')) return castWith(k, user, chosen, st, '');
     user.mp -= k.mp;
+    if (G.kenbun) G.kenbun.castSeen(id);   // 見聞録：唱えたのを見た言霊
     return castWith(k, user, chosen, st, `${user.name}は${k.name}を唱えた！`);
   }
 

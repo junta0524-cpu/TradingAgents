@@ -525,6 +525,30 @@ const { chromium } = require('playwright');
   await shot('96_request_board');
   await key('KeyX', 200);
   await ev(() => { GAME.state.chapter = window.__ch; });
+  // 見聞録：出会った敵・倒した数、手にした品、唱えた言霊が載る（記録とは別に覚える）
+  const kb = await ev(() => {
+    const keep = localStorage.getItem('maou_kenbun'); localStorage.removeItem('maou_kenbun');
+    const out = [];
+    const c0 = GAME.kenbun.count();
+    GAME.kenbun.meet(['dog', 'wansho']); GAME.kenbun.result([{ id: 'dog', hp: 0 }, { id: 'wansho', hp: 0, awakened: true }]);
+    const d = GAME.kenbun.load();
+    out.push(JSON.stringify(d.e.dog) + JSON.stringify(d.e.wansho));
+    GAME.party.addItem('kotomuke_kagami'); out.push(!!GAME.kenbun.load().i.kotomuke_kagami); GAME.party.removeItem('kotomuke_kagami');
+    const oo = GAME.party.member('oonamuchi'); const mp = oo.mp; oo.mp = 99;
+    GAME.kotodama.cast(oo, 'oboro', null, null); oo.mp = mp; out.push(!!GAME.kenbun.load().k.oboro);
+    const c1 = GAME.kenbun.count();
+    out.push([c1.e[0] - c0.e[0] >= 1, c1.e[1] === Object.keys(GAME.DATA.enemies).length, !GAME.kenbun.kotodamaIds().includes('kotozute'), !GAME.kenbun.itemIds().includes('koudou_kagi')].join());
+    out.push(GAME.kenbun.placesOf('junkai').join() + '/' + GAME.kenbun.placesOf('koke_ookumo').join());
+    out.push(GAME.kenbun.effectText(GAME.DATA.kotodama.iyashi.effect));
+    if (keep) localStorage.setItem('maou_kenbun', keep);
+    return out.join(' | ');
+  });
+  expect('見聞録：敵・品・言霊が載る', kb, '[1,1,0][1,0,1] | true | true | true,true,true,true | 人間界/苔むした地下道の奥 | 体力を戻す（12〜18＋賢さ）');
+  await ev(() => GAME.scene.push(GAME.scenes.kenbun())); await wait(300);
+  await key('ArrowRight', 150);
+  expect('見聞録の画面（左右で敵・言霊・品）', await scenes(), 'マップ > 見聞録');
+  await shot('97_kenbun');
+  await key('KeyX', 200);
 
   // ===== フェーズ5：ベル専用のしくみ =====
   await ev(() => { GAME.party.newGame(); GAME.rng.setFixed(true); });

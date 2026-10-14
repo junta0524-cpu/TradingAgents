@@ -48,6 +48,7 @@
     if (CH) st.chant = 0;
     const watching = G.state.split === 'watch';   // ベルは画面の端で見守るだけ
     const party = st.party, enemies = st.enemies;
+    G.kenbun.meet(enemies.map(e => e.id));   // 見聞録：出会った敵
 
     // play / command / sub（言霊・道具の一覧）/ target（敵を選ぶ）/ ally（味方を選ぶ）/ result / gameover
     let phase = 'play';
@@ -269,6 +270,7 @@
     // ---- 決着 ----
     function finish(out) {
       G.flags.set('last_battle_won', out === 'win');
+      G.kenbun.result(enemies);   // 見聞録：倒した数・目覚めさせた数
       if (out === 'lose' && opts.training) {
         // 手合わせ：負けてもやり直しにはならない（倒れた仲間は体力1で起き上がる）
         party.forEach(p => { if (p.hp <= 0) p.hp = 1; });

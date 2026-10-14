@@ -122,6 +122,7 @@
     count(id) { const s = G.state.items.find(x => x.id === id); return s ? s.count : 0; },
     addItem(id, count) {
       count = count || 1;
+      if (G.kenbun) G.kenbun.gotItem(id);   // 見聞録：手にした品
       const slot = G.state.items.find(s => s.id === id);
       if (slot) slot.count += count;
       else G.state.items.push({ id, count });
