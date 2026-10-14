@@ -586,7 +586,9 @@ const { chromium } = require('playwright');
 
   // 戦闘で、ベルを「ぜんぶ指示する」にすると「本気」が選べる
   await ev(() => { GAME.party.member('bell').tactic = 'manual'; GAME.scene.push(GAME.scenes.battle(['boar'])); });
-  await wait(1300);
+  // コマンドの窓が出るまで待つ（「先手を取った！」が出ると、文が1行増える）
+  for (let i = 0; i < 40 && (await ev(() => GAME.scene.top().phase)) !== 'command'; i++) await wait(100);
+  await wait(200);
   await shot('43_bell_commands');
   await key('ArrowDown', 60); await key('KeyZ', 100); await key('KeyZ', 100);   // ベル：本気 → 敵
   await key('KeyZ', 100); await key('KeyZ', 100);                               // オオナムチ：こうげき
