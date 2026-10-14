@@ -31,6 +31,7 @@
     let gst = null;         // しかけの状態（js/systems/gimmick.js）
     let forced = null;      // 滑る床・流れる床で、勝手に進む向き
     let hurtFlash = 0;
+    let toast = '', toastTimer = 0;   // 上の小さな知らせ（名の欠片を拾ったとき）
     const BATTLE_FLASH_FRAMES = 30;
 
     function randWait() { return G.rng.int(B.NPC_WANDER_MIN, B.NPC_WANDER_MAX); }
@@ -41,7 +42,7 @@
       if (!map) throw new Error('マップが見つかりません：' + id);
       gst = G.gimmick.init(id, map);
       forced = null;
-      npcs = (map.npcs || []).filter(n => G.flags.check(n)).map(makeNpc);
+      npcs = (map.npcs || []).filter(n => G.flags.check(n)).concat(G.names.owners(mapId)).map(makeNpc);   // 名の欠片の持ち主も
       buildRows();
       player = makeEntity(x, y, dir || 'down', leaderLook());
       buildFollowers();
@@ -69,7 +70,8 @@
     function makeNpc(n) { return Object.assign(makeEntity(n.x, n.y, n.dir || 'down', n.look), { data: n, wait: randWait() }); }
     // 場面が終わったあと、出る人を条件で入れ替える（いる人はその場に残す）
     function refreshNpcs() {
-      const want = (map.npcs || []).filter(n => G.flags.check(n));
+      // 名の欠片の持ち主（js/systems/names.js）も、このマップの人に加える
+      const want = (map.npcs || []).filter(n => G.flags.check(n)).concat(G.names.owners(mapId));
       npcs = want.map(n => npcs.find(e => e.data === n) || makeNpc(n));
     }
     // 場面を流す（条件つきの一覧から、合う最初のもの）
@@ -222,6 +224,13 @@
       if (npc && npc.data) {
         npc.dir = OPP[player.dir];
         const d = npc.data;
+        // 名の欠片の持ち主：拾った欠片があれば返す
+        if (d.nameOwner) {
+          const lines = G.names.talk(d.nameOwner);
+          if (lines.length > 2 && G.sound) G.sound.se('learn');
+          G.message.show(lines);
+          return;
+        }
         // 話すと場面が流れる人（doneFlag が立ったあとは、ふつうの会話）
         if (d.event && !(d.doneFlag && G.flags.get(d.doneFlag))) { G.event.run(d.event); return; }
         G.message.show(d.talk || ['……。'], () => {
@@ -360,6 +369,9 @@
             if (G.inhibit.step(map)) { G.scene.change(G.scenes.exposure()); return; }
             if (checkWarp()) return;
             if (runFirst((map.triggers || []).filter(o => o.x === player.x && o.y === player.y))) return;
+            // 名の欠片を踏んだら拾う（止まらずに、上に小さく知らせる）
+            const frag = G.names.pickAt(mapId, player.x, player.y);
+            if (frag) { toast = `名の欠片を拾った――「${frag.name}」（${frag.who}の名）`; toastTimer = 150; if (G.sound) G.sound.se('chest'); }
             // しかけ：熱い床・落とし穴・滑る床・流れる床
             const gs = G.gimmick.afterStep(gimmickApi, player.dir);
             if (gs.hurt) hurtFlash = 8;
@@ -425,11 +437,20 @@
         npcs.concat([player]).forEach(e => things.push({ y: e.py, draw: () => {
           ctx.globalAlpha = fadeOf(e); G.sprite.drawPerson(ctx, e.look, e.dir, e.walk, e.moving, e.px - cam.x + jitter(e), e.py - cam.y); ctx.globalAlpha = 1; } }));
         G.gimmick.things(gst, ctx, cam, T).forEach(t => things.push(t));
+        things.push({ y: -1, draw: () => G.names.draw(ctx, mapId, cam, T) });   // 名の欠片の光（人より下に）
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
         const tint = typeof map.tint === 'function' ? map.tint() : map.tint;
         if (tint) r.rect(0, 0, r.W, r.H, tint);
         G.gimmick.drawDark(r, gst, player, cam, T);
         if (hurtFlash > 0) { hurtFlash--; r.rect(0, 0, r.W, r.H, 'rgba(220,60,30,0.25)'); }
+        // 上の小さな知らせ（名の欠片を拾った など）
+        if (toastTimer > 0) {
+          toastTimer--;
+          const w = Math.min(464, Math.ceil(r.measure(toast)) + 24);
+          ctx.save(); ctx.globalAlpha = Math.min(1, toastTimer / 20);
+          G.ui.drawWindow((r.W - w) / 2, 40, w, 26); r.text(toast, r.W / 2, 47, '#fff4c0', 'center', null, w - 16);
+          ctx.restore();
+        }
 
         if (nameTimer > 0 && !fadeDir && G.scene.top() === this) {
           const w = Math.ceil(r.measure(map.name)) + 24;

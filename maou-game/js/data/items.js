@@ -65,6 +65,7 @@
     kotomuke_tama:   { name: '言向けの勾玉', type: 'accessory', wis: 4, mp: 10, who: ['oonamuchi'], desc: '目を覚ました人たちから託された勾玉。古事記の「言向け和す」（刃ではなく言葉で和らげる）の名を持つ。' },
     nagomi_hire:     { name: '和しの比礼',   type: 'accessory', resist: { confuse: 0, sleep: 0.5 }, def: 3, who: ['oonamuchi'], desc: '心を和らげる比礼。惑わしにかからず、眠りにもかかりにくい。' },
     kotomuke_kagami: { name: '言向け和す鏡', type: 'accessory', wis: 10, mp: 30, def: 4, who: ['oonamuchi'], desc: '三十人の目を覚ました言葉が、澄んだ鏡になった。古事記の「言向け和す」から。' },
+    nanori_magatama: { name: '名告りの勾玉', type: 'accessory', wis: 8, mp: 20, resist: { confuse: 0 }, who: ['oonamuchi'], desc: '名を取り戻した二十四人の思いが宿る勾玉。古事記で、名を告げること（名告り）は、自らを明かすこと。惑わしにかからない。' },
     tama_no_o:       { name: '魂の緒',       type: 'accessory', mp: 20, who: ['oonamuchi'], desc: '言葉の力を蓄える、細い組紐。' },
     chikara_ude:     { name: '力の釧',     type: 'accessory', atk: 5, who: ['oonamuchi'], desc: '鉱山の里で作られた、太い腕輪（くしろ）。' },
     inochi_ishi:     { name: '命の勾玉',       type: 'accessory', hp: 30, who: ['oonamuchi'], desc: '握ると、体の奥が温かくなる勾玉。' },

@@ -234,7 +234,8 @@
     PRICES: {
       kizugusuri: 8, hoshiii: 4, dokukeshi: 6, mezamashi: 10,
       copper_knife: 40, iron_sword: 120,
-      kotomuke_tama: 300, nagomi_hire: 600, kotomuke_kagami: 1200,   // 目覚めさせた人の数で届く品（店にはない。売ると半分）
+      kotomuke_tama: 300, nagomi_hire: 600, kotomuke_kagami: 1200,
+      nanori_magatama: 2000,   // 名の欠片を全部返すと届く品   // 目覚めさせた人の数で届く品（店にはない。売ると半分）
       leather_armor: 50, chain_mail: 150,
       mamori_ishi: 30, hayate_obi: 60,
       old_dagger: 2, patched_cloak: 2,
@@ -251,6 +252,9 @@
     },
     SELL_RATE: 0.5,
     INN_PRICE: 6,      // 宿屋の一晩の値段
+
+    // ---- 名の欠片（js/data/names.js）：返した数で届く品 ----
+    NAMES: { REWARDS: [{ n: 6, item: 'tama_no_o' }, { n: 12, item: 'inochi_ishi' }, { n: 18, item: 'tsukikage_obi' }, { n: 24, item: 'nanori_magatama' }] },
 
     // ---- 遊びやすさ（設定）----
     BATTLE_MSG_WAIT: { normal: 40, fast: 24, fastest: 12 },   // 戦いの文を1行出してから次へ進むまでのコマ数（設定「戦いの速さ」）

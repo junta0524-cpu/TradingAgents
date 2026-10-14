@@ -545,6 +545,28 @@ const { chromium } = require('playwright');
     if (keep) localStorage.setItem('maou_kenbun', keep);
     return out.join(' | ');
   });
+  // 名の欠片：落ちている所と持ち主の立つ所は通れるマスで、マップの人や出入口と重ならない。拾って持ち主に話すと返せ、6人で品
+  expect('名の欠片：置き場所がどれも正しい', await ev(() => GAME.DATA.nameFragments.filter(f => {
+    const ok = (p, mapId) => { const m = GAME.DATA.maps[mapId]; if (!m) return false; const t = GAME.DATA.tiles[(m.rows[p.y] || '')[p.x]];
+      const busy = (m.npcs || []).concat(m.warps || [], m.chests || [], m.signs || []).some(o => o.x === p.x && o.y === p.y);
+      return t && !t.solid && !busy; };
+    return !ok(f.at, f.at.map) || !ok(f.owner, f.owner.map);
+  }).map(f => f.id).join()), '');
+  const nm = await ev(() => {
+    const keep = JSON.stringify({ names: GAME.state.names || null, vars: GAME.state.vars || {}, items: GAME.state.items, ch: GAME.state.chapter });
+    GAME.state.names = {}; GAME.state.vars = {}; GAME.state.chapter = 13;
+    const out = [];
+    out.push(GAME.names.on('minamo').map(f => f.id).join() + '/' + GAME.names.owners('minamo').length);
+    out.push(GAME.names.talk('isana')[0].includes('思い出せない'));
+    out.push((GAME.names.pickAt('minamo', 14, 5) || {}).id + '/' + GAME.names.pickAt('minamo', 14, 5) + '/' + GAME.names.on('minamo').length);
+    const t = GAME.names.talk('isana'); out.push(t.length + ':' + GAME.names.status('isana') + ':' + GAME.names.returned());
+    ['asagi', 'tomari', 'nogiku', 'fuki'].forEach(id => { GAME.state.names[id] = 'picked'; GAME.names.talk(id); });
+    GAME.state.names.tane = 'picked';
+    const last = GAME.names.talk('tane'); out.push(last.some(l => l.includes('魂の緒')) + ':' + GAME.state.items.some(s => s.id === 'tama_no_o'));
+    const k = JSON.parse(keep); Object.assign(GAME.state, { names: k.names, vars: k.vars, items: k.items, chapter: k.ch });
+    return out.join(' | ');
+  });
+  expect('名の欠片：拾う・返す・6人で品', nm, 'isana/3 | true | isana/null/0 | 3:returned:1 | true:true');
   expect('言霊・品の説明（カーソルを合わせると出す文）', await ev(() => [GAME.kenbun.skillText(GAME.DATA.kotodama.iyashi, true), GAME.kenbun.skillText(GAME.DATA.kotodama.iyashi), GAME.kenbun.itemText(GAME.DATA.items.kizugusuri).split('。')[0]].join(' / ')),
     '体力を戻す（12〜18＋賢さ）（味方1人）。 / 体力を戻す（12〜18＋賢さ）（味方1人）。戦いでも移動中でも使う。 / 体力を戻す（20〜25＋賢さ）（味方1人）');
   expect('見聞録：敵・品・言霊が載る', kb, '[1,1,0][1,0,1] | true | true | true,true,true,true | 人間界/苔むした地下道の奥 | 体力を戻す（12〜18＋賢さ）');
@@ -1387,7 +1409,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/8');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/9');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない

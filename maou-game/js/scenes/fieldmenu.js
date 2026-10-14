@@ -271,10 +271,12 @@
       draw() {
         menu.draw(); drawPartyMini();
         // メニューの下：銅貨と、目を覚まさせた人の数（js/systems/battle.js の tryAwaken）
-        const rr = G.renderer, lh = menu.lineH, wy = menu.y + menu.h + 4, woke = G.state.awakened || 0;
-        G.ui.drawWindow(8, wy, 120, 14 + lh * (woke ? 2 : 1));
-        rr.text(`銅貨 ${G.state.copper}枚`, 18, wy + 7, '#fff', 'left', null, 100);
-        if (woke) rr.text(`目覚め ${woke}人`, 18, wy + 7 + lh, '#fff4c0', 'left', null, 100);
+        const rr = G.renderer, lh = menu.lineH, wy = menu.y + menu.h + 4, woke = G.state.awakened || 0, picked = G.names.picked();
+        const rows = [[`銅貨 ${G.state.copper}枚`, '#fff']];
+        if (woke) rows.push([`目覚め ${woke}人`, '#fff4c0']);
+        if (picked) rows.push([`名を返す ${G.names.returned()}/${G.names.list().length}`, '#cfe']);   // 名の欠片：返した数
+        G.ui.drawWindow(8, wy, 120, 14 + lh * rows.length);
+        rows.forEach(([t, c], i) => rr.text(t, 18, wy + 7 + lh * i, c, 'left', null, 100));
         // いまの目的（js/data/objectives.js）
         const goal = G.objective && G.objective();
         const r = G.renderer;

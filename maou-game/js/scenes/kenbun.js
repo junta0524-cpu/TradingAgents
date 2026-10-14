@@ -1,19 +1,21 @@
 // このファイルの役目：「見聞録」の画面（メニューから開く）。上の見出しで「敵・言霊・品」を左右キーで切り替え、
-// 左の一覧で選ぶと右に中身を出す（敵は絵・強さ・種族・出る場所・倒した数、言霊は系統・効き目、品は強さ・由来）。
+// 左の一覧で選ぶと右に中身を出す（敵は絵・強さ・種族・出る場所・倒した数、言霊は系統・効き目、品は強さ・由来、名は名の欠片の持ち主と手がかり）。
 // まだ知らないものは「？？？」。覚え書きとしくみは js/systems/kenbun.js。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
 
-  const TABS = [{ key: 'e', label: '敵' }, { key: 'k', label: '言霊' }, { key: 'i', label: '品' }];
+  const TABS = [{ key: 'e', label: '敵' }, { key: 'k', label: '言霊' }, { key: 'i', label: '品' }, { key: 'n', label: '名' }];   // 名：名の欠片（js/systems/names.js）
   const TYPE = { weapon: '武器', armor: '防具', accessory: '装飾', use: '道具' };
   const USE = { battle: '戦いの中', both: '戦いと移動中', field: '移動中' };
 
   G.scenes.kenbun = function () {
     let d = G.kenbun.sync(), tab = 0;
-    const idsOf = t => (t === 'e' ? G.kenbun.enemyIds() : t === 'k' ? G.kenbun.kotodamaIds() : G.kenbun.itemIds());
-    const nameOf = (t, id) => (t === 'e' ? G.DATA.enemies[id].name : t === 'k' ? G.DATA.kotodama[id].name : G.DATA.items[id].name);
-    const known = (t, id) => !!d[t][id];
+    const frag = id => G.names.list().find(f => f.id === id);
+    const idsOf = t => (t === 'e' ? G.kenbun.enemyIds() : t === 'k' ? G.kenbun.kotodamaIds() : t === 'i' ? G.kenbun.itemIds() : G.names.list().map(f => f.id));
+    const nameOf = (t, id) => (t === 'e' ? G.DATA.enemies[id].name : t === 'k' ? G.DATA.kotodama[id].name : t === 'i' ? G.DATA.items[id].name : frag(id).name);
+    // 名の欠片は記録ごと（拾ったか）、ほかはこの機械に覚えたもの
+    const known = (t, id) => (t === 'n' ? !!(G.state && G.names.status(id)) : !!d[t][id]);
     const menu = new G.ui.Menu([], { x: 8, y: 44, w: 170, rows: 13 });
     let ids = [];
     function fill() {
@@ -82,6 +84,18 @@
       lines(L, x, y + 24, w);
     }
 
+    function drawName(id, x, y, w) {
+      const f = frag(id), r = G.renderer, s = G.names.status(id), map = G.DATA.maps[f.at.map], om = G.DATA.maps[f.owner.map];
+      r.text(`「${f.name}」`, x, y, '#fff4c0');
+      r.text(s === 'returned' ? '返した' : '拾った（まだ返していない）', x + w, y, s === 'returned' ? '#9f9' : '#ffd866', 'right');
+      lines([
+        [`持ち主：${f.who}`],
+        [`持ち主のいる所：${om ? om.name : f.owner.map}`, '#ccc'],
+        [`拾った所：${map ? map.name : f.at.map}`, '#ccc'],
+        [s === 'returned' ? '名を取り戻して、穏やかに暮らしている。' : '持ち主に話しかけると、名を返せる。', '#cfe'],
+      ], x, y + 24, w);
+    }
+
     return {
       name: '見聞録',
       opaque: true,
@@ -111,10 +125,17 @@
         menu.draw();
         G.ui.drawWindow(182, 44, 290, 268);
         const t = TABS[tab].key, id = ids[menu.index];
+        if (t === 'n' && id && !known(t, id)) {   // まだ拾っていない名の欠片：手がかりだけ
+          const f = frag(id), ok = (G.state && G.state.chapter || 1) >= f.from;
+          r.text('まだ拾っていない。', 196, 56, '#888');
+          lines([[ok ? `手がかり：${f.hint}に落ちているらしい。` : '手がかり：まだ分からない。', '#ccc']], 196, 80, 262);
+          return;
+        }
         if (!id || !known(t, id)) { r.text('まだ知らない。', 196, 56, '#888'); return; }
         if (t === 'e') drawEnemy(id, 196, 54, 262);
         else if (t === 'k') drawKotodama(id, 196, 56, 262);
-        else drawItem(id, 196, 56, 262);
+        else if (t === 'i') drawItem(id, 196, 56, 262);
+        else drawName(id, 196, 56, 262);
       },
     };
   };
