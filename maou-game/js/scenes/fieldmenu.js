@@ -246,15 +246,18 @@
     { label: 'とじる' },
   ];
 
+  let lastIndex = 0;   // 前に選んだ項目にカーソルを置く（「とじる」で閉じたときは先頭へ）
   G.scenes.fieldMenu = function () {
-    const menu = new G.ui.Menu(ITEMS.map(i => ({ label: i.label })), { x: 8, y: 8, w: 120 });
+    const menu = new G.ui.Menu(ITEMS.map(i => ({ label: i.label })), { x: 8, y: 8, w: 120, index: G.settings.cursorMemory === false ? 0 : lastIndex });
     return {
       name: 'メニュー',
       update() {
         const res = menu.update();
         if (!res) return;
         const it = ITEMS[res.index];
-        if (res.type === 'cancel' || !it.run) { G.scene.pop(); return; }
+        if (res.type === 'cancel') { G.scene.pop(); return; }
+        if (!it.run) { lastIndex = 0; G.scene.pop(); return; }   // 「とじる」で閉じたら、次は先頭から
+        lastIndex = res.index;
         it.run();
       },
       draw() {

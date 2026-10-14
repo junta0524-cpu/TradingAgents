@@ -350,7 +350,8 @@
         }
         if (poisonFlash > 0) poisonFlash--;
         if (player.moving) {
-          const speed = inp.held('fast') ? B.DASH_SPEED : B.WALK_SPEED;
+          // 設定「いつも走る」が入なら、Shiftを押しているあいだだけ歩く
+          const speed = inp.held('fast') !== !!G.settings.autoRun ? B.DASH_SPEED : B.WALK_SPEED;
           followers.forEach(f => advance(f, speed));
           if (advance(player, speed)) {
             Object.assign(G.state, { x: player.x, y: player.y, dir: player.dir });

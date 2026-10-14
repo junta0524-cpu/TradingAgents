@@ -35,6 +35,8 @@ const { chromium } = require('playwright');
 
   await page.goto(url);
   await wait(400);
+  // カーソルを覚える：キー操作の確かめは、いつもコマンドの先頭から始める（覚える動きは別に確かめる）
+  await ev(() => { GAME.settings.cursorMemory = false; GAME.save.saveSettings(); });
   // フェーズ1〜5の確かめは「4章（ミナモ）にいる状態」で行う（物語の場面は最後にまとめて確かめる）
   const patchCh4 = () => ev(() => {
     GAME.party._newGameOrig = GAME.party.newGame;
@@ -1065,7 +1067,34 @@ const { chromium } = require('playwright');
   const bigText = await ev(() => `${GAME.settings.textSize}/${GAME.scene.names().includes('メッセージ')}`);
   await closeMessages();
   expect('設定：文字の大きさを大きくできる（試しの会話が出る）', bigText, 'large/true');
+  await key('ArrowDown', 60); await key('KeyZ', 150);   // 戦いの速さ → はやい
+  await key('ArrowDown', 60); await key('KeyZ', 300); await closeMessages();   // いつも走る → 入
+  await shot('83_settings_more');
+  expect('設定：戦いの速さ・いつも走る', await ev(() => `${GAME.settings.battleSpeed}/${GAME.settings.autoRun}/${GAME.DATA.balance.BATTLE_MSG_WAIT[GAME.settings.battleSpeed]}`), 'fast/true/24');
   await key('KeyX', 150);
+  // いつも走る：Shiftを押さなくても、同じ時間で倍ほど進む
+  await ev(() => { window.__keepState = JSON.stringify({ state: GAME.state, flags: GAME.flags.data }); });   // この確かめのあと元に戻す
+  const run = await ev(() => { GAME.party.newGame(); GAME.encounter.enabled = false; GAME.scene.change(GAME.scenes.map('field_minamo', 20, 10, 'down')); return 1; });
+  await wait(300); await hold('ArrowDown', 500); await wait(300);
+  const ranSteps = await ev(() => GAME.scene.top().player.y - 10);
+  await ev(() => { GAME.settings.autoRun = false; GAME.scene.change(GAME.scenes.map('field_minamo', 20, 10, 'down')); }); await wait(300);
+  await hold('ArrowDown', 500); await wait(300);
+  const walkSteps = await ev(() => GAME.scene.top().player.y - 10);
+  expect('いつも走る：歩くより速い', run === 1 && ranSteps > walkSteps, true);
+  // カーソルを覚える：戦いで「ことだま」を選ぶと、次のラウンドは「ことだま」から
+  const mem = await ev(() => {
+    GAME.settings.cursorMemory = true; GAME.battleCursor = { oonamuchi: { cmd: 1, kotodama: 0, item: 0 } };
+    GAME.story.jump(6); GAME.event.running = 0;
+    const o = GAME.party.member('oonamuchi'); o.tactic = 'manual';
+    GAME.scene.change(GAME.scenes.map('field_minamo', 20, 10, 'down')); GAME.scene.push(GAME.scenes.battle(['dog']));
+    return 1;
+  });
+  for (let i = 0; i < 30 && (await ev(() => GAME.scene.top().phase)) !== 'command'; i++) await key('KeyZ', 120);
+  await key('KeyZ', 200);
+  expect('カーソルを覚える：前に選んだ「ことだま」から', mem === 1 && await ev(() => GAME.scene.top().phase), 'sub');
+  await ev(() => { GAME.scene.pop(); GAME.settings.cursorMemory = false; GAME.settings.battleSpeed = 'normal'; GAME.encounter.enabled = true; GAME.save.saveSettings();
+    const k = JSON.parse(window.__keepState); GAME.state = k.state; GAME.flags.data = k.flags; GAME.event.running = 0; GAME.scene.change(GAME.scenes.title()); });
+  await wait(200);
   expect('設定：敵は少なめ・音は切（保存される）', await ev(() => `${GAME.settings.encounter}/${GAME.settings.sound}/${JSON.parse(localStorage.getItem('maou_settings')).sound}`), 'low/false/false');
   await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.settings.textSize = 'normal'; GAME.save.saveSettings(); });
 

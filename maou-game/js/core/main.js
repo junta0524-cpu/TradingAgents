@@ -9,6 +9,9 @@
     encounter: 'normal',   // normal / low
     textSize: 'normal',    // normal / large（会話の文字の大きさ）
     sound: true,
+    battleSpeed: 'normal', // normal / fast / fastest（戦いの文の速さ）
+    autoRun: false,        // true：Shiftを押さなくても走る（押すと歩く）
+    cursorMemory: true,    // true：メニューと戦いのコマンドで、前に選んだところにカーソルを置く
   };
   G.save.loadSettings();
   G.frame = 0;

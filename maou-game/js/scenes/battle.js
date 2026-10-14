@@ -5,7 +5,8 @@
   const G = window.GAME = window.GAME || {};
   G.scenes = G.scenes || {};
 
-  const MSG_WAIT = 40;        // 1行出してから次へ進むまでのコマ数
+  // 1行出してから次へ進むまでのコマ数（設定「戦いの速さ」。balance.js の BATTLE_MSG_WAIT）
+  const msgWait = () => G.DATA.balance.BATTLE_MSG_WAIT[G.settings.battleSpeed] || G.DATA.balance.BATTLE_MSG_WAIT.normal;
   const MSG_WAIT_FAST = 6;    // 決定キーやShiftで早送りしたとき
   const LOG_LINES = 4;
   const COMMANDS = [
@@ -90,7 +91,7 @@
           return;
         }
         if (ev.type === 'msg') {
-          say(ev.text); waitTimer = MSG_WAIT;
+          say(ev.text); waitTimer = msgWait();
           if (/を唱えた！$|を放った！$/.test(ev.text)) { G.sound.se('spell'); mode = { spell: spellColor(ev.text) }; }
           else if (/レベル\d+になった！$|を覚えた！$/.test(ev.text)) G.sound.se('levelup');
           else if (/の攻撃！/.test(ev.text)) mode = 'hit';
@@ -101,7 +102,7 @@
           const c = centerOf(ev.target);
           if (c) { addFx('sparkle', c, { color: '#9f9' }); if (ev.amount > 0) addFx('num', c, { text: String(ev.amount), color: '#7f7' }); }
         }
-        else if (ev.type === 'calc') { say(ev.text, '#9ab'); waitTimer = MSG_WAIT / 2; }
+        else if (ev.type === 'calc') { say(ev.text, '#9ab'); waitTimer = Math.ceil(msgWait() / 2); }
         else if (ev.type === 'talk') { G.message.show(ev.list); waitTimer = 2; }   // 物語の場面のセリフ（会話の窓で出す）
         else if (ev.type === 'damage') {
           flash = ev.target; flashTimer = 16;
@@ -142,12 +143,15 @@
     }
     // ベルだけ「本気」を選べる（阻害ゲージが大きく減る）
     let cmdList = COMMANDS;
+    // 前に選んだコマンド・言霊・道具にカーソルを置く（仲間ごと。ゲームを閉じるまで覚える）
+    const memo = G.battleCursor = G.battleCursor || {};
+    const memoOf = m => (G.settings.cursorMemory === false ? { cmd: 0, kotodama: 0, item: 0 } : (memo[m.id] = memo[m.id] || { cmd: 0, kotodama: 0, item: 0 }));
     function openMenu() {
       const m = party[cmdIndex];
       cmdList = G.DATA.characters[m.id].isBell
         ? [COMMANDS[0], { label: '本気', type: 'fullpower' }].concat(COMMANDS.slice(1))
         : COMMANDS;
-      menu = new G.ui.Menu(cmdList.map(c => ({ label: c.label })), { x: 8, y: CMD_Y, w: 150, title: m.name });
+      menu = new G.ui.Menu(cmdList.map(c => ({ label: c.label })), { x: 8, y: CMD_Y, w: 150, title: m.name, index: Math.min(memoOf(m).cmd, cmdList.length - 1) });
       menu.y = CMD_BOTTOM - menu.h;   // 下の端をそろえる（項目の数や文字の大きさで高さが変わる）
       phase = 'command';
     }
@@ -180,13 +184,13 @@
             note: ok ? `MP${s.d.mp}` : (s.d.phase ? `フェーズ${s.d.phase}` : '—'),
             disabled: !ok || m.mp < s.d.mp,
           };
-        }), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '言霊（MP ' + m.mp + '）' });
+        }), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '言霊（MP ' + m.mp + '）', index: Math.min(memoOf(m).kotodama, subList.length - 1) });
         subMenu.y = CMD_BOTTOM - subMenu.h;
       } else {
         subList = G.state.items.filter(s => { const d = G.DATA.items[s.id]; return d.type === 'use' && (d.use === 'both' || d.use === 'battle'); })
           .map(s => ({ id: s.id, d: G.DATA.items[s.id], count: s.count }));
         if (!subList.length) { flashNote('使える道具を持っていない。'); return; }
-        subMenu = new G.ui.Menu(subList.map(s => ({ label: s.d.name, note: '×' + s.count })), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '道具' });
+        subMenu = new G.ui.Menu(subList.map(s => ({ label: s.d.name, note: '×' + s.count })), { x: 162, y: CMD_Y, w: 310, rows: 5, title: '道具', index: Math.min(memoOf(m).item, subList.length - 1) });
         subMenu.y = CMD_BOTTOM - subMenu.h;
       }
       subMenu.kind = kind;
@@ -452,6 +456,7 @@
           if (!res) return;
           if (res.type === 'cancel') { prevMember(); return; }
           const c = cmdList[res.index];
+          memoOf(party[cmdIndex]).cmd = c.type === 'escape' ? 0 : res.index;   // にげるは覚えない
           if (c.type === 'escape') { runEscape(); return; }
           if (c.type === 'defend') { setCommand({ type: 'defend' }); return; }
           if (c.type === 'kotodama' || c.type === 'item') { openSub(c.type); return; }
@@ -470,6 +475,7 @@
             return;
           }
           const s = subList[res.index];
+          memoOf(party[cmdIndex])[subMenu.kind] = res.index;
           chooseTarget(subMenu.kind, s.id, s.d);
           return;
         }
