@@ -1,6 +1,7 @@
 // このファイルの役目：ダンジョンのしかけ（マップの gimmicks）。押せる岩・穴埋め・重しの床・レバーと門・
 // 言霊で開く道（火種で蔦を焼く など）・鍵の扉・灯籠を順に灯す謎・暗闇と燭台・滑る床・流れる床・熱い床・落とし穴・
-// 番人（奥の宝を守る強い敵。調べると「戦いますか？」。倒すまで道をふさぐ。reward があれば品をくれる）。
+// 番人（奥の宝を守る強い敵。調べると「戦いますか？」。倒すまで道をふさぐ。reward があれば品をくれる）・
+// 言の葉の石碑（kotoba。js/data/kotoba.js の石碑を、そのマップのしかけに加える。調べると文字並べの謎＝js/scenes/kotoba.js）。
 // 地形の文字は js/data/tiles.js、数字は balance.js の GIMMICK。歩く画面（js/scenes/map.js）から呼ばれる。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -10,7 +11,18 @@
   // しかけの覚え書き（フラグ）の名前。flag を書いていなければ「gm:マップ:id」
   const flagOf = (mapId, g) => g.flag || `gm:${mapId}:${g.id}`;
   const fillKey = (mapId, x, y) => `gm:${mapId}:fill:${x},${y}`;
-  const list = map => map.gimmicks || [];
+  // 言の葉の石碑（js/data/kotoba.js）を、そのマップのしかけとして加える（現れる章になってから）
+  const stonesCache = new Map();
+  function stonesOf(map) {
+    if (!G.DATA.kotobaStones) return [];
+    if (!stonesCache.has(map)) {
+      const id = Object.keys(G.DATA.maps).find(k => G.DATA.maps[k] === map);
+      stonesCache.set(map, G.DATA.kotobaStones.filter(s => s.map === id).map(s => ({ type: 'kotoba', id: 'kotoba_' + s.id, x: s.x, y: s.y, stone: s })));
+    }
+    const ch = (G.state && G.state.chapter) || 1;
+    return stonesCache.get(map).filter(g => ch >= g.stone.from);
+  }
+  const list = map => (map.gimmicks || []).concat(stonesOf(map));
 
   // マップに入ったときの、しかけの状態（岩の位置は入るたびに元へ戻る＝詰んでも出直せばよい）
   function init(mapId, map) {
@@ -39,7 +51,7 @@
   function objectAt(st, x, y) {
     const b = st.boulders.find(o => o.x === x && o.y === y);
     if (b) return { type: 'boulder', ref: b };
-    return list(st.map).find(g => g.x === x && g.y === y && (['lever', 'lantern', 'torch'].includes(g.type)
+    return list(st.map).find(g => g.x === x && g.y === y && (['lever', 'lantern', 'torch', 'kotoba'].includes(g.type)
       || (g.type === 'guardian' && !G.flags.get(flagOf(st.mapId, g))))) || null;
   }
   const blocks = (st, x, y) => !!objectAt(st, x, y);
@@ -156,6 +168,23 @@
         });
         return true;
       }
+      case 'kotoba': {
+        // 言の葉の石碑：解くと文字が光り、品か銅貨が手に入る（石碑はそのまま残る）
+        if (done) { G.message.show('（石碑の言葉は、静かに光っている）'); return true; }
+        G.message.show('古い石碑に、ばらばらの文字が刻まれている。並べ直せば、言葉になりそうだ。', () => {
+          G.scene.push(G.scenes.kotoba(g.stone, ok => {
+            if (!ok) return;
+            G.flags.set(f);
+            const w = g.stone.reward || {};
+            const lines = [`「${g.stone.word}」――石碑の文字が、光った。`];
+            if (w.item) { G.party.addItem(w.item, w.count || 1); lines.push(`石碑の奥から、${G.DATA.items[w.item].name}${(w.count || 1) > 1 ? 'を' + w.count + 'つ' : 'を'}見つけた。`); }
+            if (w.copper) { G.party.addCopper(w.copper); lines.push(`石碑の奥から、銅貨を${w.copper}枚 見つけた。`); }
+            if (G.sound) G.sound.se('chest');
+            G.message.show(lines);
+          }));
+        });
+        return true;
+      }
       case 'guardian': {
         if (done) return false;
         // 戦う前に記録する（負けたら、ここからやり直し）
@@ -205,6 +234,7 @@
     });
     st.boulders.forEach(b => draw('boulder', b.x, b.y));
     list(st.map).forEach(g => { if (g.type === 'guardian' && !G.flags.get(flagOf(st.mapId, g))) draw('guardian', g.x, g.y); });
+    list(st.map).forEach(g => { if (g.type === 'kotoba') draw(G.flags.get(flagOf(st.mapId, g)) ? 'tabletLit' : 'tablet', g.x, g.y); });
     return out;
   }
 

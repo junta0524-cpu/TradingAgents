@@ -567,6 +567,27 @@ const { chromium } = require('playwright');
     return out.join(' | ');
   });
   expect('名の欠片：拾う・返す・6人で品', nm, 'isana/3 | true | isana/null/0 | 3:returned:1 | true:true');
+  // 言の葉の石碑：置き場所が通れるマスで、答えの文字が並び、ごほうびの品がある。文字を順に選ぶと解ける
+  expect('言の葉の石碑：置き場所・答え・ごほうび', await ev(() => GAME.DATA.kotobaStones.filter(s => {
+    const m = GAME.DATA.maps[s.map], t = m && GAME.DATA.tiles[(m.rows[s.y] || '')[s.x]];
+    const busy = (m.npcs || []).concat(m.warps || [], m.chests || [], m.signs || [], m.gimmicks || []).some(o => o.x === s.x && o.y === s.y)
+      || GAME.DATA.nameFragments.some(f => (f.at.map === s.map && f.at.x === s.x && f.at.y === s.y) || (f.owner.map === s.map && f.owner.x === s.x && f.owner.y === s.y));
+    return !t || t.solid || busy || !s.word || (s.reward.item && !GAME.DATA.items[s.reward.item]);
+  }).map(s => s.id).join()), '');
+  await ev(() => { window.__kt = null; GAME.scene.push(GAME.scenes.kotoba(GAME.DATA.kotobaStones[0], ok => { window.__kt = ok; })); });
+  await wait(200);
+  const ktLetters = await ev(() => GAME.scene.top().answer);
+  { const used = []; for (const ch of 'かため') { const t = ktLetters.findIndex((c, i) => c === ch && !used.includes(i)); used.push(t);
+    for (let n = 0; n < 12 && (await ev(() => GAME.scene.top().cursor)) !== t; n++) await key('ArrowRight', 40);
+    await key('KeyZ', 80); } }
+  await shot('98_kotoba');
+  await key('KeyZ', 200);
+  expect('言の葉の石碑：文字を並べると解ける', `${ktLetters.length}/${await ev(() => window.__kt)}/${await ev(() => GAME.scene.top().name)}`, '4/true/マップ');
+  expect('言の葉の石碑：マップのしかけに加わり、通れない', await ev(() => {
+    const keep = GAME.state.chapter; GAME.state.chapter = 8;
+    const m = GAME.DATA.maps.amatsu, st = GAME.gimmick.init('amatsu', m), r = GAME.gimmick.blocks(st, 21, 8);
+    GAME.state.chapter = keep; return r;
+  }), true);
   expect('言霊・品の説明（カーソルを合わせると出す文）', await ev(() => [GAME.kenbun.skillText(GAME.DATA.kotodama.iyashi, true), GAME.kenbun.skillText(GAME.DATA.kotodama.iyashi), GAME.kenbun.itemText(GAME.DATA.items.kizugusuri).split('。')[0]].join(' / ')),
     '体力を戻す（12〜18＋賢さ）（味方1人）。 / 体力を戻す（12〜18＋賢さ）（味方1人）。戦いでも移動中でも使う。 / 体力を戻す（20〜25＋賢さ）（味方1人）');
   expect('見聞録：敵・品・言霊が載る', kb, '[1,1,0][1,0,1] | true | true | true,true,true,true | 人間界/苔むした地下道の奥 | 体力を戻す（12〜18＋賢さ）');
@@ -1409,7 +1430,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/9');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/10');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない

@@ -26,6 +26,8 @@
     return {
       name: '言の葉の石碑',
       get answer() { return letters; },   // 自動チェック用：並んでいる文字
+      get cursor() { return cur; },        // 自動チェック用：選んでいる文字
+      get solved() { return solved; },
       update() {
         const inp = G.input;
         if (wrong > 0) { if (--wrong === 0) picked = []; return; }
