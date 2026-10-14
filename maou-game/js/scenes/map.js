@@ -231,6 +231,9 @@
           G.message.show(lines);
           return;
         }
+        // 寄り道の頼みごと（js/systems/quests.js）：届け先の人なら預かった物を渡す／頼む人なら頼みごとの話
+        if (G.quests.receive(mapId, d.id)) return;
+        if (d.quest && G.quests.talk(d.quest)) return;
         // 話すと場面が流れる人（doneFlag が立ったあとは、ふつうの会話）
         if (d.event && !(d.doneFlag && G.flags.get(d.doneFlag))) { G.event.run(d.event); return; }
         G.message.show(d.talk || ['……。'], () => {
@@ -243,6 +246,7 @@
         return;
       }
       if (G.gimmick.interact(gimmickApi, fx, fy)) return;
+      if (G.quests.look(mapId, fx, fy)) return;   // 頼まれて調べる場所
       const chest = at(map.chests, fx, fy);
       if (chest) { openChest(chest); return; }
       const sign = at(map.signs, fx, fy);

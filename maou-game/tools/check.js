@@ -597,6 +597,105 @@ const { chromium } = require('playwright');
   await shot('97_kenbun');
   await key('KeyX', 200);
 
+  // 寄り道の拠点（js/data/maps/base_*.js）：地図から入れ、戸から部屋へ入れ、町の人の頼みごとが正しく置かれている
+  expect('拠点：地図の出入口・部屋の出入口がつながる', await ev(() => {
+    const bad = [];
+    const ids = Object.keys(GAME.DATA.maps).filter(id => GAME.DATA.maps['base_' + id] === undefined && /^(magane|iwakura|yachimata|kukunochi|ukihashi|takama|mizuho|inasa|yata|ohabari|hirasaka|nezumi|chibiki|yominohara|iwayato)$/.test(id));
+    if (ids.length !== 15) bad.push('count' + ids.length);
+    ids.forEach(id => {
+      const world = ['yata', 'ohabari', 'hirasaka', 'nezumi', 'chibiki', 'yominohara', 'iwayato'].includes(id) ? 'world_makai' : 'world_ningen';
+      if (!GAME.DATA.maps[world].warps.some(w => w.to === id)) bad.push(id + ':noworld');
+      GAME.DATA.maps[id].warps.forEach(w => {
+        const to = GAME.DATA.maps[w.to], t = to && GAME.DATA.tiles[(to.rows[w.ty] || '')[w.tx]];
+        if (!t || t.solid) bad.push(id + '>' + w.to);
+        if (to && w.to !== world && !to.warps.some(b => b.to === id && GAME.DATA.maps[id].warps.some(d => d.to === w.to && b.tx === d.x && b.ty === d.y + 1))) bad.push(w.to + ':noback');
+      });
+    });
+    return bad.join();
+  }), '');
+  expect('頼みごと：頼む人・届け先・調べる所・品・敵がそろう', await ev(() => {
+    const npcOf = (map, id) => (GAME.DATA.maps[map].npcs || []).find(n => n.id === id);
+    const givers = {};
+    Object.entries(GAME.DATA.maps).forEach(([mid, m]) => (m.npcs || []).forEach(n => { if (n.quest) givers[n.quest] = (givers[n.quest] || 0) + 1; }));
+    return GAME.DATA.quests.filter(q => {
+      if (givers[q.id] !== 1 || !q.offer || !q.wait || !q.done || !q.after || !q.desc || !q.who) return true;
+      if (q.reward.item && !GAME.DATA.items[q.reward.item]) return true;
+      if (q.kind === 'slay' && !GAME.DATA.enemies[q.enemy]) return true;
+      if (q.kind === 'bring' && !GAME.DATA.items[q.item]) return true;
+      if (q.kind === 'deliver' && (!GAME.DATA.items[q.letter] || !npcOf(q.to.map, q.to.npc) || !q.toLines)) return true;
+      if (q.kind === 'look') { const m = GAME.DATA.maps[q.look.map], t = GAME.DATA.tiles[m.rows[q.look.y][q.look.x]]; if (!t || !t.solid) return true; }
+      return false;
+    }).map(q => q.id).join() + '/' + GAME.DATA.quests.length + '/' + Object.keys(givers).length;
+  }), '/23/23');
+  // 地図から入って、戸から部屋へ（人間界のマガネ：地図の上で、村のマスへ歩く）
+  await ev(() => { GAME.state.chapter = 6; });
+  await placeAt('world_ningen', 8, 10, 'up');
+  await hold('ArrowUp', 300);
+  expect('拠点：地図から入れる（マガネ）', await pos(), 'magane(11,13)');
+  await shot('99_base_magane');
+  await placeAt('magane', 4, 4, 'up');
+  await hold('ArrowUp', 300);
+  expect('拠点：戸から部屋へ', await pos(), 'magane_r1(5,7)');
+  await hold('ArrowDown', 400);
+  expect('拠点：部屋から外へ', await pos(), 'magane(4,4)');
+  // 魔界の拠点（11章）
+  await ev(() => { GAME.state.chapter = 11; });
+  await placeAt('world_makai', 6, 6, 'up');
+  await hold('ArrowUp', 300);
+  expect('拠点：魔界の地図から入れる（オハバリ城）', await pos(), 'ohabari(11,14)');
+  await shot('99_base_ohabari');
+  // 頼みごと：退治（話す→引き受ける→倒す→知らせる→ごほうび）
+  const keepQ = await ev(() => JSON.stringify({ q: GAME.state.quests || null, items: GAME.state.items, copper: GAME.state.copper, ch: GAME.state.chapter }));
+  await ev(() => { GAME.state.chapter = 6; GAME.state.quests = {}; });
+  await placeAt('magane', 14, 5, 'up');
+  await key('KeyZ', 200);
+  for (let i = 0; i < 4 && (await scenes()).includes('メッセージ'); i++) await key('KeyZ', 150);
+  expect('頼みごと：話すと「引き受けますか」', await scenes(), 'マップ > 確認');
+  await shot('99_quest_offer');
+  await key('KeyZ', 200);
+  await closeMessages();
+  expect('頼みごと：引き受けると、いらいに並ぶ', await ev(() => GAME.quests.status(GAME.quests.byId('magane_tokage')) + '/' + GAME.quests.taken().map(q => q.id).join()), 'active/magane_tokage');
+  await ev(() => GAME.scenes.openRequestList()); await wait(200);
+  await shot('99_quest_list');
+  expect('頼みごと：メニューのいらい', await scenes(), 'マップ > いらい');
+  await key('KeyX', 150);
+  expect('頼みごと：退治の数', await ev(() => GAME.quests.onBattle([{ id: 'iwatokage', hp: 0 }, { id: 'iwatokage', hp: 0 }, { id: 'iwatokage', hp: 0 }, { id: 'iwatokage', hp: 0 }, { id: 'iwatokage', hp: 0, awakened: true }]).join() + '|' + GAME.quests.onBattle([{ id: 'iwatokage', hp: 0 }]).join()), '|坑道の岩蜥蜴');
+  const cop = await ev(() => GAME.state.copper);
+  await key('KeyZ', 200);
+  await closeMessages();
+  expect('頼みごと：知らせるとごほうび', await ev(() => GAME.quests.status(GAME.quests.byId('magane_tokage'))) + '/' + ((await ev(() => GAME.state.copper)) - cop) + '/' + await ev(() => GAME.party.count('inochi_ishi') > 0), 'claimed/150/true');
+  // 届ける：マガネの母 → ヤチマタの大宿の息子 → 母に知らせる
+  expect('頼みごと：届ける', await ev(() => {
+    const out = [];
+    GAME.quests.accept('magane_fumi'); out.push(GAME.party.count('magane_tegami'));
+    out.push(GAME.quests.receive('yachimata_inn', 'yachimata_inn_youth') + ':' + GAME.party.count('magane_tegami') + ':' + GAME.quests.status(GAME.quests.byId('magane_fumi')));
+    out.push(GAME.quests.receive('yachimata_inn', 'yachimata_inn_youth'));
+    return out.join('|');
+  }), '1|true:0:ready|false');
+  await closeMessages();
+  // 調べる：イワクラ城の古井戸（頼まれる前は井戸のふつうの文）
+  await ev(() => { GAME.state.chapter = 7; });
+  await placeAt('iwakura', 12, 9, 'up');
+  await key('KeyZ', 200);
+  expect('頼みごと：頼まれる前は、ふつうに調べる', await ev(() => GAME.quests.status(GAME.quests.byId('iwakura_ido'))), 'open');
+  await closeMessages();
+  await ev(() => GAME.quests.accept('iwakura_ido'));
+  await key('KeyZ', 200);
+  await closeMessages();
+  expect('頼みごと：調べる', await ev(() => GAME.quests.status(GAME.quests.byId('iwakura_ido'))), 'ready');
+  // 持ってくる：品が足りないと待つ、そろうと渡す
+  expect('頼みごと：持ってくる', await ev(() => {
+    const q = GAME.quests.byId('iwakura_kusuri'); GAME.quests.accept(q.id);
+    const n0 = GAME.party.count('kizugusuri'); GAME.party.removeItem('kizugusuri', n0);
+    const a = GAME.quests.status(q); GAME.party.addItem('kizugusuri', 6); const b = GAME.quests.status(q);
+    GAME.quests.talk(q.id); return a + '/' + b + '/' + GAME.quests.status(q) + '/' + GAME.party.count('kizugusuri');
+  }), 'active/ready/claimed/1');
+  await closeMessages();
+  // 章が来ていないと、ふつうの会話
+  expect('頼みごと：章の前はふつうの会話', await ev(() => { GAME.state.chapter = 5; return GAME.quests.talk('magane_fumi'); }), false);
+  await closeMessages();
+  await page.evaluate(k => { const o = JSON.parse(k); Object.assign(GAME.state, { quests: o.q, items: o.items, copper: o.copper, chapter: o.ch }); }, keepQ);
+
   // ===== フェーズ5：ベル専用のしくみ =====
   await ev(() => { GAME.party.newGame(); GAME.rng.setFixed(true); });
   const g = () => ev(() => Math.round(GAME.state.inhibit * 100) / 100);
@@ -1430,7 +1529,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/10');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/11');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない

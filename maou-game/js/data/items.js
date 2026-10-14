@@ -79,6 +79,10 @@
 
     koudou_kagi:  { name: '坑道の鍵', type: 'key', desc: '古い坑道の、鉄の扉の鍵。' },
     iwamizo_kagi: { name: '岩溝の鍵', type: 'key', desc: '風の岩溝の、岩の扉の鍵。' },
+    // 寄り道の頼みごと（js/data/quests.js）で預かる品
+    magane_tegami:  { name: '坑夫の母の手紙', type: 'key', desc: 'マガネの坑夫の母から、ヤチマタの宿で働く息子へ。' },
+    ukihashi_fumi:  { name: '関所の書付', type: 'key', desc: 'ウキハシの関所から、イナサの網元へ宛てた書付。' },
+    yata_hanefumi:  { name: '鴉の羽文', type: 'key', desc: 'ヤタの断崖の伝令から、イワヤトに住む妹へ。黒い羽に結んだ文。' },
     kakikake_tegami: { name: '書きかけの手紙', type: 'key', desc: '兵の懐にあった、書きかけの手紙。', read: () => G.DATA.rampage.ch2.letter },
   };
 

@@ -1,5 +1,5 @@
 // このファイルの役目：人間界のフィールドマップ（全体の地図）。1マスが一つの土地。ユーザーが描いた地図（デザインの「人間界（ゲーム用フィールド）」）の形どおり。
-// 物語に出る町（ミナモ・ひなた野・聖の森・炉ヶ岳・獣ノ原・天津京）は小説の名前で置き、その章から入れる。ほかの地名はユーザーの地図の名前（立つと名前が出るだけ）。
+// 物語に出る町（ミナモ・ひなた野・聖の森・炉ヶ岳・獣ノ原・天津京）は小説の名前で置き、その章から入れる。ほかの地名はユーザーの地図の名前で、寄り道の拠点（js/data/maps/base_*.js）として入れる。
 // 町の上に乗ると、その土地のマップへ入る。土地のマップの端から、ここへ出てこられる。クリア後（13章）は全部の町に入れ、大穴から魔界へ渡れる。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -66,6 +66,15 @@
       { x: 8, y: 5, to: 'ro_path', tx: 12, ty: 19, dir: 'up', requires: { chapterFrom: 6, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
       { x: 12, y: 2, to: 'kemono_field', tx: 1, ty: 10, dir: 'right', requires: { chapterFrom: 7, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
       { x: 26, y: 11, to: 'amatsu', tx: 15, ty: 18, dir: 'up', requires: { chapterFrom: 8, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      // 寄り道の拠点（js/data/maps/base_*.js）。物語の町と同じく、9章までとクリア後に入れる
+      { x: 8, y: 9, to: 'magane', tx: 11, ty: 13, dir: 'up', requires: { chapterFrom: 6, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      { x: 13, y: 6, to: 'iwakura', tx: 12, ty: 14, dir: 'up', requires: { chapterFrom: 7, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      { x: 8, y: 13, to: 'yachimata', tx: 12, ty: 1, dir: 'down', requires: { chapterFrom: 5, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      { x: 4, y: 13, to: 'kukunochi', tx: 11, ty: 14, dir: 'up', requires: { chapterFrom: 5, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      { x: 21, y: 13, to: 'ukihashi', tx: 12, ty: 14, dir: 'up', requires: { chapterFrom: 5, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      { x: 23, y: 10, to: 'takama', tx: 10, ty: 13, dir: 'up', requires: { chapterFrom: 8, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      { x: 26, y: 16, to: 'mizuho', tx: 12, ty: 14, dir: 'up', requires: { chapterFrom: 8, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
+      { x: 22, y: 18, to: 'inasa', tx: 12, ty: 1, dir: 'down', requires: { chapterFrom: 5, chapterTo: 9, chapterAlso: 13 }, blockedText: NOT_YET },
     ],
     // 立つと左上に名前が出る（物語の町は小説の名前、ほかはユーザーの地図の名前）
     // note：地名の由来（ゲーム版の資料「地名の由来（古事記）」より）。名前の下に出る

@@ -298,6 +298,7 @@
       }
       // 寄り道の依頼（倒した数）
       G.requests.onBattle(enemies).forEach(t => ev.push({ type: 'msg', text: `（依頼「${t}」の条件を満たした。ギルドの受付へ）` }));
+      G.quests.onBattle(enemies).forEach(t => ev.push({ type: 'msg', text: `（頼み「${t}」の数を退治した。頼んだ人に知らせよう）` }));
       // 目覚めさせた人の数
       const woke = enemies.filter(e => e.awakened).length;
       if (woke) ev.push({ type: 'msg', text: `${woke}人が、目を覚ました。（これまでに${G.state.awakened}人）` });
