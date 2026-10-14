@@ -1,5 +1,5 @@
 // このファイルの役目：拠点「タカマの丘」（人間界の地図の寄り道の場所）の外のマップと、建物の中（部屋）のマップ。
-// 空に近い丘。頂に、古い石の像が二つ並んでいる。住む人のひと言は暮らしの声（ユーザー決定）。quest のある人は寄り道の頼みごと（js/data/quests.js）。
+// 空に近い丘。頂に、古い立ち石が二つ並んでいる。住む人のひと言は暮らしの声（ユーザー決定）。quest のある人は寄り道の頼みごと（js/data/quests.js）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -15,7 +15,7 @@
       "TTTTTTTTTTTTTTTTTTTTTT",
       "TTTTTTTTTTTTTTTTTTTTTT",
       "T......FFFFFFFF......T",
-      "T..,,,.FFF44FFF..,,,.T",
+      "T..,,,.FFFRRFFF..,,,.T",
       "T......FFFFFFFF......T",
       "T......FFFFFFFF......T",
       "T.........--.........T",
@@ -63,7 +63,7 @@
       { x: 6, y: 8, to: "takama", tx: 5, ty: 10, dir: 'down' },
     ],
     npcs: [
-      { id: "takama_shrine_priest", look: "elder", x: 5, y: 2, dir: "down", move: "still", quest: "takama_hoshi", talk: ["「この丘は、天に一番近い場所だと言われておった」"] },
+      { id: "takama_shrine_priest", look: "elder", x: 5, y: 2, dir: "down", move: "still", quest: "takama_hoshi", talk: ["「この丘は、天に一番近い場所だと言われておった」", "「社の紋は、王都の役人に削られた。それでも、空を仰ぐことまでは、止められん」"] },
     ],
     chests: [],
     signs: [],

@@ -34,7 +34,7 @@
       { x: 10, y: 13, to: "world_makai", tx: 18, ty: 14, dir: "down" },
     ],
     npcs: [
-      { id: "chibiki_watch", look: "wolfkid", x: 11, y: 6, dir: "left", move: "still", talk: ["「見張りの番だ。……あ、ベルさまのお客人か。どうぞどうぞ」"] },
+      { id: "chibiki_watch", look: "wolfkid", x: 11, y: 6, dir: "left", move: "still", talk: ["「見張りの番だ。……人間？　ああ、王様のお客人か。どうぞどうぞ」"] },
       { id: "chibiki_watch2", look: "oni", x: 8, y: 4, dir: "up", move: "still", quest: "chibiki_kage", talk: ["「この大岩を、千人がかりで引いてきたって話だ。本当かは、知らんがな」"] },
     ],
     chests: [],

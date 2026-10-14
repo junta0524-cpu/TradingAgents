@@ -38,7 +38,7 @@
       { x: 12, y: 15, to: "world_ningen", tx: 4, ty: 14, dir: "down" },
     ],
     npcs: [
-      { id: "kukunochi_chief", look: "elf2", x: 13, y: 6, dir: "down", move: "still", quest: "kukunochi_tsuta", talk: ["「森の木は、切らずに住まわせてもらうのが、この村の決まりだ」"] },
+      { id: "kukunochi_chief", look: "elf2", x: 13, y: 6, dir: "down", move: "still", quest: "kukunochi_tsuta", talk: ["「森の木は、切らずに住まわせてもらうのが、この村の決まりだ」", "「聖の森は、どちらにもつかぬ。わしらも、そうして生きてきた」"] },
       { id: "kukunochi_girl", look: "elf", x: 6, y: 9, dir: "right", move: "wander", talk: ["「木の上の家は、風が吹くと少し揺れるの。それが気持ちいいのよ」"] },
       { id: "kukunochi_old", look: "elder", x: 10, y: 12, dir: "right", move: "still", quest: "kukunochi_ki", talk: ["「この大樹は、村ができる前からここにある」"] },
     ],

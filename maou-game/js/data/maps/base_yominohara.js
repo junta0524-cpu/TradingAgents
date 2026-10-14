@@ -1,5 +1,5 @@
 // このファイルの役目：拠点「ヨミノハラ」（魔界の地図の寄り道の場所）の外のマップと、建物の中（部屋）のマップ。
-// 湯治場の跡。崩れた建物の間に、まだ湯が湧いている。住む人のひと言は暮らしの声（ユーザー決定）。quest のある人は寄り道の頼みごと（js/data/quests.js）。
+// 湯治場の跡。人間の軍に焼かれた建物の間に、まだ湯が湧いている。住む人のひと言は暮らしの声（ユーザー決定）。quest のある人は寄り道の頼みごと（js/data/quests.js）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -63,7 +63,7 @@
       { x: 6, y: 8, to: "yominohara", tx: 5, ty: 11, dir: 'down' },
     ],
     npcs: [
-      { id: "yominohara_r1_man", look: "tsuchi", x: 8, y: 5, dir: "left", move: "still", talk: ["「屋根は落ちたが、湯船は残っておる。わしは、ここで湯を守る」"] },
+      { id: "yominohara_r1_man", look: "tsuchi", x: 8, y: 5, dir: "left", move: "still", talk: ["「人間の軍が来た年に、湯屋は焼けた。屋根は落ちたが、湯船は残っておる」", "「わしは、ここで湯を守る。……おまえさんが人間でも、湯は分け隔てなく温めるさ」"] },
     ],
     chests: [],
     signs: [],

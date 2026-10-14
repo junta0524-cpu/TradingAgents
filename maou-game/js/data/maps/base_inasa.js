@@ -120,7 +120,7 @@
       { x: 6, y: 8, to: "inasa", tx: 5, ty: 9, dir: 'down' },
     ],
     npcs: [
-      { id: "inasa_amimoto_amimoto", look: "elder", x: 7, y: 5, dir: "left", move: "still", talk: ["「網元をしておる。浜のことなら、なんでも聞きなさい」"] },
+      { id: "inasa_amimoto_amimoto", look: "elder", x: 7, y: 5, dir: "left", move: "still", talk: ["「網元をしておる。浜のことなら、なんでも聞きなさい」", "「昔、この浜で、国を譲る譲らぬの話し合いがあったそうな。剣ではなく、言葉でな」"] },
     ],
     chests: [],
     signs: [],

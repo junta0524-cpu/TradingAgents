@@ -33,7 +33,7 @@
       { x: 10, y: 13, to: "world_makai", tx: 28, ty: 17, dir: "down" },
     ],
     npcs: [
-      { id: "iwayato_hermit", look: "jutsushi", x: 12, y: 8, dir: "left", move: "still", talk: ["「ここは、光を嫌う者が隠れる穴だ。……わしも、そのひとりよ」"] },
+      { id: "iwayato_hermit", look: "elder", x: 12, y: 8, dir: "left", move: "still", talk: ["「ここは、光を嫌う者が隠れる穴だ。……わしも、そのひとりよ」", "「宮で夜ごと捧げる祈りの声も、ここまでは届かん。届かんが、わしも、同じ神々に祈っておる」"] },
     ],
     chests: [],
     signs: [

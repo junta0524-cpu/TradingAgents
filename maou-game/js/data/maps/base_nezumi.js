@@ -34,7 +34,7 @@
       { x: 10, y: 13, to: "world_makai", tx: 9, ty: 7, dir: "down" },
     ],
     npcs: [
-      { id: "nezumi_kid", look: "kid_tail", x: 9, y: 7, dir: "down", move: "still", quest: "nezumi_ana", talk: ["「ここはね、火の野から逃げてきた人が、昔、隠れた穴なんだって」"] },
+      { id: "nezumi_kid", look: "kid_tail", x: 9, y: 7, dir: "down", move: "still", quest: "nezumi_ana", talk: ["「ここはね、人間の兵が野に火を放ったとき、みんなが逃げこんだ穴なんだって」"] },
       { id: "nezumi_elder", look: "tsuchi", x: 5, y: 9, dir: "right", move: "still", talk: ["「狭いが、雨も火も入ってこん。いい穴だ」"] },
     ],
     chests: [],

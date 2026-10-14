@@ -36,7 +36,7 @@
       { x: 11, y: 14, to: "world_makai", tx: 21, ty: 4, dir: "left" },
     ],
     npcs: [
-      { id: "yata_crow1", look: "crow", x: 12, y: 6, dir: "left", move: "still", talk: ["「ここは鴉族の崖だ。風を読めねえやつは、足を踏み外すぜ」"] },
+      { id: "yata_crow1", look: "crow", x: 12, y: 6, dir: "left", move: "still", talk: ["「ここは鴉族の崖だ。風を読めねえやつは、足を踏み外すぜ」", "「人間を崖に上げるのは、初めてだ。王様の連れでなけりゃ、突き落としてるところさ」"] },
       { id: "yata_crow2", look: "crow", x: 15, y: 9, dir: "up", move: "wander", talk: ["「崖の上からは、魔界の端まで見える。見張りには、もってこいさ」"] },
     ],
     chests: [],

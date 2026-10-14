@@ -68,7 +68,7 @@
       { x: 6, y: 8, to: "iwakura", tx: 12, ty: 5, dir: 'down' },
     ],
     npcs: [
-      { id: "iwakura_hall_steward", look: "kanri", x: 5, y: 2, dir: "down", move: "still", talk: ["「城主の名代を務めております。……と申しても、留守を預かるだけの身ですが」"] },
+      { id: "iwakura_hall_steward", look: "elder", x: 5, y: 2, dir: "down", move: "still", talk: ["「城主の名代を務めております。……と申しても、留守を預かるだけの身ですが」"] },
     ],
     chests: [],
     signs: [],
@@ -94,7 +94,7 @@
       { x: 6, y: 8, to: "iwakura", tx: 4, ty: 8, dir: 'down' },
     ],
     npcs: [
-      { id: "iwakura_barracks_captain", look: "soldier", x: 7, y: 5, dir: "left", move: "still", quest: "iwakura_kusuri", talk: ["「衛士は皆、年を取った。若い者は、王都の兵に取られていく」"] },
+      { id: "iwakura_barracks_captain", look: "guard", x: 7, y: 5, dir: "left", move: "still", quest: "iwakura_kusuri", talk: ["「衛士は皆、年を取った。若い者は、王都の兵に取られていく」", "「白い腕章をつけて帰ってきた者は、礼儀正しくなる。……正しすぎるほどにな」"] },
     ],
     chests: [],
     signs: [],
@@ -172,7 +172,7 @@
       { x: 6, y: 8, to: "iwakura", tx: 21, ty: 13, dir: 'down' },
     ],
     npcs: [
-      { id: "iwakura_r1_scribe", look: "jutsushi", x: 8, y: 5, dir: "left", move: "still", talk: ["「この城の記録は、紙が脆くなって読めないものも多い」", "「それでも、書き写す者がいれば、残る」"] },
+      { id: "iwakura_r1_scribe", look: "elder", x: 8, y: 5, dir: "left", move: "still", talk: ["「この城の記録は、紙が脆くなって読めないものも多い」", "「神々の名の出てくる巻物は、王都の役人が持っていった。残ったのは、米と税の帳面ばかりだ」"] },
     ],
     chests: [],
     signs: [],

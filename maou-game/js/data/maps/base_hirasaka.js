@@ -35,7 +35,7 @@
       { x: 11, y: 14, to: "world_makai", tx: 15, ty: 7, dir: "down" },
     ],
     npcs: [
-      { id: "hirasaka_gate", look: "oni", x: 9, y: 7, dir: "down", move: "still", talk: ["「坂の上は宮だ。用のない者は、通さん。……ベルさまのお連れなら、別だがな」"] },
+      { id: "hirasaka_gate", look: "oni", x: 9, y: 7, dir: "down", move: "still", talk: ["「坂の上は宮だ。用のない者は、通さん。……王様のお連れなら、別だがな」"] },
       { id: "hirasaka_keeper", look: "oni", x: 12, y: 9, dir: "left", move: "still", quest: "hirasaka_nakui", talk: ["「近ごろ、坂の下の暗がりに、名を喰う影が出る」"] },
     ],
     chests: [],

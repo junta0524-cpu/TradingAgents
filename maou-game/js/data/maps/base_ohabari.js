@@ -40,7 +40,7 @@
     ],
     npcs: [
       { id: "ohabari_oni1", look: "oni", x: 10, y: 6, dir: "down", move: "still", talk: ["「オハバリの城は、角ヶ原より古い。昔の鬼の王が建てたそうだ」"] },
-      { id: "ohabari_oni2", look: "oni", x: 14, y: 11, dir: "left", move: "wander", talk: ["「鍛錬だ、鍛錬！　……人間の冒険者か。おまえも、ひと汗かいていくか？」"] },
+      { id: "ohabari_oni2", look: "oni", x: 14, y: 11, dir: "left", move: "wander", talk: ["「鍛錬だ、鍛錬！　……人間か。王様の連れなら、遠慮はいらん。おまえも、ひと汗かいていくか？」"] },
     ],
     chests: [],
     signs: [
