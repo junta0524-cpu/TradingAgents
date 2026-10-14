@@ -545,6 +545,8 @@ const { chromium } = require('playwright');
     if (keep) localStorage.setItem('maou_kenbun', keep);
     return out.join(' | ');
   });
+  expect('言霊・品の説明（カーソルを合わせると出す文）', await ev(() => [GAME.kenbun.skillText(GAME.DATA.kotodama.iyashi, true), GAME.kenbun.skillText(GAME.DATA.kotodama.iyashi), GAME.kenbun.itemText(GAME.DATA.items.kizugusuri).split('。')[0]].join(' / ')),
+    '体力を戻す（12〜18＋賢さ）（味方1人）。 / 体力を戻す（12〜18＋賢さ）（味方1人）。戦いでも移動中でも使う。 / 体力を戻す（20〜25＋賢さ）（味方1人）');
   expect('見聞録：敵・品・言霊が載る', kb, '[1,1,0][1,0,1] | true | true | true,true,true,true | 人間界/苔むした地下道の奥 | 体力を戻す（12〜18＋賢さ）');
   await ev(() => GAME.scene.push(GAME.scenes.kenbun())); await wait(300);
   await key('ArrowRight', 150);

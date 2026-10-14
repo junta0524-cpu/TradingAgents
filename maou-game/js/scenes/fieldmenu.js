@@ -28,6 +28,14 @@
       { x: 136, y: 8, w: 160, title, name: '仲間を選ぶ', extra: drawPartyMini, index: first }, i => onPick(party[i]));
   }
 
+  // カーソルを合わせた言霊・品の説明（画面の下の窓）
+  function drawDesc(text) {
+    if (!text) return;
+    const r = G.renderer, lh = r.large() ? 18 : 16;
+    G.ui.drawWindow(8, 250, 464, 62);
+    r.wrap(text, 440).slice(0, 3).forEach((l, i) => r.text(l, 20, 258 + i * lh, '#cfe'));
+  }
+
   // 効き目の相手を選んで使う（ally は1人、allies は全員）
   function useOn(targetType, onTargets) {
     if (targetType === 'allies' || targetType === 'self') { onTargets(null); return; }
@@ -42,8 +50,8 @@
     });
     if (!G.state.items.length) { G.message.show('何も持っていない。'); return; }
     G.ui.choose(build(), {
-      x: 136, y: 8, w: 180, title: `もちもの　銅貨${G.state.copper}枚`, rows: 12, stay: true, refresh: build, name: 'もちもの',
-      extra: drawPartyMini,
+      x: 136, y: 8, w: 180, title: `もちもの　銅貨${G.state.copper}枚`, rows: 11, stay: true, refresh: build, name: 'もちもの',
+      extra: menu => { drawPartyMini(); const s = G.state.items[menu.index]; if (s) drawDesc(G.kenbun.itemText(G.DATA.items[s.id])); },
     }, i => {
       const s = G.state.items[i];
       if (!s) return;
@@ -70,9 +78,9 @@
         };
       });
       G.ui.choose(build(), {
-        x: 8, y: 8, w: 300, rows: 13, stay: true, refresh: build, name: 'ことだま',
+        x: 8, y: 8, w: 300, rows: 11, stay: true, refresh: build, name: 'ことだま',
         title: `${caster.name}の言霊（MP ${caster.mp}/${caster.maxMp}）`,
-        extra: drawPartyMini,
+        extra: menu => { drawPartyMini(); drawDesc(G.kenbun.skillText(G.DATA.kotodama[caster.kotodama[menu.index]])); },
         onDisabled: i => {
           const k = G.DATA.kotodama[caster.kotodama[i]];
           G.message.show(G.kotodama.usableIn(k, 'field') ? 'MPが足りない。'

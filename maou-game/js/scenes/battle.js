@@ -604,6 +604,14 @@
           menu.draw();
           if (phase === 'sub' || ((phase === 'target' || phase === 'ally') && pending.type !== 'attack' && pending.type !== 'fullpower')) {
             if (subMenu) subMenu.draw();
+            // カーソルを合わせた言霊・道具の効き目を、一覧の上に出す
+            const pick = phase === 'sub' && subMenu && subList[subMenu.index];
+            if (pick && noteTimer <= 0) {
+              const text = subMenu.kind === 'kotodama' ? G.kenbun.skillText(pick.d, true) : G.kenbun.itemText(pick.d);
+              const lh = r.large() ? 18 : 16, ls = r.wrap(text, 290).slice(0, 2), h = ls.length * lh + 12;
+              G.ui.drawWindow(162, subMenu.y - h - 2, 310, h);
+              ls.forEach((l, i) => r.text(l, 172, subMenu.y - h + 4 + i * lh, '#cfe'));
+            }
           } else {
             G.ui.drawWindow(162, 232, 310, 80);
             const groups = {};

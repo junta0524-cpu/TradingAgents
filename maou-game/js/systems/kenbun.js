@@ -70,8 +70,23 @@
     }
   }
 
+  // カーソルを合わせたときに出す説明（言霊：効き目・相手・使える所／品：効き目か強さ・説明）
+  const USE = { battle: '戦いの中で', both: '戦いでも移動中でも', field: '移動中に' };
+  // inBattle：戦いの中で出すとき（短く。「どこで使えるか」は出さない）
+  function skillText(k, inBattle) {
+    if (!k) return '';
+    const ef = k.effect && k.effect.kind === 'story' ? '声を風に乗せて届ける（物語の場所で）' : (effectText(k.effect) || '物語の中で使う');
+    return `${ef}（${TARGET[k.target] || '—'}）。` + (inBattle ? '' : `${USE[k.use] || ''}使う。`) + (k.awaken ? '揺らいだ人の敵に唱えると、目を覚まさせる。' : '');
+  }
+  function itemText(it) {
+    if (!it) return '';
+    if (it.type === 'use') return (it.effect ? `${effectText(it.effect)}（${TARGET[it.target] || ''}）。` : '') + (it.desc || '');
+    const st = [['atk', '攻撃'], ['def', '守り'], ['agi', '素早さ'], ['wis', '賢さ'], ['hp', '最大HP'], ['mp', '最大MP']].filter(([k]) => it[k]).map(([k, n]) => `${n}+${it[k]}`).join(' ');
+    return [st, G.equipEffects(it), it.desc].filter(Boolean).join('。');
+  }
+
   G.kenbun = {
-    enemyIds, kotodamaIds, itemIds, placesOf, effectText, TARGET, sync,
+    enemyIds, kotodamaIds, itemIds, placesOf, effectText, TARGET, sync, skillText, itemText,
     load,
     // 戦いで出会った
     meet(ids) { const d = load(); ids.forEach(id => { d.e[id] = d.e[id] || [1, 0, 0]; }); save(d); },
