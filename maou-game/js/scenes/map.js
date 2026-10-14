@@ -225,6 +225,9 @@
         // 話すと場面が流れる人（doneFlag が立ったあとは、ふつうの会話）
         if (d.event && !(d.doneFlag && G.flags.get(d.doneFlag))) { G.event.run(d.event); return; }
         G.message.show(d.talk || ['……。'], () => {
+          // ギルドの受付：済んだ依頼をまとめて報告する（js/systems/requests.js）
+          const reported = d.requestDesk && G.state.requests ? G.requests.report() : [];
+          if (reported.length) { G.sound.se('chest'); G.message.show(reported); return; }
           if (d.shop) G.shop.open(d.shop);
           else if (d.inn) G.shop.inn(done => { sleeping = done; fadeDir = 1; });
         });
@@ -237,7 +240,7 @@
       if (sign) { G.message.show(sign.text); return; }
       // 調べると場面が流れる場所
       const spot = (map.spots || []).find(o => o.x === fx && o.y === fy && G.flags.check(o));
-      if (spot) { if (spot.event) G.event.run(spot.event); else G.message.show(spot.text); return; }
+      if (spot) { if (spot.board) G.scenes.openRequestBoard(); else if (spot.event) G.event.run(spot.event); else G.message.show(spot.text); return; }
       if (tile && tile.check) G.message.show(tile.check);
     }
 

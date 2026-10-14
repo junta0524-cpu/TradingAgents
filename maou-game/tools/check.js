@@ -496,6 +496,35 @@ const { chromium } = require('playwright');
   expect('目覚めさせる：揺らぎ・心鎮め・数・経験値半分・品・名呼び', aw, 'false | true | true | （腕章の兵Ａは、武器を下ろした） | 0/true/1/53 | false:true | true | kotomuke_tama/0 | true:true');
   expect('目覚めさせられる人の敵（腕章・巡回・槍・弓・追手・護衛・残党）', await ev(() => Object.keys(GAME.DATA.enemies).filter(k => GAME.DATA.enemies[k].awaken).sort().join()), 'ch2_yari,ch2_yumi,goei,junkai,otte,wansho,zantou');
   expect('8・9章の人間界の地図に巡回の兵', await ev(() => GAME.DATA.maps.world_ningen.encounter.byChapter[8].some(g => g.includes('junkai'))), true);
+  // ギルドの寄り道の依頼：掲示板で受け、倒す・持ってくる・目覚めさせる・主を倒すで済み、受付で報告するとごほうび
+  const rq = await ev(() => {
+    const keep = JSON.stringify({ ch: GAME.state.chapter, c: GAME.state.copper, items: GAME.state.items, rq: GAME.state.requests || null, aw: GAME.state.awakened || 0, flags: GAME.flags.data });
+    const out = [];
+    GAME.state.chapter = 5; GAME.state.requests = {}; GAME.state.awakened = 0;
+    out.push(GAME.requests.board().map(r => r.id).join());
+    const R = GAME.requests, inu = R.byId('inu'), kusuri = R.byId('kusuri'), koke = R.byId('koke');
+    out.push(R.status(inu) + '/' + R.accept('inu') + '/' + R.status(inu) + '/' + R.accept('inu'));
+    const st = GAME.battle.create(GAME.party.active(), ['dog', 'dog', 'dog', 'dog', 'dog', 'dog']); st.enemies.forEach(e => { e.hp = 0; });
+    st.enemies[0].awakened = true;   // 目覚めさせた敵は数えない
+    out.push(R.onBattle(st.enemies).length + ':' + R.progress(inu).n);
+    st.enemies[0].awakened = false; out.push(R.onBattle([st.enemies[0]]).join() + ':' + R.status(inu));
+    R.accept('kusuri'); GAME.state.items = GAME.state.items.filter(x => x.id !== 'kizugusuri'); GAME.party.addItem('kizugusuri', 4);
+    R.accept('koke'); GAME.flags.set('gm:hijiri_deep:nushi');
+    const c0 = GAME.state.copper, lines = R.report();
+    out.push(lines.length + ':' + (GAME.state.copper - c0) + ':' + (GAME.state.items.find(x => x.id === 'kizugusuri') || { count: 0 }).count + ':' + [inu, kusuri, koke].map(R.status).join());
+    GAME.state.chapter = 8; R.accept('mezame1'); GAME.state.awakened = 2; out.push(R.status(R.byId('mezame1'))); GAME.state.awakened = 3; out.push(R.status(R.byId('mezame1')));
+    const k = JSON.parse(keep);
+    Object.assign(GAME.state, { chapter: k.ch, copper: k.c, items: k.items, requests: k.rq, awakened: k.aw }); GAME.flags.data = k.flags;
+    return out.join(' | ');
+  });
+  expect('ギルドの依頼：受ける・数える・報告・ごほうび', rq, 'inu,kusuri,kumo,koke | open/true/active/false | 0:5 | 野犬の群れ:ready | 3:410:4:claimed,claimed,claimed | active | ready');
+  expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
+  await ev(() => { window.__ch = GAME.state.chapter; GAME.state.chapter = 5; });
+  await placeAt('minamo_guild', 12, 2, 'up'); await wait(300); await key('KeyZ', 400);
+  expect('ギルドの掲示板（5章から）', await scenes(), 'マップ > 掲示板');
+  await shot('96_request_board');
+  await key('KeyX', 200);
+  await ev(() => { GAME.state.chapter = window.__ch; });
 
   // ===== フェーズ5：ベル専用のしくみ =====
   await ev(() => { GAME.party.newGame(); GAME.rng.setFixed(true); });

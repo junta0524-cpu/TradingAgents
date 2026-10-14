@@ -290,6 +290,8 @@
         const item = G.DATA.items[r.drop];
         ev.push({ type: 'msg', text: `${st.lastKilled.name}は、${item ? item.name : r.drop}を落としていった。` });
       }
+      // 寄り道の依頼（倒した数）
+      G.requests.onBattle(enemies).forEach(t => ev.push({ type: 'msg', text: `（依頼「${t}」の条件を満たした。ギルドの受付へ）` }));
       // 目覚めさせた人の数
       const woke = enemies.filter(e => e.awakened).length;
       if (woke) ev.push({ type: 'msg', text: `${woke}人が、目を覚ました。（これまでに${G.state.awakened}人）` });
