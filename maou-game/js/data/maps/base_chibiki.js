@@ -44,7 +44,7 @@
   };
 
   G.DATA.maps.chibiki_tower = {
-    name: "チビキ岩の見張り台　見張り台の詰所",
+    name: "チビキ岩　詰所",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -70,7 +70,7 @@
   };
 
   G.DATA.maps.chibiki_r1 = {
-    name: "チビキ岩の見張り台　見張りの寝床",
+    name: "チビキ岩　見張りの寝床",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

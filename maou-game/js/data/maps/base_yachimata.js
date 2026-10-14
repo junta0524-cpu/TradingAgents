@@ -55,7 +55,7 @@
   };
 
   G.DATA.maps.yachimata_inn = {
-    name: "宿場町ヤチマタ　ヤチマタの大宿",
+    name: "ヤチマタ　大宿",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -82,7 +82,7 @@
   };
 
   G.DATA.maps.yachimata_shop = {
-    name: "宿場町ヤチマタ　茶屋",
+    name: "ヤチマタ　茶屋",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -109,7 +109,7 @@
   };
 
   G.DATA.maps.yachimata_r1 = {
-    name: "宿場町ヤチマタ　馬宿",
+    name: "ヤチマタ　馬宿",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -135,7 +135,7 @@
   };
 
   G.DATA.maps.yachimata_r2 = {
-    name: "宿場町ヤチマタ　旅籠の主の家",
+    name: "ヤチマタ　旅籠の主の家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -161,7 +161,7 @@
   };
 
   G.DATA.maps.yachimata_r3 = {
-    name: "宿場町ヤチマタ　道祖神の祠守の家",
+    name: "ヤチマタ　祠守の家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

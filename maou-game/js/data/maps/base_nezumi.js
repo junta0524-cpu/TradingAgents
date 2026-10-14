@@ -44,7 +44,7 @@
   };
 
   G.DATA.maps.nezumi_r1 = {
-    name: "ネズミの抜け穴　穴の奥の住まい",
+    name: "抜け穴　穴の奥の住まい",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -70,7 +70,7 @@
   };
 
   G.DATA.maps.nezumi_r2 = {
-    name: "ネズミの抜け穴　貯えの穴",
+    name: "抜け穴　貯えの穴",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

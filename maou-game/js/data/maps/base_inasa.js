@@ -49,7 +49,7 @@
   };
 
   G.DATA.maps.inasa_inn = {
-    name: "港町イナサ　浜の宿",
+    name: "イナサ　浜の宿",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -75,7 +75,7 @@
   };
 
   G.DATA.maps.inasa_shop = {
-    name: "港町イナサ　イナサの店",
+    name: "イナサ　イナサの店",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -101,7 +101,7 @@
   };
 
   G.DATA.maps.inasa_amimoto = {
-    name: "港町イナサ　網元の家",
+    name: "イナサ　網元の家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -127,7 +127,7 @@
   };
 
   G.DATA.maps.inasa_r1 = {
-    name: "港町イナサ　網干しの小屋",
+    name: "イナサ　網干しの小屋",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

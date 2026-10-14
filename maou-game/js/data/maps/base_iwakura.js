@@ -49,7 +49,7 @@
   };
 
   G.DATA.maps.iwakura_hall = {
-    name: "イワクラ城　イワクラ城の広間",
+    name: "イワクラ城　広間",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

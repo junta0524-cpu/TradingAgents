@@ -49,7 +49,7 @@
   };
 
   G.DATA.maps.ukihashi_post = {
-    name: "関所の町ウキハシ　関所の詰所",
+    name: "ウキハシ　関所の詰所",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -75,7 +75,7 @@
   };
 
   G.DATA.maps.ukihashi_r1 = {
-    name: "関所の町ウキハシ　渡し守の家",
+    name: "ウキハシ　渡し守の家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -101,7 +101,7 @@
   };
 
   G.DATA.maps.ukihashi_inn = {
-    name: "関所の町ウキハシ　関所前の宿",
+    name: "ウキハシ　関所前の宿",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -127,7 +127,7 @@
   };
 
   G.DATA.maps.ukihashi_shop = {
-    name: "関所の町ウキハシ　関所の店",
+    name: "ウキハシ　関所の店",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -153,7 +153,7 @@
   };
 
   G.DATA.maps.ukihashi_r2 = {
-    name: "関所の町ウキハシ　川漁師の家",
+    name: "ウキハシ　川漁師の家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

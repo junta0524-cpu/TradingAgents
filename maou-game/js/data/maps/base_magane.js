@@ -48,7 +48,7 @@
   };
 
   G.DATA.maps.magane_r1 = {
-    name: "鉱夫村マガネ　坑夫の家",
+    name: "マガネ　坑夫の家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -74,7 +74,7 @@
   };
 
   G.DATA.maps.magane_inn = {
-    name: "鉱夫村マガネ　マガネの宿",
+    name: "マガネ　坑夫の宿",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -101,7 +101,7 @@
   };
 
   G.DATA.maps.magane_shop = {
-    name: "鉱夫村マガネ　マガネの道具屋",
+    name: "マガネ　道具屋",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -127,7 +127,7 @@
   };
 
   G.DATA.maps.magane_r2 = {
-    name: "鉱夫村マガネ　鍛冶小屋",
+    name: "マガネ　鍛冶小屋",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

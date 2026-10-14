@@ -48,7 +48,7 @@
   };
 
   G.DATA.maps.kukunochi_r1 = {
-    name: "森の村ククノチ　薬師見習いの家",
+    name: "ククノチ　薬師見習いの家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -74,7 +74,7 @@
   };
 
   G.DATA.maps.kukunochi_inn = {
-    name: "森の村ククノチ　樹上の宿",
+    name: "ククノチ　樹上の宿",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -100,7 +100,7 @@
   };
 
   G.DATA.maps.kukunochi_shop = {
-    name: "森の村ククノチ　森の薬屋",
+    name: "ククノチ　森の薬屋",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
@@ -126,7 +126,7 @@
   };
 
   G.DATA.maps.kukunochi_r2 = {
-    name: "森の村ククノチ　弓作りの家",
+    name: "ククノチ　弓作りの家",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

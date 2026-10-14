@@ -48,7 +48,7 @@
   };
 
   G.DATA.maps.ohabari_hall = {
-    name: "オハバリ城　オハバリ城の大広間",
+    name: "オハバリ城　大広間",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [
