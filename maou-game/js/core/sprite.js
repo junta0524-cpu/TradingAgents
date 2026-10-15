@@ -20,6 +20,15 @@
     return cv;
   }
 
+  // 作った敵の絵（js/data/art.js の data URI）。読み込みが済むまでは null（そのあいだは型紙の絵）
+  const arts = {};
+  function artImage(id) {
+    const src = G.DATA && G.DATA.art && G.DATA.art.enemies && G.DATA.art.enemies[id];
+    if (!src) return null;
+    if (!arts[id]) { arts[id] = new Image(); arts[id].src = src; }
+    return arts[id].complete && arts[id].naturalWidth ? arts[id] : null;
+  }
+
   // 歩きの絵の並び：立ち → 一歩目 → 立ち → 二歩目
   const CYCLE = [0, 1, 0, 2];
 
@@ -97,11 +106,19 @@
       const step = moving ? CYCLE[Math.floor(walk / 8) % 4] : 0;
       ctx.drawImage(person(lookId, dir, step), Math.round(x), Math.round(y));
     },
-    // 敵を scale 倍に拡大して描く（ドットはぼかさない）
+    // 敵を scale 倍に拡大して描く（ドットはぼかさない）。作った絵（js/data/art.js）があればそちらを同じ大きさの枠に描く
     drawEnemy(ctx, id, x, y, scale) {
+      const art = artImage(id), size = T * scale;
+      if (art) {
+        ctx.imageSmoothingEnabled = size < art.width;   // 縮めるときだけ少しなめらかに
+        ctx.drawImage(art, Math.round(x), Math.round(y), size, size);
+        ctx.imageSmoothingEnabled = false;
+        return;
+      }
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(enemyCanvas(id), Math.round(x), Math.round(y), T * scale, T * scale);
+      ctx.drawImage(enemyCanvas(id), Math.round(x), Math.round(y), size, size);
     },
+    hasArt: id => !!artImage(id),
     drawObject(ctx, kind, x, y) {
       if (!objCache[kind]) objCache[kind] = OBJECTS[kind]();
       ctx.drawImage(objCache[kind], Math.round(x), Math.round(y));

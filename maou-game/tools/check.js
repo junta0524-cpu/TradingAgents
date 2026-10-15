@@ -597,6 +597,8 @@ const { chromium } = require('playwright');
   await shot('97_kenbun');
   await key('KeyX', 200);
 
+  // 作った敵の絵（js/data/art.js）：どれも敵の一覧にあり、読み込めて64×64
+  expect('作った敵の絵：敵の一覧にあり、読み込める', await ev(() => Object.keys(GAME.DATA.art.enemies).filter(id => !GAME.DATA.enemies[id] || !GAME.sprite.hasArt(id)).join() || 'なし'), 'なし');
   // 寄り道の拠点（js/data/maps/base_*.js）：地図から入れ、戸から部屋へ入れ、町の人の頼みごとが正しく置かれている
   expect('拠点：地図の出入口・部屋の出入口がつながる', await ev(() => {
     const bad = [];
