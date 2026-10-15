@@ -232,12 +232,16 @@
           return;
         }
         // 寄り道の頼みごと（js/systems/quests.js）：届け先の人なら預かった物を渡す／頼む人なら頼みごとの話
+        // 条件つきのひと言（talkWhen：[{ 条件…, talk }]。上から最初に合うもの）→ クリア後（13章）の talkAfter → ふつうの talk
+        const when = (d.talkWhen || []).find(w => G.flags.check(w));
+        const special = (when && when.talk) || (G.state.chapter === 13 && d.talkAfter);
         if (G.quests.receive(mapId, d.id)) return;
-        if (d.quest && G.quests.talk(d.quest)) return;
+        // 頼みごとを済ませたあとは、条件つきのひと言のほうを話す
+        const questDone = d.quest && G.quests.byId(d.quest) && G.quests.status(G.quests.byId(d.quest)) === 'claimed';
+        if (d.quest && !(special && questDone) && G.quests.talk(d.quest)) return;
         // 話すと場面が流れる人（doneFlag が立ったあとは、ふつうの会話）
         if (d.event && !(d.doneFlag && G.flags.get(d.doneFlag))) { G.event.run(d.event); return; }
-        // クリア後（13章）は、支配が解けたあとのひと言（talkAfter）があればそちら
-        const said = (G.state.chapter === 13 && d.talkAfter) || d.talk;
+        const said = special || d.talk;
         G.message.show(said || ['……。'], () => {
           // ギルドの受付：済んだ依頼をまとめて報告する（js/systems/requests.js）
           const reported = d.requestDesk && G.state.requests ? G.requests.report() : [];

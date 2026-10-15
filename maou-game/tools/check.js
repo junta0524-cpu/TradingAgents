@@ -702,6 +702,24 @@ const { chromium } = require('playwright');
   };
   expect('拠点：クリア後はひと言が替わる（9章／13章）', `${(await saidAt(9)).includes('止められた')}/${(await saidAt(13)).includes('触れが解けて')}`, 'true/true');
   expect('拠点：クリア後のひと言がある人', await ev(() => Object.values(GAME.DATA.maps).reduce((n, m) => n + (m.npcs || []).filter(x => x.talkAfter).length, 0)), 8);
+  // タカマの社守（頼む人）：頼みを済ませたあとはクリア後のひと言、調和の光を授かると五つ目の紋の話
+  expect('拠点：社守のひと言（クリア後／調和の光のあと）', await ev(() => {
+    const keep = JSON.stringify({ q: GAME.state.quests || null, ch: GAME.state.chapter }), m = GAME.party.member('oonamuchi'), kd = m.kotodama.slice();
+    const out = [];
+    GAME.state.chapter = 13; GAME.state.quests = { takama_hoshi: { s: 'claimed' } };
+    m.kotodama = kd.filter(k => k !== 'chouwa');
+    out.push(GAME.flags.check(GAME.DATA.maps.takama_shrine.npcs[0].talkWhen[0]));
+    m.kotodama = kd.concat('chouwa');
+    out.push(GAME.flags.check(GAME.DATA.maps.takama_shrine.npcs[0].talkWhen[0]));
+    m.kotodama = kd; const k = JSON.parse(keep); GAME.state.quests = k.q; GAME.state.chapter = k.ch;
+    return out.join('/');
+  }), 'false/true');
+  await page.evaluate(() => { GAME.state.chapter = 13; GAME.state.quests = { takama_hoshi: { s: 'claimed' } }; window.__said = null; const o = GAME.message.show; GAME.message._orig = o;
+    GAME.message.show = (l, f) => { if (!window.__said) window.__said = [].concat(l).map(e => (typeof e === 'string' ? e : e.text)).join(''); return o.call(GAME.message, l, f); }; });
+  await placeAt('takama_shrine', 5, 3, 'up');
+  await key('KeyZ', 200);
+  expect('拠点：頼みを済ませた社守は、クリア後のひと言', await ev(() => { GAME.message.show = GAME.message._orig; GAME.state.quests = {}; return (window.__said || '').includes('彫り直して'); }), true);
+  await closeMessages();
   // 章が来ていないと、ふつうの会話
   expect('頼みごと：章の前はふつうの会話', await ev(() => { GAME.state.chapter = 5; return GAME.quests.talk('magane_fumi'); }), false);
   await closeMessages();
