@@ -119,6 +119,7 @@
       ctx.drawImage(enemyCanvas(id), Math.round(x), Math.round(y), size, size);
     },
     hasArt: id => !!artImage(id),
+    preloadArt() { Object.keys((G.DATA.art && G.DATA.art.enemies) || {}).forEach(artImage); },
     drawObject(ctx, kind, x, y) {
       if (!objCache[kind]) objCache[kind] = OBJECTS[kind]();
       ctx.drawImage(objCache[kind], Math.round(x), Math.round(y));

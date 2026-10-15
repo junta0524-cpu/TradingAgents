@@ -54,6 +54,7 @@
 
   window.addEventListener('error', e => { if (!crashed) { crashed = e.message; drawCrash(); } });
 
+  G.sprite.preloadArt();   // 作った絵（js/data/art.js）を先に読み込んでおく
   G.scene.change(G.scenes.title());
   requestAnimationFrame(loop);
 })();
