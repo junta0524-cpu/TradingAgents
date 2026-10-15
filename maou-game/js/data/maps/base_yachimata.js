@@ -180,7 +180,7 @@
       { x: 6, y: 8, to: "yachimata", tx: 8, ty: 13, dir: 'down' },
     ],
     npcs: [
-      { id: "yachimata_r3_keeper", look: "elder", x: 8, y: 5, dir: "left", move: "still", talk: ["「道の分かれ目には、道を守る神がいると言われておった」", "「神を拝むのは、王都の触れで止められた。それでも、わしは毎朝、石を拭く」"] },
+      { id: "yachimata_r3_keeper", look: "elder", x: 8, y: 5, dir: "left", move: "still", talk: ["「道の分かれ目には、道を守る神がいると言われておった」", "「神を拝むのは、王都の触れで止められた。それでも、わしは毎朝、石を拭く」"], talkAfter: ["「触れが解けてな。今朝は、わしのほかにも、石を拭く者がおった」", "「道の神さまも、さぞ、にぎやかで驚いておられよう」"] },
     ],
     chests: [],
     signs: [],

@@ -691,6 +691,17 @@ const { chromium } = require('playwright');
     GAME.quests.talk(q.id); return a + '/' + b + '/' + GAME.quests.status(q) + '/' + GAME.party.count('kizugusuri');
   }), 'active/ready/claimed/1');
   await closeMessages();
+  // クリア後（13章）は、支配が解けたあとのひと言（talkAfter）に替わる
+  const saidAt = async (ch) => {
+    await page.evaluate(ch => { GAME.state.chapter = ch; window.__said = null; const o = GAME.message.show; GAME.message._orig = o;
+      GAME.message.show = (l, f) => { if (!window.__said) window.__said = [].concat(l).map(e => (typeof e === 'string' ? e : e.text)).join(''); return o.call(GAME.message, l, f); }; }, ch);
+    await placeAt('yachimata_r3', 7, 5, 'right');
+    await key('KeyZ', 200);
+    const t = await ev(() => { GAME.message.show = GAME.message._orig; return window.__said || ''; });
+    await closeMessages(); return t;
+  };
+  expect('拠点：クリア後はひと言が替わる（9章／13章）', `${(await saidAt(9)).includes('止められた')}/${(await saidAt(13)).includes('触れが解けて')}`, 'true/true');
+  expect('拠点：クリア後のひと言がある人', await ev(() => Object.values(GAME.DATA.maps).reduce((n, m) => n + (m.npcs || []).filter(x => x.talkAfter).length, 0)), 8);
   // 章が来ていないと、ふつうの会話
   expect('頼みごと：章の前はふつうの会話', await ev(() => { GAME.state.chapter = 5; return GAME.quests.talk('magane_fumi'); }), false);
   await closeMessages();

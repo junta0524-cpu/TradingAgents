@@ -39,7 +39,7 @@
     npcs: [
       { id: "magane_miner", look: "dwarf", x: 14, y: 4, dir: "left", move: "still", quest: "magane_tokage", talk: ["「竪坑は、もう二十年も前に閉じた。鉄は出るが、人が出てこられなくなってな」"] },
       { id: "magane_kid", look: "kid_ear", x: 8, y: 6, dir: "down", move: "wander", talk: ["「ぼく、大きくなったら坑夫になるんだ」", "「父ちゃんの手、ごつごつで、あったかいんだよ」"] },
-      { id: "magane_woman", look: "villager", x: 15, y: 9, dir: "up", move: "still", talk: ["「炉ヶ岳の里へ鉄を運ぶ荷車が、朝早くに出ていくの」", "「王都に納める数が、年ごとに増えてね。坑夫たちは、夜も掘っているのよ」"] },
+      { id: "magane_woman", look: "villager", x: 15, y: 9, dir: "up", move: "still", talk: ["「炉ヶ岳の里へ鉄を運ぶ荷車が、朝早くに出ていくの」", "「王都に納める数が、年ごとに増えてね。坑夫たちは、夜も掘っているのよ」"], talkAfter: ["「王都に納める数の触れが、取り消されたの」", "「坑夫たちも、夜は家に帰って眠れるようになったわ」"] },
     ],
     chests: [],
     signs: [

@@ -39,7 +39,7 @@
       { x: 13, y: 15, to: "world_ningen", tx: 21, ty: 14, dir: "down" },
     ],
     npcs: [
-      { id: "ukihashi_gate1", look: "guard", x: 11, y: 4, dir: "down", move: "still", talk: ["「橋の向こうへ渡るなら、札を見せてもらう。……冒険者か。通っていい」", "「亜人は、札のほかに身元の書付もいる。決まりでな。……わしが決めたわけではない」"] },
+      { id: "ukihashi_gate1", look: "guard", x: 11, y: 4, dir: "down", move: "still", talk: ["「橋の向こうへ渡るなら、札を見せてもらう。……冒険者か。通っていい」", "「亜人は、札のほかに身元の書付もいる。決まりでな。……わしが決めたわけではない」"], talkAfter: ["「書付の決まりは、なくなった。札ひとつで、誰でも渡れる」", "「……もともと、橋は、渡るためにあるものだからな」"] },
       { id: "ukihashi_gate2", look: "guard", x: 14, y: 9, dir: "up", move: "still", quest: "ukihashi_inoshishi", talk: ["「川の向こうから、野の獣が橋を渡ってくることがある。気をつけてな」"] },
       { id: "ukihashi_woman", look: "villager", x: 7, y: 13, dir: "up", move: "wander", talk: ["「橋が架かる前は、渡し舟だったんですって」"] },
     ],

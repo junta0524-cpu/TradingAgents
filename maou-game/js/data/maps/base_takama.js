@@ -63,7 +63,7 @@
       { x: 6, y: 8, to: "takama", tx: 5, ty: 10, dir: 'down' },
     ],
     npcs: [
-      { id: "takama_shrine_priest", look: "elder", x: 5, y: 2, dir: "down", move: "still", quest: "takama_hoshi", talk: ["「この丘は、天に一番近い場所だと言われておった」", "「社の紋は、王都の役人に削られた。それでも、空を仰ぐことまでは、止められん」"] },
+      { id: "takama_shrine_priest", look: "elder", x: 5, y: 2, dir: "down", move: "still", quest: "takama_hoshi", talk: ["「この丘は、天に一番近い場所だと言われておった」", "「社の紋は、王都の役人に削られた。それでも、空を仰ぐことまでは、止められん」"], talkAfter: ["「削られた紋を、村の者たちと少しずつ彫り直しておる」", "「五つ目の紋の形だけは、誰も覚えておらなんだ。……それでも、空は、ちゃんと見ておられる」"] },
     ],
     chests: [],
     signs: [],

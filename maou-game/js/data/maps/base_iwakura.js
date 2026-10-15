@@ -39,7 +39,7 @@
       { x: 13, y: 15, to: "world_ningen", tx: 13, ty: 7, dir: "down" },
     ],
     npcs: [
-      { id: "iwakura_guard1", look: "guard", x: 11, y: 5, dir: "down", move: "still", talk: ["「城主さまは、もうずいぶん前から王都に住んでおられる。ここを守るのは、わしら年寄りの衛士だけだ」"] },
+      { id: "iwakura_guard1", look: "guard", x: 11, y: 5, dir: "down", move: "still", talk: ["「城主さまは、もうずいぶん前から王都に住んでおられる。ここを守るのは、わしら年寄りの衛士だけだ」"], talkAfter: ["「腕章を外して帰ってきた若い者が、昔のように笑うようになった」", "「少し痩せてな。だが、目が、ちゃんとこっちを見ておる」"] },
       { id: "iwakura_gardener", look: "elder", x: 14, y: 8, dir: "left", move: "still", quest: "iwakura_ido", talk: ["「この井戸は、城ができる前からあったそうな」"] },
       { id: "iwakura_kid", look: "child", x: 6, y: 13, dir: "right", move: "wander", talk: ["「お城の上から、王都の白い塔が見えるんだって」"] },
     ],
@@ -172,7 +172,7 @@
       { x: 6, y: 8, to: "iwakura", tx: 21, ty: 13, dir: 'down' },
     ],
     npcs: [
-      { id: "iwakura_r1_scribe", look: "elder", x: 8, y: 5, dir: "left", move: "still", talk: ["「この城の記録は、紙が脆くなって読めないものも多い」", "「神々の名の出てくる巻物は、王都の役人が持っていった。残ったのは、米と税の帳面ばかりだ」"] },
+      { id: "iwakura_r1_scribe", look: "elder", x: 8, y: 5, dir: "left", move: "still", talk: ["「この城の記録は、紙が脆くなって読めないものも多い」", "「神々の名の出てくる巻物は、王都の役人が持っていった。残ったのは、米と税の帳面ばかりだ」"], talkAfter: ["「王都の役人が持っていった巻物が、少しずつ戻ってきておる」", "「書き写す手が、足りんほどだ。……ありがたい忙しさよ」"] },
     ],
     chests: [],
     signs: [],

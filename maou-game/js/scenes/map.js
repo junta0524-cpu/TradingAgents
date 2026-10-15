@@ -236,7 +236,9 @@
         if (d.quest && G.quests.talk(d.quest)) return;
         // 話すと場面が流れる人（doneFlag が立ったあとは、ふつうの会話）
         if (d.event && !(d.doneFlag && G.flags.get(d.doneFlag))) { G.event.run(d.event); return; }
-        G.message.show(d.talk || ['……。'], () => {
+        // クリア後（13章）は、支配が解けたあとのひと言（talkAfter）があればそちら
+        const said = (G.state.chapter === 13 && d.talkAfter) || d.talk;
+        G.message.show(said || ['……。'], () => {
           // ギルドの受付：済んだ依頼をまとめて報告する（js/systems/requests.js）
           const reported = d.requestDesk && G.state.requests ? G.requests.report() : [];
           if (reported.length) { G.sound.se('chest'); G.message.show(reported); return; }
