@@ -1,5 +1,6 @@
 // このファイルの役目：会話やお知らせの文章を、画面下のウィンドウに1文字ずつ表示する。
 // 決定キーで一気に表示、もう一度で次へ。▼が点滅。Shiftを押している間は早送り。設定で文字を大きくできる（窓も少し高くなる）。
+// 話し手に顔グラ（js/data/art.js）があれば、窓の左に顔を出し、文はその右に寄せる。
 // 使い方：GAME.message.show([{ name: 'ベル', text: '……' }, '名前なしの文'], 終わったときの処理)
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -12,16 +13,18 @@
   const boxOf = () => (large() ? BOX_LARGE : BOX_NORMAL);
   const sizeOf = () => (large() ? G.DATA.balance.TEXT_SIZE_LARGE : null);
   const lineH = () => (large() ? Math.round(G.DATA.balance.TEXT_SIZE_LARGE * 1.4) : G.renderer.LINE_HEIGHT);
-  const FAST_WAIT = 6;  // 早送り中、全文が出てから次へ進むまでのコマ数
+  const FAST_WAIT = 6;
+  const FACE = 64, FACE_GAP = 8;   // 顔グラの大きさと、文との間  // 早送り中、全文が出てから次へ進むまでのコマ数
 
   // 入力を「ページ（3行ずつ）」に分ける
   function toPages(list) {
     const r = G.renderer, pages = [], BOX = boxOf();
     list.forEach(entry => {
       const e = typeof entry === 'string' ? { text: entry } : entry;
-      const lines = r.wrap(e.text, BOX.w - PAD * 2, sizeOf());
+      const face = G.sprite.hasFace(e.name);
+      const lines = r.wrap(e.text, BOX.w - PAD * 2 - (face ? FACE + FACE_GAP : 0), sizeOf());
       for (let i = 0; i < lines.length; i += LINES_PER_PAGE) {
-        pages.push({ name: e.name || '', lines: lines.slice(i, i + LINES_PER_PAGE) });
+        pages.push({ name: e.name || '', face, lines: lines.slice(i, i + LINES_PER_PAGE) });
       }
     });
     return pages;
@@ -73,11 +76,18 @@
           r.text(p.name, BOX.x + 10, BOX.y - 17, '#ffd866');
         }
         G.ui.drawWindow(BOX.x, BOX.y, BOX.w, BOX.h);
+        let tx = BOX.x + PAD;
+        if (p.face) {   // 顔グラ：窓の左、縦はまん中
+          const img = G.sprite.faceOf(p.name), fy = BOX.y + Math.round((BOX.h - FACE) / 2), ctx = r.ctx;
+          r.rect(BOX.x + 4, fy, FACE, FACE, '#1a1626');
+          if (img) { ctx.imageSmoothingEnabled = false; ctx.drawImage(img, BOX.x + 4, fy, FACE, FACE); }
+          tx = BOX.x + 4 + FACE + FACE_GAP;
+        }
         let left = Math.floor(shown);
         p.lines.forEach((line, i) => {
           const part = line.slice(0, Math.max(0, left));
           left -= line.length;
-          r.text(part, BOX.x + PAD, BOX.y + PAD + i * lineH(), '#fff', 'left', size);
+          r.text(part, tx, BOX.y + PAD + i * lineH(), '#fff', 'left', size);
         });
         if (complete() && G.ui.blinkOn()) {
           r.text('▼', BOX.x + BOX.w / 2, BOX.y + BOX.h - 14, '#fff', 'center');

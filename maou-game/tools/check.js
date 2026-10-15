@@ -599,6 +599,7 @@ const { chromium } = require('playwright');
 
   // 作った敵の絵（js/data/art.js）：どれも敵の一覧にあり、読み込めて64×64
   expect('作った敵の絵：敵の一覧にあり、読み込める', await ev(() => Object.keys(GAME.DATA.art.enemies).filter(id => !GAME.DATA.enemies[id] || !GAME.sprite.hasArt(id)).join() || 'なし'), 'なし');
+  expect('顔グラ：話し手の顔が読み込め、名前のない文には出ない', await ev(() => ['オオナムチ', 'ベル', 'ベルイザナ'].map(n => !!GAME.sprite.faceOf(n)).join() + '/' + GAME.sprite.hasFace('') + '/' + GAME.sprite.hasFace('受付の女')), 'true,true,true/false/false');
   // 寄り道の拠点（js/data/maps/base_*.js）：地図から入れ、戸から部屋へ入れ、町の人の頼みごとが正しく置かれている
   expect('拠点：地図の出入口・部屋の出入口がつながる', await ev(() => {
     const bad = [];

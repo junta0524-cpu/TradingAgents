@@ -22,12 +22,14 @@
 
   // 作った敵の絵（js/data/art.js の data URI）。読み込みが済むまでは null（そのあいだは型紙の絵）
   const arts = {};
-  function artImage(id) {
-    const src = G.DATA && G.DATA.art && G.DATA.art.enemies && G.DATA.art.enemies[id];
+  function loadArt(kind, id) {
+    const src = G.DATA && G.DATA.art && G.DATA.art[kind] && G.DATA.art[kind][id];
     if (!src) return null;
-    if (!arts[id]) { arts[id] = new Image(); arts[id].src = src; }
-    return arts[id].complete && arts[id].naturalWidth ? arts[id] : null;
+    const k = kind + ':' + id;
+    if (!arts[k]) { arts[k] = new Image(); arts[k].src = src; }
+    return arts[k].complete && arts[k].naturalWidth ? arts[k] : null;
   }
+  const artImage = id => loadArt('enemies', id);
 
   // 歩きの絵の並び：立ち → 一歩目 → 立ち → 二歩目
   const CYCLE = [0, 1, 0, 2];
@@ -119,7 +121,10 @@
       ctx.drawImage(enemyCanvas(id), Math.round(x), Math.round(y), size, size);
     },
     hasArt: id => !!artImage(id),
-    preloadArt() { Object.keys((G.DATA.art && G.DATA.art.enemies) || {}).forEach(artImage); },
+    preloadArt() { ['enemies', 'faces'].forEach(kind => Object.keys((G.DATA.art && G.DATA.art[kind]) || {}).forEach(id => loadArt(kind, id))); },
+    // 話し手の名前から顔グラ（なければ null）
+    faceOf(name) { const id = name && G.DATA.art && G.DATA.art.faceNames && G.DATA.art.faceNames[name]; return id ? loadArt('faces', id) : null; },
+    hasFace: name => !!(G.DATA.art && G.DATA.art.faceNames && G.DATA.art.faceNames[name]),
     drawObject(ctx, kind, x, y) {
       if (!objCache[kind]) objCache[kind] = OBJECTS[kind]();
       ctx.drawImage(objCache[kind], Math.round(x), Math.round(y));
