@@ -11,8 +11,8 @@
     start: { x: 11, y: 13, dir: "up" },
     detection: 1,
     rows: [
-      "mmmmmmmmmmmmmmmmmmmmmmmm",
-      "mmmmmmmmm杭杭杭杭杭mmmmmmmmmm",
+      "mmmmmmm:mmmmmmmmmmmmmmmm",
+      "mmmmmmm:m杭杭杭杭杭mmmmmmmmmm",
       "meXXXXeee杭杭R杭杭eeeeXXXXem",
       "meXXDXeeeee::eeeeeXXDXem",
       "meeeeeeeeee::eeeeeeeeeem",
@@ -35,6 +35,7 @@
       { x: 19, y: 11, to: "magane_r2", tx: 5, ty: 7, dir: 'up' },
       { x: 11, y: 14, to: "world_ningen", tx: 8, ty: 10, dir: "down" },
       { x: 12, y: 14, to: "world_ningen", tx: 8, ty: 10, dir: "down" },
+      { x: 7, y: 0, to: "world_ningen", tx: 8, ty: 8, dir: "up" },
     ],
     npcs: [
       { id: "magane_miner", look: "dwarf", x: 14, y: 4, dir: "left", move: "still", quest: "magane_tokage", talk: ["「竪坑は、もう二十年も前に閉じた。鉄は出るが、人が出てこられなくなってな」"] },

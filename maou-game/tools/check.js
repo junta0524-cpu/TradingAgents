@@ -607,8 +607,17 @@ const { chromium } = require('playwright');
     const walk = (m, x, y) => { if (isWarp(m, x, y)) return false; const r = m.rows[y]; const t = r && T[r[x]]; return !!t && !t.solid; };
     const comp = (m, sx, sy) => { const seen = new Set([sx + ',' + sy]), q = [[sx, sy]];
       while (q.length) { const [x, y] = q.pop(); D4.forEach(([dx, dy]) => { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (!seen.has(k) && walk(m, nx, ny)) { seen.add(k); q.push([nx, ny]); } }); } return seen; };
+    // 地図の陸のかたまり。村を通り抜けられる（地図への出口が2か所以上ある）マップは、その出口の着く所どうしをつなぐ
     const main = {};
-    ['world_ningen', 'world_makai'].forEach(w => { let best = new Set(); M[w].rows.forEach((r, y) => [...r].forEach((c, x) => { if (walk(M[w], x, y) && !best.has(x + ',' + y)) { const c2 = comp(M[w], x, y); if (c2.size > best.size) best = c2; } })); main[w] = best; });
+    ['world_ningen', 'world_makai'].forEach(w => {
+      const label = {}, parts = [];
+      M[w].rows.forEach((r, y) => [...r].forEach((c, x) => { if (walk(M[w], x, y) && label[x + ',' + y] == null) { const c2 = comp(M[w], x, y); c2.forEach(k => { label[k] = parts.length; }); parts.push(c2); } }));
+      const up = parts.map((_, i) => i), find = i => (up[i] === i ? i : (up[i] = find(up[i])));
+      Object.values(M).forEach(m => { const ls = (m.warps || []).filter(o => o.to === w).map(o => label[o.tx + ',' + o.ty]).filter(v => v != null); ls.forEach(v => { up[find(v)] = find(ls[0]); }); });
+      const size = {}; parts.forEach((p, i) => { size[find(i)] = (size[find(i)] || 0) + p.size; });
+      const top = +Object.keys(size).sort((a, b) => size[b] - size[a])[0];
+      main[w] = new Set(Object.keys(label).filter(k => find(label[k]) === top));
+    });
     const bad = [];
     Object.entries(M).forEach(([id, m]) => (m.warps || []).forEach(w => {
       const to = M[w.to];
@@ -625,6 +634,9 @@ const { chromium } = require('playwright');
   const inasaOut = await pos();
   await hold('ArrowLeft', 400);
   expect('港町イナサから地図へ出て、歩ける', `${inasaOut}/${(await pos()) !== inasaOut}`, 'world_ningen(22,17)/true');
+  await placeAt('magane', 7, 1, 'up');
+  await hold('ArrowUp', 300);
+  expect('マガネの北の出口から、炉ヶ岳の下の道へ出る', await pos(), 'world_ningen(8,8)');
   // 寄り道の拠点（js/data/maps/base_*.js）：地図から入れ、戸から部屋へ入れ、町の人の頼みごとが正しく置かれている
   expect('拠点：地図の出入口・部屋の出入口がつながる', await ev(() => {
     const bad = [];
