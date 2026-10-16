@@ -34,8 +34,8 @@
       { x: 19, y: 4, to: "inasa_shop", tx: 5, ty: 7, dir: 'up' },
       { x: 5, y: 8, to: "inasa_amimoto", tx: 5, ty: 7, dir: 'up' },
       { x: 20, y: 8, to: "inasa_r1", tx: 5, ty: 7, dir: 'up' },
-      { x: 12, y: 0, to: "world_ningen", tx: 22, ty: 19, dir: "down" },
-      { x: 13, y: 0, to: "world_ningen", tx: 22, ty: 19, dir: "down" },
+      { x: 12, y: 0, to: "world_ningen", tx: 22, ty: 17, dir: "up" },
+      { x: 13, y: 0, to: "world_ningen", tx: 22, ty: 17, dir: "up" },
     ],
     npcs: [
       { id: "inasa_fisher", look: "sailor", x: 10, y: 8, dir: "right", move: "still", quest: "inasa_karasu", talk: ["「鴉のやつら、干した魚を片っ端から持っていきやがる」"] },

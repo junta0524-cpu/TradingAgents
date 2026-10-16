@@ -23,7 +23,11 @@
       'GffffffffffffffffG',
       'GGGGGGGGSSGGGGGGGG',
     ],
-    warps: [],
+    // 下の石段から院の倉庫へ戻る（場面のあとやクリア後に入っても、出られるように）
+    warps: [
+      { x: 8, y: 11, to: 'yasuragi', tx: 21, ty: 3, dir: 'down' },
+      { x: 9, y: 11, to: 'yasuragi', tx: 21, ty: 3, dir: 'down' },
+    ],
     onEnter: [{ event: 'ch9_temple', chapter: 9, unless: 'ch9_temple' }],
     npcs: [],
     chests: [],

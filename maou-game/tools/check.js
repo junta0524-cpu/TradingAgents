@@ -600,6 +600,31 @@ const { chromium } = require('playwright');
   // 作った敵の絵（js/data/art.js）：どれも敵の一覧にあり、読み込めて64×64
   expect('作った敵の絵：敵の一覧にあり、読み込める', await ev(() => Object.keys(GAME.DATA.art.enemies).filter(id => !GAME.DATA.enemies[id] || !GAME.sprite.hasArt(id)).join() || 'なし'), 'なし');
   expect('顔グラ：話し手の顔が読み込め、名前のない文には出ない', await ev(() => ['オオナムチ', 'ベル', 'ベルイザナ'].map(n => !!GAME.sprite.faceOf(n)).join() + '/' + GAME.sprite.hasFace('') + '/' + GAME.sprite.hasFace('受付の女')), 'true,true,true/false/false');
+  // 行き止まり：どの出入口で着いても、地図では本土（いちばん大きな陸）に立ち、ほかのマップではどこかの出口に歩いて届く
+  expect('行き止まりがない（出入口の着く所から歩いて出られる）', await ev(() => {
+    const M = GAME.DATA.maps, T = GAME.DATA.tiles, D4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const isWarp = (m, x, y) => (m.warps || []).some(w => w.x === x && w.y === y);
+    const walk = (m, x, y) => { if (isWarp(m, x, y)) return false; const r = m.rows[y]; const t = r && T[r[x]]; return !!t && !t.solid; };
+    const comp = (m, sx, sy) => { const seen = new Set([sx + ',' + sy]), q = [[sx, sy]];
+      while (q.length) { const [x, y] = q.pop(); D4.forEach(([dx, dy]) => { const nx = x + dx, ny = y + dy, k = nx + ',' + ny; if (!seen.has(k) && walk(m, nx, ny)) { seen.add(k); q.push([nx, ny]); } }); } return seen; };
+    const main = {};
+    ['world_ningen', 'world_makai'].forEach(w => { let best = new Set(); M[w].rows.forEach((r, y) => [...r].forEach((c, x) => { if (walk(M[w], x, y) && !best.has(x + ',' + y)) { const c2 = comp(M[w], x, y); if (c2.size > best.size) best = c2; } })); main[w] = best; });
+    const bad = [];
+    Object.entries(M).forEach(([id, m]) => (m.warps || []).forEach(w => {
+      const to = M[w.to];
+      if (main[w.to]) { if (!main[w.to].has(w.tx + ',' + w.ty)) bad.push(id + '>' + w.to); return; }
+      const c = comp(to, w.tx, w.ty);
+      if (!(to.warps || []).some(o => D4.some(([dx, dy]) => c.has((o.x + dx) + ',' + (o.y + dy))))) bad.push(id + '>' + w.to);
+    }));
+    ['world_ningen', 'world_makai'].forEach(w => M[w].warps.forEach(p => { if (!D4.some(([dx, dy]) => main[w].has((p.x + dx) + ',' + (p.y + dy)))) bad.push(w + ':' + p.to); }));
+    return [...new Set(bad)].join() || 'なし';
+  }), 'なし');
+  await ev(() => { GAME.state.chapter = 6; });
+  await placeAt('inasa', 12, 1, 'up');
+  await hold('ArrowUp', 300);
+  const inasaOut = await pos();
+  await hold('ArrowLeft', 400);
+  expect('港町イナサから地図へ出て、歩ける', `${inasaOut}/${(await pos()) !== inasaOut}`, 'world_ningen(22,17)/true');
   // 寄り道の拠点（js/data/maps/base_*.js）：地図から入れ、戸から部屋へ入れ、町の人の頼みごとが正しく置かれている
   expect('拠点：地図の出入口・部屋の出入口がつながる', await ev(() => {
     const bad = [];
