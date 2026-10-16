@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!--
+  このファイルの役目：ゲームの入口。ダブルクリックで開くと遊べる。
+  画面（canvas）とスマホ用ボタンを置き、JSファイルを決まった順に読み込む。
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>魔王が仲間になりたそうな顔でこちらを見ている</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="screen"><canvas id="game" width="480" height="320"></canvas></div>
+<div id="pad">
+  <div class="dpad">
+    <button data-action="up" class="up">▲</button>
+    <button data-action="left" class="left">◀</button>
+    <button data-action="right" class="right">▶</button>
+    <button data-action="down" class="down">▼</button>
+  </div>
+  <div class="ab">
+    <button data-action="fast" class="f">早</button>
+    <button data-action="cancel" class="b">B</button>
+    <button data-action="ok" class="a">A</button>
+  </div>
+</div>
+
+<!-- 読み込み順が大事。上から順に読まれる。 -->
+<!-- 土台 -->
+<script src="js/core/rng.js"></script>
+<script src="js/core/input.js"></script>
+<script src="js/core/renderer.js"></script>
+<script src="js/core/window.js"></script>
+<script src="js/core/tileset.js"></script>
+<script src="js/core/sprite.js"></script>
+<script src="js/core/backdrop.js"></script>
+<script src="js/core/scene.js"></script>
+<script src="js/core/message.js"></script>
+<script src="js/core/save.js"></script>
+<script src="js/core/sound.js"></script>
+<script src="js/core/debug.js"></script>
+<!-- しくみ -->
+<script src="js/systems/flags.js"></script>
+<script src="js/systems/growth.js"></script>
+<script src="js/systems/party.js"></script>
+<script src="js/systems/status.js"></script>
+<script src="js/systems/ai.js"></script>
+<script src="js/systems/inhibit.js"></script>
+<script src="js/systems/kotodama.js"></script>
+<script src="js/systems/affinity.js"></script>
+<script src="js/systems/shop.js"></script>
+<script src="js/systems/encounter.js"></script>
+<script src="js/systems/gimmick.js"></script>
+<script src="js/systems/battle.js"></script>
+<script src="js/systems/event.js"></script>
+<script src="js/systems/story.js"></script>
+<script src="js/systems/memories.js"></script>
+<script src="js/systems/requests.js"></script>
+<script src="js/systems/quests.js"></script>
+<script src="js/systems/kenbun.js"></script>
+<script src="js/systems/names.js"></script>
+<!-- データ -->
+<script src="js/data/balance.js"></script>
+<script src="js/data/tiles.js"></script>
+<script src="js/data/sprites.js"></script>
+<script src="js/data/art.js"></script>
+<script src="js/data/items.js"></script>
+<script src="js/data/characters.js"></script>
+<script src="js/data/kotodama.js"></script>
+<script src="js/data/status.js"></script>
+<script src="js/data/shops.js"></script>
+<script src="js/data/howtoplay.js"></script>
+<script src="js/data/music.js"></script>
+<script src="js/data/objectives.js"></script>
+<script src="js/data/memories.js"></script>
+<script src="js/data/requests.js"></script>
+<script src="js/data/quests.js"></script>
+<script src="js/data/names.js"></script>
+<script src="js/data/kotoba.js"></script>
+<script src="js/data/rampage.js"></script>
+<script src="js/data/enemies.js"></script>
+<script src="js/data/enemies_part3.js"></script>
+<script src="js/data/enemies_post.js"></script>
+<script src="js/data/enemies_guard.js"></script>
+<script src="js/data/tribes.js"></script>
+<script src="js/data/maps/minamo.js"></script>
+<script src="js/data/maps/rooms_minamo.js"></script>
+<script src="js/data/maps/minamo_guild.js"></script>
+<script src="js/data/maps/minamo_inn.js"></script>
+<script src="js/data/maps/minamo_shop.js"></script>
+<script src="js/data/maps/field_minamo.js"></script>
+<script src="js/data/maps/world_ningen.js"></script>
+<script src="js/data/maps/world_makai.js"></script>
+<script src="js/data/maps/yomi_hani.js"></script>
+<script src="js/data/maps/yomi_market.js"></script>
+<script src="js/data/maps/yomi_palace.js"></script>
+<script src="js/data/maps/yomi_prison.js"></script>
+<script src="js/data/maps/yomi_balcony.js"></script>
+<script src="js/data/maps/hinatano.js"></script>
+<script src="js/data/maps/rooms_hinatano.js"></script>
+<script src="js/data/maps/hijiri_path.js"></script>
+<script src="js/data/maps/hijiri_village.js"></script>
+<script src="js/data/maps/rooms_hijiri.js"></script>
+<script src="js/data/maps/hijiri_hall.js"></script>
+<script src="js/data/maps/hijiri_cave.js"></script>
+<script src="js/data/maps/hijiri_deep.js"></script>
+<script src="js/data/maps/ro_path.js"></script>
+<script src="js/data/maps/ro_mine.js"></script>
+<script src="js/data/maps/ro_village.js"></script>
+<script src="js/data/maps/rooms_ro.js"></script>
+<script src="js/data/maps/kemono_field.js"></script>
+<script src="js/data/maps/kemono_ravine.js"></script>
+<script src="js/data/maps/kuzu_village.js"></script>
+<script src="js/data/maps/rooms_kuzu.js"></script>
+<script src="js/data/maps/saru_hall.js"></script>
+<script src="js/data/maps/amatsu.js"></script>
+<script src="js/data/maps/rooms_amatsu.js"></script>
+<script src="js/data/maps/amatsu_slum.js"></script>
+<script src="js/data/maps/rooms_slum.js"></script>
+<script src="js/data/maps/base_magane.js"></script>
+<script src="js/data/maps/base_iwakura.js"></script>
+<script src="js/data/maps/base_yachimata.js"></script>
+<script src="js/data/maps/base_kukunochi.js"></script>
+<script src="js/data/maps/base_ukihashi.js"></script>
+<script src="js/data/maps/base_takama.js"></script>
+<script src="js/data/maps/base_mizuho.js"></script>
+<script src="js/data/maps/base_inasa.js"></script>
+<script src="js/data/maps/base_yata.js"></script>
+<script src="js/data/maps/base_ohabari.js"></script>
+<script src="js/data/maps/base_hirasaka.js"></script>
+<script src="js/data/maps/base_nezumi.js"></script>
+<script src="js/data/maps/base_chibiki.js"></script>
+<script src="js/data/maps/base_yominohara.js"></script>
+<script src="js/data/maps/base_iwayato.js"></script>
+<script src="js/data/maps/yasuragi.js"></script>
+<script src="js/data/maps/yasuragi_ward.js"></script>
+<script src="js/data/maps/yasuragi_temple.js"></script>
+<script src="js/data/maps/tsunogahara.js"></script>
+<script src="js/data/maps/arashigamine.js"></script>
+<script src="js/data/maps/yomi_sanctum.js"></script>
+<script src="js/data/maps/oana_soko.js"></script>
+<script src="js/data/maps/oana_jou.js"></script>
+<script src="js/data/maps/oana_chuu.js"></script>
+<script src="js/data/maps/tsukuyomi_yashiro.js"></script>
+<!-- 物語（章ごとの場面） -->
+<script src="js/data/story/chapters.js"></script>
+<script src="js/data/story/ch01.js"></script>
+<script src="js/data/story/ch02.js"></script>
+<script src="js/data/story/ch03.js"></script>
+<script src="js/data/story/ch04.js"></script>
+<script src="js/data/story/ch05.js"></script>
+<script src="js/data/story/ch06.js"></script>
+<script src="js/data/story/ch07.js"></script>
+<script src="js/data/story/ch08.js"></script>
+<script src="js/data/story/ch09.js"></script>
+<script src="js/data/story/ch10.js"></script>
+<script src="js/data/story/ch11.js"></script>
+<script src="js/data/story/ch12.js"></script>
+<script src="js/data/story/epilogue.js"></script>
+<script src="js/data/story/postgame.js"></script>
+<!-- 画面 -->
+<script src="js/scenes/settings.js"></script>
+<script src="js/scenes/title.js"></script>
+<script src="js/scenes/memories.js"></script>
+<script src="js/scenes/requestboard.js"></script>
+<script src="js/scenes/kenbun.js"></script>
+<script src="js/scenes/kotoba.js"></script>
+<script src="js/scenes/map.js"></script>
+<script src="js/scenes/fieldmenu.js"></script>
+<script src="js/scenes/battle.js"></script>
+<script src="js/scenes/rampage.js"></script>
+<script src="js/scenes/exposure.js"></script>
+<!-- 起動（必ず最後） -->
+<script src="js/core/main.js"></script>
+</body>
+</html>
