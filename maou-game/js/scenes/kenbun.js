@@ -50,6 +50,7 @@
       } else L.push(['（倒すか目を覚まさせると、強さが分かる）', '#aaa']);
       if (T && G.affinity.known()) { const wk = G.affinity.weakTo(e.tribe); L.push([`弱点：${G.DATA.kotodamaSystems[G.DATA.tribes[wk].sys].short}（${G.DATA.tribes[wk].short}）の構え`, '#9cf']); }
       if (e.awaken) L.push(['弱らせて心鎮め（名呼び）を唱えると、目を覚ます', '#fff4c0']);
+      if (e.hard) L.push(['打撃はほとんど効かず、言霊の傷は効かない。すぐ逃げる。会心の一撃なら届く', '#fff4c0']);
       const pl = G.kenbun.placesOf(id);
       L.push([`出る場所：${pl.length ? pl.join('・') : '物語の戦い'}`, '#ccc']);
       L.push([`倒した ${rec[1]}　目覚めさせた ${rec[2]}`, '#f0e8a0']);

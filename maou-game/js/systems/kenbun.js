@@ -39,6 +39,8 @@
         groups = groups.concat(enc.groups || []);
         Object.values(enc.byChapter || {}).forEach(v => { groups = groups.concat(Array.isArray(v) ? v : []); (v.byLevel || []).forEach(t => { groups = groups.concat(t.groups); }); });
       }
+      ((G.DATA.encounterMore || {})[mid] || []).forEach(o => { groups = groups.concat(o.groups); });   // あとから増やした敵
+      (G.DATA.rares || []).filter(o => o.maps.includes(mid)).forEach(o => { groups = groups.concat(o.groups); });
       if (groups.some(g => g.includes(id))) out.push(m.name || mid);
       (m.gimmicks || []).forEach(g => { if (g.type === 'guardian' && (g.enemies || []).includes(id)) out.push((m.name || mid) + 'の奥'); });
     });
@@ -95,7 +97,7 @@
       const d = load();
       enemies.forEach(e => {
         const r = d.e[e.id] = d.e[e.id] || [1, 0, 0];
-        if (e.awakened) r[2]++; else if (e.hp <= 0) r[1]++;
+        if (e.awakened) r[2]++; else if (e.hp <= 0 && !e.fled) r[1]++;
       });
       save(d);
     },

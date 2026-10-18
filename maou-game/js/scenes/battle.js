@@ -282,6 +282,8 @@
         return;
       }
       if (out === 'lose') { phase = 'gameover'; gameoverTimer = 0; G.sound.jingle('gameover'); return; }
+      // 敵がみな逃げた（白兎など）：ごほうびはない
+      if (enemies.every(e => e.fled)) { play([{ type: 'msg', text: '敵は、みな逃げてしまった。' }], () => { phase = 'result'; }); return; }
       const r = G.battle.rewards(st);
       G.party.addCopper(r.copper);
       G.sound.jingle('victory');   // 勝ったときの短い曲（終わると、戦いのあとでもとの曲へ戻る）

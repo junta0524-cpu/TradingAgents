@@ -91,8 +91,8 @@
       const total = acts.reduce((s, a) => s + a.w, 0);
       let r = G.rng.random() * total, pick = acts[0];
       for (const a of acts) { r -= a.w; if (r < 0) { pick = a; break; } }
-      st.plans[e.key] = pick.type === 'kotodama'
-        ? { type: 'kotodama', id: pick.id }
+      st.plans[e.key] = pick.type === 'kotodama' ? { type: 'kotodama', id: pick.id }
+        : pick.type === 'flee' ? { type: 'flee' }   // 逃げる（白兎など）
         : { type: 'attack', target: pickPartyTarget(st.party) };
     });
   }
@@ -107,6 +107,7 @@
   const hasPerk = (st, perk) => st.party.some(p => p.hp > 0 && (charOf(p).perk === perk || (p.perks || []).includes(perk)));
 
   const aliveEnemies = st => st.enemies.filter(e => e.hp > 0);
+  const isHard = t => t.side === 'enemy' && !!(G.DATA.enemies[t.id] || {}).hard;
   const charOf = m => G.DATA.characters[m.id] || {};
 
   // ベルが、仲間への致命の一撃を止められるか（守り手のしくみ・仕様書 7-2）
@@ -153,6 +154,8 @@
     if (actor.side === 'enemy') {
       const plan = st.plans[actor.key] || { type: 'attack' };
       if (plan.type === 'kotodama') return ev.concat(G.kotodama.castEnemy(actor, plan.id, null, st));
+      // 逃げる：戦いからいなくなる（倒したことにはならず、経験値ももらえない）
+      if (plan.type === 'flee') { actor.hp = 0; actor.fled = true; return ev.concat([{ type: 'msg', text: `${actor.name}は、逃げ出した！` }, { type: 'ko', target: actor }]); }
       // hits：1ターンに何回打つか（2章のタケルは2回）
       const hits = (G.DATA.enemies[actor.id] || {}).hits || 1;
       for (let h = 0; h < hits; h++) {
@@ -218,6 +221,7 @@
     dmg = Math.floor(dmg * aff);
     if (target.defending) dmg = Math.floor(dmg * B().DEFEND_RATE);
     if (target.guard > 0) dmg = 0;
+    if (isHard(target)) dmg = r.crit ? G.DATA.balance.RARE.HARD_CRIT : G.rng.int(0, G.DATA.balance.RARE.HARD_MAX);   // 白兎：打撃がほとんど効かない
     if (r.crit) ev.push({ type: 'msg', text: '会心の一撃！' });
     if (G.affinity.note(aff, actor)) ev.push({ type: 'msg', text: G.affinity.note(aff, actor) });
     if (st.showCalc) {
@@ -250,7 +254,7 @@
     if (!target || target.hp <= 0) target = aliveEnemies(st)[0];
     if (!target) return [];
     const ev = [{ type: 'msg', text: `${actor.name}は、抑えていた力をほんの少し解いた。` }];
-    const dmg = Math.floor(actor.atk * I.FULL_POWER_MULT) + G.rng.int(0, Math.floor(actor.atk / 2));
+    const dmg = isHard(target) ? G.DATA.balance.RARE.HARD_CRIT : Math.floor(actor.atk * I.FULL_POWER_MULT) + G.rng.int(0, Math.floor(actor.atk / 2));
     G.inhibit.drain(I.FULL_POWER);
     applyDamage(st, target, dmg);
     ev.push({ type: 'inhibit' }, { type: 'damage', target, amount: dmg });
@@ -316,8 +320,9 @@
   // 勝ったときのごほうび（経験値は、レベルの上がる仲間で分ける。目覚めさせた敵は AWAKEN.EXP_RATE 倍）
   function rewards(st) {
     const b = B();
-    const exp = Math.floor(st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].exp * (e.awakened ? AW().EXP_RATE : 1), 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1));
-    const copper = Math.floor(st.enemies.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0) * (hasPerk(st, 'copperBoost') ? G.DATA.balance.COPPER_BOOST : 1));
+    const won = st.enemies.filter(e => !e.fled);   // 逃げた敵の分はもらえない
+    const exp = Math.floor(won.reduce((s, e) => s + G.DATA.enemies[e.id].exp * (e.awakened ? AW().EXP_RATE : 1), 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1));
+    const copper = Math.floor(won.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0) * (hasPerk(st, 'copperBoost') ? G.DATA.balance.COPPER_BOOST : 1));
     const alive = st.party.filter(p => p.hp > 0 && !charOf(p).fixed);
     const each = b.EXP_SPLIT ? Math.ceil(exp / Math.max(1, alive.length)) : exp;
     // 落とし物は、最後に倒した敵1体だけが判定
@@ -359,5 +364,5 @@
     return result;
   }
 
-  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike, wavering, tryAwaken, awakenRewards };
+  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike, wavering, tryAwaken, awakenRewards, isHard };
 })();

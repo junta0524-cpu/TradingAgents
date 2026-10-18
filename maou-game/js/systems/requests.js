@@ -56,7 +56,7 @@
         const s = store()[r.id];
         if (r.kind !== 'slay' || !s || s.s !== 'active') return;
         const before = progress(r).done;
-        s.n = (s.n || 0) + enemies.filter(e => e.id === r.enemy && e.hp <= 0 && !e.awakened).length;
+        s.n = (s.n || 0) + enemies.filter(e => e.id === r.enemy && e.hp <= 0 && !e.awakened && !e.fled).length;
         if (!before && progress(r).done) newly.push(r.title);
       });
       return newly;

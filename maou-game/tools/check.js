@@ -637,6 +637,24 @@ const { chromium } = require('playwright');
   await placeAt('magane', 7, 1, 'up');
   await hold('ArrowUp', 300);
   expect('マガネの北の出口から、炉ヶ岳の下の道へ出る', await pos(), 'world_ningen(8,8)');
+  // あとから増やした敵：足した組の敵がいて、白兎は打撃がほとんど効かず、逃げると経験値なし。まれに出会う
+  expect('増やした敵：組の敵がそろい、白兎は硬くて逃げる', await ev(() => {
+    const out = [], bad = [];
+    Object.values(GAME.DATA.encounterMore).forEach(list => list.forEach(o => o.groups.flat().forEach(id => { if (!GAME.DATA.enemies[id]) bad.push(id); })));
+    GAME.DATA.rares.forEach(r => r.groups.flat().forEach(id => { if (!GAME.DATA.enemies[id]) bad.push(id); }));
+    out.push(bad.join() || 'ok');
+    const st = GAME.battle.create(GAME.state.party, ['shirousagi']), e = st.enemies[0], a = st.party.find(m => m.id === 'oonamuchi');
+    let mx = 0; for (let i = 0; i < 200; i++) { e.hp = 3; GAME.battle.act(st, a, { type: 'attack', target: e }); mx = Math.max(mx, 3 - e.hp); }
+    out.push(mx <= GAME.DATA.balance.RARE.HARD_CRIT);
+    e.hp = 3; st.plans[e.key] = { type: 'flee' }; GAME.battle.act(st, e, {});
+    out.push(e.fled + ':' + GAME.battle.outcome(st) + ':' + GAME.battle.rewards(st).exp);
+    const keepCh = GAME.state.chapter, keepMap = GAME.state.mapId, keep = GAME.DATA.rares[0].chance;
+    GAME.state.chapter = 6; GAME.state.mapId = 'ro_path'; GAME.DATA.rares[0].chance = 1; GAME.state.encounterSteps = 1;
+    out.push(GAME.encounter.step(GAME.DATA.maps.ro_path, null)[0]);
+    GAME.DATA.rares[0].chance = keep; GAME.state.chapter = 11; out.push(GAME.encounter.moreFor('world_makai').length > 0);
+    GAME.state.chapter = keepCh; GAME.state.mapId = keepMap;
+    return out.join('/');
+  }), 'ok/true/true:win:0/shirousagi/true');
   // 寄り道の拠点（js/data/maps/base_*.js）：地図から入れ、戸から部屋へ入れ、町の人の頼みごとが正しく置かれている
   expect('拠点：地図の出入口・部屋の出入口がつながる', await ev(() => {
     const bad = [];
@@ -1598,7 +1616,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/11');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/12');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない
