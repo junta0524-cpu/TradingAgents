@@ -28,7 +28,7 @@
       { id: 'takeru', look: 'takeru', x: 2, y: 2, dir: 'down', move: 'still', chapter: 3,
         event: 'ch3_visit', doneFlag: 'ch3_visit',
         talk: ['タケルは、何も言わなかった。ただ、目だけが、揺れていた。'] },
-      { id: 'captive', look: 'soldier', x: 8, y: 1, dir: 'down', move: 'still', chapter: 3, talk: ['……。'] },
+      { id: 'captive', look: 'soldier', x: 8, y: 2, dir: 'down', move: 'still', chapter: 3, talk: ['……。'] },
     ],
     chests: [],
     signs: [],
