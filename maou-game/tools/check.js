@@ -496,7 +496,7 @@ const { chromium } = require('playwright');
     return out.join(' | ');
   });
   expect('目覚めさせる：揺らぎ・心鎮め・数・経験値半分・品・名呼び', aw, 'false | true | true | （腕章の兵Ａは、武器を下ろした） | 0/true/1/53 | false:true | true | kotomuke_tama/0 | true:true');
-  expect('目覚めさせられる人の敵（腕章・巡回・槍・弓・追手・護衛・残党）', await ev(() => Object.keys(GAME.DATA.enemies).filter(k => GAME.DATA.enemies[k].awaken).sort().join()), 'ch2_yari,ch2_yumi,goei,junkai,otte,wansho,zantou');
+  expect('目覚めさせられる人の敵（腕章・巡回・槍・弓・追手・護衛・残党・腕章の術師と騎兵）', await ev(() => Object.keys(GAME.DATA.enemies).filter(k => GAME.DATA.enemies[k].awaken).sort().join()), 'ch2_yari,ch2_yumi,goei,junkai,otte,wansho,wansho_jutsu,wansho_kihei,zantou');
   expect('8・9章の人間界の地図に巡回の兵', await ev(() => GAME.DATA.maps.world_ningen.encounter.byChapter[8].some(g => g.includes('junkai'))), true);
   // ギルドの寄り道の依頼：掲示板で受け、倒す・持ってくる・目覚めさせる・主を倒すで済み、受付で報告するとごほうび
   const rq = await ev(() => {
@@ -1398,7 +1398,7 @@ const { chromium } = require('playwright');
   const blockedMsg = (await scenes()).includes('メッセージ');
   await closeMessages();
   expect('人間界：まだの章の町には入れない（7章で天津京）', `${await pos()}/${blockedMsg}`, 'world_ningen(26,12)/true');
-  expect('章ごとの敵（7章は獣ノ原の敵）', await ev(() => { GAME.state.encounterSteps = 0; GAME.encounter.enabled = true; const g = GAME.encounter.step(GAME.DATA.maps.world_ningen, GAME.DATA.tiles['.']); GAME.encounter.enabled = false; return ['arano_ookami', 'oosasori'].includes(g[0]); }), true);
+  expect('章ごとの敵（7章は獣ノ原の敵）', await ev(() => { GAME.state.encounterSteps = 0; GAME.encounter.enabled = true; const g = GAME.encounter.step(GAME.DATA.maps.world_ningen, GAME.DATA.tiles['.']); GAME.encounter.enabled = false; return ['arano_ookami', 'oosasori', 'sajin_hebi', 'hagetaka', 'arano_ushi', 'shirousagi'].includes(g[0]); }), true);
   await ev(() => { GAME.story.jump(11); }); await wait(1500);
   await runThrough(atMap, 200);
   await ev(() => { GAME.encounter.enabled = false; });
