@@ -4,6 +4,9 @@
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
   const H = G.DATA.enemies.otte.sprite;   // 人の形の型紙（enemies_part3.js と同じ）
+  // 残党軍の仲間呼びの候補（重みの合計100。将は1＝およそ1%）
+  const CALL = [{ id: 'zantou_hohei', w: 30 }, { id: 'zantou_yumi', w: 25 }, { id: 'zantou_jutsu', w: 15 }, { id: 'zantou_kihei', w: 15 }, { id: 'zantou_hata', w: 7 }, { id: 'zantou_kusushi', w: 7 }];
+  const RANK_AND_FILE = CALL.concat([{ id: 'zantou', w: 1 }]);
 
   Object.assign(G.DATA.enemies, {
     // 師（手合わせ）
@@ -33,13 +36,42 @@
       palette: { K: '#06040a', H: '#3a2a4a', D: '#1e1428', E: '#ff4040', W: '#a090c0' }, sprite: H,
     },
     // ---- やりこみ（Lv40〜99向け。フィールドで、オオナムチのレベルに応じて出る）----
+    // ---- 残党軍（ユーザー決定B）：王が倒れても洗脳の解けない旧王軍。みな洗脳された人なので目を覚まさせられる ----
+    // 仲間呼び（call）で残党を呼ぶ。将（unique）は1回の戦いに1体まで。残党が将を呼ぶのは、呼ぶうちのおよそ1%（RANK_AND_FILE の w: 1）
     zantou: {
       big: true,   // 2体までなら大きく描く（js/scenes/battle.js）
-      name: '残党の将', counter: '人', hp: 420, atk: 110, def: 80, agi: 50, wis: 70, exp: 600, copper: 120,
+      unique: true,   // 1回の戦いに1体まで（仲間呼びでも2体目は来ない）
+      name: '残党の将', counter: '人', hp: 1300, atk: 195, def: 155, agi: 115, wis: 130, exp: 2500, copper: 500, hits: 2,
       awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
+      actions: [{ w: 6, type: 'attack' }, { w: 1, type: 'call', ids: CALL }],
       drop: { item: 'kizugusuri', rank: 'A' },
       palette: { K: '#06040a', H: '#4a3a2a', D: '#6a2a2a', E: '#ff6040', W: '#e0d0b0' }, sprite: H,
     },
+    zantou_hohei: { name: '残党の歩兵', counter: '人', hp: 300, atk: 95, def: 100, agi: 60, wis: 40, exp: 700, copper: 150, awaken: true,
+      actions: [{ w: 8, type: 'attack' }, { w: 1, type: 'call', ids: RANK_AND_FILE }],
+      drop: { item: 'kizugusuri', rank: 'B' },
+      palette: { K: '#06040a', H: '#5a4a3a', D: '#3a3a44', E: '#ff8060', W: '#d8d0c0' }, sprite: H },
+    zantou_yumi: { name: '残党の弓兵', counter: '人', hp: 240, atk: 75, def: 65, agi: 100, wis: 50, exp: 650, copper: 140, awaken: true, hits: 2,
+      actions: [{ w: 8, type: 'attack' }, { w: 1, type: 'call', ids: RANK_AND_FILE }],
+      onHit: { status: 'poison', chance: 0.15 },   // 毒矢
+      drop: { item: 'dokukeshi', rank: 'B' },
+      palette: { K: '#06040a', H: '#4a5a3a', D: '#2a3a2a', E: '#ffa040', W: '#d0d8c0' }, sprite: H },
+    zantou_jutsu: { name: '残党の術師', counter: '人', hp: 240, atk: 60, def: 60, agi: 90, wis: 170, exp: 750, copper: 160, awaken: true,
+      actions: [{ w: 3, type: 'attack' }, { w: 2, type: 'kotodama', id: 'kangen' }, { w: 2, type: 'kotodama', id: 'surikomi' }, { w: 1, type: 'call', ids: RANK_AND_FILE }],
+      drop: { item: 'mezamashi', rank: 'B' },
+      palette: { K: '#06040a', H: '#3a2a5a', D: '#2a1a3a', E: '#c080ff', W: '#e0d8f0' }, sprite: H },
+    zantou_kihei: { name: '残党の騎兵', counter: '人', hp: 340, atk: 115, def: 85, agi: 130, wis: 50, exp: 850, copper: 180, awaken: true,
+      actions: [{ w: 8, type: 'attack' }, { w: 1, type: 'call', ids: RANK_AND_FILE }],
+      drop: { item: 'kizugusuri', rank: 'A' },
+      palette: { K: '#06040a', H: '#6a3a2a', D: '#4a2a1a', E: '#ffd040', W: '#e8d8c0' }, sprite: H },
+    zantou_hata: { name: '残党の旗持ち', counter: '人', hp: 280, atk: 70, def: 85, agi: 70, wis: 80, exp: 800, copper: 200, awaken: true,
+      actions: [{ w: 3, type: 'buff', stat: 'atk', mult: 1.3, turns: 3, text: '軍旗を高く掲げた！' }, { w: 3, type: 'attack' }, { w: 2, type: 'call', ids: RANK_AND_FILE }],
+      drop: { item: 'kizugusuri', rank: 'A' },
+      palette: { K: '#06040a', H: '#7a6a2a', D: '#5a2a2a', E: '#ff6040', W: '#f0e0b0' }, sprite: H },
+    zantou_kusushi: { name: '残党の薬師', counter: '人', hp: 260, atk: 50, def: 65, agi: 80, wis: 140, exp: 800, copper: 220, awaken: true,
+      actions: [{ w: 4, type: 'heal', rate: 0.3, text: '仲間の傷を手当てした。' }, { w: 2, type: 'attack' }, { w: 1, type: 'call', ids: RANK_AND_FILE }],
+      drop: { item: 'kizugusuri', rank: 'S' },
+      palette: { K: '#06040a', H: '#3a5a5a', D: '#2a3a3a', E: '#80ffc0', W: '#d8f0e8' }, sprite: H },
     orochi: {
       big: true,   // 大きく描く（js/scenes/battle.js）
       name: '黄泉の大蛇', hp: 3800, atk: 210, def: 180, agi: 90, wis: 150, exp: 8000, copper: 2000, hits: 2,   // 黄泉の深淵　上の淵の番人（Lv75で自動戦闘およそ6〜7割）

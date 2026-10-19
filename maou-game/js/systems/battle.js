@@ -93,8 +93,56 @@
       for (const a of acts) { r -= a.w; if (r < 0) { pick = a; break; } }
       st.plans[e.key] = pick.type === 'kotodama' ? { type: 'kotodama', id: pick.id }
         : pick.type === 'flee' ? { type: 'flee' }   // 逃げる（白兎など）
+        : (pick.type === 'call' || pick.type === 'buff' || pick.type === 'heal') && helpUseful(st, e, pick) ? { type: pick.type, act: pick }
         : { type: 'attack', target: pickPartyTarget(st.party) };
     });
+  }
+
+  // ---- 仲間を助ける敵の行動（残党軍）：call 仲間呼び／buff 仲間を強くする／heal 仲間の傷を手当て ----
+  // 行動のデータ：{ w, type: 'call', ids: [{ id, w }] }（敵データに unique があれば、その戦いに1体まで）
+  //               { w, type: 'buff', stat: 'atk', mult, turns, text }／{ w, type: 'heal', rate, text }
+  // 役に立たないとき（もう6体いる・みな強くなっている・傷ついた仲間がいない）は、ふつうに攻撃する
+  const callable = (st, act) => (act.ids || []).filter(c => !((G.DATA.enemies[c.id] || {}).unique && st.enemies.some(e => e.id === c.id)));
+  const wounded = (st, self) => aliveEnemies(st).filter(e => e.hp < e.maxHp * B().ENEMY_HEAL_BELOW).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
+  function helpUseful(st, e, act) {
+    if (act.type === 'call') return st.enemies.length < B().MAX_ENEMIES && callable(st, act).length > 0;
+    if (act.type === 'buff') return aliveEnemies(st).some(u => !(u.buffs && u.buffs[act.stat]));
+    return wounded(st, e).length > 0;
+  }
+  // 戦いの途中で敵を加える（名前の Ａ・Ｂ… も付け直す）
+  function addEnemy(st, id) {
+    const d = G.DATA.enemies[id];
+    const same = st.enemies.filter(e => e.id === id);
+    if (same.length === 1 && same[0].name === d.name) same[0].name = d.name + LETTERS[0];
+    const e = {
+      key: 'e' + st.enemies.length, id, side: 'enemy', name: d.name + (same.length ? LETTERS[same.length] : ''), koText: null,
+      hp: d.hp, maxHp: d.hp, atk: d.atk, def: d.def, agi: d.agi, wis: d.wis, defending: false, called: true,
+    };
+    st.enemies.push(e);
+    if (G.kenbun) G.kenbun.meet([id]);
+    return e;
+  }
+  function enemyHelp(st, actor, plan) {
+    const a = plan.act;
+    if (a.type === 'call') {
+      const list = callable(st, a);
+      if (st.enemies.length >= B().MAX_ENEMIES || !list.length) return [{ type: 'msg', text: `${actor.name}は仲間を呼んだ！` }, { type: 'msg', text: 'しかし、だれも来なかった。' }];
+      let r = G.rng.random() * list.reduce((n, c) => n + c.w, 0), pick = list[0];
+      for (const c of list) { r -= c.w; if (r < 0) { pick = c; break; } }
+      const e = addEnemy(st, pick.id);
+      return [{ type: 'msg', text: `${actor.name}は仲間を呼んだ！` }, { type: 'msg', text: `${e.name}が現れた！` }];
+    }
+    if (a.type === 'buff') {
+      const ev = [{ type: 'msg', text: `${actor.name}は${a.text || '仲間を鼓舞した！'}` }];
+      aliveEnemies(st).forEach(u => { u.buffs = u.buffs || {}; u.buffs[a.stat] = { mult: a.mult, turns: a.turns }; });
+      ev.push({ type: 'msg', text: `敵の${a.stat === 'atk' ? '力' : '守り'}が上がった！` });
+      return ev;
+    }
+    const t = wounded(st, actor)[0];
+    if (!t) return [{ type: 'msg', text: `${actor.name}の攻撃！` }].concat(attack(st, actor, pickPartyTarget(st.party), []).slice(1));
+    const amount = Math.min(t.maxHp - t.hp, Math.floor(t.maxHp * (a.rate || 0.3)));
+    t.hp += amount;
+    return [{ type: 'msg', text: `${actor.name}は${a.text || '傷の手当てをした。'}` }, { type: 'heal', target: t, amount }, { type: 'msg', text: `${t.name}の体力が ${amount} 戻った。` }];
   }
 
   // 混乱：敵味方の区別なく、だれかを打つ
@@ -156,6 +204,7 @@
       if (plan.type === 'kotodama') return ev.concat(G.kotodama.castEnemy(actor, plan.id, null, st));
       // 逃げる：戦いからいなくなる（倒したことにはならず、経験値ももらえない）
       if (plan.type === 'flee') { actor.hp = 0; actor.fled = true; return ev.concat([{ type: 'msg', text: `${actor.name}は、逃げ出した！` }, { type: 'ko', target: actor }]); }
+      if (plan.type === 'call' || plan.type === 'buff' || plan.type === 'heal') return ev.concat(enemyHelp(st, actor, plan));
       // hits：1ターンに何回打つか（2章のタケルは2回）
       const hits = (G.DATA.enemies[actor.id] || {}).hits || 1;
       for (let h = 0; h < hits; h++) {

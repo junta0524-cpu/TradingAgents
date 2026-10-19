@@ -15,12 +15,12 @@
       byChapter: {
         1: [],
         11: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']],
-        // クリア後：レベルに応じて強い敵（Lv40〜99のやりこみ）
+        // クリア後：レベルに応じて強い敵（Lv40〜99のやりこみ）。残党軍（将は1回の戦いに1体まで。js/data/enemies_post.js）
         13: { byLevel: [
           { from: 1, groups: [['kage_oni'], ['yomi_hebi'], ['na_kui'], ['kage_oni', 'na_kui']] },
-          { from: 35, groups: [['zantou'], ['kage_oni', 'zantou'], ['kage_oni', 'kage_oni']] },
-          { from: 55, groups: [['zantou', 'zantou'], ['kage_oni', 'na_kui', 'zantou'], ['kage_oni', 'kage_oni', 'zantou']] },
-          { from: 75, groups: [['zantou', 'zantou', 'kage_oni'], ['zantou', 'zantou'], ['kage_oni', 'kage_oni', 'na_kui']] },
+          { from: 35, groups: [['zantou_hohei', 'zantou_hohei', 'zantou_hohei'], ['zantou_yumi', 'zantou_hohei'], ['zantou_jutsu', 'zantou_hohei'], ['kage_oni', 'kage_oni'], ['zantou_kihei', 'zantou_kusushi']] },
+          { from: 55, groups: [['zantou'], ['zantou', 'zantou_yumi', 'zantou_yumi'], ['zantou_hata', 'zantou_hohei', 'zantou_kihei'], ['kage_oni', 'na_kui', 'zantou_hohei'], ['zantou_jutsu', 'zantou_kusushi', 'zantou_hohei']] },
+          { from: 75, groups: [['zantou', 'zantou_hata', 'zantou_kusushi'], ['zantou', 'zantou_jutsu', 'zantou_hohei'], ['zantou_kihei', 'zantou_kihei', 'zantou_hata'], ['kage_oni', 'kage_oni', 'na_kui'], ['zantou_hohei', 'zantou_yumi', 'zantou_jutsu', 'zantou_kusushi']] },
         ] },
       },
     },

@@ -23,12 +23,12 @@
         // 8・9章：王都のまわりを白い腕章の兵が見回る（洗脳された人。弱らせて心鎮めで目を覚まさせられる）
         8: [['arano_ookami'], ['oosasori'], ['junkai'], ['junkai', 'junkai'], ['junkai', 'arano_ookami'], ['wansho', 'wansho', 'junkai']],
         10: [],
-        // クリア後：レベルに応じて強い敵（Lv40〜99のやりこみ）
+        // クリア後：レベルに応じて強い敵（Lv40〜99のやりこみ）。残党軍（将は1回の戦いに1体まで。js/data/enemies_post.js）
         13: { byLevel: [
           { from: 1, groups: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']] },
-          { from: 35, groups: [['zantou'], ['zantou', 'arano_ookami'], ['zantou', 'zantou']] },
-          { from: 55, groups: [['zantou', 'zantou'], ['zantou', 'arano_ookami', 'arano_ookami'], ['kurogane_tokage', 'zantou']] },
-          { from: 75, groups: [['zantou', 'zantou', 'zantou'], ['zantou', 'zantou'], ['kurogane_tokage', 'kurogane_tokage', 'zantou']] },
+          { from: 35, groups: [['zantou_hohei', 'zantou_hohei', 'zantou_hohei'], ['zantou_yumi', 'zantou_yumi', 'zantou_hohei'], ['zantou_jutsu', 'zantou_hohei', 'zantou_hohei'], ['zantou_kihei', 'zantou_kihei'], ['zantou_hohei', 'zantou_kusushi'], ['arano_ookami', 'arano_ookami']] },
+          { from: 55, groups: [['zantou'], ['zantou', 'zantou_hohei', 'zantou_hohei'], ['zantou_hata', 'zantou_hohei', 'zantou_yumi'], ['zantou_kihei', 'zantou_yumi', 'zantou_kusushi'], ['zantou_hohei', 'zantou_hohei', 'zantou_jutsu', 'zantou_yumi'], ['kurogane_tokage', 'zantou_hohei']] },
+          { from: 75, groups: [['zantou', 'zantou_hata', 'zantou_kusushi'], ['zantou', 'zantou_kihei', 'zantou_yumi'], ['zantou_hohei', 'zantou_hohei', 'zantou_hata', 'zantou_kusushi'], ['zantou_jutsu', 'zantou_jutsu', 'zantou_kihei'], ['zantou_kihei', 'zantou_kihei', 'zantou_yumi', 'zantou_yumi']] },
         ] },
       },
     },

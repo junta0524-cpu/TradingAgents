@@ -116,7 +116,7 @@
       { from: 7, to: 9, groups: [['sajin_hebi'], ['hagetaka'], ['arano_ushi']] },
       { from: 8, to: 9, groups: [['wansho_jutsu', 'junkai'], ['wansho_kihei'], ['wansho_kihei', 'wansho_jutsu']] },
       { from: 13, groups: [['ookami_kashira'], ['doku_ookumo'], ['ookami_kashira', 'doku_ookumo']] },
-      { from: 13, lv: 35, groups: [['kurogane_tokage'], ['kurogane_tokage', 'zantou']] },
+      { from: 13, lv: 35, groups: [['kurogane_tokage'], ['kurogane_tokage', 'zantou_hohei']] },
     ],
     world_makai: [
       { from: 11, to: 11, groups: [['yomotsu_inu'], ['yomotsu_inu', 'yomotsu_inu'], ['hainezumi', 'hainezumi'], ['yakeno_onibi'], ['yakeno_onibi', 'yomotsu_inu'], ['hainezumi', 'yakeno_onibi', 'hainezumi']] },

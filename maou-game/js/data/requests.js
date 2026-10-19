@@ -37,8 +37,8 @@
     { id: 'hoshii', from: 8, title: '干し飯の差し入れ', kind: 'bring', item: 'hoshiii', count: 5,
       desc: 'ひなた野の子どもたちへの差し入れに、干し飯を5つ集めている。', reward: { copper: 60 } },
     // ---- クリア後 ----
-    { id: 'zantou', from: 13, title: '残党の将', kind: 'awaken', count: 3,
-      desc: '人間界の地図を、軍の残党の将がさまよっている。3人、目を覚まさせてほしい。', reward: { copper: 2000 } },
+    { id: 'zantou', from: 13, title: '残党軍', kind: 'awaken', count: 3,
+      desc: '両方の地図を、旧王軍の残党がさまよっている。3人、目を覚まさせてほしい。', reward: { copper: 2000 } },
     { id: 'orochi', from: 13, title: '黄泉の大蛇', kind: 'flag', flag: 'gm:yomi_fuchi1:nushi',
       desc: '大穴の最深部のさらに下、黄泉の深淵に大蛇が棲みついた。退治してほしい。', reward: { copper: 3000, item: 'fuku_suzu', count: 1 } },
     { id: 'hyoumon', from: 13, title: '氷門の番人', kind: 'flag', flag: 'gm:oana_jou:nushi',
