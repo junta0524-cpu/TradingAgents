@@ -348,7 +348,9 @@
 
     // ---- 並び ----
     // 敵は画面の幅いっぱいを使って中央にそろえる。数が多いほど間をつめる。ボス1体だけなら大きく出す
-    const scale = enemies.length === 1 && (opts.boss || CH) ? BOSS_SCALE : ENEMY_SCALE;
+    // 大きな敵（敵データの big：クリア後の強敵）は、2体までのときボスと同じ大きさ
+    const bigOne = enemies.length <= 2 && enemies.some(e => (G.DATA.enemies[e.id] || {}).big);
+    const scale = (enemies.length === 1 && (opts.boss || CH)) || bigOne ? BOSS_SCALE : ENEMY_SCALE;
     const SIZE = 16 * scale;
     function enemyX(i) {
       const n = enemies.length, gap = n <= 3 ? 32 : n <= 5 ? 20 : 12;

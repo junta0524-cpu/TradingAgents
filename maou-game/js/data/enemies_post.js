@@ -34,12 +34,14 @@
     },
     // ---- やりこみ（Lv40〜99向け。フィールドで、オオナムチのレベルに応じて出る）----
     zantou: {
+      big: true,   // 2体までなら大きく描く（js/scenes/battle.js）
       name: '残党の将', counter: '人', hp: 420, atk: 110, def: 80, agi: 50, wis: 70, exp: 600, copper: 120,
       awaken: true,   // 洗脳された人：弱らせて心鎮め・名呼びで目を覚まさせられる（balance.js の AWAKEN）
       drop: { item: 'kizugusuri', rank: 'A' },
       palette: { K: '#06040a', H: '#4a3a2a', D: '#6a2a2a', E: '#ff6040', W: '#e0d0b0' }, sprite: H,
     },
     orochi: {
+      big: true,   // 2体までなら大きく描く（js/scenes/battle.js）
       name: '黄泉の大蛇', hp: 900, atk: 170, def: 130, agi: 60, wis: 120, exp: 1500, copper: 200,
       drop: { item: 'dokukeshi', rank: 'A' },
       onHit: { status: 'venom', chance: 0.25 },
@@ -47,6 +49,7 @@
       sprite: G.DATA.enemies.centipede.sprite,
     },
     nakui_ou: {
+      big: true,   // 2体までなら大きく描く（js/scenes/battle.js）
       name: '名喰いの王', hp: 1600, atk: 230, def: 190, agi: 120, wis: 200, exp: 3500, copper: 400,
       drop: { item: 'mezamashi', rank: 'A' },
       actions: [{ w: 3, type: 'attack' }, { w: 1, type: 'kotodama', id: 'mayoi_bi' }],
