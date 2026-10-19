@@ -61,7 +61,7 @@
       Object.assign({ id: 'crowd1', look: 'oldwoman', x: 14, y: 10, dir: 'up', talk: ['「念のため」'] }, DAY),
       Object.assign({ id: 'crowd2', look: 'beastwoman', x: 19, y: 9, dir: 'up', talk: ['「念のため」'] }, DAY),
       Object.assign({ id: 'crowd3', look: 'dwarf2', x: 17, y: 10, dir: 'up', talk: ['「悪気はないんだ。ただ、念のため」'] }, DAY),
-      Object.assign({ id: 'crowd4', look: 'child', x: 16, y: 13, dir: 'up', talk: ['子は頷き、胸に手を当てて、短く礼をした。'] }, DAY),
+      Object.assign({ id: 'crowd4', look: 'child', x: 18, y: 13, dir: 'up', talk: ['子は頷き、胸に手を当てて、短く礼をした。'] }, DAY),
       Object.assign({ id: 'crowd5', look: 'merchant', x: 20, y: 14, dir: 'up', talk: ['人は多い。ただ、誰も大声を出さない。'] }, DAY),
       { id: 'kotoshiro', look: 'kotoshiro', x: 24, y: 9, dir: 'left', move: 'still', chapter: 8, if: 'ch8_debate', unless: 'ch8_meet', event: 'ch8_meet' },
     ],
