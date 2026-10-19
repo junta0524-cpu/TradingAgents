@@ -14,8 +14,8 @@
     rows: [
       'mmmmmmmmmmmmmmmmmmmmmmmmmm',
       'mmXXXXXmmmmmmmmmmmXXXXXXmm',
-      'mmXZXXXmmmmmmmmmmmXXXXXXmm',
-      'mmXXDXX....::::....XXDXXmm',
+      'mmXZXXXmXXXmmmmmmmXXXXXXmm',
+      'mmXXDXX.XDX::::....XXDXXmm',
       'mm.........::::.........mm',
       'mm...XXXX..::::..XXXX...mm',
       'mm...XXDX..::::..XDXX...mm',
@@ -30,6 +30,7 @@
       'mmmmmmmmmmm::::mmmmmmmmmmm',
     ],
     warps: [
+      { x: 9, y: 3, to: 'ro_dougu', tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋を分けた店（js/data/maps/rooms_shops2.js）
       // 建物の中（js/data/maps/rooms_ro.js）
       { x: 4, y: 3, to: 'ro_r1', tx: 5, ty: 7, dir: 'up' },
       { x: 21, y: 3, to: 'ro_r2', tx: 5, ty: 7, dir: 'up' },

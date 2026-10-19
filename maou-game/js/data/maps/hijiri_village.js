@@ -22,13 +22,14 @@
       'TT....p......p.......p.....T',
       'TT..UUU......p......UUU....T',
       'TT..UJU......p......UJU..UUT',
-      'TT...........p...........UJT',
-      'TTT..........p.............T',
+      'TT...........p...UUU.....UJT',
+      'TTT..........p...UJU.......T',
       'TTTT.........p..........TTTT',
       'TTTTTT.......p.......TTTTTTT',
       'TTTTTTTTTTTTTpTTTTTTTTTTTTTT',
     ],
     warps: [
+      { x: 18, y: 12, to: 'hijiri_bugu', tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋を分けた店（js/data/maps/rooms_shops2.js）
       // 建物の中（js/data/maps/rooms_hijiri.js）
       { x: 5, y: 4, to: 'hijiri_inn', tx: 5, ty: 7, dir: 'up' },
       { x: 23, y: 4, to: 'hijiri_shop', tx: 5, ty: 7, dir: 'up' },

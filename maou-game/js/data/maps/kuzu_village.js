@@ -25,12 +25,13 @@
       'mV.........ewe...........m',
       '--.........eee...........m',
       'mV.......................m',
-      'mV..YYY.........YYY......m',
-      'mV..XDX.........XDX......m',
+      'mV..YYY...YYY...YYY......m',
+      'mV..XDX...XDX...XDX......m',
       'mV.......................m',
       'mVVVVVVVVVVVVVVVVVVVVVVVVm',
     ],
     warps: [
+      { x: 11, y: 11, to: 'kuzu_bugu', tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋を分けた店（js/data/maps/rooms_shops2.js）
       // 建物の中（js/data/maps/rooms_kuzu.js）
       { x: 4, y: 3, to: 'kuzu_inn', tx: 5, ty: 7, dir: 'up' },
       { x: 11, y: 3, to: 'kuzu_shop', tx: 5, ty: 7, dir: 'up' },
