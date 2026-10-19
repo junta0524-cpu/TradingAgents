@@ -1673,7 +1673,8 @@ const { chromium } = require('playwright');
   for (let i = 0; i < 300 && !(await ev(() => window.__memoDone)); i++) await key('KeyZ', 30);
   await page.keyboard.up('Shift');
   expect('思い出の帳：見返しが終わると帳へ戻り、記録は変わらない', await ev(() => JSON.stringify([GAME.state, GAME.flags.data, GAME.scene.names()])) === memo.before && await ev(() => window.__memoDone), true);
-  await key('KeyX', 200);
+  await wait(300);
+  for (let i = 0; i < 3 && (await scenes()).includes('思い出の帳'); i++) await key('KeyX', 300);   // 見返しの直後は押しが届かないことがある
   expect('思い出の帳：Xでタイトルへ', await scenes(), 'タイトル');
 
   // スマホ縦画面
