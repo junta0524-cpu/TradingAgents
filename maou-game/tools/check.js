@@ -535,7 +535,7 @@ const { chromium } = require('playwright');
   }), '|');
   expect('拠点限定の道具：MPを戻す・全員の体力を戻す（移動中は相手を選ばない）', await ev(() => {
     const oo = GAME.party.member('oonamuchi'); const keep = { mp: oo.mp, hp: oo.hp };
-    oo.mp = 0; GAME.party.addItem('miru_shiru'); GAME.kotodama.useItem(oo, 'miru_shiru', oo, null); const a = oo.mp >= 12 && oo.mp <= 16;
+    oo.mp = 0; GAME.party.addItem('miru_shiru'); GAME.kotodama.useItem(oo, 'miru_shiru', oo, null); const a = oo.mp >= Math.min(12, oo.maxMp) && oo.mp <= 16;   // 最大MPより多くは戻らない
     oo.hp = 1; GAME.party.addItem('mori_reiyaku'); GAME.kotodama.useItem(oo, 'mori_reiyaku', null, null); const b = oo.hp > 1;
     Object.assign(oo, keep); return `${a}/${b}/${GAME.kenbun.effectText(GAME.DATA.items.miru_shiru.effect)}`;
   }), 'true/true/MPを戻す（12〜16）');
