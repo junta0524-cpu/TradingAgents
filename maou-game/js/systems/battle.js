@@ -366,11 +366,17 @@
     return got;
   }
 
+  // 4〜9章は経験値を増やす（物語の道だけでも推奨レベルに近づくように。balance.js の CHAPTER_EXP）
+  function chapterExpRate() {
+    const c = G.DATA.balance.CHAPTER_EXP, ch = (G.state && G.state.chapter) || 1;
+    return c && ch >= c.FROM && ch <= c.TO ? c.RATE : 1;
+  }
+
   // 勝ったときのごほうび（経験値は、レベルの上がる仲間で分ける。目覚めさせた敵は AWAKEN.EXP_RATE 倍）
   function rewards(st) {
     const b = B();
     const won = st.enemies.filter(e => !e.fled);   // 逃げた敵の分はもらえない
-    const exp = Math.floor(won.reduce((s, e) => s + G.DATA.enemies[e.id].exp * (e.awakened ? AW().EXP_RATE : 1), 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1));
+    const exp = Math.floor(won.reduce((s, e) => s + G.DATA.enemies[e.id].exp * (e.awakened ? AW().EXP_RATE : 1), 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1) * chapterExpRate());
     const copper = Math.floor(won.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0) * (hasPerk(st, 'copperBoost') ? G.DATA.balance.COPPER_BOOST : 1));
     const alive = st.party.filter(p => p.hp > 0 && !charOf(p).fixed);
     const each = b.EXP_SPLIT ? Math.ceil(exp / Math.max(1, alive.length)) : exp;
@@ -413,5 +419,5 @@
     return result;
   }
 
-  G.battle = { calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike, wavering, tryAwaken, awakenRewards, isHard };
+  G.battle = { chapterExpRate, calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike, wavering, tryAwaken, awakenRewards, isHard };
 })();

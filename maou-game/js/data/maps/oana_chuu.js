@@ -47,7 +47,7 @@
       {'type': 'plate', 'id': 'p2', 'x': 17, 'y': 9},
       {'type': 'seal', 'id': 'illusion', 'x': 5, 'y': 2, 'ch': '幻', 'need': 'miyaburi', 'text': '黒い岩壁だ。……ほかの壁と、どこか手ざわりがちがう気がする。', 'done': '偽りの壁が、霧のようにほどけて消えた。'},
       {'type': 'seal', 'id': 'crag', 'x': 19, 'y': 2, 'ch': '巌', 'need': 'ikazuchi', 'text': '道をふさぐ大岩だ。強い雷でも落とせば、砕けるかもしれない。', 'done': '雷が落ち、大岩は粉々に砕け散った。'},
-      {'type': 'guardian', 'id': 'nushi', 'x': 12, 'y': 16, 'enemies': ['oana_nushi'], 'reward': 'nushi_shinzou', 'text': '大穴の底の闇が、ひとつの形を取った。最深部への石段を、何かが守っている。', 'win': '大穴の主は、闇の中へ溶けるように消えた。'},
+      {'type': 'guardian', 'id': 'nushi', 'rec': 55, 'x': 12, 'y': 16, 'enemies': ['oana_nushi'], 'reward': 'nushi_shinzou', 'text': '大穴の底の闇が、ひとつの形を取った。最深部への石段を、何かが守っている。', 'win': '大穴の主は、闇の中へ溶けるように消えた。'},
       {'type': 'torch', 'id': 't1', 'x': 8, 'y': 1},
       {'type': 'torch', 'id': 't2', 'x': 16, 'y': 1},
       {'type': 'torch', 'id': 't3', 'x': 4, 'y': 9},

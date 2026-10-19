@@ -44,7 +44,7 @@
     gimmicks: [
       { type: 'boulder', id: 'b1', x: 9, y: 3 },
       { type: 'lever', id: 'lever', x: 22, y: 1, once: true, text: '焼けた岩の奥のレバーを倒した。遠く南のほうで、門の上がる音がした。', doneText: 'レバーは、もう動かない。' },
-      { type: 'guardian', id: 'nushi', x: 12, y: 16, enemies: ['orochi'], reward: 'yashiori_kame', text: '石段の前で、何かがとぐろを巻いている。いくつもの脚が、闇の中でざわめいた。', win: '黄泉の大蛇は、闇の底へ沈むように消えた。' },
+      { type: 'guardian', id: 'nushi', rec: 75, x: 12, y: 16, enemies: ['orochi'], reward: 'yashiori_kame', text: '石段の前で、何かがとぐろを巻いている。いくつもの脚が、闇の中でざわめいた。', win: '黄泉の大蛇は、闇の底へ沈むように消えた。' },
       { type: 'torch', id: 't1', x: 9, y: 1 },
       { type: 'torch', id: 't2', x: 15, y: 1 },
       { type: 'torch', id: 't3', x: 3, y: 8 },

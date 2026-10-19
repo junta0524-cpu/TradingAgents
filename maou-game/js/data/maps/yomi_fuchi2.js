@@ -47,7 +47,7 @@
       { type: 'lantern', id: 'ls', seq: 'names', order: 2, x: 12, y: 13 },
       { type: 'lantern', id: 'lw', seq: 'names', order: 3, x: 7, y: 10 },
       { type: 'lock', id: 'vault', x: 3, y: 10, ch: '門', key: 'fuchi_kagi', text: '鉄の扉に、鍵がかかっている。深淵の鍵が要りそうだ。' },
-      { type: 'guardian', id: 'nushi', x: 12, y: 3, enemies: ['nakui_ou'], reward: 'manai_shizuku', text: '奪われた名の文字が、灰のように渦を巻いている。その中心で、黒い鎧の影が、ゆっくりと顔を上げた。', win: '名喰いの王は崩れ、渦を巻いていた名の文字が、光になって散っていった。' },
+      { type: 'guardian', id: 'nushi', rec: 85, x: 12, y: 3, enemies: ['nakui_ou'], reward: 'manai_shizuku', text: '奪われた名の文字が、灰のように渦を巻いている。その中心で、黒い鎧の影が、ゆっくりと顔を上げた。', win: '名喰いの王は崩れ、渦を巻いていた名の文字が、光になって散っていった。' },
     ],
     chests: [
       { id: 'throne1', x: 10, y: 1, item: 'kokoro_kagami' },

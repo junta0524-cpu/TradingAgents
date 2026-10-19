@@ -1,6 +1,6 @@
 // このファイルの役目：ダンジョンのしかけ（マップの gimmicks）。押せる岩・穴埋め・重しの床・レバーと門・
 // 言霊で開く道（火種で蔦を焼く など）・鍵の扉・灯籠を順に灯す謎・暗闇と燭台・滑る床・流れる床・熱い床・落とし穴・
-// 番人（奥の宝を守る強い敵。調べると「戦いますか？」。倒すまで道をふさぐ。reward があれば品をくれる）・
+// 番人（奥の宝を守る強い敵。調べると目安のレベル rec と「戦いますか？」。倒すまで道をふさぐ。reward があれば品をくれる）・
 // 言の葉の石碑（kotoba。js/data/kotoba.js の石碑を、そのマップのしかけに加える。調べると文字並べの謎＝js/scenes/kotoba.js）。
 // 地形の文字は js/data/tiles.js、数字は balance.js の GIMMICK。歩く画面（js/scenes/map.js）から呼ばれる。
 (function () {
@@ -188,7 +188,8 @@
       case 'guardian': {
         if (done) return false;
         // 戦う前に記録する（負けたら、ここからやり直し）
-        G.message.show(g.text, () => G.ui.confirm('戦いますか？', () => G.event.run([
+        // rec：強さの目安のレベル（自動戦闘で6〜8割ほど勝てるレベル）
+        G.message.show(g.rec ? [g.text, `（強い気配がする。目安：Lv${g.rec}）`] : g.text, () => G.ui.confirm('戦いますか？', () => G.event.run([
           { t: 'save' },
           { t: 'battle', enemies: g.enemies, bg: g.bg || st.map.battleBg },
           { t: 'flag', set: f },
