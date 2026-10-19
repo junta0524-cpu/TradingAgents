@@ -39,6 +39,11 @@
     // ---- クリア後 ----
     { id: 'zantou', from: 13, title: '残党軍', kind: 'awaken', count: 3,
       desc: '両方の地図を、旧王軍の残党がさまよっている。3人、目を覚まさせてほしい。', reward: { copper: 2000 } },
+    { id: 'zantou_tai', from: 13, title: '残党の隊を鎮める', kind: 'awaken', count: 10,
+      enemies: ['zantou_hohei', 'zantou_yumi', 'zantou_jutsu', 'zantou_kihei', 'zantou_hata', 'zantou_kusushi'],
+      desc: '歩兵・弓兵・術師など、隊を組んでさまよう残党の兵を、10人目覚めさせてほしい。', reward: { copper: 4000, item: 'kokoro_kagami', count: 1 } },
+    { id: 'zantou_shou', from: 13, title: '残党の将を目覚めさせる', kind: 'awaken', count: 1, enemies: ['zantou'],
+      desc: '残党を率いる将を、ひとり目覚めさせてほしい。将はひどく強い。隊の兵が呼ぶこともある。', reward: { copper: 6000, item: 'inochi_ishi', count: 1 } },
     { id: 'orochi', from: 13, title: '黄泉の大蛇', kind: 'flag', flag: 'gm:yomi_fuchi1:nushi',
       desc: '大穴の最深部のさらに下、黄泉の深淵に大蛇が棲みついた。退治してほしい。', reward: { copper: 3000, item: 'fuku_suzu', count: 1 } },
     { id: 'hyoumon', from: 13, title: '氷門の番人', kind: 'flag', flag: 'gm:oana_jou:nushi',

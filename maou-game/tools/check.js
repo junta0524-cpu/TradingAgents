@@ -521,6 +521,14 @@ const { chromium } = require('playwright');
   });
   expect('ギルドの依頼：受ける・数える・報告・ごほうび', rq, 'inu,kusuri,kumo,koke | open/true/active/false | 0:5 | 野犬の群れ:ready | 3:410:4:claimed,claimed,claimed | active | ready');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
+  expect('ギルドの依頼：残党の将・残党の隊は、その敵を目覚めさせた数で済む', await ev(() => {
+    const keep = JSON.stringify(GAME.state.requests || {}); GAME.state.requests = {};
+    GAME.requests.accept('zantou_shou'); GAME.requests.accept('zantou_tai');
+    const a = GAME.requests.onBattle([{ id: 'zantou_hohei', hp: 0, awakened: true }, { id: 'zantou_yumi', hp: 0 }]).join();
+    const b = GAME.requests.onBattle([{ id: 'zantou', hp: 0, awakened: true }]).join();
+    const out = `${a}|${b}|${GAME.requests.progress(GAME.requests.byId('zantou_tai')).n}`;
+    GAME.state.requests = JSON.parse(keep); return out;
+  }), '|残党の将を目覚めさせる|1');
   await ev(() => { window.__ch = GAME.state.chapter; GAME.state.chapter = 5; });
   await placeAt('minamo_guild', 12, 2, 'up'); await wait(300); await key('KeyZ', 400);
   expect('ギルドの掲示板（5章から）', await scenes(), 'マップ > 掲示板');

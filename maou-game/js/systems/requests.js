@@ -14,7 +14,8 @@
     const s = store()[r.id];
     switch (r.kind) {
       case 'slay': { const n = s ? s.n || 0 : 0; return { n: Math.min(n, r.count), need: r.count, done: n >= r.count }; }
-      case 'awaken': { const n = s ? (G.state.awakened || 0) - (s.base || 0) : 0; return { n: Math.min(n, r.count), need: r.count, done: n >= r.count }; }
+      // awaken：enemies があれば、その敵を目覚めさせた数（戦いのあと onBattle で数える）。なければ目覚めさせた人の数
+      case 'awaken': { const n = !s ? 0 : r.enemies ? s.n || 0 : (G.state.awakened || 0) - (s.base || 0); return { n: Math.min(n, r.count), need: r.count, done: n >= r.count }; }
       case 'bring': { const n = itemCount(r.item); return { n: Math.min(n, r.count), need: r.count, done: n >= r.count }; }
       case 'flag': { const on = G.flags.get(r.flag); return { n: on ? 1 : 0, need: 1, done: on }; }
       default: return { n: 0, need: 1, done: false };
@@ -49,14 +50,16 @@
       store()[id] = { s: 'active', n: 0, base: G.state.awakened || 0 };
       return true;
     },
-    // 戦いに勝ったとき：倒した敵（目覚めさせた敵は数えない）を、受けている退治の依頼に数える。済んだ依頼の名前を返す
+    // 戦いに勝ったとき：倒した敵（目覚めさせた敵は数えない）を退治の依頼に、決まった敵を目覚めさせた数を目覚めの依頼に数える。済んだ依頼の名前を返す
     onBattle(enemies) {
       const newly = [];
       all().forEach(r => {
         const s = store()[r.id];
-        if (r.kind !== 'slay' || !s || s.s !== 'active') return;
+        if (!(r.kind === 'slay' || (r.kind === 'awaken' && r.enemies)) || !s || s.s !== 'active') return;
         const before = progress(r).done;
-        s.n = (s.n || 0) + enemies.filter(e => e.id === r.enemy && e.hp <= 0 && !e.awakened && !e.fled).length;
+        s.n = (s.n || 0) + (r.kind === 'slay'
+          ? enemies.filter(e => e.id === r.enemy && e.hp <= 0 && !e.awakened && !e.fled).length
+          : enemies.filter(e => e.awakened && r.enemies.includes(e.id)).length);   // 決まった敵を目覚めさせる（残党軍）
         if (!before && progress(r).done) newly.push(r.title);
       });
       return newly;
