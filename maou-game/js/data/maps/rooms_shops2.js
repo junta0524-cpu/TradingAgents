@@ -21,11 +21,11 @@
       '     EE     ',
     ],
     warps: [
-      { x: 5, y: 8, to: 'minamo', tx: 24, ty: 19, dir: 'down' },
-      { x: 6, y: 8, to: 'minamo', tx: 24, ty: 19, dir: 'down' },
+      { x: 5, y: 8, to: 'minamo', tx: 24, ty: 20, dir: 'down' },
+      { x: 6, y: 8, to: 'minamo', tx: 24, ty: 20, dir: 'down' },
     ],
     npcs: [
-      { id: 'minamo_bugu_keeper', look: 'merchant', x: 5, y: 2, dir: 'down', move: 'still', shop: 'minamo_bugu', talk: ['「刃物も鎧も、港に着いたばかりの品だよ」'] },
+      { id: 'minamo_bugu_keeper', look: 'merchant', x: 5, y: 2, dir: 'down', move: 'still', shop: 'minamo_bugu', talk: ['（仮）刃物も鎧も、港に着いたばかりの品だよ。'] },
     ],
     chests: [],
     signs: [],
@@ -51,7 +51,7 @@
       { x: 6, y: 8, to: 'hijiri_village', tx: 18, ty: 13, dir: 'down' },
     ],
     npcs: [
-      { id: 'hijiri_bugu_keeper', look: 'elf', x: 5, y: 2, dir: 'down', move: 'still', shop: 'hijiri_bugu', talk: ['「弓も衣も、森の木と糸で作ったものです」'] },
+      { id: 'hijiri_bugu_keeper', look: 'elf', x: 5, y: 2, dir: 'down', move: 'still', shop: 'hijiri_bugu', talk: ['（仮）弓も衣も、森の木と糸で作ったものです。'] },
     ],
     chests: [],
     signs: [],
@@ -77,7 +77,7 @@
       { x: 6, y: 8, to: 'ro_village', tx: 9, ty: 4, dir: 'down' },
     ],
     npcs: [
-      { id: 'ro_dougu_keeper', look: 'dwarf', x: 5, y: 2, dir: 'down', move: 'still', shop: 'ro_dougu', talk: ['「山を越えるなら、薬は多めに持っていけ」'] },
+      { id: 'ro_dougu_keeper', look: 'dwarf', x: 5, y: 2, dir: 'down', move: 'still', shop: 'ro_dougu', talk: ['（仮）山を越えるなら、薬は多めに持っていけ。'] },
     ],
     chests: [],
     signs: [],
@@ -103,7 +103,7 @@
       { x: 6, y: 8, to: 'kuzu_village', tx: 11, ty: 12, dir: 'down' },
     ],
     npcs: [
-      { id: 'kuzu_bugu_keeper', look: 'beastwoman', x: 5, y: 2, dir: 'down', move: 'still', shop: 'kuzu_bugu', talk: ['「爪も牙もない人間には、刃が要るだろう」'] },
+      { id: 'kuzu_bugu_keeper', look: 'beastwoman', x: 5, y: 2, dir: 'down', move: 'still', shop: 'kuzu_bugu', talk: ['（仮）爪も牙もない人間には、刃が要るだろう。'] },
     ],
     chests: [],
     signs: [],
@@ -129,7 +129,7 @@
       { x: 6, y: 8, to: 'amatsu', tx: 12, ty: 16, dir: 'down' },
     ],
     npcs: [
-      { id: 'amatsu_dougu_keeper', look: 'merchant', x: 5, y: 2, dir: 'down', move: 'still', shop: 'amatsu_dougu', talk: ['「いらっしゃいませ。薬も干し飯も、きちんと揃えております」'] },
+      { id: 'amatsu_dougu_keeper', look: 'merchant', x: 5, y: 2, dir: 'down', move: 'still', shop: 'amatsu_dougu', talk: ['（仮）いらっしゃいませ。薬も干し飯も、きちんと揃えております。'] },
     ],
     chests: [],
     signs: [],

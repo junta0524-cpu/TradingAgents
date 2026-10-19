@@ -44,7 +44,7 @@
       { id: 'konoha', look: 'konoha', x: 25, y: 12, dir: 'up', move: 'still', chapter: 5, unless: 'ch5_konoha', event: 'ch5_konoha' },
       { id: 'elf_a', look: 'elf', x: 9, y: 8, dir: 'down', move: 'wander',
         talk: ['ただ、視線だけを寄越す。冷たくもなく、温かくもない。そこに、何も乗っていない目だった。'] },
-      { id: 'elf_b', look: 'elf2', x: 18, y: 11, dir: 'left', move: 'wander',
+      { id: 'elf_b', look: 'elf2', x: 18, y: 9, dir: 'left', move: 'wander',
         talk: ['エルフたちは、行き交う二人の人間を見ても、足を止めなかった。'] },
     ],
     chests: [{ id: 'nook', x: 26, y: 3, item: 'mezamashi' }],

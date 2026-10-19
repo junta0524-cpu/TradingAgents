@@ -275,7 +275,7 @@ const { chromium } = require('playwright');
   }
   expect('戦いのあと強化が消える', await ev(() => GAME.state.party.every(p => !p.buffs && p.side === undefined)), true);
 
-  // 道具屋：傷薬と頭椎の大刀（copper_knife）を買い、干し飯を売る
+  // 道具屋で傷薬、武具屋で頭椎の大刀（copper_knife）を買い、武具屋で干し飯を売る
   await ev(() => { GAME.state.items = []; });   // 前の戦いの落とし物で数がずれないように
   await placeAt('minamo_shop', 5, 4, 'up'); await wait(200);
   await key('KeyZ', 500); await closeMessages(); await wait(200);
@@ -283,8 +283,11 @@ const { chromium } = require('playwright');
   const c0 = await ev(() => GAME.state.copper);
   await key('KeyZ', 150);                       // 買う
   await key('KeyZ', 200); await closeMessages(); // 傷薬
-  for (let i = 0; i < 4; i++) await key('ArrowDown', 60);
-  await key('KeyZ', 200); await closeMessages(); // 頭椎の大刀（毒消し草・目覚まし香の下）
+  for (let i = 0; i < 6 && (await scenes()) !== 'マップ'; i++) await key('KeyX', 120);
+  await placeAt('minamo_bugu', 5, 4, 'up'); await wait(200);   // 道具屋と武具屋は別の建物
+  await key('KeyZ', 500); await closeMessages(); await wait(200);
+  await key('KeyZ', 150);                       // 買う
+  await key('KeyZ', 200); await closeMessages(); // 頭椎の大刀（武具屋の一番上）
   await shot('26_shop_buy');
   const bought = await ev(() => ({ c: GAME.state.copper, k: GAME.party.count('kizugusuri'), knife: GAME.party.count('copper_knife') }));
   expect('買い物：銅貨が 8+40 減り、品物が増える', `${c0 - bought.c}/${bought.k}/${bought.knife}`, '48/1/1');
