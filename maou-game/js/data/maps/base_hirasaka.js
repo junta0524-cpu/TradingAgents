@@ -31,8 +31,8 @@
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 9, to: "hirasaka_post", tx: 5, ty: 7, dir: 'up' },
       { x: 16, y: 9, to: "hirasaka_r1", tx: 5, ty: 7, dir: 'up' },
-      { x: 10, y: 14, to: "world_makai", tx: 15, ty: 7, dir: "down" },
-      { x: 11, y: 14, to: "world_makai", tx: 15, ty: 7, dir: "down" },
+      { x: 10, y: 14, to: "world_makai", tx: 62, ty: 27, dir: "down" },
+      { x: 11, y: 14, to: "world_makai", tx: 62, ty: 27, dir: "down" },
     ],
     npcs: [
       { id: "hirasaka_gate", look: "oni", x: 9, y: 7, dir: "down", move: "still", talk: ["「坂の上は宮だ。用のない者は、通さん。……王様のお連れなら、別だがな」"] },

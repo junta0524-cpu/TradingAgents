@@ -31,8 +31,8 @@
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 9, to: "takama_shrine", tx: 5, ty: 7, dir: 'up' },
       { x: 16, y: 9, to: "takama_r1", tx: 5, ty: 7, dir: 'up' },
-      { x: 10, y: 14, to: "world_ningen", tx: 23, ty: 11, dir: "down" },
-      { x: 11, y: 14, to: "world_ningen", tx: 23, ty: 11, dir: "down" },
+      { x: 10, y: 14, to: "world_ningen", tx: 94, ty: 43, dir: "down" },
+      { x: 11, y: 14, to: "world_ningen", tx: 94, ty: 43, dir: "down" },
     ],
     npcs: [
       { id: "takama_shepherd", look: "villager", x: 15, y: 11, dir: "up", move: "still", quest: "takama_ookami", talk: ["「羊を連れて上ってくると、遠くに王都の塔が見える」"] },

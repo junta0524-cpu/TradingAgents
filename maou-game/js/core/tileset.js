@@ -253,6 +253,14 @@
       c.fillStyle = '#2a2830'; c.beginPath(); c.moveTo(1, 15); c.lineTo(6, 2); c.lineTo(10, 9); c.lineTo(15, 15); c.closePath(); c.fill();
       fill(c, '#c9a66b', 6, 2, 1, 1);
     },
+    // 広い地図の寄り道の祠（小さな木の祠。屋根と、手前の小さな鳥居）
+    shrine(c, f, base) {
+      (base || LOOKS.grass)(c);
+      fill(c, '#5a3a22', 4, 6, 8, 7); fill(c, '#7a5232', 5, 7, 6, 5); fill(c, '#2a1a10', 7, 9, 2, 3);
+      fill(c, '#8a2a22', 2, 4, 12, 2); fill(c, '#a83a2a', 3, 3, 10, 1);
+      fill(c, '#c03028', 1, 13, 1, 3); fill(c, '#c03028', 14, 13, 1, 3); fill(c, '#c03028', 0, 12, 16, 1);
+    },
+    shrine_y(c) { LOOKS.shrine(c, 0, LOOKS.yomiland); },
     // 魔界のフィールドの城・村・町（地面が魔界の色）
     yomicastle(c) { LOOKS.castle(c, 0, LOOKS.yomiland); },
     yomivillage(c) { LOOKS.village(c, 0, LOOKS.yomiland); },

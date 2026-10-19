@@ -29,8 +29,8 @@
     warps: [
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 6, y: 4, to: "iwayato_r1", tx: 5, ty: 7, dir: 'up' },
-      { x: 9, y: 13, to: "world_makai", tx: 28, ty: 17, dir: "down" },
-      { x: 10, y: 13, to: "world_makai", tx: 28, ty: 17, dir: "down" },
+      { x: 9, y: 13, to: "world_makai", tx: 114, ty: 67, dir: "down" },
+      { x: 10, y: 13, to: "world_makai", tx: 114, ty: 67, dir: "down" },
     ],
     npcs: [
       { id: "iwayato_hermit", look: "elder", x: 12, y: 8, dir: "left", move: "still", talk: ["「ここは、光を嫌う者が隠れる穴だ。……わしも、そのひとりよ」", "「宮で夜ごと捧げる祈りの声も、ここまでは届かん。届かんが、わしも、同じ神々に祈っておる」"] },

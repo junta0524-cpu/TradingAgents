@@ -34,8 +34,8 @@
       { x: 17, y: 5, to: "kukunochi_inn", tx: 5, ty: 7, dir: 'up' },
       { x: 5, y: 12, to: "kukunochi_shop", tx: 5, ty: 7, dir: 'up' },
       { x: 18, y: 12, to: "kukunochi_r2", tx: 5, ty: 7, dir: 'up' },
-      { x: 11, y: 15, to: "world_ningen", tx: 4, ty: 14, dir: "down" },
-      { x: 12, y: 15, to: "world_ningen", tx: 4, ty: 14, dir: "down" },
+      { x: 11, y: 15, to: "world_ningen", tx: 18, ty: 55, dir: "down" },
+      { x: 12, y: 15, to: "world_ningen", tx: 18, ty: 55, dir: "down" },
     ],
     npcs: [
       { id: "kukunochi_chief", look: "elf2", x: 13, y: 6, dir: "down", move: "still", quest: "kukunochi_tsuta", talk: ["「森の木は、切らずに住まわせてもらうのが、この村の決まりだ」", "「聖の森は、どちらにもつかぬ。わしらも、そうして生きてきた」"] },

@@ -35,8 +35,8 @@
       { x: 4, y: 7, to: "ohabari_barracks", tx: 5, ty: 7, dir: 'up' },
       { x: 20, y: 7, to: "ohabari_smithy", tx: 5, ty: 7, dir: 'up' },
       { x: 4, y: 12, to: "ohabari_inn", tx: 5, ty: 7, dir: 'up' },
-      { x: 11, y: 15, to: "world_makai", tx: 6, ty: 6, dir: "down" },
-      { x: 12, y: 15, to: "world_makai", tx: 6, ty: 6, dir: "down" },
+      { x: 11, y: 15, to: "world_makai", tx: 26, ty: 23, dir: "down" },
+      { x: 12, y: 15, to: "world_makai", tx: 26, ty: 23, dir: "down" },
     ],
     npcs: [
       { id: "ohabari_oni1", look: "oni", x: 10, y: 6, dir: "down", move: "still", talk: ["「オハバリの城は、角ヶ原より古い。昔の鬼の王が建てたそうだ」"] },

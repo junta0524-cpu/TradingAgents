@@ -48,7 +48,7 @@
     ],
     warps: [
       // 西の端：人間界のフィールドへ,
-      { x: 0, y: 14, to: 'world_ningen', tx: 15, ty: 13, dir: 'left' },
+      { x: 0, y: 14, to: 'world_ningen', tx: 65, ty: 54, dir: 'left' },
       { x: 20, y: 2, to: 'minamo', tx: 15, ty: 22, dir: 'up' },
       // 東の端：ひなた野へ（4章で届け物を受けてから）
       { x: 39, y: 27, to: 'hinatano', tx: 1, ty: 8, dir: 'right', requires: { if: 'ch4_guild' }, blockedText: '（ひなた野への道。ギルドで届け物の依頼を受けてから行こう）' },

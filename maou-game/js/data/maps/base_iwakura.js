@@ -35,8 +35,8 @@
       { x: 22, y: 7, to: "iwakura_inn", tx: 5, ty: 7, dir: 'up' },
       { x: 5, y: 12, to: "iwakura_shop", tx: 5, ty: 7, dir: 'up' },
       { x: 21, y: 12, to: "iwakura_r1", tx: 5, ty: 7, dir: 'up' },
-      { x: 12, y: 15, to: "world_ningen", tx: 13, ty: 7, dir: "down" },
-      { x: 13, y: 15, to: "world_ningen", tx: 13, ty: 7, dir: "down" },
+      { x: 12, y: 15, to: "world_ningen", tx: 54, ty: 27, dir: "down" },
+      { x: 13, y: 15, to: "world_ningen", tx: 54, ty: 27, dir: "down" },
     ],
     npcs: [
       { id: "iwakura_guard1", look: "guard", x: 11, y: 5, dir: "down", move: "still", talk: ["「城主さまは、もうずいぶん前から王都に住んでおられる。ここを守るのは、わしら年寄りの衛士だけだ」"], talkAfter: ["「腕章を外して帰ってきた若い者が、昔のように笑うようになった」", "「少し痩せてな。だが、目が、ちゃんとこっちを見ておる」"] },

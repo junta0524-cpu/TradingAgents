@@ -34,8 +34,8 @@
       { x: 4, y: 8, to: "mizuho_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 21, y: 8, to: "mizuho_shop", tx: 5, ty: 7, dir: 'up' },
       { x: 9, y: 12, to: "mizuho_kura", tx: 5, ty: 7, dir: 'up' },
-      { x: 12, y: 15, to: "world_ningen", tx: 26, ty: 15, dir: "up" },
-      { x: 13, y: 15, to: "world_ningen", tx: 26, ty: 15, dir: "up" },
+      { x: 12, y: 15, to: "world_ningen", tx: 106, ty: 65, dir: "up" },
+      { x: 13, y: 15, to: "world_ningen", tx: 106, ty: 65, dir: "up" },
     ],
     npcs: [
       { id: "mizuho_farmer", look: "villager", x: 7, y: 10, dir: "down", move: "still", quest: "mizuho_ine", talk: ["「離宮の田の米は、昔、王さまの祭りに納めたものだ」"] },

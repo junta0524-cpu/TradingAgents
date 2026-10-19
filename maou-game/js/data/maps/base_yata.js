@@ -32,8 +32,8 @@
       { x: 6, y: 4, to: "yata_nest", tx: 5, ty: 7, dir: 'up' },
       { x: 15, y: 4, to: "yata_shop", tx: 5, ty: 7, dir: 'up' },
       { x: 6, y: 10, to: "yata_inn", tx: 5, ty: 7, dir: 'up' },
-      { x: 10, y: 14, to: "world_makai", tx: 21, ty: 4, dir: "left" },
-      { x: 11, y: 14, to: "world_makai", tx: 21, ty: 4, dir: "left" },
+      { x: 10, y: 14, to: "world_makai", tx: 89, ty: 18, dir: "left" },
+      { x: 11, y: 14, to: "world_makai", tx: 89, ty: 18, dir: "left" },
     ],
     npcs: [
       { id: "yata_crow1", look: "crow", x: 12, y: 6, dir: "left", move: "still", talk: ["「ここは鴉族の崖だ。風を読めねえやつは、足を踏み外すぜ」", "「人間を崖に上げるのは、初めてだ。王様の連れでなけりゃ、突き落としてるところさ」"], talkAfter: ["「王様が人間の前で頭を下げたって話は、崖じゅうに広まってるぜ」", "「……まあ、王様がそうするなら、おれたちも、突き落とすのはやめとくさ」"] },

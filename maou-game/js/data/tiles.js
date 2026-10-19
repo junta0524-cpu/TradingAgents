@@ -128,6 +128,9 @@
     'N': { name: '荒れ地',   look: 'waste',    tallGrass: true },
     '!': { name: '焼け野',   look: 'embers' },
     '$': { name: '魔界の野', look: 'yomiland' },
+    // 広い地図の寄り道：草に埋もれた祠（人間界）・焼け残った廟（魔界）。調べると体力・MPが戻る（マップの spots の heal）
+    '祠': { name: '祠', look: 'shrine', solid: true },
+    '廟': { name: '廟', look: 'shrine_y', solid: true },
     '%': { name: '赤土の野', look: 'redland' },
     '&': { name: '高原',     look: 'steppe' },
     '(': { name: '断崖',     look: 'crag',     solid: true },

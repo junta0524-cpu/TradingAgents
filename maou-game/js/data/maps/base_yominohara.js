@@ -31,8 +31,8 @@
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 10, to: "yominohara_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 19, y: 10, to: "yominohara_inn", tx: 5, ty: 7, dir: 'up' },
-      { x: 11, y: 14, to: "world_makai", tx: 27, ty: 19, dir: "down" },
-      { x: 12, y: 14, to: "world_makai", tx: 27, ty: 19, dir: "down" },
+      { x: 11, y: 14, to: "world_makai", tx: 110, ty: 75, dir: "down" },
+      { x: 12, y: 14, to: "world_makai", tx: 110, ty: 75, dir: "down" },
     ],
     npcs: [
       { id: "yominohara_granny", look: "oldwoman", x: 13, y: 8, dir: "left", move: "still", quest: "yominohara_doku", talk: ["「湯はまだ湧いておる。浸かれば、腰の痛みが少しやわらぐ」"] },

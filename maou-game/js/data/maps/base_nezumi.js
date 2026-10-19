@@ -30,8 +30,8 @@
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 4, to: "nezumi_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 14, y: 4, to: "nezumi_r2", tx: 5, ty: 7, dir: 'up' },
-      { x: 9, y: 13, to: "world_makai", tx: 9, ty: 7, dir: "down" },
-      { x: 10, y: 13, to: "world_makai", tx: 9, ty: 7, dir: "down" },
+      { x: 9, y: 13, to: "world_makai", tx: 38, ty: 27, dir: "down" },
+      { x: 10, y: 13, to: "world_makai", tx: 38, ty: 27, dir: "down" },
     ],
     npcs: [
       { id: "nezumi_kid", look: "kid_tail", x: 9, y: 7, dir: "down", move: "still", quest: "nezumi_ana", talk: ["「ここはね、人間の兵が野に火を放ったとき、みんなが逃げこんだ穴なんだって」"] },

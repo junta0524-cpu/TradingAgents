@@ -35,8 +35,8 @@
       { x: 5, y: 11, to: "ukihashi_inn", tx: 5, ty: 7, dir: 'up' },
       { x: 20, y: 11, to: "ukihashi_shop", tx: 5, ty: 7, dir: 'up' },
       { x: 9, y: 13, to: "ukihashi_r2", tx: 5, ty: 7, dir: 'up' },
-      { x: 12, y: 15, to: "world_ningen", tx: 21, ty: 14, dir: "down" },
-      { x: 13, y: 15, to: "world_ningen", tx: 21, ty: 14, dir: "down" },
+      { x: 12, y: 15, to: "world_ningen", tx: 86, ty: 55, dir: "down" },
+      { x: 13, y: 15, to: "world_ningen", tx: 86, ty: 55, dir: "down" },
     ],
     npcs: [
       { id: "ukihashi_gate1", look: "guard", x: 11, y: 4, dir: "down", move: "still", talk: ["「橋の向こうへ渡るなら、札を見せてもらう。……冒険者か。通っていい」", "「亜人は、札のほかに身元の書付もいる。決まりでな。……わしが決めたわけではない」"], talkAfter: ["「書付の決まりは、なくなった。札ひとつで、誰でも渡れる」", "「……もともと、橋は、渡るためにあるものだからな」"] },

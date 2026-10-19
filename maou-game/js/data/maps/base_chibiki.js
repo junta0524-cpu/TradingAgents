@@ -30,8 +30,8 @@
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 6, to: "chibiki_tower", tx: 5, ty: 7, dir: 'up' },
       { x: 15, y: 6, to: "chibiki_r1", tx: 5, ty: 7, dir: 'up' },
-      { x: 9, y: 13, to: "world_makai", tx: 18, ty: 14, dir: "down" },
-      { x: 10, y: 13, to: "world_makai", tx: 18, ty: 14, dir: "down" },
+      { x: 9, y: 13, to: "world_makai", tx: 74, ty: 55, dir: "down" },
+      { x: 10, y: 13, to: "world_makai", tx: 74, ty: 55, dir: "down" },
     ],
     npcs: [
       { id: "chibiki_watch", look: "wolfkid", x: 11, y: 6, dir: "left", move: "still", talk: ["「見張りの番だ。……人間？　ああ、王様のお客人か。どうぞどうぞ」"] },

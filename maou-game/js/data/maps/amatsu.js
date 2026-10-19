@@ -44,8 +44,8 @@
       { x: 4, y: 15, to: 'amatsu_r1', tx: 5, ty: 7, dir: 'up' },
       { x: 26, y: 15, to: 'amatsu_r2', tx: 5, ty: 7, dir: 'up' },
       { x: 31, y: 8, to: 'amatsu_slum', tx: 24, ty: 6, dir: 'left', requires: { if: 'amatsu_night', chapter: 8 }, blockedText: '鐘楼の裏の路地。表通りの白い街灯が、ここまでは届かない。' },
-      { x: 15, y: 19, to: 'world_ningen', tx: 26, ty: 12, dir: 'down', requires: { chapterTo: 9, chapterAlso: 13 }, blockedText: '（いまは、王都を離れない）' },
-      { x: 16, y: 19, to: 'world_ningen', tx: 26, ty: 12, dir: 'down', requires: { chapterTo: 9, chapterAlso: 13 }, blockedText: '（いまは、王都を離れない）' },
+      { x: 15, y: 19, to: 'world_ningen', tx: 106, ty: 47, dir: 'down', requires: { chapterTo: 9, chapterAlso: 13 }, blockedText: '（いまは、王都を離れない）' },
+      { x: 16, y: 19, to: 'world_ningen', tx: 106, ty: 47, dir: 'down', requires: { chapterTo: 9, chapterAlso: 13 }, blockedText: '（いまは、王都を離れない）' },
     ],
     triggers: [12, 13, 14, 15, 16, 17, 18, 19].map(x => ({ x, y: 8, event: 'ch8_debate', chapter: 8, if: 'ch8_arrive', unless: 'ch8_debate' })),
     spots: [

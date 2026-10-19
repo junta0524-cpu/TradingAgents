@@ -44,7 +44,7 @@
       // 南東の岩溝：風の岩溝（寄り道。js/data/maps/kemono_ravine.js）
       { x: 30, y: 19, to: 'kemono_ravine', tx: 3, ty: 15, dir: 'up' },
       // 西の端：人間界のフィールドへ,
-      { x: 0, y: 10, to: 'world_ningen', tx: 12, ty: 3, dir: 'down' },
+      { x: 0, y: 10, to: 'world_ningen', tx: 50, ty: 11, dir: 'down' },
       { x: 31, y: 10, to: 'kuzu_village', tx: 1, ty: 8, dir: 'right', requires: { if: 'ch7_uzume' }, blockedText: '（道の先に、小さな集落が見える）' },
     ],
     triggers: [
