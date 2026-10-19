@@ -18,9 +18,9 @@
         // クリア後：レベルに応じて強い敵（Lv40〜99のやりこみ）
         13: { byLevel: [
           { from: 1, groups: [['kage_oni'], ['yomi_hebi'], ['na_kui'], ['kage_oni', 'na_kui']] },
-          { from: 35, groups: [['zantou'], ['kage_oni', 'zantou'], ['orochi']] },
-          { from: 55, groups: [['orochi'], ['orochi', 'na_kui'], ['nakui_ou']] },
-          { from: 75, groups: [['nakui_ou'], ['nakui_ou', 'orochi'], ['orochi', 'orochi', 'kage_oni']] },
+          { from: 35, groups: [['zantou'], ['kage_oni', 'zantou'], ['kage_oni', 'kage_oni']] },
+          { from: 55, groups: [['zantou', 'zantou'], ['kage_oni', 'na_kui', 'zantou'], ['kage_oni', 'kage_oni', 'zantou']] },
+          { from: 75, groups: [['zantou', 'zantou', 'kage_oni'], ['zantou', 'zantou'], ['kage_oni', 'kage_oni', 'na_kui']] },
         ] },
       },
     },

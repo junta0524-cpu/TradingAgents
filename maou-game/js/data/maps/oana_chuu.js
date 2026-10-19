@@ -12,7 +12,7 @@
     start: {'x': 12, 'y': 2, 'dir': 'down'},
     battleBg: 'night',
     dark: true,
-    encounter: {'steps': [12, 20], 'groups': [['kage_oni'], ['yomi_hebi', 'na_kui'], ['kage_oni', 'kage_oni'], ['yomi_hebi'], ['orochi']]},
+    encounter: {'steps': [12, 20], 'groups': [['kage_oni'], ['yomi_hebi', 'na_kui'], ['kage_oni', 'kage_oni'], ['yomi_hebi'], ['yomi_hebi', 'kage_oni']]},
     rows: [
       '黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒',
       '黒闇闇闇闇黒闇闇闇闇闇闇S闇闇闇闇闇闇黒闇闇闇黒',

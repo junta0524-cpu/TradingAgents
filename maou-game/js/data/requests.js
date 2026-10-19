@@ -39,8 +39,8 @@
     // ---- クリア後 ----
     { id: 'zantou', from: 13, title: '残党の将', kind: 'awaken', count: 3,
       desc: '人間界の地図を、軍の残党の将がさまよっている。3人、目を覚まさせてほしい。', reward: { copper: 2000 } },
-    { id: 'orochi', from: 13, title: '黄泉の大蛇', kind: 'slay', enemy: 'orochi', count: 3,
-      desc: '大穴から這い出た大蛇が、両方の世界の道を荒らしている。3匹退治してほしい。', reward: { copper: 3000, item: 'fuku_suzu', count: 1 } },
+    { id: 'orochi', from: 13, title: '黄泉の大蛇', kind: 'flag', flag: 'gm:yomi_fuchi1:nushi',
+      desc: '大穴の最深部のさらに下、黄泉の深淵に大蛇が棲みついた。退治してほしい。', reward: { copper: 3000, item: 'fuku_suzu', count: 1 } },
     { id: 'hyoumon', from: 13, title: '氷門の番人', kind: 'flag', flag: 'gm:oana_jou:nushi',
       desc: '大穴の上層の氷の門を、番人が守っている。退けてほしい。', reward: { copper: 3000 } },
     { id: 'nushi', from: 13, title: '大穴の主', kind: 'flag', flag: 'gm:oana_chuu:nushi',

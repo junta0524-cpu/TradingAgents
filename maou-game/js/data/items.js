@@ -76,9 +76,13 @@
     hyoumon_hitai:   { name: '蛇の比礼',   type: 'accessory', def: 10, resist: { sleep: 0, confuse: 0 }, who: ['oonamuchi'], desc: 'スセリビメがオオナムチに渡し、蛇の室で眠らせなかった比礼。眠りと惑わしを払う。（古事記）' },
     kogane_inaho:    { name: '大宜都比売の稲穂',   type: 'accessory', perk: 'expBoost', who: ['oonamuchi'], desc: '体から稲や粟を生んだ女神・大宜都比売の稲穂。戦いから得るものが多くなる。（古事記）' },
     nushi_shinzou:   { name: '天詔琴',   type: 'accessory', hp: 200, mp: 100, wis: 15, who: ['oonamuchi'], desc: '大穴牟遅がスサノオのもとから、生大刀・生弓矢とともに持ち帰った琴。（古事記）' },
+    // 黄泉の深淵の番人のごほうび（クリア後）
+    yashiori_kame:   { name: '八塩折の甕', type: 'accessory', hp: 150, def: 25, resist: { poison: 0, venom: 0 }, who: ['oonamuchi'], desc: '須佐之男命が八俣の大蛇を酔わせた、八塩折の酒を満たした甕。毒を寄せつけない。（古事記）' },
+    manai_shizuku:   { name: '天之真名井の雫', type: 'accessory', mp: 150, wis: 30, resist: { sleep: 0, confuse: 0, silence: 0 }, who: ['oonamuchi'], desc: '天照大御神と須佐之男命が誓いを立てた、天の真名井の水のひと雫。奪われた名を映し、心を乱させない。（古事記）' },
 
     koudou_kagi:  { name: '坑道の鍵', type: 'key', desc: '古い坑道の、鉄の扉の鍵。' },
     iwamizo_kagi: { name: '岩溝の鍵', type: 'key', desc: '風の岩溝の、岩の扉の鍵。' },
+    fuchi_kagi:   { name: '深淵の鍵', type: 'key', desc: '黄泉の深淵の、底の階の蔵の鍵。' },
     // 寄り道の頼みごと（js/data/quests.js）で預かる品
     magane_tegami:  { name: '坑夫の母の手紙', type: 'key', desc: 'マガネの坑夫の母から、ヤチマタの宿で働く息子へ。' },
     ukihashi_fumi:  { name: '関所の書付', type: 'key', desc: 'ウキハシの関所から、イナサの網元へ宛てた書付。' },

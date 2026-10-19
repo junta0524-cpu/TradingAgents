@@ -41,16 +41,17 @@
       palette: { K: '#06040a', H: '#4a3a2a', D: '#6a2a2a', E: '#ff6040', W: '#e0d0b0' }, sprite: H,
     },
     orochi: {
-      big: true,   // 2体までなら大きく描く（js/scenes/battle.js）
-      name: '黄泉の大蛇', hp: 900, atk: 170, def: 130, agi: 60, wis: 120, exp: 1500, copper: 200,
+      big: true,   // 大きく描く（js/scenes/battle.js）
+      name: '黄泉の大蛇', hp: 3800, atk: 210, def: 180, agi: 90, wis: 150, exp: 8000, copper: 2000, hits: 2,   // 黄泉の深淵　上の淵の番人（Lv75で自動戦闘およそ6〜7割）
       drop: { item: 'dokukeshi', rank: 'A' },
-      onHit: { status: 'venom', chance: 0.25 },
+      actions: [{ w: 3, type: 'attack' }, { w: 1, type: 'kotodama', id: 'doku_rinpun' }],
+      onHit: { status: 'poison', chance: 0.2 },
       palette: { K: '#06060a', H: '#2a4a3a', D: '#14261e', E: '#ff3030', W: '#a0e0c0' },
       sprite: G.DATA.enemies.centipede.sprite,
     },
     nakui_ou: {
-      big: true,   // 2体までなら大きく描く（js/scenes/battle.js）
-      name: '名喰いの王', hp: 1600, atk: 230, def: 190, agi: 120, wis: 200, exp: 3500, copper: 400,
+      big: true,   // 大きく描く（js/scenes/battle.js）
+      name: '名喰いの王', hp: 4100, atk: 220, def: 188, agi: 130, wis: 230, exp: 15000, copper: 4000, hits: 2,   // 黄泉の深淵　底の番人（クリア後でいちばん強い番人。Lv85で自動戦闘およそ6割）
       drop: { item: 'mezamashi', rank: 'A' },
       actions: [{ w: 3, type: 'attack' }, { w: 1, type: 'kotodama', id: 'mayoi_bi' }],
       resist: { sleep: 0, confuse: 0 },

@@ -96,7 +96,7 @@ async function run(page, expect) {
   const fight = async (dir, mapId) => {
     await ev(() => GAME.state.party.forEach(m => { m.hp = m.maxHp; m.mp = m.maxMp; m.status = {}; }));
     await face(dir); await page.keyboard.press('KeyZ'); await wait(250);
-    for (let i = 0; i < 400; i++) {
+    for (let i = 0; i < 900; i++) {
       const s = await scenes();
       if (s === 'マップ' && i > 3) break;
       await page.keyboard.press('KeyZ'); await wait(s.includes('戦闘') ? 60 : 150);
@@ -221,6 +221,43 @@ async function run(page, expect) {
   // ひびの床から落ちると中層へ
   await place('oana_jou', 5, 11, 'down'); await step('d'); await closeMsgs(); await idle();
   expect('上層：ひびの床を踏むと、中層へ落ちる', await pos(), 'oana_chuu(12,10)');
+
+  // ---- 6. 黄泉の深淵（大穴の最深部の南西の石段から） ----
+  await place('oana_soko', 2, 20, 'left'); await step('l');
+  expect('寄り道：大穴の最深部の南西の石段から、黄泉の深淵へ', await pos(), 'yomi_fuchi1(12,2)');
+  expect('上の淵：岩で穴を埋める前は、西の小部屋へ行けない', await route(1, 2), null);
+  await goTo(10, 3, '上の淵 岩の右'); for (const k of 'll') await step(k);
+  expect('上の淵：岩を穴へ押し込むと、西の通路を渡れる', await flag('gm:yomi_fuchi1:fill:7,3'), true);
+  await goTo(1, 2, '上の淵 西の小部屋'); await examine('u');
+  expect('上の淵：深淵の鍵', await has('fuchi_kagi'), 1);
+  expect('上の淵：レバーを倒す前は、南の門の先へ行けない', await route(12, 15), null);
+  await goTo(19, 3, '上の淵 焼けた岩の手前'); for (const k of 'rrru') await step(k);   // 焼けた岩を渡る（体力が減る）
+  await examine('u');
+  expect('上の淵：焼けた岩の奥のレバーで、南の門が開く', await flag('gm:yomi_fuchi1:lever'), true);
+  for (const k of 'dlll') await step(k);   // 焼けた岩を渡って戻る
+  await goTo(12, 15, '上の淵 門の先');
+  expect('上の淵：番人（黄泉の大蛇）を倒す', await fight('d', 'yomi_fuchi1'), true);
+  expect('上の淵：大蛇のごほうび（八塩折の甕）', await has('yashiori_kame'), 1);
+  await goTo(12, 16, '上の淵 下への石段');
+  expect('上の淵：石段から底の階へ', await pos(), 'yomi_fuchi2(12,16)');
+  await goTo(16, 10, '底 東の灯籠'); await examine('r');
+  expect('底：灯籠を順番ちがいで灯すと消える', await ev(() => GAME.scene.find('マップ').gimmickState.seq.names || 0), 0);
+  for (const [x, y, d] of [[12, 8, 'u'], [16, 10, 'r'], [12, 14, 'u'], [8, 10, 'l']]) { await goTo(x, y, '底 灯籠'); await examine(d); }
+  expect('底：石碑の順（北→東→南→西）で灯すと北の門が開く', await flag('gm:yomi_fuchi2:names'), true);
+  await goTo(4, 10, '底 鍵の扉の前'); await examine('l');
+  expect('底：深淵の鍵で西の蔵が開き、鍵はなくなる', `${await flag('gm:yomi_fuchi2:vault')}/${await has('fuchi_kagi')}`, 'true/0');
+  await goTo(2, 8, '底 蔵の宝箱'); await examine('l');
+  expect('底：蔵の宝箱', await flag('chest:yomi_fuchi2:vault'), true);
+  await goTo(20, 10, '底 焼けた回廊の手前'); for (const k of 'ruuuu') await step(k);   // 焼けた回廊を渡る
+  await examine('r');
+  expect('底：焼けた回廊の奥の宝箱', await flag('chest:yomi_fuchi2:east'), true);
+  for (const k of 'ddddl') await step(k);   // 焼けた回廊を渡って戻る
+  await ev(() => GAME.state.party.forEach(m => { m.hp = m.maxHp; }));
+  await goTo(12, 4, '底 王の間の前');
+  expect('底：番人（名喰いの王）を倒す', await fight('u', 'yomi_fuchi2'), true);
+  expect('底：名喰いの王のごほうび（天之真名井の雫）', await has('manai_shizuku'), 1);
+  await goTo(10, 2, '底 王の間'); await examine('u');
+  expect('底：王の間の宝箱', await flag('chest:yomi_fuchi2:throne1'), true);
 
   // ---- 物語の道すじのダンジョンの寄り道 ----
   await place('field_minamo', 7, 26, 'up');

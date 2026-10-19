@@ -1,5 +1,5 @@
 // このファイルの役目：マップ「大穴の最深部」のデータ（クリア後）。強い敵が出る。いちばん奥に「試練の扉」がある。
-// 扉を調べると、天の声が問う（js/data/story/postgame.js）。クナドの案内で来られる。
+// 扉を調べると、天の声が問う（js/data/story/postgame.js）。クナドの案内で来られる。南西の隅の石段は、さらに下の黄泉の深淵へ。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -36,12 +36,13 @@
       'RzzRRRRRRzzzzzzzzzRRRRzzzR',
       'RzzzzzzzzzzzzzzzzzzzzRRRRR',
       'Rzzzzzzzzzzzzzzzzzzzz門zzzR',
-      'RzzzzzzzzzzzzzzzzzzzzRzzzR',
+      'RSzzzzzzzzzzzzzzzzzzzRzzzR',
       'RRRRRRRRRRRRzzRRRRRRRRRRRR',
     ],
     warps: [
       { x: 12, y: 21, to: 'yomi_hani', tx: 9, ty: 12, dir: 'down' },
       { x: 13, y: 21, to: 'yomi_hani', tx: 9, ty: 12, dir: 'down' },
+      { x: 1, y: 20, to: 'yomi_fuchi1', tx: 12, ty: 2, dir: 'down' },   // 南西の石段：黄泉の深淵へ（クリア後の寄り道）
     ],
     flagTiles: [{ x: 21, y: 19, ch: 'z', if: 'soko_vault' }],   // レバーで開く南東の蔵
     spots: [

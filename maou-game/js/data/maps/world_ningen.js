@@ -27,8 +27,8 @@
         13: { byLevel: [
           { from: 1, groups: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']] },
           { from: 35, groups: [['zantou'], ['zantou', 'arano_ookami'], ['zantou', 'zantou']] },
-          { from: 55, groups: [['zantou', 'zantou'], ['orochi'], ['zantou', 'orochi']] },
-          { from: 75, groups: [['orochi', 'orochi'], ['nakui_ou'], ['orochi', 'zantou', 'zantou']] },
+          { from: 55, groups: [['zantou', 'zantou'], ['zantou', 'arano_ookami', 'arano_ookami'], ['kurogane_tokage', 'zantou']] },
+          { from: 75, groups: [['zantou', 'zantou', 'zantou'], ['zantou', 'zantou'], ['kurogane_tokage', 'kurogane_tokage', 'zantou']] },
         ] },
       },
     },

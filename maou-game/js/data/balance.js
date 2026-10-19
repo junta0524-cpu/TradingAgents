@@ -250,7 +250,7 @@
       mori_koromo: 140, kumoginu: 300, hagane_doumaru: 340, juuhi_dougi: 280, tsugihagi_kawa: 160, shirogane_yoroi: 620,
       inori_houi: 560, onigane_yoroi: 1100,
       dokuyoke: 80, mezame_suzu: 120, tama_no_o: 200, chikara_ude: 200, inochi_ishi: 240, kokoro_kagami: 260,
-      owashi_hane: 500, fuku_suzu: 900, tsukikage_obi: 700, hyoumon_hitai: 900, kogane_inaho: 1500, nushi_shinzou: 2500,
+      owashi_hane: 500, fuku_suzu: 900, tsukikage_obi: 700, hyoumon_hitai: 900, kogane_inaho: 1500, nushi_shinzou: 2500, yashiori_kame: 3000, manai_shizuku: 4000,
     },
     SELL_RATE: 0.5,
     INN_PRICE: 6,      // 宿屋の一晩の値段
