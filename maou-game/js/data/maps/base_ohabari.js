@@ -20,8 +20,8 @@
       "GfGGGGffPffccffPffGGGGfG",
       "GfGGDGfffffccfffffGGDGfG",
       "GffffffffffccffffffffffG",
-      "GfffffffPffccffPfffffffG",
-      "GffffffffffccffffffffffG",
+      "GfffffffPffccffPffGGGGfG",
+      "GffffffffffccfffffGGDGfG",
       "GfGGGGfffffccffffffffffG",
       "GfGGDGffPffccffPffKKfffG",
       "GffffffffffccfffffffKffG",
@@ -29,6 +29,7 @@
       "GGGGGGGGGGGccGGGGGGGGGGG",
     ],
     warps: [
+      { x: 20, y: 10, to: "ohabari_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 11, y: 4, to: "ohabari_hall", tx: 5, ty: 7, dir: 'up' },
       { x: 12, y: 4, to: "ohabari_hall", tx: 5, ty: 7, dir: 'up' },

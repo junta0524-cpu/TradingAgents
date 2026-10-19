@@ -17,8 +17,8 @@
       "(((()GGG))uu))GGG)((((",
       "(((()GDG))uu))GDG)((((",
       "(((())))))uu))))))((((",
-      "(((())))))uu))))))((((",
-      "(((())))))uu))))))((((",
+      "(((()GGG))uu))))))((((",
+      "(((()GDG))uu))))))((((",
       "(((())))))uu))nn))((((",
       "(((()GGG))uu))))))((((",
       "(((()GDG))uu))))))((((",
@@ -28,6 +28,7 @@
       "((((((((((uu((((((((((",
     ],
     warps: [
+      { x: 6, y: 7, to: "yata_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 6, y: 4, to: "yata_nest", tx: 5, ty: 7, dir: 'up' },
       { x: 15, y: 4, to: "yata_shop", tx: 5, ty: 7, dir: 'up' },
@@ -71,7 +72,7 @@
   };
 
   G.DATA.maps.yata_shop = {
-    name: "ヤタの断崖　鴉族の市",
+    name: "ヤタの断崖　鴉族の武具市",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

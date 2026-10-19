@@ -12,8 +12,8 @@
     detection: 1,
     rows: [
       "TTTTTTTTTTTTTTTTTTTTTTTTTT",
-      "T...........--...........T",
-      "T..^^^^^....--....YYY....T",
+      "T...........--........YYYT",
+      "T..^^^^^....--....YYY.#D#T",
       "T..##D##....--....#D#....T",
       "T...........--...........T",
       "T..........VHHV..........T",
@@ -29,6 +29,7 @@
       "TTTTTTTTTTTT--TTTTTTTTTTTT",
     ],
     warps: [
+      { x: 23, y: 2, to: "ukihashi_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 3, to: "ukihashi_post", tx: 5, ty: 7, dir: 'up' },
       { x: 19, y: 3, to: "ukihashi_r1", tx: 5, ty: 7, dir: 'up' },
@@ -127,7 +128,7 @@
   };
 
   G.DATA.maps.ukihashi_shop = {
-    name: "ウキハシ　関所の店",
+    name: "ウキハシ　武具屋",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

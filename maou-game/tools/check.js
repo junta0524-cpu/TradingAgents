@@ -525,6 +525,20 @@ const { chromium } = require('playwright');
   expect('ギルドの依頼：受ける・数える・報告・ごほうび', rq, 'inu,kusuri,kumo,koke | open/true/active/false | 0:5 | 野犬の群れ:ready | 3:410:4:claimed,claimed,claimed | active | ready');
   expect('町の看板：宿屋・店の戸の上に看板（ミナモ・天津京＝宿屋と道具屋と武具屋が別々、市場には出さない）', await ev(() => ['minamo', 'amatsu', 'world_makai'].map(m => m + ':' + GAME.shopSigns.list(m).map(s => s.kind).sort().join('+')).join(' ')), 'minamo:gear+inn+item amatsu:gear+inn+item world_makai:');
   expect('店の分け方：主な町は道具屋と武具屋が別の建物（道具屋に武具なし・武具屋に道具なし）', await ev(() => [['minamo','minamo_bugu'],['hijiri','hijiri_bugu'],['ro_dougu','ro'],['kuzu','kuzu_bugu'],['amatsu_dougu','amatsu']].map(([d, b]) => { const isGear = id => { const it = GAME.DATA.items[id]; return !!(it && ['weapon', 'armor', 'accessory'].includes(it.type)); }; const sd = GAME.DATA.shops[d], sb = GAME.DATA.shops[b]; return (sd && sb && sd.items.every(i => !isGear(i)) && sb.items.every(isGear)) ? 'ok' : d; }).join()), 'ok,ok,ok,ok,ok');
+  expect('寄り道の拠点：15か所すべてに道具屋と武具屋の看板。拠点限定の品は1軒だけで売り、値段がある', await ev(() => {
+    const bases = ['magane', 'iwakura', 'yachimata', 'kukunochi', 'ukihashi', 'inasa', 'takama', 'mizuho', 'yata', 'ohabari', 'hirasaka', 'nezumi', 'chibiki', 'yominohara', 'iwayato'];
+    const bad = bases.filter(m => { const k = GAME.shopSigns.list(m).map(s => s.kind); return !k.includes('gear') || !k.includes('item'); });
+    const count = {}; Object.values(GAME.DATA.shops).forEach(s => s.items.forEach(i => { i = i.id || i; count[i] = (count[i] || 0) + 1; }));
+    const ex = ['yado_nigiri', 'mori_reiyaku', 'kiduke', 'miru_shiru', 'hiuchi_tsubute', 'hyourougan', 'kiyome_shio', 'kanro', 'nemuri_hane', 'oni_sake', 'oho_momo', 'hora_tsuchi', 'chibiki_ishiko', 'yomi_izumi', 'iwaya_akari',
+      'kyahan', 'kusu_tsue', 'sekimori_kote', 'samekawa', 'tsuruhashi', 'ooshitate', 'yashiromori_hire', 'tamakazura', 'karasuba', 'kanasai', 'momo_bokutou', 'narikabura', 'chibiki_yoroi', 'yomi_kushiro', 'iwaya_kagami'];
+    return bad.join() + '|' + ex.filter(i => count[i] !== 1 || !GAME.DATA.balance.PRICES[i] || !GAME.DATA.items[i]).join();
+  }), '|');
+  expect('拠点限定の道具：MPを戻す・全員の体力を戻す（移動中は相手を選ばない）', await ev(() => {
+    const oo = GAME.party.member('oonamuchi'); const keep = { mp: oo.mp, hp: oo.hp };
+    oo.mp = 0; GAME.party.addItem('miru_shiru'); GAME.kotodama.useItem(oo, 'miru_shiru', oo, null); const a = oo.mp >= 12 && oo.mp <= 16;
+    oo.hp = 1; GAME.party.addItem('mori_reiyaku'); GAME.kotodama.useItem(oo, 'mori_reiyaku', null, null); const b = oo.hp > 1;
+    Object.assign(oo, keep); return `${a}/${b}/${GAME.kenbun.effectText(GAME.DATA.items.miru_shiru.effect)}`;
+  }), 'true/true/MPを戻す（12〜16）');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
   expect('ギルドの依頼：残党の将・残党の隊は、その敵を目覚めさせた数で済む', await ev(() => {
     const keep = JSON.stringify(GAME.state.requests || {}); GAME.state.requests = {};

@@ -251,6 +251,11 @@
       mori_koromo: 140, kumoginu: 300, hagane_doumaru: 340, juuhi_dougi: 280, tsugihagi_kawa: 160, shirogane_yoroi: 620,
       inori_houi: 560, onigane_yoroi: 1100,
       dokuyoke: 80, mezame_suzu: 120, tama_no_o: 200, chikara_ude: 200, inochi_ishi: 240, kokoro_kagami: 260,
+      // 拠点限定の品（items.js の「拠点限定の品」）
+      yado_nigiri: 18, mori_reiyaku: 40, kiduke: 30, miru_shiru: 45, hiuchi_tsubute: 35, hyourougan: 50, kiyome_shio: 40, kanro: 120,
+      nemuri_hane: 80, oni_sake: 150, oho_momo: 200, hora_tsuchi: 180, chibiki_ishiko: 150, yomi_izumi: 220, iwaya_akari: 300,
+      kyahan: 150, kusu_tsue: 260, sekimori_kote: 200, samekawa: 260, tsuruhashi: 380, ooshitate: 480, yashiromori_hire: 650, tamakazura: 700,
+      karasuba: 1200, kanasai: 1500, momo_bokutou: 1400, narikabura: 1000, chibiki_yoroi: 1600, yomi_kushiro: 1100, iwaya_kagami: 1800,
       owashi_hane: 500, fuku_suzu: 900, tsukikage_obi: 700, hyoumon_hitai: 900, kogane_inaho: 1500, nushi_shinzou: 2500, yashiori_kame: 3000, manai_shizuku: 4000,
     },
     SELL_RATE: 0.5,

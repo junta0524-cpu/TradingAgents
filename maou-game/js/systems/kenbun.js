@@ -55,6 +55,7 @@
     if (!e) return '';
     switch (e.kind) {
       case 'heal': return e.full ? '体力をすべて戻す' : `体力を戻す（${e.power[0]}〜${e.power[1]}＋賢さ）`;
+      case 'mp': return `MPを戻す（${e.power[0]}〜${e.power[1]}）`;
       case 'damage': return `傷を与える（${e.power[0]}〜${e.power[1]}＋賢さ）`;
       case 'buff': return `${STAT[e.stat] || e.stat}を${e.mult}倍に（${e.turns}ターン）`;
       case 'guard': return `${e.turns}ターン、傷を受けない`;

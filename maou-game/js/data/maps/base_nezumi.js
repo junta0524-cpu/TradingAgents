@@ -14,7 +14,7 @@
       "黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒",
       "黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒",
       "黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒",
-      "黒黒黒z黒黒黒zzzzzz黒黒黒z黒黒黒",
+      "黒黒黒z黒黒黒黒D黒黒D黒黒黒黒z黒黒黒",
       "黒黒黒z黒D黒zzzzzz黒D黒z黒黒黒",
       "黒黒黒zzzRRRzzzzzzzz黒黒黒",
       "黒黒黒zzzRRRzzzzzzzz黒黒黒",
@@ -27,6 +27,8 @@
       "黒黒黒黒黒黒黒黒黒zz黒黒黒黒黒黒黒黒黒",
     ],
     warps: [
+      { x: 8, y: 3, to: "nezumi_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
+      { x: 11, y: 3, to: "nezumi_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 4, to: "nezumi_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 14, y: 4, to: "nezumi_r2", tx: 5, ty: 7, dir: 'up' },

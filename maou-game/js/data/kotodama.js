@@ -6,6 +6,7 @@
 // use：battle（戦闘だけ）／both（戦闘と移動中）／field（移動中だけ）
 // effect：
 //   { kind: 'heal', power: [最小, 最大] } または { kind: 'heal', full: true }  … 体力を戻す
+//   { kind: 'mp', power: [最小, 最大] }                                       … MPを戻す（いまは道具だけ）
 //   { kind: 'damage', power: [最小, 最大], element: 'fire' など }            … 傷を与える
 //   { kind: 'buff', stat: 'atk'|'def'|'both', mult: 倍率, turns: ターン数 }   … 強くする
 //   { kind: 'guard', turns: ターン数 }                                        … 傷を受けない

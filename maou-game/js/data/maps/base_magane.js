@@ -17,8 +17,8 @@
       "meXXDXeeeee::eeeeeXXDXem",
       "meeeeeeeeee::eeeeeeeeeem",
       "meeeeeooeee::eeeZeeeeeem",
-      "meReeeeeeee::eeeeeeeReem",
-      "meeeeeeeeee::eeeeeeeeeem",
+      "meReeeeeeee::eXXXXeeReem",
+      "meeeeeeeeee::eXXDXeeeeem",
       "mee::::::::::::::::::eem",
       "meeeeeeeeee::eeeeeeeeeem",
       "meeXXXXeeee::eeeeXXXXeem",
@@ -28,6 +28,7 @@
       "mmmmmmmmmmm::mmmmmmmmmmm",
     ],
     warps: [
+      { x: 16, y: 7, to: "magane_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 4, y: 3, to: "magane_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 20, y: 3, to: "magane_inn", tx: 5, ty: 7, dir: 'up' },
@@ -121,7 +122,7 @@
       { x: 6, y: 8, to: "magane", tx: 5, ty: 12, dir: 'down' },
     ],
     npcs: [
-      { id: "magane_shop_shop", look: "merchant", x: 5, y: 2, dir: "down", move: "still", shop: "magane", talk: ["「鶴嘴から傷薬まで。坑夫の村の店だよ」"] },
+      { id: "magane_shop_shop", look: "merchant", x: 5, y: 2, dir: "down", move: "still", shop: "magane", talk: ["「傷薬も干し飯も、坑夫の村の店だよ」"] },
     ],
     chests: [],
     signs: [],

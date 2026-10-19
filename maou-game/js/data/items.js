@@ -80,6 +80,40 @@
     yashiori_kame:   { name: '八塩折の甕', type: 'accessory', hp: 150, def: 25, resist: { poison: 0, venom: 0 }, who: ['oonamuchi'], desc: '須佐之男命が八俣の大蛇を酔わせた、八塩折の酒を満たした甕。毒を寄せつけない。（古事記）' },
     manai_shizuku:   { name: '天之真名井の雫', type: 'accessory', mp: 150, wis: 30, resist: { sleep: 0, confuse: 0, silence: 0 }, who: ['oonamuchi'], desc: '天照大御神と須佐之男命が誓いを立てた、天の真名井の水のひと雫。奪われた名を映し、心を乱させない。（古事記）' },
 
+    // ---- 拠点限定の品（ユーザー依頼：寄り道の拠点15か所の道具屋・武具屋に1つずつ。ほかの店では売っていない）----
+    // 道具（type: 'use'）。名前は土地の暮らしと古事記の雰囲気から。
+    yado_nigiri:   { name: '旅籠の握り飯', type: 'use', target: 'ally', use: 'both', effect: { kind: 'heal', power: [45, 55] }, desc: 'ヤチマタの宿場で握る、大きな握り飯。体力がたっぷり戻る。' },
+    mori_reiyaku:  { name: '森の霊薬', type: 'use', target: 'allies', use: 'both', effect: { kind: 'heal', power: [25, 30] }, desc: 'ククノチのエルフが煎じる薬。仲間みんなの体力が戻る。' },
+    kiduke:        { name: '関守の気付け薬', type: 'use', target: 'ally', use: 'both', effect: { kind: 'cure', statuses: ['poison', 'venom', 'sleep', 'confuse', 'silence', 'bind'] }, desc: 'ウキハシの関守が持ち歩く、強い匂いの薬。たいていの状態を治す。' },
+    miru_shiru:    { name: '海松の汁', type: 'use', target: 'ally', use: 'both', effect: { kind: 'mp', power: [12, 16] }, desc: 'イナサの海でとれる海松（みる）を煮た汁。言葉の力（MP）が少し戻る。' },
+    hiuchi_tsubute:{ name: '火打ちの礫', type: 'use', target: 'enemies', use: 'battle', effect: { kind: 'damage', power: [25, 35], element: 'fire' }, desc: 'マガネの坑夫が使う、火花の散る石。投げると敵みんなに火が走る。' },
+    hyourougan:    { name: '兵糧丸', type: 'use', target: 'allies', use: 'battle', effect: { kind: 'buff', stat: 'atk', mult: 1.3, turns: 4 }, desc: 'イワクラの城で兵に配る丸薬。仲間みんなの力が上がる。' },
+    kiyome_shio:   { name: '清めの塩', type: 'use', target: 'self', use: 'field', effect: { kind: 'barrier' }, desc: 'タカマの丘の社で清めた塩。撒くと、しばらく獣が寄りつかない。' },
+    kanro:         { name: '離宮の甘露', type: 'use', target: 'ally', use: 'both', effect: { kind: 'heal', full: true }, desc: 'ミズホ離宮の奥で作られる甘い露。体力がすべて戻る。' },
+    nemuri_hane:   { name: '眠り羽の香', type: 'use', target: 'enemies', use: 'battle', effect: { kind: 'status', status: 'sleep', chance: 0.6 }, desc: 'ヤタの鴉族が羽にしみこませる香。焚くと敵が眠りに誘われる。' },
+    oni_sake:      { name: '鬼の神酒', type: 'use', target: 'allies', use: 'battle', effect: { kind: 'buff', stat: 'atk', mult: 1.5, turns: 4 }, desc: 'オハバリの鬼が戦の前に酌み交わす神酒（みき）。仲間みんなの力が大きく上がる。' },
+    oho_momo:      { name: '意富加牟豆美の桃', type: 'use', target: 'enemies', use: 'battle', effect: { kind: 'damage', power: [90, 110] }, desc: 'イザナギが黄泉比良坂で追手に投げつけた桃の名を持つ。投げると敵みんなを打ち払う。（古事記）' },
+    hora_tsuchi:   { name: '洞の土', type: 'use', target: 'allies', use: 'battle', effect: { kind: 'guard', turns: 2 }, desc: '「内はほらほら、外はすぶすぶ」。野火から大穴牟遅を隠した鼠の穴の土。仲間みんなを守る。（古事記）' },
+    chibiki_ishiko:{ name: '千引の石粉', type: 'use', target: 'allies', use: 'battle', effect: { kind: 'buff', stat: 'def', mult: 1.5, turns: 5 }, desc: '黄泉の道をふさいだ千引の岩を削った粉。仲間みんなの守りが堅くなる。（古事記）' },
+    yomi_izumi:    { name: '黄泉の泉水', type: 'use', target: 'ally', use: 'both', effect: { kind: 'mp', power: [45, 55] }, desc: 'ヨミノハラの湧き水。言葉の力（MP）がたっぷり戻る。' },
+    iwaya_akari:   { name: '岩屋戸の灯', type: 'use', target: 'allies', use: 'both', effect: { kind: 'heal', power: [150, 180] }, desc: 'イワヤトの奥でともす灯の油。仲間みんなの体力が大きく戻る。' },
+    // 武具（装備できるのはオオナムチ）
+    kyahan:        { name: '旅人の脚絆', type: 'accessory', agi: 5, hp: 10, who: ['oonamuchi'], desc: 'ヤチマタの宿場で旅人が巻く脚絆（きゃはん）。足が軽くなる。' },
+    kusu_tsue:     { name: '楠の杖', type: 'weapon', atk: 6, wis: 12, who: ['oonamuchi'], desc: 'ククノチの森の古い楠から削った杖。言葉がよく通る。' },
+    sekimori_kote: { name: '関守の籠手', type: 'accessory', def: 5, resist: { bind: 0.5 }, who: ['oonamuchi'], desc: 'ウキハシの関守が腕にはめる籠手。縛られにくい。' },
+    samekawa:      { name: '鮫皮の衣', type: 'armor', def: 9, agi: 2, resist: { poison: 0.5 }, who: ['oonamuchi'], desc: 'イナサの漁師が鮫の皮でつくった衣。毒にかかりにくい。' },
+    tsuruhashi:    { name: '坑夫の鶴嘴', type: 'weapon', atk: 18, crit: 0.04, who: ['oonamuchi'], desc: 'マガネの坑夫の使う鶴嘴を、戦い向きに鍛え直したもの。急所を突きやすい。' },
+    ooshitate:     { name: '城兵の大楯', type: 'armor', def: 15, agi: -2, who: ['oonamuchi'], desc: 'イワクラの城の兵が構える大きな楯を、身にまとえるようにしたもの。重い。' },
+    yashiromori_hire: { name: '社守の比礼', type: 'accessory', wis: 6, resist: { sleep: 0.5, confuse: 0.5 }, who: ['oonamuchi'], desc: 'タカマの社守が祈りのときに掛ける比礼。眠りと惑わしにかかりにくい。' },
+    tamakazura:    { name: '玉鬘', type: 'accessory', mp: 40, wis: 4, who: ['oonamuchi'], desc: 'ミズホ離宮の女官が髪に飾る、玉を連ねた鬘（かずら）。' },
+    karasuba:      { name: '烏羽の衣', type: 'armor', def: 20, agi: 8, who: ['oonamuchi'], desc: 'ヤタの鴉族の黒い羽を織りこんだ衣。軽くて丈夫。' },
+    kanasai:       { name: '鬼の金砕棒', type: 'weapon', atk: 40, agi: -3, who: ['oonamuchi'], desc: 'オハバリの鬼が振るう、鉄の鋲を打った棒。重いが、打てば岩も砕ける。' },
+    momo_bokutou:  { name: '桃の木刀', type: 'weapon', atk: 30, wis: 20, who: ['oonamuchi'], desc: '黄泉比良坂の桃の木を削った木刀。悪いものを払うという。（古事記）' },
+    narikabura:    { name: '鳴鏑の矢羽', type: 'accessory', agi: 8, crit: 0.05, who: ['oonamuchi'], desc: '野火の中で鼠がくわえて戻した、鳴鏑（なりかぶら）の矢の羽。（古事記）' },
+    chibiki_yoroi: { name: '千引岩の挂甲', type: 'armor', def: 28, who: ['oonamuchi'], desc: '千引の岩から切り出した石の小札を綴じた挂甲。とても堅い。' },
+    yomi_kushiro:  { name: '黄泉の釧', type: 'accessory', hp: 80, resist: { poison: 0, venom: 0 }, who: ['oonamuchi'], desc: 'ヨミノハラの黒い石の腕輪（くしろ）。毒と猛毒にかからない。' },
+    iwaya_kagami:  { name: '岩屋戸の鏡', type: 'accessory', wis: 14, mp: 50, who: ['oonamuchi'], desc: '天石屋戸の前に掛けられた鏡にならい、イワヤトの者が磨いた鏡。（古事記）' },
+
     koudou_kagi:  { name: '坑道の鍵', type: 'key', desc: '古い坑道の、鉄の扉の鍵。' },
     iwamizo_kagi: { name: '岩溝の鍵', type: 'key', desc: '風の岩溝の、岩の扉の鍵。' },
     fuchi_kagi:   { name: '深淵の鍵', type: 'key', desc: '黄泉の深淵の、底の階の蔵の鍵。' },
@@ -91,15 +125,15 @@
   };
 
   // 装備の能力を短く（一覧の右に出す）：攻+6 賢+4 など。特別な効き目は短い印
-  const SPECIAL = { poison: '毒', sleep: '眠', confuse: '惑' };
+  const SPECIAL = { poison: '毒', venom: '猛毒', sleep: '眠', confuse: '惑', silence: '封', bind: '縛' };
   G.equipNote = it => [['atk', '攻'], ['def', '守'], ['agi', '速'], ['wis', '賢'], ['hp', 'HP'], ['mp', 'MP']]
-    .filter(([k]) => it[k]).map(([k, n]) => `${n}+${it[k]}`)
+    .filter(([k]) => it[k]).map(([k, n]) => `${n}${it[k] > 0 ? '+' : ''}${it[k]}`)
     .concat(Object.keys(it.resist || {}).map(k => `${SPECIAL[k] || k}防`))
     .concat(it.crit ? ['会心+'] : [], it.perk ? [{ firstStrike: '先手', expBoost: '経験', copperBoost: '銅貨' }[it.perk]] : [])
     .slice(0, 3).join(' ');
   // 特別な効き目を文で（装備を選ぶ窓の下）
   G.equipEffects = it => [
-    ...Object.entries(it.resist || {}).map(([k, v]) => `${{ poison: '毒', sleep: '眠り', confuse: '惑わし' }[k] || k}${v === 0 ? 'にかからない' : 'にかかりにくい'}`),
+    ...Object.entries(it.resist || {}).map(([k, v]) => `${{ poison: '毒', venom: '猛毒', sleep: '眠り', confuse: '惑わし', silence: '封じ', bind: '縛り' }[k] || k}${v === 0 ? 'にかからない' : 'にかかりにくい'}`),
     it.crit ? '会心の一撃が出やすい' : '',
     { firstStrike: '敵より先に動きやすい', expBoost: '経験値が多くもらえる', copperBoost: '銅貨が多くもらえる' }[it.perk] || '',
   ].filter(Boolean).join('・');

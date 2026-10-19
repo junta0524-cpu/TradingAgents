@@ -19,14 +19,16 @@
       "($$GGGG$$uu$$$GGG$$(",
       "($$GGDG$$uu$$$GDG$$(",
       "($$$$$$$$uu$$$$$$$$(",
-      "($$$$$$$$uu$$$$$$$$(",
-      "($$$$$$$$uu$$$$$$$$(",
+      "($$$$GGG$uu$$GGG$$$(",
+      "($$$$GDG$uu$$GDG$$$(",
       "($$$t$$$$uu$$$$$$$$(",
       "($$$$$$$$uu$$$$tt$$(",
       "($$$$$$$$uu$$$$$$$$(",
       "(((((((((uu(((((((((",
     ],
     warps: [
+      { x: 6, y: 9, to: "chibiki_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
+      { x: 14, y: 9, to: "chibiki_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 6, to: "chibiki_tower", tx: 5, ty: 7, dir: 'up' },
       { x: 15, y: 6, to: "chibiki_r1", tx: 5, ty: 7, dir: 'up' },

@@ -16,9 +16,9 @@
       "TTTT.......pp.......TTTT",
       "TTTT.UUU...pp...UUU.TTTT",
       "T....UUU.T.pp.T.UUU....T",
-      "T....UJU...pp...UJU....T",
-      "T..........pp..........T",
-      "T..........pp..........T",
+      "TUUU.UJU...pp...UJU....T",
+      "TUUU.......pp..........T",
+      "TUJU.......pp..........T",
       "T.pppppppppppppppppppp.T",
       "T..........pp..........T",
       "T...UUU....pp....UUU...T",
@@ -29,6 +29,7 @@
       "TTTTTTTTTTTppTTTTTTTTTTT",
     ],
     warps: [
+      { x: 2, y: 7, to: "kukunochi_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 6, y: 5, to: "kukunochi_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 17, y: 5, to: "kukunochi_inn", tx: 5, ty: 7, dir: 'up' },

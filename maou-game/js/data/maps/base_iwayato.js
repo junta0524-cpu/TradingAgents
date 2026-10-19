@@ -14,7 +14,7 @@
       "黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒",
       "黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒",
       "黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒黒",
-      "黒黒黒黒z黒黒黒zzzzzzzz黒黒黒黒",
+      "黒黒黒黒z黒黒黒z黒D黒黒D黒z黒黒黒黒",
       "黒黒黒黒z黒D黒zzzzzzzz黒黒黒黒",
       "黒黒黒黒zzzzzzzzRRzz黒黒黒黒",
       "黒黒黒黒zzzzzzzzzzzz黒黒黒黒",
@@ -27,6 +27,8 @@
       "黒黒黒黒黒黒黒黒黒zz黒黒黒黒黒黒黒黒黒",
     ],
     warps: [
+      { x: 10, y: 3, to: "iwayato_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
+      { x: 13, y: 3, to: "iwayato_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 6, y: 4, to: "iwayato_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 9, y: 13, to: "world_makai", tx: 114, ty: 67, dir: "down" },

@@ -58,8 +58,10 @@
       const d = G.DATA.items[s.id];
       if (d.read) { G.message.show(d.read().join('\n')); return; }
       if (d.type !== 'use' || d.use === 'battle') { G.message.show(d.desc || d.name); return; }
-      pickMember(`${d.name}をだれに`, p => p.hp > 0, target => {
-        const ev = G.kotodama.useItem(target, s.id, target, null);
+      // 全員に効く品・自分に使う品（結界など）は、相手を選ばない
+      const pick = (d.target === 'allies' || d.target === 'self') ? (f => f(null)) : (f => pickMember(`${d.name}をだれに`, p => p.hp > 0, f));
+      pick(target => {
+        const ev = G.kotodama.useItem(target || G.party.leader(), s.id, target, null);
         G.message.show(ev.filter(e => e.type === 'msg').map(e => e.text).join('\n'));
       });
     });

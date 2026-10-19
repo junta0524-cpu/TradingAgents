@@ -16,8 +16,8 @@
       "tggggggggggggggggggggggt",
       "tggAAggV~~~~~~~~VggAAggt",
       "tggAAggV~~~~~~~~Vggggggt",
-      "tggggggV~~~~~~~~Vggggggt",
-      "tggggggV~~~~~~~~Vggggggt",
+      "tgGGGGgV~~~~~~~~VGGGGggt",
+      "tgGGDGgV~~~~~~~~VGGDGggt",
       "tgggggggggguuggggggggggt",
       "tgggggggggguuggggggggggt",
       "tggGGGGgggguuggggGGGGggt",
@@ -28,6 +28,8 @@
       "tttttttttttuuttttttttttt",
     ],
     warps: [
+      { x: 4, y: 6, to: "yominohara_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
+      { x: 19, y: 6, to: "yominohara_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 10, to: "yominohara_r1", tx: 5, ty: 7, dir: 'up' },
       { x: 19, y: 10, to: "yominohara_inn", tx: 5, ty: 7, dir: 'up' },

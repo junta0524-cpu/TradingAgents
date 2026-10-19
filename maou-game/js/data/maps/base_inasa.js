@@ -18,8 +18,8 @@
       "T.##D##.....::...##D##...T",
       "T...........::...........T",
       "T...........::...........T",
-      "T..YYYY.....::.....YYY...T",
-      "T..##D#.....::.....#D#...T",
+      "T..YYYY.....::.YYY.YYY...T",
+      "T..##D#.....::.#D#.#D#...T",
       "T........oo.::.o.........T",
       "T::::::::::::::::::::::::T",
       "T~~~~~==~~~~~~~~~~==~~~~~T",
@@ -29,6 +29,7 @@
       "TTTTTTTTTTTTTTTTTTTTTTTTTT",
     ],
     warps: [
+      { x: 16, y: 8, to: "inasa_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 4, y: 4, to: "inasa_inn", tx: 5, ty: 7, dir: 'up' },
       { x: 19, y: 4, to: "inasa_shop", tx: 5, ty: 7, dir: 'up' },
@@ -75,7 +76,7 @@
   };
 
   G.DATA.maps.inasa_shop = {
-    name: "イナサ　イナサの店",
+    name: "イナサ　武具屋",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

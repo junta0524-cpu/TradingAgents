@@ -50,6 +50,14 @@
           ev.push({ type: 'msg', text: t.hp === t.maxHp && effect.full ? `${t.name}の体力がすべて戻った。` : `${t.name}の体力が ${t.hp - before} 戻った。` });
           return;
         }
+        case 'mp': {   // MPを戻す（拠点の道具屋の品）
+          if (t.hp <= 0) { ev.push({ type: 'msg', text: `${t.name}には効かなかった。` }); return; }
+          const before = t.mp;
+          t.mp = Math.min(t.maxMp, t.mp + G.rng.int(effect.power[0], effect.power[1]));
+          ev.push({ type: 'heal', target: t, amount: t.mp - before });
+          ev.push({ type: 'msg', text: `${t.name}のMPが ${t.mp - before} 戻った。` });
+          return;
+        }
         case 'revive': {
           if (t.hp > 0) { ev.push({ type: 'msg', text: `${t.name}は、倒れていない。` }); return; }
           t.hp = Math.max(1, Math.floor(t.maxHp * effect.ratio));

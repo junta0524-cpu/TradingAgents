@@ -20,8 +20,8 @@
       "Vhhhhhhhhhhh33hhhhhhhhhhhV",
       "Vhh222hhhhhh33hhhhh2222hhV",
       "Vhh1D1hhhhhh33hhhhh11D1hhV",
-      "Vhhhhhhhhhhh33hhhhhhhhhhhV",
-      "Vhhhhhhhhhhh33hhhhhhhhhhhV",
+      "Vhhhhhhhhhhh33h222hhhhhhhV",
+      "Vhhhhhhhhhhh33h1D1hhhhhhhV",
       "VhrrrrrhYYYh33hhhhhrrrrrhV",
       "Vhrrrrrh#D#h33hhhhhrrrrrhV",
       "Vhrrrrrhhhhh33hhwhhrrrrrhV",
@@ -29,6 +29,7 @@
       "VVVVVVVVVVVV33VVVVVVVVVVVV",
     ],
     warps: [
+      { x: 16, y: 10, to: "mizuho_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 12, y: 4, to: "mizuho_hall", tx: 5, ty: 7, dir: 'up' },
       { x: 4, y: 8, to: "mizuho_r1", tx: 5, ty: 7, dir: 'up' },
@@ -100,7 +101,7 @@
   };
 
   G.DATA.maps.mizuho_shop = {
-    name: "ミズホ離宮　出入りの商人",
+    name: "ミズホ離宮　武具商人",
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     rows: [

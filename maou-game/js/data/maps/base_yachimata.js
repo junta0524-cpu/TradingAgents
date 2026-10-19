@@ -22,13 +22,14 @@
       "--------------------------",
       "T...........--...........T",
       "T...........--.w.........T",
-      "T..YYY.YYY..--....YYY....T",
-      "T..#D#.#D#..--....#D#.vv.T",
+      "T..YYY.YYY..--YYY.YYY....T",
+      "T..#D#.#D#..--#D#.#D#.vv.T",
       "T...........--........vv.T",
       "T...........--...........T",
       "TTTTTTTTTTTT--TTTTTTTTTTTT",
     ],
     warps: [
+      { x: 15, y: 12, to: "yachimata_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 4, to: "yachimata_inn", tx: 5, ty: 7, dir: 'up' },
       { x: 19, y: 4, to: "yachimata_shop", tx: 5, ty: 7, dir: 'up' },

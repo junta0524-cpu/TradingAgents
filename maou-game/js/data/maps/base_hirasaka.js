@@ -21,13 +21,15 @@
       "R%%%%%%%%%uu%%%%%%%%%R",
       "R%%GGGG%%%uu%%%GGG%%%R",
       "R%%GGDG%%%uu%%%GDG%%%R",
-      "R%%%%%%%%%uu%%%%%%%%%R",
-      "R%%%%%%%%%uu%%%%%%%%%R",
+      "R%%%%%GGG%uu%%%%%GGG%R",
+      "R%%%%%GDG%uu%%%%%GDG%R",
       "R%%%tt%%%%uu%%%%t%%%%R",
       "R%%%%%%%%%uu%%%%%%%%%R",
       "RRRRRRRRRRuuRRRRRRRRRR",
     ],
     warps: [
+      { x: 7, y: 11, to: "hirasaka_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
+      { x: 18, y: 11, to: "hirasaka_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 9, to: "hirasaka_post", tx: 5, ty: 7, dir: 'up' },
       { x: 16, y: 9, to: "hirasaka_r1", tx: 5, ty: 7, dir: 'up' },

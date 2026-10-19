@@ -17,8 +17,8 @@
       "T......FFFFFFFF......T",
       "T..,,,.FFFRRFFF..,,,.T",
       "T......FFFFFFFF......T",
-      "T......FFFFFFFF......T",
-      "T.........--.........T",
+      "TYYY...FFFFFFFF...YYYT",
+      "T#D#......--......#D#T",
       "T..^^^^...--...YYY...T",
       "T..##D#...--...#D#...T",
       "T.........--.........T",
@@ -28,6 +28,8 @@
       "TTTTTTTTTT--TTTTTTTTTT",
     ],
     warps: [
+      { x: 2, y: 7, to: "takama_dougu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
+      { x: 19, y: 7, to: "takama_bugu", tx: 5, ty: 7, dir: 'up' },   // 道具屋と武具屋（tools/dungeon_design/base_shops.py）
       // 建物の中（このファイルの下）と、外の地図への出口
       { x: 5, y: 9, to: "takama_shrine", tx: 5, ty: 7, dir: 'up' },
       { x: 16, y: 9, to: "takama_r1", tx: 5, ty: 7, dir: 'up' },
