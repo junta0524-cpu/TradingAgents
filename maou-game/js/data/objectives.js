@@ -57,6 +57,7 @@
     // ---- クリア後 ----
     { chapter: 13, unless: 'ame_lit', text: '師と手合わせして四系統をそろえ、畑のクナドへ' },
     { chapter: 13, unless: 'post_bell_win', text: '宮のオモイカに話し、ベルとの最終手合わせに挑む' },
+    { chapter: 13, unless: 'gm:yomi_fuchi2:nushi', text: '最深部の南西の石段から、黄泉の深淵の底へ' },
     { chapter: 13, text: '両方の世界を自由に巡る（大穴で行き来できる）' },
   ];
 

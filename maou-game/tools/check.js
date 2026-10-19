@@ -1651,7 +1651,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/12');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/14');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない
