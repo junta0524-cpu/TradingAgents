@@ -14,10 +14,10 @@ def uris(folder):
     return out
 
 L = ["// このファイルの役目：Gemini で作ったドット絵（assets/ の PNG）を、ゲームで読めるように文字にして入れておく所（fetch を使わないため）。",
-     "// enemies：敵の id ごとの絵（64×64、背景は透明。js/core/sprite.js の drawEnemy）。faces：顔グラ（64×64。会話の窓の左、js/core/message.js）。backgrounds：場面の背景（480×320。js/core/backdrop.js）。faceNames：話し手の名前 → 顔。",
+     "// enemies：敵の id ごとの絵（64×64、背景は透明。js/core/sprite.js の drawEnemy）。faces：顔グラ（64×64。会話の窓の左、js/core/message.js）。backgrounds：場面の背景（480×320。js/core/backdrop.js）。battles：戦いの背景（480×232。js/scenes/battle.js）。faceNames：話し手の名前 → 顔。",
      "// 手で書き換えない：assets/ に絵を入れて「python3 tools/art_build.py」で作り直す。",
      "(function () {", "  const G = window.GAME = window.GAME || {};", "  G.DATA = G.DATA || {};", "  G.DATA.art = {"]
-for key, folder in (('enemies', 'enemies'), ('faces', 'faces'), ('backgrounds', 'backgrounds')):
+for key, folder in (('enemies', 'enemies'), ('faces', 'faces'), ('backgrounds', 'backgrounds'), ('battles', 'battle')):
     L.append(f"    {key}: {{")
     for k, v in uris(folder).items(): L.append(f"      {k}: '{v}',")
     L.append("    },")

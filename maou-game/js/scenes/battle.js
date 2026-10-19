@@ -26,7 +26,7 @@
 
   G.debugOpts = G.debugOpts || { showCalc: false };
 
-  // 戦いの背景（空の上・下、地平、地面2色）。マップの battleBg や物語の場面の bg で選ぶ
+  // 戦いの背景（空の上・下、地平、地面2色）。マップの battleBg や物語の場面の bg で選ぶ。作った絵（assets/battle）があればそちらを描く
   const BACKS = {
     field:  [[120, 170, 220], [190, 220, 240], '#7a9a7a', '#4f8a42', '#478039'],
     forest: [[60, 100, 70], [120, 160, 110], '#3a5a3a', '#2e5a2a', '#284e24'],
@@ -507,13 +507,17 @@
 
         // 背景：空と野原
         const bk = BACKS[opts.bg] || BACKS.field;
-        for (let i = 0; i < 10; i++) {
+        const bgArt = G.sprite.battleBackOf(BACKS[opts.bg] ? opts.bg : 'field');   // 作った絵があればそれ（js/data/art.js の battles）
+        if (bgArt) { ctx.imageSmoothingEnabled = false; ctx.drawImage(bgArt, 0, 0, r.W, 232); }
+        else for (let i = 0; i < 10; i++) {
           const t = i / 9, c = bk[0].map((v, k) => Math.round(v + (bk[1][k] - v) * t));
           r.rect(0, i * 16, r.W, 16, `rgb(${c[0]}, ${c[1]}, ${c[2]})`);
         }
-        r.rect(0, 120, r.W, 12, bk[2]);
-        r.rect(0, 132, r.W, 100, bk[3]);
-        r.rect(0, 150, r.W, 82, bk[4]);
+        if (!bgArt) {
+          r.rect(0, 120, r.W, 12, bk[2]);
+          r.rect(0, 132, r.W, 100, bk[3]);
+          r.rect(0, 150, r.W, 82, bk[4]);
+        }
         r.rect(0, 232, r.W, 88, '#000');
 
         // 敵
