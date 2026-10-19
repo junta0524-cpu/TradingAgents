@@ -260,7 +260,7 @@
       // 調べると場面が流れる場所
       const spot = (map.spots || []).find(o => o.x === fx && o.y === fy && G.flags.check(o));
       // 祠（spots の heal）：体力・MPがすべて戻る
-      if (spot && spot.heal) { G.party.healAll(); if (G.sound) G.sound.se('learn'); G.message.show(spot.text || '（体の疲れが抜けていった）'); return; }
+      if (spot && spot.heal) { G.flags.set(`shrine:${mapId}:${spot.x},${spot.y}`); G.party.healAll(); if (G.sound) G.sound.se('learn'); G.message.show(spot.text || '（体の疲れが抜けていった）'); return; }
       if (spot) { if (spot.board) G.scenes.openRequestBoard(); else if (spot.event) G.event.run(spot.event); else G.message.show(spot.text); return; }
       if (tile && tile.check) G.message.show(tile.check);
     }

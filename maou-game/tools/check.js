@@ -716,6 +716,17 @@ const { chromium } = require('playwright');
   await key('KeyZ', 250);
   expect('ちず：町の中では案内の文', await scenes(), 'マップ > メニュー > メッセージ');
   await closeMessages(); await key('KeyX', 200);
+  // 祠：調べると体力が戻り、ちずに印が出る（調べる前は印なし）
+  const shr = await ev(() => {
+    const m = GAME.DATA.maps.world_ningen, o = m.spots.find(s => s.heal), T = GAME.DATA.tiles;
+    const d = [[0, 1, 'up'], [0, -1, 'down'], [1, 0, 'left'], [-1, 0, 'right']].find(([dx, dy]) => !(T[m.rows[o.y + dy][o.x + dx]] || {}).solid);
+    return { x: o.x + d[0], y: o.y + d[1], dir: d[2], key: `shrine:world_ningen:${o.x},${o.y}` };
+  });
+  await page.evaluate(k => { GAME.flags.set(k, false); GAME.party.member('oonamuchi').hp = 1; }, shr.key);
+  await placeAt('world_ningen', shr.x, shr.y, shr.dir); await wait(200);
+  await key('KeyZ', 250);
+  expect('祠：調べると体力が戻り、印のフラグが立つ', await page.evaluate(k => { const o = GAME.party.member('oonamuchi'); return (o.hp === o.maxHp) + '/' + GAME.flags.get(k); }, shr.key), 'true/true');
+  await closeMessages();
   // 頼みごと：退治（話す→引き受ける→倒す→知らせる→ごほうび）
   const keepQ = await ev(() => JSON.stringify({ q: GAME.state.quests || null, items: GAME.state.items, copper: GAME.state.copper, ch: GAME.state.chapter }));
   await ev(() => { GAME.state.chapter = 6; GAME.state.quests = {}; });
