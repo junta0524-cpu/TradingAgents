@@ -11,7 +11,7 @@
     outside: '#2A1418',
     battleBg: 'wild',
     encounter: {
-      steps: [18, 30],
+      steps: [24, 40],   // 広い地図（4倍）なので、出会う間を少し長めに
       byChapter: {
         1: [],
         11: [['arano_ookami'], ['oosasori'], ['arano_ookami', 'arano_ookami']],

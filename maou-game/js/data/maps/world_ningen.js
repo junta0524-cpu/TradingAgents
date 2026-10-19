@@ -14,7 +14,7 @@
     battleBg: 'field',
     // 敵の組は章ごと（その章の土地の敵）。道・町の上では出ない
     encounter: {
-      steps: [18, 30],
+      steps: [24, 40],   // 広い地図（4倍）なので、出会う間を少し長めに
       byChapter: {
         4: [['dog'], ['dog', 'dog'], ['boar'], ['centipede'], ['fox']],
         5: [['morigumo'], ['onibi'], ['tsuta'], ['morigumo', 'onibi']],

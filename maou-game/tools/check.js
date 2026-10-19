@@ -702,6 +702,20 @@ const { chromium } = require('playwright');
   await hold('ArrowUp', 300);
   expect('拠点：魔界の地図から入れる（オハバリ城）', await pos(), 'ohabari(11,14)');
   await shot('99_base_ohabari');
+  // ちず：地図の上でメニューから全体の地図を開く（地図の外では案内の文）
+  await placeAt('world_ningen', 66, 50, 'up'); await wait(200);
+  await key('KeyX', 250);
+  for (let i = 0; i < 7; i++) await key('ArrowDown', 80);
+  await key('KeyZ', 250);
+  expect('ちず：地図の上でメニューから開く', await scenes(), 'マップ > メニュー > ちず');
+  await shot('99_worldmap');
+  await key('KeyX', 200); await key('KeyX', 200);
+  await placeAt('minamo', 15, 12, 'down'); await wait(200);
+  await key('KeyX', 250);
+  for (let i = 0; i < 7; i++) await key('ArrowDown', 80);
+  await key('KeyZ', 250);
+  expect('ちず：町の中では案内の文', await scenes(), 'マップ > メニュー > メッセージ');
+  await closeMessages(); await key('KeyX', 200);
   // 頼みごと：退治（話す→引き受ける→倒す→知らせる→ごほうび）
   const keepQ = await ev(() => JSON.stringify({ q: GAME.state.quests || null, items: GAME.state.items, copper: GAME.state.copper, ch: GAME.state.chapter }));
   await ev(() => { GAME.state.chapter = 6; GAME.state.quests = {}; });
