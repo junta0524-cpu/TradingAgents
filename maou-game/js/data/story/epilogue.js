@@ -89,9 +89,9 @@
     S(BELL, '「次の手を聞かせてくれ」'),
     S('オモイカ', '「はい。まず、明日の、席次から」'),
     // ---- 五：同盟の儀 ----
-    ...scene('roundtable', [
-      { look: 'kushinada', x: 130, y: 220, dir: 'right' }, { look: 'ishikoridome', x: 180, y: 206, dir: 'down' }, { look: 'sarutahiko', x: 300, y: 206, dir: 'down' },
-      { look: 'elder', x: 350, y: 220, dir: 'left' }, { look: 'bell_true', x: 240, y: 262, dir: 'up' }, { look: 'kunado', x: 420, y: 256, dir: 'left' },
+    ...scene('roundtable', [   // 円卓のまわりの席（奥の席と左右の端。手前は会話の窓に隠れるので置かない）
+      { look: 'kushinada', x: 130, y: 220, dir: 'right' }, { look: 'ishikoridome', x: 200, y: 178, dir: 'down' }, { look: 'bell_true', x: 265, y: 176, dir: 'down' },
+      { look: 'sarutahiko', x: 330, y: 178, dir: 'down' }, { look: 'elder', x: 430, y: 210, dir: 'left' }, { look: 'kunado', x: 452, y: 236, dir: 'left' },
     ]),
     N('衢の里の広場には、白い石の円卓が、据えられていた。'),
     S('クナド', '「これより、同盟の儀を行います」'),
