@@ -487,7 +487,7 @@ const { chromium } = require('playwright');
     d.hp = 1; out.push(GAME.battle.wavering(d) + ':' + msgs(GAME.battle.act(st, oo, { type: 'kotodama', id: 'kokoroshizume', target: d })).includes('届かない'));
     b2.hp = 0; d.hp = 0;
     const full = st.enemies.reduce((s, e) => s + GAME.DATA.enemies[e.id].exp, 0);
-    out.push(GAME.battle.rewards(st).exp === Math.floor(full - GAME.DATA.enemies.wansho.exp * (1 - GAME.DATA.balance.AWAKEN.EXP_RATE)));
+    out.push(GAME.battle.rewards(st).exp === Math.floor((full - GAME.DATA.enemies.wansho.exp * (1 - GAME.DATA.balance.AWAKEN.EXP_RATE)) * GAME.battle.chapterExpRate()));   // 4〜9章は CHAPTER_EXP 倍
     GAME.state.awakened = 5;
     out.push(GAME.battle.awakenRewards().map(r => r.item).join() + '/' + GAME.battle.awakenRewards().length);
     const st2 = GAME.battle.create(GAME.party.freshMembers(), ['junkai']); st2.enemies[0].hp = 3;
