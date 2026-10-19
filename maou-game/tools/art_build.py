@@ -3,7 +3,7 @@
 import base64, os
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 # 話し手の名前 → 顔の絵（assets/faces/<id>.png）
-FACE_NAMES = {'オオナムチ': 'oonamuchi', 'ベル': 'bell', 'ベルイザナ': 'bell_true', 'スクナ': 'sukuna', 'コノハ': 'konoha', 'カナメ': 'kaname', 'コトシロ': 'kotoshiro', 'ウズメ': 'uzume', 'ヒエダ': 'hieda', 'クシナダ': 'kushinada', 'イシコリドメ': 'ishikoridome', 'サルタヒコ': 'sarutahiko', 'ユウ': 'yuu', 'タケル': 'takeru'}
+FACE_NAMES = {'オオナムチ': 'oonamuchi', 'ベル': 'bell', 'ベルイザナ': 'bell_true', 'スクナ': 'sukuna', 'コノハ': 'konoha', 'カナメ': 'kaname', 'コトシロ': 'kotoshiro', 'ウズメ': 'uzume', 'ヒエダ': 'hieda', 'クシナダ': 'kushinada', 'イシコリドメ': 'ishikoridome', 'サルタヒコ': 'sarutahiko', 'ユウ': 'yuu', 'タケル': 'takeru', 'アマツ王': 'amatsu'}
 
 def uris(folder):
     d = os.path.join(ROOT, 'assets', folder)
