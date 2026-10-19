@@ -539,6 +539,14 @@ const { chromium } = require('playwright');
     oo.hp = 1; GAME.party.addItem('mori_reiyaku'); GAME.kotodama.useItem(oo, 'mori_reiyaku', null, null); const b = oo.hp > 1;
     Object.assign(oo, keep); return `${a}/${b}/${GAME.kenbun.effectText(GAME.DATA.items.miru_shiru.effect)}`;
   }), 'true/true/MPを戻す（12〜16）');
+  expect('顔グラ：タケルは洗脳中と、11章で王の声が遮られたあと（12章より後も）で顔が替わる', await ev(() => {
+    const keep = { ch: GAME.state.chapter, f: GAME.flags.get('takeru_free') }; const out = [];
+    GAME.state.chapter = 11; GAME.flags.set('takeru_free', false); out.push(GAME.sprite.faceId('タケル'));
+    GAME.flags.set('takeru_free', true); out.push(GAME.sprite.faceId('タケル'));
+    GAME.flags.set('takeru_free', false); GAME.state.chapter = 12; out.push(GAME.sprite.faceId('タケル'));
+    out.push(GAME.sprite.faceId('サルタヒコ'), GAME.sprite.faceId('ユウ'));
+    GAME.state.chapter = keep.ch; GAME.flags.set('takeru_free', keep.f); return out.join();
+  }), 'takeru,takeru_free,takeru_free,sarutahiko,yuu');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
   expect('ギルドの依頼：残党の将・残党の隊は、その敵を目覚めさせた数で済む', await ev(() => {
     const keep = JSON.stringify(GAME.state.requests || {}); GAME.state.requests = {};

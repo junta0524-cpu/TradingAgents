@@ -102,6 +102,14 @@
     return enemyCache[id];
   }
 
+  // 話し手の名前 → 顔グラの名前。物語の進み方で替わる人は js/data/face_states.js（なければ art.js の faceNames）
+  function faceId(name) {
+    const art = G.DATA.art;
+    if (!name || !art || !art.faceNames) return null;
+    const rule = ((G.DATA.faceStates || {})[name] || []).find(r => art.faces && art.faces[r.face] && G.flags.check(r));
+    return rule ? rule.face : art.faceNames[name] || null;
+  }
+
   G.sprite = {
     // 人物を描く。walk はこれまで歩いた距離（px）。動いていなければ立ち絵
     drawPerson(ctx, lookId, dir, walk, moving, x, y) {
@@ -127,8 +135,9 @@
     battleBackOf: key => loadArt('battles', key),
     preloadArt() { ['enemies', 'faces', 'backgrounds', 'battles'].forEach(kind => Object.keys((G.DATA.art && G.DATA.art[kind]) || {}).forEach(id => loadArt(kind, id))); },
     // 話し手の名前から顔グラ（なければ null）
-    faceOf(name) { const id = name && G.DATA.art && G.DATA.art.faceNames && G.DATA.art.faceNames[name]; return id ? loadArt('faces', id) : null; },
-    hasFace: name => !!(G.DATA.art && G.DATA.art.faceNames && G.DATA.art.faceNames[name]),
+    faceOf(name) { const id = faceId(name); return id ? loadArt('faces', id) : null; },
+    hasFace: name => !!faceId(name),
+    faceId,
     drawObject(ctx, kind, x, y) {
       if (!objCache[kind]) objCache[kind] = OBJECTS[kind]();
       ctx.drawImage(objCache[kind], Math.round(x), Math.round(y));
