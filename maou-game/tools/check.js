@@ -520,6 +520,7 @@ const { chromium } = require('playwright');
     return out.join(' | ');
   });
   expect('ギルドの依頼：受ける・数える・報告・ごほうび', rq, 'inu,kusuri,kumo,koke | open/true/active/false | 0:5 | 野犬の群れ:ready | 3:410:4:claimed,claimed,claimed | active | ready');
+  expect('町の看板：宿屋・店の戸の上に看板（ミナモ＝宿屋と道具、天津京＝宿屋と武具、市場には出さない）', await ev(() => ['minamo', 'amatsu', 'world_makai'].map(m => m + ':' + GAME.shopSigns.list(m).map(s => s.kind).sort().join('+')).join(' ')), 'minamo:inn+item amatsu:gear+inn world_makai:');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
   expect('ギルドの依頼：残党の将・残党の隊は、その敵を目覚めさせた数で済む', await ev(() => {
     const keep = JSON.stringify(GAME.state.requests || {}); GAME.state.requests = {};
