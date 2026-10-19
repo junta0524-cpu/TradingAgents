@@ -1,5 +1,6 @@
 # このファイルの役目：Gemini で作ったドット絵（マゼンタの背景）を、ゲームの大きさに縮める道具（作る人用。ゲーム本体では使わない）。
 # 背景を透明にし、絵の部分だけ切り出して正方形にし、64×64へ縮めて64色にそろえる。使い方：python3 tools/art_proc.py 元.jpg 先.png [元2 先2 …]
+# 細かい絵（大きく描くボス）は「--size 128」を先に付けると、128×128・96色で残す。
 import sys, numpy as np
 from PIL import Image
 def proc(src, dst, size=64, colors=64):
@@ -16,4 +17,6 @@ def proc(src, dst, size=64, colors=64):
     rgb = Image.fromarray(arr[...,:3]).quantize(colors, method=Image.Quantize.FASTOCTREE).convert('RGB')
     out = np.dstack([np.asarray(rgb), np.where(op, 255, 0).astype(np.uint8)])
     Image.fromarray(out, 'RGBA').save(dst)
-for s, d in zip(sys.argv[1::2], sys.argv[2::2]): proc(s, d)
+args = sys.argv[1:]; size, colors = 64, 64
+if args and args[0] == '--size': size, colors, args = int(args[1]), 96, args[2:]
+for s, d in zip(args[0::2], args[1::2]): proc(s, d, size, colors)
