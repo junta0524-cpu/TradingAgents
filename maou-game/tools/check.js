@@ -1085,7 +1085,7 @@ const { chromium } = require('playwright');
   await walkTo('hijiri_village', 14, 3, 'up', 'ArrowUp', 150);
   await runThrough(() => GAME.scene.names().includes('選択肢'));
   await shot('66_ch5_choice');
-  await key('KeyZ', 300);   // 1回目は「頷く」
+  await wait(500); await key('KeyZ', 300);   // 1回目は「頷く」（選択肢が出きってから押す）
   await runThrough(atMap);
   expect('5章：心鎮めを覚える（頷いた回数1）', `${await ev(() => GAME.party.member('oonamuchi').kotodama.includes('kokoroshizume'))}/${await ev(() => GAME.state.vars.ch5_nod)}`, 'true/1');
   expect('5章：夜の森へ', await pos(), 'hijiri_path(27,6)');
