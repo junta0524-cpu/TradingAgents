@@ -136,9 +136,9 @@
   // ---- 四・五：収穫祭と、畦の約束（修行を三つ終えて畑へ戻ると）----
   E.ch11_fest = [
     { t: 'fade', to: 1 },
-    { t: 'bg', key: 'harvest', actors: [
-      { look: 'omoika', x: 100, y: 256, dir: 'right' }, { look: 'oonamuchi', x: 240, y: 256, dir: 'down' }, { look: 'oni', x: 270, y: 256, dir: 'left' },
-      { look: 'wolfkid', x: 210, y: 262, dir: 'right' }, { look: 'tsuchi', x: 330, y: 256, dir: 'left' }, { look: 'crow', x: 380, y: 256, dir: 'left' },
+    { t: 'bg', key: 'harvest', actors: [   // 斜めの長い卓の、奥と手前に並ぶ
+      { look: 'omoika', x: 150, y: 228, dir: 'right' }, { look: 'wolfkid', x: 200, y: 212, dir: 'right' }, { look: 'oonamuchi', x: 245, y: 196, dir: 'down' },
+      { look: 'oni', x: 280, y: 224, dir: 'left' }, { look: 'tsuchi', x: 330, y: 208, dir: 'left' }, { look: 'crow', x: 380, y: 192, dir: 'left' },
     ] },
     { t: 'fade', to: 0 },
     N('収穫祭の夜は、赤い空が、深い藍に沈んだころに始まった。'),

@@ -106,10 +106,10 @@
     S('サルタヒコ', '「よし！ 決まりだ！」'),
     N('境界は、もはや、見張り合う場所ではなかった。'),
     // ---- 六：収穫祭の盃 ----
-    ...scene('harvest', [
-      { look: 'hieda', x: 100, y: 256, dir: 'right' }, { look: 'oonamuchi', x: 160, y: 256, dir: 'right' }, { look: 'bell_true', x: 210, y: 250, dir: 'left' },
-      { look: 'konoha', x: 270, y: 256, dir: 'left' }, { look: 'sukuna', x: 310, y: 256, dir: 'left' }, { look: 'kaname', x: 350, y: 256, dir: 'left' },
-      { look: 'kotoshiro', x: 390, y: 256, dir: 'left' }, { look: 'uzume', x: 430, y: 262, dir: 'left' },
+    ...scene('harvest', [   // 斜めの長い卓の、奥と手前に並ぶ
+      { look: 'hieda', x: 120, y: 238, dir: 'right' }, { look: 'oonamuchi', x: 165, y: 223, dir: 'right' }, { look: 'bell_true', x: 210, y: 208, dir: 'right' },
+      { look: 'konoha', x: 255, y: 193, dir: 'right' }, { look: 'sukuna', x: 270, y: 227, dir: 'left' }, { look: 'kaname', x: 315, y: 213, dir: 'left' },
+      { look: 'kotoshiro', x: 360, y: 198, dir: 'left' }, { look: 'uzume', x: 405, y: 184, dir: 'left' },
     ]),
     N('収穫祭の夜、埴の里の畑は、灯りで満ちていた。'),
     N('人間。エルフ。ドワーフ。亜人。鬼。嵐狼。鴉。土蜘蛛。種族の席は、どこにも、分かれていなかった。'),
