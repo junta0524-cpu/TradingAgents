@@ -106,7 +106,7 @@
     S('サルタヒコ', '「よし！ 決まりだ！」'),
     N('境界は、もはや、見張り合う場所ではなかった。'),
     // ---- 六：収穫祭の盃 ----
-    ...scene('fields', [
+    ...scene('harvest', [
       { look: 'hieda', x: 100, y: 256, dir: 'right' }, { look: 'oonamuchi', x: 160, y: 256, dir: 'right' }, { look: 'bell_true', x: 210, y: 250, dir: 'left' },
       { look: 'konoha', x: 270, y: 256, dir: 'left' }, { look: 'sukuna', x: 310, y: 256, dir: 'left' }, { look: 'kaname', x: 350, y: 256, dir: 'left' },
       { look: 'kotoshiro', x: 390, y: 256, dir: 'left' }, { look: 'uzume', x: 430, y: 262, dir: 'left' },

@@ -136,7 +136,7 @@
   // ---- 四・五：収穫祭と、畦の約束（修行を三つ終えて畑へ戻ると）----
   E.ch11_fest = [
     { t: 'fade', to: 1 },
-    { t: 'bg', key: 'fields', actors: [
+    { t: 'bg', key: 'harvest', actors: [
       { look: 'omoika', x: 100, y: 256, dir: 'right' }, { look: 'oonamuchi', x: 240, y: 256, dir: 'down' }, { look: 'oni', x: 270, y: 256, dir: 'left' },
       { look: 'wolfkid', x: 210, y: 262, dir: 'right' }, { look: 'tsuchi', x: 330, y: 256, dir: 'left' }, { look: 'crow', x: 380, y: 256, dir: 'left' },
     ] },
