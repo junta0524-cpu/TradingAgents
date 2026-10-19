@@ -1,6 +1,6 @@
 // このファイルの役目：会話だけの場面（回想など）の「背景の絵」を描く。
 // 歩けるマップではなく、1枚の絵として描く。名前（key）で選ぶ。
-// 魔界・過去回想は赤みがかった色、人間界は白〜青、が基本（仕様書 第11章）。
+// 魔界・過去回想は赤みがかった色、人間界は白〜青、が基本（仕様書 第11章）。作った絵（js/data/art.js の backgrounds）があればそれを描き、なければ下の DRAW の絵。
 (function () {
   const G = window.GAME = window.GAME || {};
 
@@ -32,7 +32,8 @@
       r.clear('#120a0c');
       for (let i = 0; i < 6; i++) { const w = 400 - i * 60, h = 280 - i * 44; r.rect((r.W - w) / 2, (r.H - h) / 2, w, h, `rgb(${30 - i * 4},${16 - i * 2},${18 - i * 2})`); }
     },
-    // 焼けた根の洲の丘陵
+    // 焼けた根の洲の丘陵（2章。作った絵があればそちら）。エピローグの三か月後の黒い土は、火のない scorched_after
+    scorched_after(r) { DRAW.scorched(r); },
     scorched(r) {
       sky(r, [110, 30, 20], [60, 16, 14], 150);
       r.rect(0, 150, r.W, 170, '#1e1612');
@@ -209,7 +210,11 @@
   }
 
   G.backdrop = {
-    draw(key) { (DRAW[key] || (r => r.clear('#000')))(G.renderer); },
+    draw(key) {
+      const r = G.renderer, img = G.sprite && G.sprite.backgroundOf && G.sprite.backgroundOf(key);
+      if (img) { r.ctx.imageSmoothingEnabled = false; r.ctx.drawImage(img, 0, 0, r.W, r.H); return; }
+      (DRAW[key] || (r2 => r2.clear('#000')))(r);
+    },
     has(key) { return !!DRAW[key]; },
   };
 })();

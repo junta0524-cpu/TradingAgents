@@ -599,6 +599,7 @@ const { chromium } = require('playwright');
 
   // 作った敵の絵（js/data/art.js）：どれも敵の一覧にあり、読み込めて64×64
   expect('作った敵の絵：敵の一覧にあり、読み込める', await ev(() => Object.keys(GAME.DATA.art.enemies).filter(id => !GAME.DATA.enemies[id] || !GAME.sprite.hasArt(id)).join() || 'なし'), 'なし');
+  expect('作った背景の絵：場面の背景の名前にあり、読み込める', await ev(() => Object.keys(GAME.DATA.art.backgrounds || {}).filter(k => !GAME.backdrop.has(k) || !GAME.sprite.backgroundOf(k)).join() || 'なし'), 'なし');
   expect('顔グラ：話し手の顔が読み込め、名前のない文には出ない', await ev(() => ['オオナムチ', 'ベル', 'ベルイザナ'].map(n => !!GAME.sprite.faceOf(n)).join() + '/' + GAME.sprite.hasFace('') + '/' + GAME.sprite.hasFace('受付の女')), 'true,true,true/false/false');
   // 行き止まり：どの出入口で着いても、地図では本土（いちばん大きな陸）に立ち、ほかのマップではどこかの出口に歩いて届く
   expect('行き止まりがない（出入口の着く所から歩いて出られる）', await ev(() => {

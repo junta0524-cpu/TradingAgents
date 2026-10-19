@@ -121,7 +121,9 @@
       ctx.drawImage(enemyCanvas(id), Math.round(x), Math.round(y), size, size);
     },
     hasArt: id => !!artImage(id),
-    preloadArt() { ['enemies', 'faces'].forEach(kind => Object.keys((G.DATA.art && G.DATA.art[kind]) || {}).forEach(id => loadArt(kind, id))); },
+    // 場面の背景の絵（なければ null。js/core/backdrop.js）
+    backgroundOf: key => loadArt('backgrounds', key),
+    preloadArt() { ['enemies', 'faces', 'backgrounds'].forEach(kind => Object.keys((G.DATA.art && G.DATA.art[kind]) || {}).forEach(id => loadArt(kind, id))); },
     // 話し手の名前から顔グラ（なければ null）
     faceOf(name) { const id = name && G.DATA.art && G.DATA.art.faceNames && G.DATA.art.faceNames[name]; return id ? loadArt('faces', id) : null; },
     hasFace: name => !!(G.DATA.art && G.DATA.art.faceNames && G.DATA.art.faceNames[name]),

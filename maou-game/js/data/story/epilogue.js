@@ -12,7 +12,7 @@
     { t: 'bgm', name: 'ending' },
     { t: 'title', text: 'エピローグ', sub: '橋の上で' },
     // ---- 一：根の洲の土 ----
-    ...scene('scorched', [{ look: 'takeru', x: 220, y: 256, dir: 'down' }, { look: 'mikazuchi', x: 300, y: 250, dir: 'left' }]),
+    ...scene('scorched_after', [{ look: 'takeru', x: 220, y: 256, dir: 'down' }, { look: 'mikazuchi', x: 300, y: 250, dir: 'left' }]),
     N('根の洲の土は、まだ黒かった。'),
     N('タケルは鍬を振り下ろし、焦げた根を掘り起こした。三か月、毎日これを繰り返している。'),
     S('ミカヅチ', '「手が止まっているぞ」'),
