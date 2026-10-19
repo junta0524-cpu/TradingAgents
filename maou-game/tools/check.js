@@ -496,7 +496,7 @@ const { chromium } = require('playwright');
     return out.join(' | ');
   });
   expect('目覚めさせる：揺らぎ・心鎮め・数・経験値半分・品・名呼び', aw, 'false | true | true | （腕章の兵Ａは、武器を下ろした） | 0/true/1/53 | false:true | true | kotomuke_tama/0 | true:true');
-  expect('目覚めさせられる人の敵（腕章・巡回・槍・弓・追手・護衛・残党・腕章の術師と騎兵）', await ev(() => Object.keys(GAME.DATA.enemies).filter(k => GAME.DATA.enemies[k].awaken).sort().join()), 'ch2_yari,ch2_yumi,goei,junkai,otte,wansho,wansho_jutsu,wansho_kihei,zantou');
+  expect('目覚めさせられる人の敵（腕章・巡回・槍・弓・追手・護衛・残党軍・腕章の術師と騎兵）', await ev(() => Object.keys(GAME.DATA.enemies).filter(k => GAME.DATA.enemies[k].awaken).sort().join()), 'ch2_yari,ch2_yumi,goei,junkai,otte,wansho,wansho_jutsu,wansho_kihei,zantou,zantou_hata,zantou_hohei,zantou_jutsu,zantou_kihei,zantou_kusushi,zantou_yumi');
   expect('8・9章の人間界の地図に巡回の兵', await ev(() => GAME.DATA.maps.world_ningen.encounter.byChapter[8].some(g => g.includes('junkai'))), true);
   // ギルドの寄り道の依頼：掲示板で受け、倒す・持ってくる・目覚めさせる・主を倒すで済み、受付で報告するとごほうび
   const rq = await ev(() => {
@@ -1467,7 +1467,7 @@ const { chromium } = require('playwright');
   expect('クリア後のやりこみ：レベルに応じて強い敵', await ev(() => {
     const o = GAME.party.member('oonamuchi'), lv = o.lv, map = GAME.DATA.maps.world_makai, tile = GAME.DATA.tiles['$'], out = [];
     GAME.encounter.enabled = true;
-    [20, 80].forEach(l => { o.lv = l; GAME.state.encounterSteps = 0; out.push(GAME.encounter.step(map, tile).some(id => ['orochi', 'nakui_ou', 'zantou'].includes(id))); });
+    [20, 80].forEach(l => { o.lv = l; let any = false; for (let i = 0; i < 40; i++) { GAME.state.encounterSteps = 0; any = any || (GAME.encounter.step(map, tile) || []).some(id => /^zantou/.test(id)); } out.push(any); });   // 残党軍
     GAME.encounter.enabled = false; o.lv = lv; return out.join('/');
   }), 'false/true');
   await placeAt('world_makai', 63, 70, 'left'); await wait(2500); await shot('94_world_makai_post');
