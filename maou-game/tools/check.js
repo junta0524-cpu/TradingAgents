@@ -29,6 +29,8 @@ const { chromium } = require('playwright');
   // テスト用：マップの好きな場所に立たせる
   const placeAt = (id, x, y, dir) => page.evaluate(([id, x, y, dir]) => {
     if (!GAME.state) GAME.party.newGame();
+    // 寄り道の章の「読みますか？」は、ほかの確かめのじゃまになるので、聞いたことにしておく（寄り道の章の確かめで外す）
+    GAME.DATA.sidestories.forEach(s => GAME.flags.set('side_offer_' + s.id, true));
     GAME.scene.change(GAME.scenes.map(id, x, y, dir));
   }, [id, x, y, dir]);
   const closeMessages = async () => { for (let i = 0; i < 8 && (await scenes()).includes('メッセージ'); i++) await key('KeyZ', 150); };
@@ -551,9 +553,10 @@ const { chromium } = require('playwright');
     const keep = { ch: GAME.state.chapter, cl: GAME.state.cleared };
     const n = GAME.DATA.sidestories.filter(s => (GAME.DATA.events[s.id] || []).length > 20).length;
     const m = GAME.DATA.memories.list.filter(x => x.group === 15).length;
+    const asked = GAME.flags.get('side_offer_side_ch04_5'); GAME.flags.set('side_offer_side_ch04_5', false);
     GAME.state.chapter = 4; const a = !!GAME.sidestory.pending('minamo');
     GAME.state.chapter = 5; const b = (GAME.sidestory.pending('minamo') || {}).id;
-    GAME.state.chapter = keep.ch; GAME.state.cleared = keep.cl;
+    GAME.state.chapter = keep.ch; GAME.state.cleared = keep.cl; GAME.flags.set('side_offer_side_ch04_5', asked);
     return `${n}/${m}/${a}/${b}`;
   }), '16/16/false/side_ch04_5');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
