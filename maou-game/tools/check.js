@@ -1623,7 +1623,7 @@ const { chromium } = require('playwright');
   }), 'なし');
   {
     // クリア後のミナモで、網元の家に歩いて入り、歩いて出る
-    await ev(() => { GAME.state.chapter = 13; GAME.scene.change(GAME.scenes.map('minamo', 23, 9, 'up')); }); await wait(300);
+    await ev(() => { GAME.state.chapter = 13; }); await placeAt('minamo', 23, 9, 'up'); await wait(300);
     await closeMessages();
     await hold('ArrowUp', 260); await wait(300); await closeMessages();
     const inside = await pos();
