@@ -27,7 +27,7 @@
     { id: 'akane', name: 'アカネ', who: '土蜘蛛族の畑番', from: 11, hint: '土蜘蛛族の畑', at: { map: 'yomi_hani', x: 16, y: 1 }, owner: { map: 'yomi_market', x: 14, y: 4, look: 'tsuchi' } },
     { id: 'kuroha', name: 'クロハ', who: '鴉族の伝令', from: 11, hint: '魔界の市場', at: { map: 'yomi_market', x: 2, y: 4 }, owner: { map: 'yomi_market', x: 8, y: 5, look: 'crow' } },
     { id: 'yamabuki', name: 'ヤマブキ', who: '鬼族の鍛冶', from: 11, hint: '魔界の地図のどこか', at: { map: 'world_makai', x: 126, y: 74 }, owner: { map: 'yomi_market', x: 13, y: 8, look: 'oni' } },
-    { id: 'utsuho', name: 'ウツホ', who: '大穴の番人だった者', from: 13, hint: '大穴 上層', at: { map: 'oana_jou', x: 22, y: 15 }, owner: { map: 'yomi_hani', x: 24, y: 10, look: 'oni' } },
+    { id: 'utsuho', name: 'ウツホ', who: '大穴の番人だった者', from: 13, hint: '大穴 上層', at: { map: 'oana_jou', x: 22, y: 15 }, owner: { map: 'yomi_hani', x: 24, y: 10, look: 'elder' } },
     { id: 'yomiji', name: 'ヨミジ', who: '黄泉の旅人', from: 13, hint: '大穴 中層', at: { map: 'oana_chuu', x: 19, y: 13 }, owner: { map: 'yomi_hani', x: 10, y: 8, look: 'crow' } },
     { id: 'homura', name: 'ホムラ', who: '炎の守り手', from: 13, hint: '大穴の最深部', at: { map: 'oana_soko', x: 24, y: 4 }, owner: { map: 'yomi_hani', x: 14, y: 8, look: 'tsuchi' } },
   ];
