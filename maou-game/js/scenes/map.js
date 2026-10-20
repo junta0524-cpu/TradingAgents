@@ -356,7 +356,7 @@
       update() {
         if (nameTimer > 0) nameTimer--;
         if (fadeDir) { updateFade(); return; }
-        if (enterCheck) { enterCheck = false; if (runFirst(map.onEnter)) return; }
+        if (enterCheck) { enterCheck = false; if (runFirst(map.onEnter)) return; if (G.sidestory.offer(mapId)) return; }   // 寄り道の章（js/systems/sidestory.js）
         // 敵に出会った：画面を点滅させてから戦闘へ
         if (battleFlash > 0) {
           if (--battleFlash === 0) G.scene.push(G.scenes.battle(pendingBattle, { bg: map.battleBg }));

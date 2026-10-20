@@ -13,6 +13,7 @@
       { group: 7, label: '第七章' }, { group: 8, label: '第八章' }, { group: 9, label: '第九章' },
       { group: 10, label: '第十章' }, { group: 11, label: '第十一章' }, { group: 12, label: '第十二章' },
       { group: 13, label: 'エピローグ' }, { group: 14, label: 'クリア後' },
+      { group: 15, label: '寄り道の章' },   // 小説の寄り道の章（js/data/sidestories.js が下の list に足す）
     ],
     list: [
       { id: 'ch1_start', group: 1, title: '黄泉の畑' },

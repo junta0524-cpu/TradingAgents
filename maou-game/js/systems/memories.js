@@ -19,7 +19,8 @@
     if (!data || !data.state) return;
     const ch = data.state.chapter || 1, flags = data.flags || {};
     M().list.forEach(m => {
-      const passed = (m.group <= 12 && ch > m.group) || (m.group === 13 && data.state.cleared);
+      const passed = m.after != null ? (m.after >= 13 ? !!data.state.cleared : (ch > m.after || !!data.state.cleared))   // 寄り道の章：after の章を過ぎたら
+        : (m.group <= 12 && ch > m.group) || (m.group === 13 && data.state.cleared);
       if (passed || flags[m.flag || m.id]) set.add(m.id);
     });
   }
