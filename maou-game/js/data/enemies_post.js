@@ -11,11 +11,11 @@
   Object.assign(G.DATA.enemies, {
     // 師（手合わせ）
     haniyasu_t: {
-      tribe: 'tsuchigumo', name: 'ハニヤス', counter: '人', hp: 999, atk: 30, def: 50, agi: 6, wis: 26, exp: 60, copper: 0,
+      tribe: 'tsuchigumo', name: 'ハニヤス', counter: '人', hp: 999, atk: 30, def: 50, agi: 6, wis: 26, exp: 60, copper: 0, big: true, artScale: 6,
       palette: { K: '#120e16', H: '#c8a070', D: '#4a4030', E: '#c08020', W: '#d8c8a0' }, sprite: H,
     },
     nakime_t: {
-      tribe: 'karasu', name: 'ナキメ', counter: '人', hp: 999, atk: 26, def: 40, agi: 18, wis: 40, exp: 60, copper: 0,
+      tribe: 'karasu', name: 'ナキメ', counter: '人', hp: 999, atk: 26, def: 40, agi: 18, wis: 40, exp: 60, copper: 0, big: true, artScale: 6,
       actions: [{ w: 2, type: 'attack' }, { w: 1, type: 'kotodama', id: 'surikomi' }],
       palette: { K: '#120e16', H: '#e8d0c0', D: '#22222e', E: '#c0a020', W: '#6a6a80' }, sprite: H,
     },
