@@ -510,8 +510,10 @@
         if (shake > 0) ctx.translate((shake % 2 ? 1 : -1) * 3, 0);
 
         // 背景：空と野原
+        // 1体だけの戦いで、敵データに battleBg（専用の背景の絵）があれば、そちらを先に使う（四天王・ベルイザナ）
+        const own = enemies.length === 1 && (G.DATA.enemies[enemies[0].id] || {}).battleBg;
         const bk = BACKS[opts.bg] || BACKS.field;
-        const bgArt = G.sprite.battleBackOf(BACKS[opts.bg] ? opts.bg : 'field');   // 作った絵があればそれ（js/data/art.js の battles）
+        const bgArt = (own && G.sprite.battleBackOf(own)) || G.sprite.battleBackOf(BACKS[opts.bg] ? opts.bg : 'field');   // 作った絵があればそれ（js/data/art.js の battles）
         if (bgArt) { ctx.imageSmoothingEnabled = false; ctx.drawImage(bgArt, 0, 0, r.W, 232); }
         else for (let i = 0; i < 10; i++) {
           const t = i / 9, c = bk[0].map((v, k) => Math.round(v + (bk[1][k] - v) * t));

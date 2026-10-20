@@ -55,12 +55,12 @@
     },
     // 11章：手合わせの相手（耐えきれば勝ち）
     mikazuchi_t: {
-      tribe: 'oni', name: 'ミカヅチ', counter: '人', hp: 999, atk: 26, def: 40, agi: 8, wis: 14, exp: 40, copper: 0, big: true, artScale: 6,
+      tribe: 'oni', name: 'ミカヅチ', counter: '人', hp: 999, atk: 26, def: 40, agi: 8, wis: 14, exp: 40, copper: 0, big: true, artScale: 6, battleBg: 'oni_arena',
       palette: { K: '#120e16', H: '#c8705a', D: '#6a2a2a', E: '#e8c040', W: '#f0e0c0' },
       sprite: human(HUMAN),
     },
     susano_t: {
-      tribe: 'arashi', name: 'スサノ', counter: '人', hp: 120, atk: 24, def: 18, agi: 22, wis: 22, exp: 50, copper: 0, big: true, artScale: 6,
+      tribe: 'arashi', name: 'スサノ', counter: '人', hp: 120, atk: 24, def: 18, agi: 22, wis: 22, exp: 50, copper: 0, big: true, artScale: 6, battleBg: 'storm_crag',
       palette: { K: '#120e16', H: '#8a8a9a', D: '#4a4a5a', E: '#d0c040', W: '#f0f0f0' },
       sprite: human(HUMAN),
     },
