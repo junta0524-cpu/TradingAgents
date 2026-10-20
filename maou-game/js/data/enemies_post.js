@@ -20,12 +20,12 @@
       palette: { K: '#120e16', H: '#e8d0c0', D: '#22222e', E: '#c0a020', W: '#6a6a80' }, sprite: H,
     },
     bell_t: {
-      name: 'ベル', counter: '人', hp: 999, atk: 40, def: 60, agi: 20, wis: 60, exp: 80, copper: 0,
+      name: 'ベル', counter: '人', big: true, artScale: 6, hp: 999, atk: 40, def: 60, agi: 20, wis: 60, exp: 80, copper: 0,
       palette: { K: '#0a0608', H: '#e0c0a8', D: '#1a141e', E: '#d02030', W: '#3a2a40' }, sprite: H,
     },
     // ベルとの最終手合わせ（試練の扉のあと）
     bell_final: {
-      name: 'ベルイザナ', counter: '人', hp: 999, atk: 52, def: 80, agi: 30, wis: 80, exp: 500, copper: 0,
+      name: 'ベルイザナ', counter: '人', big: true, artScale: 6, hp: 999, atk: 52, def: 80, agi: 30, wis: 80, exp: 500, copper: 0,
       actions: [{ w: 3, type: 'attack' }, { w: 1, type: 'kotodama', id: 'kangen' }],
       palette: { K: '#0a0608', H: '#e0c0a8', D: '#0e0a12', E: '#ff2030', W: '#5a2a40' }, sprite: H,
     },
