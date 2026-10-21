@@ -310,22 +310,101 @@
     // ---- 寄り道クエスト（docs/寄り道クエスト/。js/data/sidequests/）----
     // 章ごとの数（耐えるラウンド・操る人の強さ party など）。操る人の強さは、各クエストのファイルで TEMP_PARTY に足す
     SIDEQUEST: {
-      ch01_5: {},
-      ch02_5: {},
-      ch03_5: {},
-      ch04_5: {},
-      ch05_5: {},
-      ch06_5: {},
+      ch01_5: {   // 一・五 避難の夜：操る人（ハニヤス・スサノ・ミカヅチ。四天王編でも使う）
+        party: {
+          sq_haniyasu:  { hp: 280, mp: 60, atk: 40, def: 46, agi: 18, wis: 34 },   // 守り・土
+          sq_susano:    { hp: 230, mp: 30, atk: 46, def: 30, agi: 44, wis: 20 },   // 速さ
+          sq_mikazuchi: { hp: 300, mp: 30, atk: 58, def: 40, agi: 22, wis: 22 },   // 力・攻め
+        },
+        accessory: { hp: 40, def: 4 },   // ごほうび「空の椀」：最大体力＋守り
+        price: 600,
+      },
+      ch02_5: {   // 二・五 牢の粥
+        party: { sq_hisame: { hp: 220, mp: 0, atk: 44, def: 32, agi: 20, wis: 8 } },   // 金棒で殴る若い鬼
+        KAYU_ROUNDS: 3,   // 一日目に粥を差し入れる回数
+        KAYU_HEAL: [60, 80],   // ごほうび「牢番の粥」：体力が戻る幅
+        KAYU_COUNT: 3,
+        price: 30,
+      },
+      ch03_5: {   // 三・五 比良坂を渡る
+        party: { sq_kunado: { hp: 120, mp: 40, atk: 20, def: 24, agi: 16, wis: 40 } },   // 岐人（光の道の手引き。戦わない）
+        COPPER_BACK: 16,  // 茶屋の老婆が押し戻した銅貨（ごほうび）
+        accessory: { wis: 6, atk: 2 },   // ごほうび「火口の火打ち石」：賢さ（言霊の効き目）＋攻撃
+        price: 400,
+      },
+      ch04_5: {   // 四・五　名を呼ばれない港
+        PAY: 12,                 // 日雇いの銅貨（パンを買って使う）
+        KEIKO_ROUNDS: 3,         // 宿の裏庭の手合わせ：耐えるラウンド
+        KEIKO_ATK: 14,           // 稽古のベルの打ち込み（脇から打つ弱い攻撃）
+        GAMA_HP: 15,             // ごほうび「蒲の穂綿」の最大体力
+        party: { sq_tomari: { hp: 60, mp: 0, atk: 14, def: 10, agi: 12, wis: 6 } },   // 操るトマリ（戦いはない）
+        prices: { gama_howata: 300 },
+      },
+      ch05_5: {   // 五・五　森の底の石
+        HOLD_ROUNDS: 3,          // 苔の大蜘蛛：耐えるラウンド
+        REIYAKU: 2,              // ごほうびの森の霊薬の数
+        party: { sq_haniyasu: { hp: 300, mp: 60, atk: 40, def: 50, agi: 6, wis: 26 } },   // 操るハニヤス（戦いはない）
+      },
+      ch06_5: {   // 六・五　納めの鉄
+        HOLD_ROUNDS: 3,          // 岩喰らい：耐えるラウンド
+        KIZUGUSURI: 3,           // ごほうびの傷薬の数（カイから）
+        HIUCHI_WIS: 4,           // ごほうび「炭焼きの火打ち石」の賢さ
+        party: { sq_fuji: { hp: 40, mp: 0, atk: 6, def: 6, agi: 6, wis: 6 } },   // 操るフジ（戦いはない）
+        prices: { sumi_hiuchi: 320 },
+      },
       ch07_5: {},
-      ch08_5: {},
-      ch11_5: {},
-      ch12_5: {},
-      bangai1: {},
-      bangai2: {},
-      bangai3: {},
-      bangai4: {},
-      bangai5: {},
-      bangai6: {},
+      ch08_5: {   // 八・五 削られた丘（グループC）
+        accessory: { wis: 6, resist: { confuse: 0.3 } },   // ごほうび「丘の青花」：賢さ＋惑わしに強い
+        price: 500,
+      },
+      ch11_5: {   // 四天王編：操る人（ナキメ・オモイカ）と、スサノの手合わせ
+        party: {
+          sq_nakime: { hp: 200, mp: 90, atk: 26, def: 28, agi: 30, wis: 60 },   // 言霊の後衛
+          sq_omoika: { hp: 150, mp: 40, atk: 14, def: 20, agi: 10, wis: 50 },   // 戦いなし・歩きだけ
+        },
+        SPAR_ROUNDS: 3,   // スサノとオオナムチの手合わせ：このラウンドで勝ち
+        SPAR_ENEMY: { hp: 400, atk: 14, def: 24, agi: 16, wis: 12 },   // 手合わせのオオナムチ（倒しきれない）
+        weapon: { atk: 36, crit: 4 },   // ごほうび「研ぎ直した石椎」
+        price: 1500,
+      },
+      ch12_5: {   // 十二・五 三か月（グループC）
+        party: { c_yuu: { hp: 60, mp: 0, atk: 20, def: 18, agi: 14, wis: 10 } },   // ユウ（戦わない。見た目だけ）
+        battle: ['zantou_hohei', 'zantou_hohei', 'zantou_yumi'],   // ミナモへ歩く野原の残党の小隊（案A）
+        accessory: { def: 12, hp: 60 },   // ごほうび「埴土の守り」：守り＋体力
+        price: 900,
+      },
+      bangai1: {   // 番外編一 五つ目の窪み（グループC。クリア後の本筋 postgame.js）
+        accessory: { def: 6, resist: { poison: 0.3, sleep: 0.3, confuse: 0.3, silence: 0.3, bind: 0.3 } },   // ごほうび「岐の石」：状態異常に強い
+        price: 1500,
+      },
+      bangai2: {   // 番外編二 旗を降ろさぬ者たち（グループC）
+        party: { c_takeru: { hp: 900, mp: 0, atk: 190, def: 160, agi: 150, wis: 60 } },   // タケル（樫の木刀。斬らない）
+        duelRounds: 4,   // ヤツカとの一騎討ち：このラウンド耐えれば勝ち
+        yatsuka: { hp: 1600, atk: 220, def: 170, agi: 130, wis: 120, exp: 3000, copper: 0 },   // 残党の将ヤツカ
+        accessory: { def: 8, agi: 10 },   // ごほうび「樫の木刀の鍔」：守りと素早さ
+        price: 1200,
+      },
+      bangai3: {   // 番外編三：カズミ（戦わない操作役）、上の淵の番人（甕に沈んだ首を数える）、名喰いの王（三ラウンド目に名を剥がされる／二度目は上から名が降る）
+        party: { b3_kazumi: { hp: 60, mp: 0, atk: 5, def: 6, agi: 8, wis: 30 } },
+        OROCHI: { START: 7, WAKE_ROUND: 2, NEED: 8 },   // 甕に沈んだ首：始まり7、2ラウンド目に一つ起きる、8で眠る（オオナムチの堅め1回で＋1）
+        NAKUI_STRIP_ROUND: 3,                            // 名喰いの王①：このラウンドの終わりに『オオナムチ』と呼ばれて戦いが止まる
+        NAKUI_RAIN: 0.2,                                 // 名喰いの王②：ラウンドの終わりごとに、最大体力のこの割合だけ崩れる
+        ITEM: { ikuyumiya: { atk: 30, agi: 15, wis: 20 } },   // ごほうび：生弓矢
+      },
+      bangai4: {   // 番外編四：タケル（臨時・先頭。人間界最強の剣）
+        party: { b4_takeru: { hp: 999, mp: 60, atk: 240, def: 210, agi: 240, wis: 90 } },
+        ITEM: { shiraume_kushi: { hp: 80, mp: 80, def: 10, wis: 15 } },   // ごほうび：白梅の櫛
+      },
+      bangai5: {   // 番外編五：ナキメ（戦わない操作役）、ベル一人で関まで歩く
+        party: { b5_nakime: { hp: 300, mp: 300, atk: 60, def: 60, agi: 120, wis: 200 } },
+        STEPS_3200: 3200,   // ミズキの数えた歩数（歩く道の語りで使う）
+        ITEM: { karasuba_fude: { mp: 120, wis: 40 } },   // ごほうび：鴉羽の筆
+      },
+      bangai6: {   // 番外編六：ハル・ハニヤス（戦わない操作役）。コノハは既存の臨時の仲間
+        party: { b6_hal: { hp: 40, mp: 0, atk: 5, def: 5, agi: 12, wis: 8 }, b6_haniyasu: { hp: 800, mp: 200, atk: 150, def: 230, agi: 60, wis: 150 } },
+        SPROUTS: 3,   // 夜明けの畦で見て回る芽の数
+        ITEM: { nayobi_sakazuki: { hp: 100, mp: 100, atk: 15, def: 15, agi: 15, wis: 15 } },   // ごほうび：名呼びの盃
+      },
     },
   };
 })();

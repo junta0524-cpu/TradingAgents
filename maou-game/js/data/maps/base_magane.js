@@ -69,7 +69,7 @@
       { x: 6, y: 8, to: "magane", tx: 4, ty: 4, dir: 'down' },
     ],
     npcs: [
-      { id: "magane_r1_mother", look: "oldwoman", x: 8, y: 5, dir: "left", move: "still", quest: "magane_fumi", talk: ["「息子は、ヤチマタの宿場へ働きに出たきりでねえ」"] },
+      { id: "magane_r1_mother", look: "oldwoman", x: 8, y: 5, dir: "left", move: "still", talk: ["「息子は、ヤチマタの宿場へ働きに出たきりでねえ」"] },
     ],
     chests: [],
     signs: [],

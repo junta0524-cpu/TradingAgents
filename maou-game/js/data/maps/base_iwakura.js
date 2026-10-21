@@ -41,7 +41,7 @@
     ],
     npcs: [
       { id: "iwakura_guard1", look: "guard", x: 11, y: 5, dir: "down", move: "still", talk: ["「城主さまは、もうずいぶん前から王都に住んでおられる。ここを守るのは、わしら年寄りの衛士だけだ」"], talkAfter: ["「腕章を外して帰ってきた若い者が、昔のように笑うようになった」", "「少し痩せてな。だが、目が、ちゃんとこっちを見ておる」"] },
-      { id: "iwakura_gardener", look: "elder", x: 14, y: 8, dir: "left", move: "still", quest: "iwakura_ido", talk: ["「この井戸は、城ができる前からあったそうな」"] },
+      { id: "iwakura_gardener", look: "elder", x: 14, y: 8, dir: "left", move: "still", talk: ["「この井戸は、城ができる前からあったそうな」"] },
       { id: "iwakura_kid", look: "child", x: 6, y: 13, dir: "right", move: "wander", talk: ["「お城の上から、王都の白い塔が見えるんだって」"] },
     ],
     chests: [],
