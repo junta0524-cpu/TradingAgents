@@ -42,7 +42,7 @@
     },
     // 2章：勇者タケル（人間界最強。1ターンに2回斬る。倒れず、膝をつくところで戦いが終わる＝spare）
     takeru_ch2: {
-      name: 'タケル', counter: '人', hp: 600, atk: 230, def: 200, agi: 240, wis: 120, exp: 0, copper: 0, hits: 2, spare: true,
+      name: 'タケル', counter: '人', big: true, artScale: 6, hp: 600, atk: 230, def: 200, agi: 240, wis: 120, exp: 0, copper: 0, hits: 2, spare: true,
       palette: { K: '#120e16', H: '#6a4a2a', D: '#c8ccd8', E: '#3a5a8a', W: '#ffffff' },
       sprite: human(HUMAN),
     },
@@ -66,7 +66,7 @@
     },
     // 11章：タケル（規定のターンを過ぎ、体力が半分以下になれば勝ち。削り切ってもよい）
     takeru_b: {
-      name: 'タケル', counter: '人', hp: 160, atk: 34, def: 22, agi: 16, wis: 22, exp: 150, copper: 0,
+      name: 'タケル', counter: '人', big: true, artScale: 6, hp: 160, atk: 34, def: 22, agi: 16, wis: 22, exp: 150, copper: 0,
       palette: { K: '#120e16', H: '#6a4a2a', D: '#c8ccd8', E: '#3a5a8a', W: '#ffffff' },
       sprite: human(HUMAN),
     },
