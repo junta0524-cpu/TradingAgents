@@ -35,7 +35,7 @@
 
 ## 新しく要るもの
 
-- マップ：北の山の村 `kita_yamamura`（拠点と同じ作りの外マップ＋部屋2つ：ゴロウの家・ヤツカの家）。外は梅の木（いちばん高い木）・干し大根の軒の家・入口。人間界の地図の北（イワクラ城より北の山あい）に入口を置き、クエストを受けてから入れる（`requires: { if: 'sq_bangai4_start' }`）。
+- マップ：北の山の村 `kita_yamamura`（拠点と同じ作りの外マップ＋部屋2つ：ゴロウの家・ヤツカの家）。外は梅の木（いちばん高い木）・干し大根の軒の家・入口。人間界の地図の北（イワクラ城の北の山あい。番外編二の `kita_toride` の入口の近く。セキ・ヤツカはその砦から戻った村人）に入口を置き、クエストを受けてから入れる（`requires: { if: 'sq_bangai4_start' }`）。
 - 人：セキ（`soldier`）、ヨネ（`villager`）、ミサキ（`child`）、ヤツカ（`elder`）。終わったあとは暮らしのひと言（`talkAfter`）を短く。
 - 臨時の仲間：`takeru`（characters.js に temp・fixed。強さは balance.js の `TEMP_PARTY.takeru`）。
 - spot：`world_ningen` の村の手前に「三日目の夜」の場面。
