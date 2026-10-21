@@ -629,7 +629,10 @@
             G.ui.drawWindow(162, 232, 310, 80);
             const groups = {};
             list.forEach(e => { const n = G.DATA.enemies[e.id].name; groups[n] = (groups[n] || 0) + 1; });
-            Object.keys(groups).forEach((n, i) => r.text(`${n}　${groups[n]}${counterOf(n)}${tribeNote(n)}`, 176, 244 + i * 16, '#fff'));
+            // 5種類より多いとき（残党の仲間呼びなど）は、2列×3行に分けて窓からはみ出さないようにする
+            const names = Object.keys(groups), two = names.length > 4;
+            names.forEach((n, i) => r.text(`${n}　${groups[n]}${counterOf(n)}${tribeNote(n)}`,
+              two ? 176 + Math.floor(i / 3) * 146 : 176, 244 + (two ? i % 3 : i) * (two ? 20 : 16), '#fff', 'left', undefined, two ? 140 : undefined));
           }
           if (phase === 'target' || phase === 'ally') {
             const tgt = allyTargets()[allyIndex];
