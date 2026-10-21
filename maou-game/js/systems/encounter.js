@@ -55,7 +55,7 @@
     // 1歩歩いたとき：敵が出るなら、出る敵の組（id の配列）を返す
     step(map, tile) {
       const enc = map.encounter;
-      if (!enc || !G.encounter.enabled || (tile && tile.noEncounter)) return null;
+      if (!enc || !G.encounter.enabled || G.state.noEnc || (tile && tile.noEncounter)) return null;   // noEnc：寄り道クエストで敵を出さないとき
       // 結界張り：決まった歩数のあいだ、敵に出会わない
       if (G.state.barrier > 0) { G.state.barrier--; return null; }
       if (G.state.encounterSteps == null) G.state.encounterSteps = nextSteps(enc);

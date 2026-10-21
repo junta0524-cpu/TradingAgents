@@ -22,7 +22,7 @@
 //   chapter { n }               … 次の章へ（js/systems/story.js）
 //   save                        … 自動で記録する
 //   bgm   { name }              … 曲を変える（js/core/sound.js の SONGS。null で止める）
-//   battle{ enemies, boss, bg, hook, training, chant, erase } … 決まった敵との戦い（erase：倒した敵が消える）（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
+//   battle{ enemies, boss, bg, hook, training, chant, erase, spare } … 決まった敵との戦い（erase：倒した敵が消える。spare：どの敵も体力1から下がらない＝hook で勝ちを決める戦い）（hook(st) はラウンドの終わりに呼ぶ。出来事の配列を返す）
 //                                 勝ったかどうかはフラグ last_battle_won に入る（手合わせで使う）
 //   learn { id, kotodama }      … 仲間が言霊を覚える（「〇〇を覚えた！」と出る）
 //   join  { id } / leave { id } … 仲間が加わる／別れる（quiet: true で知らせを出さない）
@@ -35,6 +35,7 @@
 //   msgfn { fn }                … その場で作った文を出す（四系統の育ち具合など）
 //   stop                        … この場面をここで終える（天の声の問いをまちがえたとき）
 //   count { key }               … 数を1つ増やす（G.state.vars[key]。選択の結果を後の章で使う）
+//   sq    { start: id } / { end: id, stay } … 寄り道クエストの始まり（いまの仲間・持ち物・場所・章を預ける）／終わり（戻して、預けた場所へ。stay で動かない）
 //
 // 見返し（思い出の帳。G.event.run(場面, 終わり, { replay: true })）：文・背景・人・暗転・曲・手紙・選択肢だけを流す。
 // 仲間・フラグ・状態・場所・記録・戦い・習得は変えない（戦いは「（戦い）」と出すだけ）。帳にある別の場面を call しても流さない。
@@ -51,7 +52,7 @@
   }
 
   // 見返しのときに飛ばす命令（遊んでいる記録を変えるもの）
-  const REPLAY_SKIP = new Set(['party', 'rename', 'walk', 'state', 'flag', 'save', 'learn', 'join', 'leave', 'inhibit', 'item', 'pillar', 'run', 'teach', 'count', 'msgfn']);
+  const REPLAY_SKIP = new Set(['sq', 'party', 'rename', 'walk', 'state', 'flag', 'save', 'learn', 'join', 'leave', 'inhibit', 'item', 'pillar', 'run', 'teach', 'count', 'msgfn']);
 
   function createEventScene(cmds, onDone, music, opts) {
     opts = opts || {};
@@ -157,6 +158,12 @@
           return;
         }
         case 'party': G.party.setMembers(c.ids); return;
+        case 'sq': {   // 寄り道クエストの始まり／終わり（js/systems/sidequest.js）。終わりは預けた場所へ戻る
+          if (c.start) { G.sq.start(c.start); return; }
+          const saved = G.sq.end(c.end);
+          if (saved && saved.mapId && !c.stay) { G.scene.change(G.scenes.map(saved.mapId, saved.x, saved.y, saved.dir)); G.scene.push(self); }
+          return;
+        }
         case 'rename': {
           const m = G.party.member(c.id);
           if (m) { m.name = c.name; if ('look' in c) { if (c.look) m.look = c.look; else delete m.look; } }
@@ -193,7 +200,7 @@
         case 'bgm': if (c.name) lockMusic(c.name); else G.sound.bgm(null); return;
         case 'battle':
           waiting = true;
-          G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook, training: c.training, chant: c.chant, erase: c.erase }));
+          G.scene.push(G.scenes.battle(c.enemies, { boss: c.boss !== false, bg: c.bg, roundHook: c.hook, training: c.training, chant: c.chant, erase: c.erase, spare: c.spare }));
           return;
         case 'learn': {
           const m = G.party.member(c.id);

@@ -79,6 +79,7 @@
     return {
       party, enemies, escapeTries: 0, boss: !!opts.boss,
       showCalc: !!opts.showCalc, lastKilled: null, turn: 0, plans: {},
+      spare: !!opts.spare,   // 寄り道クエストの耐える戦い：どの敵も体力1から下がらない
       protectLeft: G.DATA.balance.INHIBIT.PROTECT_PER_BATTLE,   // ベルが致命傷を止められる残り回数
     };
   }
@@ -171,7 +172,7 @@
   function applyDamage(st, target, amount) {
     let hp = target.hp - amount;
     if (target.side === 'party' && charOf(target).isBell && hp < 1) hp = 1;
-    if (target.side === 'enemy' && (G.DATA.enemies[target.id] || {}).spare && hp < 1) hp = 1;   // 倒れない敵（2章のタケル）
+    if (target.side === 'enemy' && ((G.DATA.enemies[target.id] || {}).spare || st.spare) && hp < 1) hp = 1;   // 倒れない敵（2章のタケル・寄り道クエストの耐える戦い）
     let saved = null;
     if (hp <= 0 && amount > 0 && canProtect(st, target)) {
       hp = 1;
@@ -224,6 +225,8 @@
       const stance = (actor.mp >= (G.DATA.kotodama[cmd.id] || {}).mp) ? G.affinity.setStance(actor, cmd.id) : null;
       if (stance) ev.push({ type: 'msg', text: stance });
       const out = G.kotodama.cast(actor, cmd.id, cmd.target, st);
+      // 唱えた言霊の覚え（寄り道クエストの hook が「堅めを唱えたか」などを見る）。唱えられたときだけ
+      if (out.some(e => e.type === 'msg' && e.text.endsWith('を唱えた！'))) (st.casts = st.casts || []).push({ who: actor.id, id: cmd.id, round: st.hookRound || 0 });
       // ベルが言霊を唱えると、阻害ゲージが大きく減る
       if (charOf(actor).isBell && out.some(e => e.type === 'msg' && e.text.endsWith('を唱えた！'))) {
         G.inhibit.drain(G.inhibit.kotodamaCost(G.DATA.kotodama[cmd.id]));

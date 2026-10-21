@@ -549,16 +549,11 @@ const { chromium } = require('playwright');
     out.push(GAME.sprite.faceId('サルタヒコ'), GAME.sprite.faceId('ユウ'));
     GAME.state.chapter = keep.ch; GAME.flags.set('takeru_free', keep.f); return out.join();
   }), 'takeru,takeru_free,takeru_free,sarutahiko,yuu');
-  expect('寄り道の章：16章が場面になっていて、思い出の帳の「寄り道の章」に並び、決まった章・場所で「読みますか？」と聞く', await ev(() => {
-    const keep = { ch: GAME.state.chapter, cl: GAME.state.cleared };
+  expect('寄り道の章：16章が場面になっていて、思い出の帳の「寄り道の章」に並ぶ。「読みますか？」は聞かず、寄り道クエスト（G.sq）で遊ぶ', await ev(() => {
     const n = GAME.DATA.sidestories.filter(s => (GAME.DATA.events[s.id] || []).length > 20).length;
     const m = GAME.DATA.memories.list.filter(x => x.group === 15).length;
-    const asked = GAME.flags.get('side_offer_side_ch04_5'); GAME.flags.set('side_offer_side_ch04_5', false);
-    GAME.state.chapter = 4; const a = !!GAME.sidestory.pending('minamo');
-    GAME.state.chapter = 5; const b = (GAME.sidestory.pending('minamo') || {}).id;
-    GAME.state.chapter = keep.ch; GAME.state.cleared = keep.cl; GAME.flags.set('side_offer_side_ch04_5', asked);
-    return `${n}/${m}/${a}/${b}`;
-  }), '16/16/false/side_ch04_5');
+    return `${n}/${m}/${GAME.DATA.sidestories.some(s => s.offer)}/${typeof GAME.sq.add}`;
+  }), '16/16/false/function');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
   expect('ギルドの依頼：残党の将・残党の隊は、その敵を目覚めさせた数で済む', await ev(() => {
     const keep = JSON.stringify(GAME.state.requests || {}); GAME.state.requests = {};

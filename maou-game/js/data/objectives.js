@@ -64,6 +64,11 @@
   // いまの目的（合う行がなければ null）
   G.objective = () => {
     const ch = (G.state && G.state.chapter) || 1;
+    // 寄り道クエストのあいだは、そのクエストの行（G.DATA.sqObjectives。条件は flags.check、chapter は見ない）を先に見る
+    if (G.state && G.state.sq) {
+      const q = (G.DATA.sqObjectives || []).find(x => x.sq === G.state.sq && G.flags.check(Object.assign({}, x, { chapter: null })));
+      if (q) return q.text;
+    }
     const o = G.DATA.objectives.find(x => x.chapter === ch && G.flags.check(Object.assign({}, x, { chapter: null })));
     return o ? o.text : null;
   };

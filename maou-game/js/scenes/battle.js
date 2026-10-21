@@ -41,7 +41,7 @@
   // opts.chant：詠唱ゲージのある戦い（12章の王戦）。{ enemy, max, perRound, threshold, reduce: { 言霊: 減る量 }, blockText, strikeText, loseText }
   G.scenes.battle = function (group, opts) {
     opts = opts || {};
-    const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc, erase: opts.erase });
+    const st = G.battle.create(G.party.active(), group, { boss: opts.boss, showCalc: G.debugOpts.showCalc, erase: opts.erase, spare: opts.spare });
     const CH = opts.chant || null;
     const prevBgm = G.sound.current();   // 戦いが終わったら、もとの曲へ戻す
     // 曲：12章の王戦＝final、手合わせ＝training、ボス（1体）＝boss、ふつう＝battle
