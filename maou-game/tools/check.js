@@ -1056,9 +1056,10 @@ const { chromium } = require('playwright');
   // 言伝を唱える（メニュー → ことだま → ベル → 言伝）
   const castKotozute = async () => {
     const kIdx = await ev(() => GAME.party.member('bell').kotodama.indexOf('kotozute'));
-    await key('KeyX', 150); await key('ArrowDown', 60); await key('KeyZ', 150); await key('KeyZ', 200);
-    for (let i = 0; i < kIdx; i++) await key('ArrowDown', 30);
-    await key('KeyZ', 300);
+    await wait(300);
+    await key('KeyX', 300); await key('ArrowDown', 100); await key('KeyZ', 300); await key('KeyZ', 400);
+    for (let i = 0; i < kIdx; i++) await key('ArrowDown', 60);
+    await key('KeyZ', 400);
   };
   await castKotozute();
   expect('言伝で場面が始まる', (await scenes()).includes('イベント'), true);
