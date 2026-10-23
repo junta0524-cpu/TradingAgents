@@ -411,8 +411,8 @@ const { chromium } = require('playwright');
   await ev(() => { const m = GAME.party.member('oonamuchi'); delete m.status; GAME.party.healAll(); GAME.encounter.enabled = true; });
 
   // 臨時の仲間（デバッグで5章の二人を入れる）→ 4人で歩く
-  await placeAt('minamo', 15, 12, 'down'); await wait(200);
-  await key('F1', 150);
+  await placeAt('minamo', 15, 12, 'down'); await wait(400);
+  await key('F1', 300);
   for (let i = 0; i < 13; i++) await key('ArrowDown', 40);
   await key('KeyZ', 200); await key('KeyZ', 300);    // 5章：スクナ・コノハ
   await closeMessages(); await key('Escape', 150);
