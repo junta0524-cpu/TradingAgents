@@ -474,14 +474,9 @@
   E.sq_ch06_5_lamps = L.lamps.concat([
     { t: 'state', set: { split: null } },
     { t: 'flag', set: F('7') },
-    N('（四人で、坑道を出る。入口へ戻る）'),
+    N('（四人で、坑道を出る。入口（下の端）へ戻る）'),
   ]);
-  E.sq_ch06_5_village = [
-    { t: 'flag', set: F('8') },
-    { t: 'fade', to: 1 },
-    { t: 'goto', map: 'magane', x: 11, y: 4, dir: 'up' },
-    { t: 'fade', to: 0 },
-  ].concat(L.village, [N('（地図を歩いて、宿場町ヤチマタへ。大宿の裏庭で薪を割る若者に話す）')]);
+  E.sq_ch06_5_village = [{ t: 'flag', set: F('8') }].concat(L.village, [N('（地図を歩いて、宿場町ヤチマタへ。大宿の裏庭で薪を割る若者に話す）')]);
   E.sq_ch06_5_kai = L.kai.concat([
     { t: 'run', fn: () => G.party.removeItem('magane_tegami', 1) },
     { t: 'flag', set: F('9') },
@@ -501,7 +496,10 @@
 
   // ---- 場所に足す ----
   G.sq.add('magane', {
-    onEnter: [{ event: 'sq_ch06_5_offer', chapterFrom: 7, chapterTo: 9, chapterAlso: 13, unless: F('began') }],
+    onEnter: [
+      { event: 'sq_ch06_5_village', ...on('7', '8') },
+      { event: 'sq_ch06_5_offer', chapterFrom: 7, chapterTo: 9, chapterAlso: 13, unless: F('began') },
+    ],
     npcs: [
       { id: 'sq65_miner', look: 'dwarf2', x: 10, y: 4, dir: 'down', move: 'still', ...on('1', '2'), event: 'sq_ch06_5_miner' },
       { id: 'sq65_bell', look: 'bell', x: 15, y: 8, dir: 'left', move: 'still', ...on('2', '3'), event: 'sq_ch06_5_fuji' },
@@ -528,7 +526,8 @@
     ],
     spots: [[8, 1], [14, 2], [16, 3]].map(([x, k]) => ({ x, y: 11, event: 'sq_ch06_5_lamp' + k, knows: 'hidane', ...on('5', 'lamp' + k) }))
       .concat([8, 14, 16].map(x => ({ x, y: 11, text: '古い燭台に、火が灯っている。', if: F('5') }))),
-    triggers: [[11, 15], [12, 15], [13, 15], [11, 16], [12, 16], [13, 16]].map(([x, y]) => ({ x, y, event: 'sq_ch06_5_village', ...on('7', '8') })),
+    // 帰り：入口の手前から、マガネの竪坑の口へ（村の場面はマガネに入ったとき）
+    warps: [11, 12, 13].map(x => ({ x, y: 16, to: 'magane', tx: 11, ty: 3, dir: 'down', when: on('7', '8') })),
   });
   G.sq.add('yachimata', {
     npcs: [{ id: 'sq65_kai', look: 'villager', x: 5, y: 2, dir: 'down', move: 'still', ...on('8', '9'), event: 'sq_ch06_5_kai' }],

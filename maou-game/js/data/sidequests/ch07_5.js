@@ -499,7 +499,6 @@
       { id: 'sq75_fuki', look: 'kid_ear', x: 5, y: 9, dir: 'up', move: 'still', ...folk },
       { id: 'sq75_tane', look: 'elder', x: 4, y: 9, dir: 'up', move: 'still', ...folk },
       { id: 'sq75_nazuna', look: 'oldwoman', x: 12, y: 8, dir: 'up', move: 'still', if: F('on'), unless: F('2'), talk: ['（老婆が、井戸の縁で、桶の縄を撚っている）'] },
-      { id: 'sq75_susuki', look: 'villager', x: 22, y: 5, dir: 'left', move: 'still', if: F('on'), unless: F('3'), talk: ['（見張りの若い男が、こちらを見ている）'] },
     ],
     spots: [{ x: 12, y: 7, event: 'sq_ch07_5_bucket', ...on('2', '3') }],
     triggers: [7, 8, 9].map(y => ({ x: 2, y, event: 'sq_ch07_5_gate', ...on('1', '2') })),

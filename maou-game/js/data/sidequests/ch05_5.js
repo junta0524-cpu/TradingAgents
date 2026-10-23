@@ -490,11 +490,11 @@
   });
   G.sq.add('hijiri_deep', {
     flagTiles: [
-      { x: 20, y: 13, ch: 'l', ...on('3', 'carry') },
+      { x: 20, y: 12, ch: 'l', ...on('3', 'carry') },
       { x: 1, y: 5, ch: '8', if: F('2') },
     ],
     spots: [
-      { x: 20, y: 13, event: 'sq_ch05_5_egg', knows: 'katame', ...on('3', 'carry') },
+      { x: 20, y: 12, event: 'sq_ch05_5_egg', knows: 'katame', ...on('3', 'carry') },
       { x: 0, y: 10, event: 'sq_ch05_5_egg_place', ...on('carry', '4') },
       { x: 0, y: 9, event: 'sq_ch05_5_egg_place', ...on('carry', '4') },
       { x: 0, y: 11, event: 'sq_ch05_5_egg_place', ...on('carry', '4') },

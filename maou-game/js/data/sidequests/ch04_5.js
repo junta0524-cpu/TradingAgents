@@ -465,11 +465,10 @@
   });
 
   // ---- 場面 ----
-  const offerLater = [{ t: 'flag', set: F('asked') }, N('（ギルドの掲示板の左の、古い紙を調べると、また遊べる）')];
-  E.sq_ch04_5_offer = Q.offer(ID, '四・五　名を呼ばれない港', offerLater);
+  E.sq_ch04_5_offer = Q.offer(ID, '四・五　名を呼ばれない港');
   E.sq_ch04_5_begin = Q.begin(ID, '四・五　名を呼ばれない港', '（四章と五章のあいだ。ひなた野の届け物から七日）',
     ['bell', 'oonamuchi'], null, ['minamo_guild', 10, 6, 'down'])
-    .concat([{ t: 'flag', set: F('asked') }], L.guild, [
+    .concat(L.guild, [
       { t: 'flag', set: F('1') },
       N('（港の北の岸壁で、荷運びのトマリに会う）'),
     ]);
@@ -532,13 +531,11 @@
 
   // ---- 場所に足す ----
   const on = (k, u) => Object.assign({ if: F(k) }, u ? { unless: F(u) } : {});
-  // ギルド：入ったときに聞く（あとで、を選んだら掲示板の左の古い紙から）
+  // ギルド：掲示板の前に立つ黒い外套の背中（思い出の中のベル）に話すと聞く
   G.sq.add('minamo_guild', {
-    onEnter: [
-      { event: 'sq_ch04_5_last', if: F('10') },
-      { event: 'sq_ch04_5_offer', chapterFrom: 5, chapterTo: 9, chapterAlso: 13, unless: F('asked') },
-    ],
-    spots: [{ x: 11, y: 1, event: 'sq_ch04_5_offer', chapterFrom: 5, chapterTo: 9, chapterAlso: 13, if: F('asked'), unless: F('began') }],
+    onEnter: [{ event: 'sq_ch04_5_last', if: F('10') }],
+    npcs: [{ id: 'sq45_board', look: 'bell', x: 11, y: 2, dir: 'up', move: 'still', chapterFrom: 5, chapterTo: 9, chapterAlso: 13, unless: F('began'), event: 'sq_ch04_5_offer',
+      talk: ['（掲示板の前に、黒い外套の背中があった）'] }],
   });
   G.sq.add('minamo', {
     npcs: [
@@ -552,9 +549,9 @@
       { id: 'sq45_kid2', look: 'kid_tail', x: 3, y: 9, dir: 'right', move: 'still', ...on('4', '5') },
       { id: 'sq45_kid3', look: 'child', x: 2, y: 10, dir: 'up', move: 'still', ...on('4', '5') },
       { id: 'sq45_baker', look: 'merchant', x: 9, y: 11, dir: 'down', move: 'still', ...on('5', '5b'), event: 'sq_ch04_5_bakery' },
-      { id: 'sq45_kid4', look: 'kid_ear', x: 27, y: 9, dir: 'down', move: 'still', ...on('5b', '6'), event: 'sq_ch04_5_kids' },
-      { id: 'sq45_kid5', look: 'kid_tail', x: 28, y: 9, dir: 'down', move: 'still', ...on('5b', '6'), event: 'sq_ch04_5_kids' },
-      { id: 'sq45_kid6', look: 'child', x: 29, y: 9, dir: 'down', move: 'still', ...on('5b', '6'), event: 'sq_ch04_5_kids' },
+      { id: 'sq45_kid4', look: 'kid_ear', x: 26, y: 9, dir: 'down', move: 'still', ...on('5b', '6'), event: 'sq_ch04_5_kids' },
+      { id: 'sq45_kid5', look: 'kid_tail', x: 27, y: 9, dir: 'down', move: 'still', ...on('5b', '6'), event: 'sq_ch04_5_kids' },
+      { id: 'sq45_kid6', look: 'child', x: 28, y: 9, dir: 'down', move: 'still', ...on('5b', '6'), event: 'sq_ch04_5_kids' },
       // 網干し場（ベル一人のとき）
       { id: 'sq45_asagi', look: 'clerk', x: 3, y: 5, dir: 'up', move: 'still', ...on('9', '10') },
       { id: 'sq45_isana2', look: 'elder', x: 2, y: 5, dir: 'up', move: 'still', ...on('9', '10') },
