@@ -361,8 +361,9 @@ const { chromium } = require('playwright');
   await ev(() => localStorage.removeItem('maou_save_2'));
   page.once('dialog', async d => { await d.accept(exported); });
   await key('ArrowDown', 60); await key('KeyZ', 400);   // 読み込み
-  await wait(300);
-  await key('ArrowDown', 120); await key('KeyZ', 400);   // 記録2へ
+  for (let i = 0; i < 30 && !(await scenes()).endsWith('読み込み'); i++) await wait(100);   // 枠を選ぶ窓が出るまで待つ
+  await wait(200);
+  await key('ArrowDown', 150); await key('KeyZ', 500);   // 記録2へ
   await shot('34_imported');
   await closeMessages();
   expect('読み込んで記録2に入る', await ev(() => !!GAME.save.read('2') && GAME.save.read('2').state.copper === GAME.save.read('1').state.copper), true);
