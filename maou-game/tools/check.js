@@ -43,6 +43,10 @@ const { chromium } = require('playwright');
     window.__hushSq = () => ['sq_ch11_5_asked', 'sq_c85_lock', 'sq_ch05_5_began', 'sq_ch06_5_began'].forEach(f => GAME.flags.set(f, true));
     const ng = GAME.party.newGame;
     GAME.party.newGame = function () { ng.apply(this, arguments); window.__hushSq(); };
+    const ap = GAME.save.apply;
+    GAME.save.apply = function () { const r = ap.apply(this, arguments); window.__hushSq(); return r; };
+    const fs = GAME.flags.reset;
+    GAME.flags.reset = function () { fs.apply(this, arguments); window.__hushSq(); };
   });
   // カーソルを覚える：キー操作の確かめは、いつもコマンドの先頭から始める（覚える動きは別に確かめる）
   await ev(() => { GAME.settings.cursorMemory = false; GAME.save.saveSettings(); });
@@ -801,6 +805,7 @@ const { chromium } = require('playwright');
   expect('頼みごと：知らせるとごほうび', await ev(() => GAME.quests.status(GAME.quests.byId('magane_tokage'))) + '/' + ((await ev(() => GAME.state.copper)) - cop) + '/' + await ev(() => GAME.party.count('inochi_ishi') > 0), 'claimed/150/true');
   // 届ける（マガネの母の手紙）と調べる（イワクラの古井戸）の頼みは、寄り道クエスト六・五章・七・五章に置き換えた（ユーザー決定）
   // 持ってくる：品が足りないと待つ、そろうと渡す
+  await ev(() => { GAME.state.chapter = 7; });
   expect('頼みごと：持ってくる', await ev(() => {
     const q = GAME.quests.byId('iwakura_kusuri'); GAME.quests.accept(q.id);
     const n0 = GAME.party.count('kizugusuri'); GAME.party.removeItem('kizugusuri', n0);
