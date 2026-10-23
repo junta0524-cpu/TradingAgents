@@ -459,7 +459,7 @@
       // 二　ハル
       at({ if: 'b6_hal', unless: 'b6_konoha' }, [
         { id: 'b6_yuu', look: 'yuu', x: 15, y: 15, dir: 'left', talk: ['（ユウが、段々田の上のほうを見ている）'] },
-        { id: 'b6_wolfkid', look: 'wolfkid', x: 10, y: 8, event: 'sq_bangai6_wolf', doneFlag: 'b6_wolf', talk: ['（嵐狼の子が、にっと笑って、手を動かした）'] },
+        { id: 'b6_wolfkid', look: 'wolfkid', x: 11, y: 8, event: 'sq_bangai6_wolf', doneFlag: 'b6_wolf', talk: ['（嵐狼の子が、にっと笑って、手を動かした）'] },
         { id: 'b6_nazuna', look: 'oldwoman', x: 13, y: 14, dir: 'up', event: 'sq_bangai6_nazuna', talk: ['（ナズナ婆さまが、杖を止めて、段々田を見上げている）'] },
         { id: 'b6_kunado', look: 'kunado', x: 18, y: 13, talk: ['（クナドが、列の先で、静かに待っている）'] },
         { id: 'b6_susuki', look: 'guard', x: 19, y: 15, talk: ['（見張りのススキが、赤い空を見上げている）'] },
