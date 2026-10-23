@@ -264,11 +264,12 @@ async function run(page, expect) {
   await goTo(7, 22, '野原 木立の奥'); for (const k of 'll') await step(k);
   await goTo(4, 22, '野原 埋めた穴'); await examine('u');
   expect('野原：木立の岩を穴へ押し込み、宝箱（守りの玉）', await has('mamori_ishi'), 1);
+  const doku0 = await has('dokukeshi');   // 道中の戦いで落とすこともあるので、増えた数で見る
   await place('hijiri_path', 5, 2, 'left'); await examine('l');
   await place('hijiri_path', 4, 2, 'left'); await examine('l');
   await place('hijiri_path', 9, 18, 'left'); await examine('l');
   await step('l'); await examine('l');
-  expect('森の道：火の玉（心鎮め）と蔦（火種）が守る宝箱', `${await flag('gm:hijiri_path:wisp')}/${await flag('gm:hijiri_path:vine')}/${await has('dokukeshi')}`, 'true/true/1');
+  expect('森の道：火の玉（心鎮め）と蔦（火種）が守る宝箱', `${await flag('gm:hijiri_path:wisp')}/${await flag('gm:hijiri_path:vine')}/${(await has('dokukeshi')) - doku0}`, 'true/true/1');
   await place('ro_path', 22, 13, 'up'); const hpR = await ev(() => GAME.party.member('oonamuchi').hp);
   await step('u'); await step('u'); await examine('u');
   expect('山道：焼けた岩を渡って宝箱（体力が減る）', `${(await ev(() => GAME.party.member('oonamuchi').hp)) < hpR}/${await flag('chest:ro_path:crag')}`, 'true/true');
