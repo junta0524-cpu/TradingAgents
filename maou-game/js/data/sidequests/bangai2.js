@@ -25,7 +25,7 @@
   const base = G.DATA.enemies.zantou;
   Object.assign(G.DATA.enemies, {
     zantou_yatsuka: Object.assign({}, base, SQ.yatsuka, {
-      name: 'ヤツカ', counter: '人', tribe: base.tribe, big: true, unique: true, awaken: true, hits: 2,
+      name: 'ヤツカ', counter: '人', tribe: base.tribe, big: true, unique: true, awaken: false, hits: 2,   // 一騎討ちは受けきる戦い（目覚めさせない）。check.js の「目覚めさせられる敵」の一覧も変えない
       actions: [{ w: 1, type: 'attack' }], drop: null,
       palette: { K: '#06040a', H: '#e8e8e8', D: '#3a3e48', E: '#ff6040', W: '#f0f0f0' },
     }),

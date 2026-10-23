@@ -212,8 +212,8 @@
   ];
 
   // ---- 七：演武場（ベルとの最終手合わせ。postgame.js の post_omoika から呼ぶ）----
-  const ARENA = [A('bell_true', 240, 220, 'down'), A('mikazuchi', 120, 236, 'right'), A('susano', 360, 236, 'left'), A('nakime', 100, 280, 'right'),
-    A('haniyasu', 380, 280, 'left'), A('omoika', 170, 300, 'up'), A('kunado', 310, 300, 'up')];
+  const ARENA = [A('bell_true', 240, 196, 'down'), A('mikazuchi', 130, 210, 'right'), A('susano', 350, 210, 'left'), A('nakime', 80, 236, 'right'),
+    A('haniyasu', 400, 236, 'left'), A('omoika', 170, 250, 'up'), A('kunado', 310, 250, 'up')];
   E.sq_b1_final_before = [
     { t: 'fade', to: 1 },
     { t: 'bg', key: 'palace', actors: ARENA },
@@ -221,13 +221,13 @@
     N('黄泉津の宮の演武場は、夜が更けると、篝火だけになる。ベルは、その真ん中に、立っていた。魔王の姿だった。'),
     N('周りには、四天王が、並んでいた。オモイカが、杖をついて、見届け人の場所に、立っていた。その隣に、クナドがいた。'),
     N('篝火の外側には、もっと大勢がいた。腰の曲がった老人が、杖をついて、立っていた。ウツホだった。人間の客も、いた。'),
-    { t: 'bg', key: 'palace', actors: ARENA.concat([A('konoha', 60, 300, 'right'), A('sukuna', 420, 300, 'left')]) },
+    { t: 'bg', key: 'palace', actors: ARENA.concat([A('konoha', 40, 256, 'right'), A('sukuna', 440, 256, 'left')]) },
     S('コノハ', '「別に、見に来たわけじゃないけど」'),
     N('誰も、何も聞いていなかった。スクナが、その隣で、にやにやしていた。'),
     S('スクナ', '「魔王様の本気など、そうそう見られるものではないからのう」'),
     S(MIKA, '「本気、か。……俺が受けきったと思っていたあれより、上だぞ」'),
     S(SUSA, '「保留だ。見てから、決める」'),
-    { t: 'bg', key: 'palace', actors: ARENA.concat([A('konoha', 60, 300, 'right'), A('sukuna', 420, 300, 'left'), A('oonamuchi', 240, 270, 'up')]) },
+    { t: 'bg', key: 'palace', actors: ARENA.concat([A('konoha', 40, 256, 'right'), A('sukuna', 440, 256, 'left'), A('oonamuchi', 240, 246, 'up')]) },
     S(BELL, '「手は、抜かぬ」'),
     S(BELL, '「それが、おまえへの、礼だ」'),
     S(OO, '「はい」'),
@@ -236,7 +236,7 @@
     { t: 'bg', key: null },
   ];
   E.sq_b1_final_after = [
-    { t: 'bg', key: 'palace', actors: ARENA.concat([A('konoha', 60, 300, 'right'), A('sukuna', 420, 300, 'left'), A('oonamuchi', 240, 262, 'up')]) },
+    { t: 'bg', key: 'palace', actors: ARENA.concat([A('konoha', 40, 256, 'right'), A('sukuna', 440, 256, 'left'), A('oonamuchi', 240, 246, 'up')]) },
     N('膜を張った。厚くはない。半分。そのまた半分。土のように、ただ、そこにある膜。オオナムチは、倒れた。立った。一歩、前に出た。'),
     N('ベルの拳が、目の前に、来た。拳の形。指の折り方。爪が、掌に、食い込んでいる。(この人は、ずっと、こうやって、拳を握ってきた)'),
     N('オオナムチは、その拳を、両手で、包んだ。受け止めたのではない。包んだ。名を呼ぶときと、同じように。'),

@@ -352,7 +352,16 @@
         party: { sq_fuji: { hp: 40, mp: 0, atk: 6, def: 6, agi: 6, wis: 6 } },   // 操るフジ（戦いはない）
         prices: { sumi_hiuchi: 320 },
       },
-      ch07_5: {},
+      ch07_5: {   // 七・五　風の岩溝
+        HOLD_ROUNDS: 3,          // 風の大鷲：耐えるラウンド
+        GRAB_DRAIN: 10,          // ベルが腕を掴んだとき、阻害ゲージが減る分（「阻害が、軋んだ」）
+        NUNO_DEF: 6,             // ごほうび「ノギクの葛布」の守り
+        party: {                 // 操るナズナ・老いた衛士（戦いはない）
+          sq_nazuna: { hp: 30, mp: 0, atk: 4, def: 4, agi: 4, wis: 8 },
+          sq_eiji:   { hp: 50, mp: 0, atk: 12, def: 10, agi: 5, wis: 6 },
+        },
+        prices: { kuzu_nuno: 360 },
+      },
       ch08_5: {   // 八・五 削られた丘（グループC）
         accessory: { wis: 6, resist: { confuse: 0.3 } },   // ごほうび「丘の青花」：賢さ＋惑わしに強い
         price: 500,

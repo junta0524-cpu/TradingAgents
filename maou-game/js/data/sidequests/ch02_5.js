@@ -171,7 +171,7 @@
     npcs: [
       { id: 'sq25_k_mate', look: 'oni', x: 7, y: 4, dir: 'left', move: 'still', if: ON, unless: P + 'rice', event: 'sq_ch02_5_rice' },
       { id: 'sq25_k_mate2', look: 'oni', x: 8, y: 6, dir: 'left', move: 'still', if: P + 'rice', unless: P + 'day2', talk: [{ name: MATE, text: '「食わない奴に、何度出しても、同じだろ」' }] },
-      { id: 'sq25_k_mika', look: 'mikazuchi', x: 7, y: 6, dir: 'left', move: 'still', if: P + 'day2', unless: P + 'mika2', event: 'sq_ch02_5_mika' },
+      { id: 'sq25_k_mika', look: 'mikazuchi', x: 8, y: 5, dir: 'left', move: 'still', if: P + 'day2', unless: P + 'mika2', event: 'sq_ch02_5_mika' },
       { id: 'sq25_k_hisame', look: 'oni', x: 2, y: 3, dir: 'up', move: 'still', if: P + 'night2', unless: P + 'thanks', event: 'sq_ch02_5_thanks' },
       { id: 'sq25_k_hisame2', look: 'oni', x: 2, y: 3, dir: 'up', move: 'still', if: P + 'thanks', talk: ['若い鬼が、竈の前で、鍋をかき回している。'] },
     ],
@@ -339,7 +339,7 @@
 
   // ==== 四：宮の塔の上（ナキメ。歩かない）====
   E.sq_ch02_5_tower = [
-    { t: 'bg', key: 'balcony', actors: [{ look: 'nakime', x: 240, y: 240, dir: 'up' }] },
+    { t: 'bg', key: 'balcony', actors: [{ look: 'nakime', x: 240, y: 205, dir: 'up' }] },
     { t: 'fade', to: 0 },
     N('ナキメは、牢のある地下へは、下りなかった。'),
     N('宮の高い塔の、いちばん上の部屋。窓辺に、椅子を置いて、座っていた。目を閉じる。牢は、ここから、三十丈は下にある。'),
@@ -465,7 +465,7 @@
 
   // ==== 六：イオリ（歩かない）====
   E.sq_ch02_5_iori = [
-    { t: 'bg', key: 'prison', actors: [{ look: 'soldier', x: 240, y: 250, dir: 'down' }] },
+    { t: 'bg', key: 'prison', actors: [{ look: 'soldier', x: 240, y: 215, dir: 'down' }] },
     { t: 'bgm', name: 'memory' },
     { t: 'fade', to: 0 },
     N('イオリは、空になった椀を、膝の上に置いたまま、動けなかった。'),

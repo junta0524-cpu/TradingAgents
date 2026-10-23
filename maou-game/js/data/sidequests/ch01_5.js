@@ -155,7 +155,7 @@
 
   // ==== 二：大穴の縁の回廊（ナキメ・オモイカ。歩かない）====
   E.sq_ch01_5_corridor = [
-    { t: 'bg', key: 'corridor', actors: [{ look: 'omoika', x: 200, y: 250, dir: 'down' }, { look: 'nakime', x: 290, y: 250, dir: 'left' }] },
+    { t: 'bg', key: 'corridor', actors: [{ look: 'omoika', x: 200, y: 215, dir: 'down' }, { look: 'nakime', x: 290, y: 215, dir: 'left' }] },
     { t: 'fade', to: 0 },
     N('大穴の縁の回廊の出口で、ナキメがオモイカを見つけたのは、日が落ちてからだった。'),
     N('石の床に、血の跡が、点々と続いていた。'),
@@ -275,7 +275,7 @@
 
   // ==== 四：宮の一室（オモイカ。歩かない）====
   E.sq_ch01_5_fever = [
-    { t: 'bg', key: 'palace', actors: [{ look: 'omoika', x: 240, y: 240, dir: 'down' }] },
+    { t: 'bg', key: 'palace', actors: [{ look: 'omoika', x: 240, y: 205, dir: 'down' }] },
     { t: 'bgm', name: 'memory' },
     { t: 'fade', to: 0 },
     N('熱が、出ていた。'),
@@ -299,7 +299,7 @@
     N('呼べば、震える。そう思って、会談の間で、呼ばなかった。今も、呼べない。呼べば、自分の中の何かが、崩れてしまう気がした。'),
     N('それでも、顔だけは、一つも、零さなかった。'),
     N('(覚えています。全員)'),
-    { t: 'actors', list: [{ look: 'omoika', x: 240, y: 240, dir: 'down' }, { look: 'nakime', x: 330, y: 240, dir: 'left' }] },
+    { t: 'actors', list: [{ look: 'omoika', x: 240, y: 205, dir: 'down' }, { look: 'nakime', x: 330, y: 205, dir: 'left' }] },
     N('熱の向こうで、誰かが、扉を開ける気配がした。ナキメの翼の音だった。'),
     S(NAKI, '「スサノの群れが、峰を越えました。ハニヤスの民は、洞に。ミカヅチは、根の洲の東へ、民を迎えに出ています」'),
     N('ナキメの声は、平らだった。報告の声だ。オモイカは、目を開けた。'),
@@ -398,7 +398,7 @@
   ];
 
   // ==== 六：宮の一室の帳面（オモイカ・ナキメ。歩かない）====
-  const ROOM = [{ look: 'omoika', x: 220, y: 240, dir: 'down' }, { look: 'nakime', x: 310, y: 240, dir: 'left' }];
+  const ROOM = [{ look: 'omoika', x: 220, y: 205, dir: 'down' }, { look: 'nakime', x: 310, y: 205, dir: 'left' }];
   E.sq_ch01_5_ledger = [
     { t: 'bg', key: 'palace', actors: ROOM },
     { t: 'bgm', name: 'warm' },
@@ -451,7 +451,7 @@
   const ARMY = [];
   for (let r = 0; r < 3; r++) for (let i = 0; i < 6; i++) ARMY.push({ look: 'soldier', x: 60 + i * 34 + r * 12, y: 230 + r * 26, dir: 'right' });
   const FAR_BELL = { look: 'bell_true', x: 430, y: 200, dir: 'left' };
-  const TOWER = [{ look: 'nakime', x: 240, y: 240, dir: 'up' }];
+  const TOWER = [{ look: 'nakime', x: 240, y: 205, dir: 'up' }];
   E.sq_ch01_5_tower = [
     { t: 'bg', key: 'balcony', actors: TOWER },
     { t: 'bgm', name: 'tension' },
@@ -562,11 +562,11 @@
     spots: [15, 16, 17, 18, 19, 20, 21].map(x => ({ x, y: 14, if: P + 'bowls', event: 'sq_ch01_5_hoe' })),
   });
   const F = (look, x, y, dir) => ({ look, x, y, dir: dir || 'up' });
-  const HANI_F = F('haniyasu', 400, 250, 'left');
-  const W1 = [HANI_F, F('oldwoman', 240, 270)];
-  const W2 = W1.concat([F('beastwoman', 160, 270), F('wolfkid', 190, 285)]);
-  const W3 = W2.concat([F('oni', 290, 285), F('crow', 120, 285), F('elder', 330, 270), F('oldwoman', 360, 285)]);
-  const W4 = W3.concat([F('susano', 80, 260), F('wolfkid', 250, 240, 'down')]);
+  const HANI_F = F('haniyasu', 400, 215, 'left');
+  const W1 = [HANI_F, F('oldwoman', 240, 235)];
+  const W2 = W1.concat([F('beastwoman', 160, 235), F('wolfkid', 190, 250)]);
+  const W3 = W2.concat([F('oni', 290, 250), F('crow', 120, 250), F('elder', 330, 235), F('oldwoman', 360, 250)]);
+  const W4 = W3.concat([F('susano', 80, 225), F('wolfkid', 250, 205, 'down')]);
   E.sq_ch01_5_bowls = [
     { t: 'flag', set: P + 'bowls' },
     N('ハニヤスは、卓の端に、立った。'),

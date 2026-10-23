@@ -382,4 +382,171 @@
     ],
   };
   // ==== 小説の文ここまで ====
+
+  const E = G.DATA.events, B = G.DATA.balance.SIDEQUEST.ch07_5, Q = G.sqB;
+  const ID = 'ch07_5', F = k => 'sq_ch07_5_' + k;
+  const on = (k, u) => Object.assign({ if: F(k) }, u ? { unless: F(u) } : {});
+  const TITLE = '七・五　風の岩溝';
+
+  // ---- 新しいもの：ナズナ・老いた衛士（操る人）・葛布・豆・衛士の鈴 ----
+  Object.assign(G.DATA.characters, {
+    sq_nazuna: { name: 'ナズナ', look: 'oldwoman', temp: true, fixed: true, tactic: 'auto', kotodama: [] },
+    sq_eiji:   { name: '衛士',   look: 'guard',    temp: true, fixed: true, tactic: 'auto', kotodama: [] },
+  });
+  Object.assign(G.DATA.balance.TEMP_PARTY, B.party);
+  Object.assign(G.DATA.balance.PRICES, B.prices);
+  Object.assign(G.DATA.items, {
+    kuzu_nuno: { name: 'ノギクの葛布', type: 'armor', def: B.NUNO_DEF, resist: { sleep: 0.5, confuse: 0.5 }, who: ['oonamuchi'],
+      desc: '機織りのノギクが、葛の糸で目を詰めて織った灰色の布。風を通さない。眠り・惑わしが効きにくい。' },
+    tane_mame: { name: 'タネ爺の豆', type: 'key', desc: 'ひなた野の畑から持ってきた種の、残り。「蒔きます。どこかに、必ず」' },
+    eiji_suzu: { name: '衛士の鈴', type: 'key', desc: '苔と泥にまみれ、緑青の浮いた小さな鈴。イワクラの広場の井戸の底から引き上げた。' },
+  });
+
+  // 岩溝で、ベルがオオナムチの腕を掴むところ（「腕を、掴まれた。」）で、阻害ゲージが軋む
+  const grabAt = L.ravine3.findIndex(c => c.text === '腕を、掴まれた。') + 1;
+  // ギルドの裏手の倉庫の陰（ベル一人）から先
+  const alleyAt = L.minamo1.findIndex(c => c.text && c.text.startsWith('人気のない、倉庫の陰'));
+
+  // ---- 場面 ----
+  E.sq_ch07_5_offer = Q.offer(ID, TITLE);
+  E.sq_ch07_5_begin = Q.begin(ID, TITLE, '（七章の翌朝。夜明け前の葛の里）', ['bell', 'oonamuchi'], null, ['kuzu_village', 8, 8, 'left'])
+    .concat([
+      { t: 'join', id: 'uzume', quiet: true },
+      { t: 'party', ids: ['uzume', 'bell', 'oonamuchi'] },
+    ], L.s1a, [{ t: 'flag', set: F('0') }, N('（門の前の、ひなた野から移ってきた人たちに話す）')]);
+  E.sq_ch07_5_folk = L.s1b.concat([{ t: 'flag', set: F('1') }, N('（門（西の端）から、外へ）')]);
+  E.sq_ch07_5_gate = L.s1c.concat([
+    { t: 'flag', set: F('2') },
+    { t: 'fade', to: 1 },
+  ], Q.swap(['sq_nazuna']), [
+    { t: 'goto', map: 'kuzu_village', x: 12, y: 8, dir: 'up' },
+    { t: 'fade', to: 0 },
+    N('（井戸番だったナズナになって）'),
+  ], L.nazuna1, [N('（井戸に、桶を下ろす。井戸を調べる）')]);
+  E.sq_ch07_5_bucket = L.nazuna2.concat([
+    { t: 'flag', set: F('3') },
+    { t: 'fade', to: 1 },
+  ], Q.back(['bell', 'oonamuchi', 'uzume']), [
+    { t: 'goto', map: 'kemono_field', x: 30, y: 10, dir: 'left' },
+    { t: 'fade', to: 0 },
+    N('（獣ノ原を南東へ。南東の隅の、風の岩溝へ）'),
+  ]);
+  E.sq_ch07_5_ravine = L.ravine1.concat([{ t: 'flag', set: F('3r') }, N('（風に流されながら、溝の半ばへ。下の右の、広い岩棚へ）')]);
+  E.sq_ch07_5_eagle = L.ravine2.concat([
+    { t: 'save' },
+    N('（大鷲は、巣を守っているだけだ。倒さずに、耐える。オオナムチが「堅め」を唱えてみよう）'),
+    { t: 'battle', enemies: ['kaze_oowashi'], spare: true, bg: 'wild', hook: Q.holdKatame(B.HOLD_ROUNDS, L.katame, F('katame')) },
+    { t: 'if', flag: F('katame'), not: true, then: L.katame },
+  ], L.ravine3.slice(0, grabAt), [{ t: 'inhibit', drain: B.GRAB_DRAIN }], L.ravine3.slice(grabAt), [
+    { t: 'flag', set: F('4') },
+    N('（溝の出口は、上の通路の東の端。右下の古いレバーで風の向きを変えて、右の縦の風に乗る）'),
+  ]);
+  E.sq_ch07_5_exit = L.exit.concat([
+    { t: 'leave', id: 'uzume', quiet: true },
+    { t: 'flag', set: F('5') },
+    { t: 'fade', to: 1 },
+    { t: 'goto', map: 'iwakura', x: 12, y: 13, dir: 'up' },
+    { t: 'fade', to: 0 },
+    N('（イワクラの城下。門の脇の、老いた衛士に話す）'),
+  ]);
+  E.sq_ch07_5_guard = L.iwa1.concat([{ t: 'flag', set: F('6') }, N('（衛士について、城下の広場の古い井戸へ）')]);
+  E.sq_ch07_5_well = L.iwa2.concat([{ t: 'flag', set: F('7') }, N('（その夜。城下の宿（右の建物）の、寝床を調べる）')]);
+  E.sq_ch07_5_inn = [{ t: 'bg', key: 'lodging', actors: [{ look: 'oonamuchi', x: 180, y: 225, dir: 'up' }, { look: 'bell', x: 300, y: 215, dir: 'up' }] }]
+    .concat(L.inn, [
+      { t: 'bg', key: null },
+      { t: 'flag', set: F('8') },
+      { t: 'state', set: { split: 'away' } },
+      N('（夜明け前。オオナムチは一人で、広場の井戸へ）'),
+    ]);
+  E.sq_ch07_5_dredge = [
+    N('（桶を下ろして、何度も、井戸の底を浚った）'),
+    { t: 'item', id: 'eiji_suzu' },
+    N('（衛士さんに、渡してください。そう言い残して、鈴を、宿の主人に預けた）'),
+    { t: 'run', fn: () => G.party.removeItem('eiji_suzu', 1) },
+    { t: 'flag', set: F('9') },
+    { t: 'fade', to: 1 },
+    { t: 'state', set: { split: null } },
+  ].concat(Q.swap(['sq_eiji']), [
+    { t: 'goto', map: 'iwakura', x: 12, y: 13, dir: 'up' },
+    { t: 'fade', to: 0 },
+    N('（翌朝。老いた衛士になって。宿の主人が、何かを届けにきた）'),
+  ]);
+  E.sq_ch07_5_bell = L.eiji.concat([
+    { t: 'flag', set: F('10') },
+    { t: 'fade', to: 1 },
+  ], Q.back(), [
+    { t: 'fade', to: 0 },
+    N('（三日後。地図を歩いて、ミナモのギルドへ）'),
+  ]);
+  E.sq_ch07_5_guild = L.minamo1.slice(0, alleyAt).concat([
+    { t: 'flag', set: F('11') },
+    { t: 'fade', to: 1 },
+  ], Q.swap(['bell']), [
+    { t: 'goto', map: 'minamo', x: 18, y: 9, dir: 'up' },
+    { t: 'fade', to: 0 },
+    N('（ギルドの裏手の、倉庫の陰。空に手をかざす）'),
+  ]);
+  E.sq_ch07_5_alley = L.minamo1.slice(alleyAt).concat(Q.back(), [{ t: 'flag', set: F('12') }, N('（港の桟橋の、小舟のほうへ）')]);
+  E.sq_ch07_5_pier = L.minamo2.concat(Q.finish(ID, [['kuzu_nuno'], ['tane_mame']]));
+
+  // ---- 場所に足す ----
+  const folk = { ...on('0', '1'), event: 'sq_ch07_5_folk' };
+  G.sq.add('kuzu_village', {
+    npcs: [
+      { id: 'sq75_uzume', look: 'uzume', x: 3, y: 7, dir: 'right', move: 'still', chapterFrom: 8, chapterTo: 9, chapterAlso: 13, unless: F('began'), event: 'sq_ch07_5_offer',
+        talk: ['（ウズメが、石垣の上にしゃがんで、門の外の道を眺めている）'] },
+      { id: 'sq75_nogiku', look: 'beastwoman', x: 5, y: 7, dir: 'down', move: 'still', ...folk },
+      { id: 'sq75_fuki', look: 'kid_ear', x: 5, y: 9, dir: 'up', move: 'still', ...folk },
+      { id: 'sq75_tane', look: 'elder', x: 4, y: 9, dir: 'up', move: 'still', ...folk },
+      { id: 'sq75_nazuna', look: 'oldwoman', x: 12, y: 8, dir: 'up', move: 'still', if: F('on'), unless: F('2'), talk: ['（老婆が、井戸の縁で、桶の縄を撚っている）'] },
+      { id: 'sq75_susuki', look: 'villager', x: 22, y: 5, dir: 'left', move: 'still', if: F('on'), unless: F('3'), talk: ['（見張りの若い男が、こちらを見ている）'] },
+    ],
+    spots: [{ x: 12, y: 7, event: 'sq_ch07_5_bucket', ...on('2', '3') }],
+    triggers: [7, 8, 9].map(y => ({ x: 2, y, event: 'sq_ch07_5_gate', ...on('1', '2') })),
+  });
+  G.sq.add('kemono_ravine', {
+    onEnter: [{ event: 'sq_ch07_5_ravine', ...on('3', '3r') }],
+    triggers: [[22, 9], [20, 10], [21, 10], [22, 10]].map(([x, y]) => ({ x, y, event: 'sq_ch07_5_eagle', ...on('3r', '4') }))
+      .concat([18, 19, 20, 21, 22].map(x => ({ x, y: 1, event: 'sq_ch07_5_exit', ...on('4', '5') }))),
+  });
+  G.sq.add('iwakura', {
+    npcs: [
+      { id: 'sq75_guard', look: 'guard', x: 14, y: 13, dir: 'left', move: 'still', ...on('5', '6'), event: 'sq_ch07_5_guard' },
+      { id: 'sq75_guard2', look: 'guard', x: 13, y: 9, dir: 'up', move: 'still', ...on('6', '7'), talk: ['（衛士は、井戸の印の跡を見ている）'] },
+      { id: 'sq75_nadai', look: 'clerk', x: 10, y: 9, dir: 'up', move: 'still', ...on('6', '7'), talk: ['（帳面を抱えた男が、広場の端に立っている）'] },
+      { id: 'sq75_innkeeper', look: 'elder', x: 11, y: 13, dir: 'right', move: 'still', ...on('9', '10'), event: 'sq_ch07_5_bell' },
+    ],
+    spots: [
+      { x: 12, y: 8, event: 'sq_ch07_5_well', ...on('6', '7') },
+      { x: 12, y: 8, event: 'sq_ch07_5_dredge', ...on('8', '9') },
+    ],
+  });
+  G.sq.add('iwakura_inn', { spots: [{ x: 10, y: 5, event: 'sq_ch07_5_inn', ...on('7', '8') }, { x: 1, y: 5, event: 'sq_ch07_5_inn', ...on('7', '8') }] });
+  G.sq.add('minamo_guild', { onEnter: [{ event: 'sq_ch07_5_guild', ...on('10', '11') }] });
+  G.sq.add('minamo', {
+    npcs: [
+      { id: 'sq75_isana', look: 'elder', x: 26, y: 2, dir: 'down', move: 'still', ...on('12'), event: 'sq_ch07_5_pier' },
+      { id: 'sq75_tomari', look: 'hal', x: 25, y: 4, dir: 'right', move: 'still', ...on('12'), event: 'sq_ch07_5_pier' },
+    ],
+    spots: [{ x: 18, y: 8, event: 'sq_ch07_5_alley', ...on('11', '12') }],
+  });
+
+  Q.obj(ID, [
+    { if: F('12'), text: '桟橋のイサナとトマリに話す' },
+    { if: F('11'), text: 'ベルとして、倉庫の陰で空に手をかざす' },
+    { if: F('10'), text: 'ミナモのギルドへ' },
+    { if: F('9'), text: '衛士として、宿の主人に話す' },
+    { if: F('8'), text: 'オオナムチ一人で、広場の井戸の底を浚う' },
+    { if: F('7'), text: '城下の宿の寝床を調べる' },
+    { if: F('6'), text: '広場の古い井戸を調べる' },
+    { if: F('5'), text: '門の脇の老いた衛士に話す' },
+    { if: F('4'), text: 'レバーで風を変え、上の通路の東の端へ' },
+    { if: F('3r'), text: '溝の半ばの、右下の岩棚へ' },
+    { if: F('3'), text: '獣ノ原の南東の、風の岩溝へ' },
+    { if: F('2'), text: 'ナズナとして、井戸を調べる' },
+    { if: F('1'), text: '門（西の端）から外へ' },
+    { if: F('0'), text: '門の前の人たちに話す' },
+    { text: '葛の里を歩く' },
+  ]);
+  if (G.DATA.music) Object.assign(G.DATA.music.events, { sq_ch07_5_begin: 'village', sq_ch07_5_gate: 'warm', sq_ch07_5_bucket: 'memory', sq_ch07_5_eagle: 'tension', sq_ch07_5_exit: 'farewell', sq_ch07_5_well: 'sad', sq_ch07_5_inn: 'night', sq_ch07_5_bell: 'memory', sq_ch07_5_guild: 'night', sq_ch07_5_pier: 'warm' });
 })();

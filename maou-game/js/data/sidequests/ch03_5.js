@@ -465,7 +465,7 @@
 
   // ==== 五：境の岩の上の岐人（歩かない）====
   E.sq_ch03_5_kunado = [
-    { t: 'bg', key: 'hirasaka', actors: [{ look: 'kunado', x: 240, y: 240, dir: 'down' }] },
+    { t: 'bg', key: 'hirasaka', actors: [{ look: 'kunado', x: 240, y: 205, dir: 'down' }] },
     { t: 'bgm', name: 'memory' },
     { t: 'fade', to: 0 },
     N('年かさの岐人は、境の岩の上に、立っていた。'),

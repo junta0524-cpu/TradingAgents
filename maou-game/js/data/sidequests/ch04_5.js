@@ -497,7 +497,9 @@
   E.sq_ch04_5_well = [{ t: 'bg', key: 'well_night', actors: [{ look: 'bell', x: 200, y: 210, dir: 'right' }, { look: 'oonamuchi', x: 270, y: 210, dir: 'left' }] }]
     .concat(L.well1, [
       N('（手合わせ：ベルの脇からの打ち込みを、堅めで受ける。オオナムチが「堅め」を唱えてみよう）'),
-      { t: 'battle', enemies: ['bell_keiko'], training: true, spare: true, boss: false, hook: Q.holdKatame(B.KEIKO_ROUNDS, L.well_katame, F('katame')) },
+      { t: 'state', set: { split: 'watch' } },   // 相手はベル。戦うのはオオナムチ一人
+      { t: 'battle', enemies: ['bell_keiko'], training: true, spare: true, boss: false, bg: 'night', hook: Q.holdKatame(B.KEIKO_ROUNDS, L.well_katame, F('katame')) },
+      { t: 'state', set: { split: null } },
       { t: 'if', flag: F('katame'), not: true, then: L.well_katame },
     ], L.well2, [
       { t: 'bg', key: null },

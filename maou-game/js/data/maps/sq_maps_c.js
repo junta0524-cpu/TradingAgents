@@ -73,6 +73,7 @@
     start: { x: 12, y: 18, dir: 'up' },
     tint: 'rgba(210,225,255,0.22)',   // 雪の色
     battleBg: 'mountain',
+    bgm: 'mountain',
     rows: [
       'mmmmmmmmmmmmmmmmmmmmmmmmmm',
       'mmmVVVVVVVVVVVVVVVVVVVVmmm',
@@ -121,6 +122,7 @@
     outside: '#000',
     start: { x: 5, y: 7, dir: 'up' },
     tint: 'rgba(20,20,50,0.25)',
+    bgm: 'eerie',
     rows: [
       ' IIIIIIIIII ',
       ' IIIIIIIIII ',
