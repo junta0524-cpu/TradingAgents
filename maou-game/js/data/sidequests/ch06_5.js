@@ -511,7 +511,7 @@
     warps: [{ x: 11, y: 2, to: 'ro_mine', tx: 12, ty: 16, dir: 'up', when: on('4', '7') }],
   });
   G.sq.add('magane_inn', {
-    npcs: [{ id: 'sq65_sleep', look: 'oonamuchi', x: 1, y: 5, dir: 'down', move: 'still', ...on('3', '3b'), event: 'sq_ch06_5_wake', doneFlag: F('3b'),
+    npcs: [{ id: 'sq65_sleep', look: 'oonamuchi', x: 2, y: 5, dir: 'down', move: 'still', ...on('3', '3b'), event: 'sq_ch06_5_wake', doneFlag: F('3b'),
       talk: ['（オオナムチは、預かった手紙を枕元に置いて、眠っている）'] }],
     flagTiles: [{ x: 11, y: 4, ch: 'W', ...on('3', '3b') }],
     spots: [{ x: 11, y: 4, event: 'sq_ch06_5_window', ...on('3', '3a') }],
