@@ -1,0 +1,322 @@
+// このファイルの役目：マス目（16×16）の絵を、Canvasの点と四角で描いて用意する。
+// 一度描いた絵はとっておき、毎回使い回す（動きが軽くなる）。水だけは2枚の絵を交互に出して揺らす。
+(function () {
+  const G = window.GAME = window.GAME || {};
+  const T = 16;
+
+  // 場所ごとに決まった「でたらめ」な数（模様を毎回同じにするため）
+  function hash(x, y, s) {
+    let h = (x * 374761393 + y * 668265263 + s * 982451653) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  }
+  function fill(c, color, x, y, w, h) { c.fillStyle = color; c.fillRect(x || 0, y || 0, w || T, h || T); }
+  function dot(c, color, x, y) { c.fillStyle = color; c.fillRect(x, y, 1, 1); }
+  function speckle(c, colors, density, seed) {
+    for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) {
+      const v = hash(x, y, seed);
+      if (v < density) dot(c, colors[Math.floor(hash(y, x, seed + 1) * colors.length)], x, y);
+    }
+  }
+
+  const LOOKS = {
+    grass(c) { fill(c, '#3f8a3a'); speckle(c, ['#4fa046', '#2f6e2c'], 0.18, 1); },
+    tallgrass(c) {
+      LOOKS.grass(c);
+      for (let i = 0; i < 6; i++) {
+        const x = 1 + Math.floor(hash(i, 0, 7) * 13), y = 4 + Math.floor(hash(0, i, 7) * 9);
+        fill(c, '#2a5e27', x, y, 1, 3); fill(c, '#5cb050', x + 1, y - 1, 1, 3);
+      }
+    },
+    flowers(c) {
+      LOOKS.grass(c);
+      [[3, 4, '#e8506a'], [10, 3, '#f2d24b'], [6, 10, '#f2f2f2'], [12, 11, '#e8506a'], [2, 13, '#f2d24b']]
+        .forEach(([x, y, col]) => { fill(c, col, x, y, 2, 2); dot(c, '#7a3b1a', x, y); });
+    },
+    tree(c) {
+      LOOKS.grass(c);
+      fill(c, '#5a3a1e', 7, 11, 2, 4);
+      c.fillStyle = '#1f5a24'; c.beginPath(); c.arc(8, 7, 6.5, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#2f7a32'; c.beginPath(); c.arc(7, 6, 4.5, 0, Math.PI * 2); c.fill();
+      dot(c, '#4f9c48', 5, 4); dot(c, '#4f9c48', 6, 3); dot(c, '#4f9c48', 9, 5);
+    },
+    mountain(c) {
+      LOOKS.grass(c);
+      c.fillStyle = '#6b5a48'; c.beginPath(); c.moveTo(0, 15); c.lineTo(8, 1); c.lineTo(16, 15); c.closePath(); c.fill();
+      c.fillStyle = '#857160'; c.beginPath(); c.moveTo(3, 15); c.lineTo(8, 1); c.lineTo(9, 15); c.closePath(); c.fill();
+      c.fillStyle = '#eee'; c.beginPath(); c.moveTo(6, 5); c.lineTo(8, 1); c.lineTo(10, 5); c.closePath(); c.fill();
+    },
+    water(c, f) {
+      fill(c, '#2a5fa8'); speckle(c, ['#245394'], 0.12, 3);
+      const o = f ? 4 : 0;
+      fill(c, '#6a9fe0', (2 + o) % 16, 4, 4, 1); fill(c, '#6a9fe0', (10 + o) % 16, 11, 4, 1);
+      fill(c, '#4a7fc8', (9 + o) % 16, 5, 2, 1); fill(c, '#4a7fc8', (1 + o) % 16, 12, 2, 1);
+    },
+    planks(c) {
+      fill(c, '#9a6b3f');
+      for (let y = 3; y < T; y += 4) fill(c, '#6e4a2a', 0, y, T, 1);
+      dot(c, '#5a3a1e', 4, 1); dot(c, '#5a3a1e', 11, 5); dot(c, '#5a3a1e', 6, 9); dot(c, '#5a3a1e', 13, 13);
+    },
+    stone(c) {
+      fill(c, '#c9c2b4');
+      fill(c, '#a69e8f', 0, 7, T, 1); fill(c, '#a69e8f', 0, 15, T, 1);
+      fill(c, '#a69e8f', 5, 0, 1, 7); fill(c, '#a69e8f', 12, 8, 1, 7);
+      speckle(c, ['#d8d2c6', '#b5ad9e'], 0.08, 5);
+    },
+    dirt(c) { fill(c, '#b08a56'); speckle(c, ['#c49c66', '#94733f'], 0.2, 9); },
+    town(c, f, base) {
+      (base || LOOKS.grass)(c);
+      fill(c, '#e8e4da', 2, 8, 5, 5); fill(c, '#4a5f8a', 1, 5, 7, 3);
+      fill(c, '#e8e4da', 9, 6, 5, 7); fill(c, '#4a5f8a', 8, 3, 7, 3);
+      fill(c, '#7a4e2a', 4, 10, 1, 3); fill(c, '#7a4e2a', 11, 10, 1, 3);
+    },
+    roof(c) {
+      fill(c, '#4a5f8a');
+      for (let y = 3; y < T; y += 4) fill(c, '#34466a', 0, y, T, 1);
+      for (let y = 0; y < T; y += 4) for (let x = (y / 4) % 2 ? 0 : 4; x < T; x += 8) fill(c, '#34466a', x, y, 1, 3);
+      fill(c, '#5c74a4', 0, 0, T, 1);
+    },
+    wall(c) {
+      fill(c, '#e8e4da'); speckle(c, ['#d8d2c4'], 0.08, 11);
+      fill(c, '#6b4a2e', 0, 0, T, 2); fill(c, '#6b4a2e', 0, 14, T, 2);
+    },
+    window(c) {
+      LOOKS.wall(c);
+      fill(c, '#6b4a2e', 4, 4, 8, 8); fill(c, '#8fb8e8', 5, 5, 6, 6); fill(c, '#6b4a2e', 7, 5, 2, 6);
+    },
+    door(c) {
+      LOOKS.wall(c);
+      fill(c, '#5a3a1e', 3, 2, 10, 14); fill(c, '#8a5a30', 4, 3, 8, 13);
+      fill(c, '#6e4a2a', 8, 3, 1, 13); dot(c, '#e8c860', 10, 9); dot(c, '#e8c860', 6, 9);
+    },
+    barrel(c) {
+      LOOKS.stone(c);
+      fill(c, '#5a3a1e', 3, 2, 10, 13); fill(c, '#8a5a30', 4, 2, 8, 13);
+      fill(c, '#3a3a3a', 3, 5, 10, 1); fill(c, '#3a3a3a', 3, 11, 10, 1);
+    },
+    well(c) {
+      LOOKS.stone(c);
+      c.fillStyle = '#7a7a80'; c.beginPath(); c.arc(8, 8, 7, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#1a2a40'; c.beginPath(); c.arc(8, 8, 4.5, 0, Math.PI * 2); c.fill();
+      dot(c, '#6a9fe0', 7, 7);
+    },
+    floor(c) {
+      fill(c, '#8a6a44');
+      for (let y = 0; y < T; y += 4) fill(c, '#74563a', 0, y, T, 1);
+      for (let y = 0; y < T; y += 4) fill(c, '#74563a', (y * 3) % 16, y, 1, 4);
+    },
+    innerwall(c) { fill(c, '#c9b48c'); fill(c, '#a8936c', 0, 12, T, 4); fill(c, '#e0d0a8', 0, 0, T, 1); },
+    counter(c) { fill(c, '#5a3a1e'); fill(c, '#8a5a30', 0, 0, T, 6); fill(c, '#a87040', 0, 0, T, 1); },
+    table(c) { LOOKS.floor(c); fill(c, '#6e4a2a', 1, 3, 14, 10); fill(c, '#8a5a30', 2, 4, 12, 8); },
+    mat(c) { LOOKS.floor(c); fill(c, '#8a2a2a', 1, 2, 14, 12); fill(c, '#b04040', 2, 3, 12, 10); },
+    // ---- 建物の中の家具（拠点の部屋）----
+    bed(c) { LOOKS.floor(c); fill(c, '#5a4030', 1, 1, 14, 14); fill(c, '#e8e0d0', 2, 2, 12, 4); fill(c, '#6a8ab0', 2, 6, 12, 8); fill(c, '#7a9ac0', 2, 6, 12, 2); },
+    shelf(c) { fill(c, '#5a3a1e'); [2, 7, 12].forEach(y => fill(c, '#8a5a30', 1, y, 14, 2)); fill(c, '#c0a070', 2, 4, 3, 3); fill(c, '#7a8a9a', 7, 4, 2, 3); fill(c, '#a04030', 10, 9, 3, 3); fill(c, '#d0c0a0', 3, 9, 4, 3); },
+    hearth(c) { fill(c, '#6a6058'); fill(c, '#4a4038', 1, 1, 14, 14); fill(c, '#2a1e18', 3, 6, 10, 8); fill(c, '#e06020', 5, 9, 6, 4); fill(c, '#f0c040', 7, 10, 2, 2); },
+    jar(c) { LOOKS.floor(c); fill(c, '#4a3a5a', 4, 3, 8, 11); fill(c, '#5a4a6a', 3, 5, 10, 7); fill(c, '#2a2030', 5, 2, 6, 2); fill(c, '#7a6a8a', 5, 6, 2, 4); },
+    books(c) { fill(c, '#4a2e18'); [1, 6, 11].forEach((y, i) => { fill(c, '#6a4428', 0, y + 4, T, 1); for (let k = 0; k < 7; k++) fill(c, ['#a03030', '#305090', '#c0a040', '#307040'][(k + i) % 4], 1 + k * 2, y, 2, 4); }); },
+    earth(c) { fill(c, '#7a6650'); speckle(c, ['#86725a', '#6e5a46'], 0.25, 91); },
+    rug(c) { LOOKS.earth(c); fill(c, '#a08850', 1, 1, 14, 14); for (let y = 2; y < 14; y += 3) fill(c, '#8a7040', 1, y, 14, 1); },
+    void(c) { fill(c, '#000'); },
+    // ---- 村（第二部）----
+    thatch(c) {
+      fill(c, '#a88a4a');
+      for (let y = 2; y < T; y += 4) fill(c, '#8a6e36', 0, y, T, 1);
+      speckle(c, ['#c0a060', '#7a6030'], 0.15, 41); fill(c, '#6a5228', 0, 15, T, 1);
+    },
+    crops(c) {
+      fill(c, '#6a4a2e');
+      for (let x = 2; x < T; x += 5) for (let y = 2; y < T; y += 6) { fill(c, '#4a8a3a', x, y, 2, 3); dot(c, '#7ac060', x + 1, y - 1); }
+    },
+    stonewall(c) {
+      LOOKS.grass(c);
+      fill(c, '#8a8a84', 0, 5, T, 9);
+      fill(c, '#6a6a64', 0, 9, T, 1); fill(c, '#6a6a64', 5, 5, 1, 4); fill(c, '#6a6a64', 11, 10, 1, 4);
+    },
+    // ---- 森（5章）----
+    moss(c) { fill(c, '#4a6a32'); speckle(c, ['#5a7a3a', '#3a5a28', '#6a8a42'], 0.25, 51); },
+    trunk(c) {
+      fill(c, '#5a3e24'); for (let x = 2; x < T; x += 5) fill(c, '#4a3018', x, 0, 1, T);
+      speckle(c, ['#6a4a2e', '#3e2a16'], 0.1, 53); fill(c, '#3a6a2a', 0, 0, T, 2);
+    },
+    trunkdoor(c) { LOOKS.trunk(c); fill(c, '#2a1a0e', 4, 4, 8, 12); fill(c, '#6a4a22', 5, 5, 6, 11); dot(c, '#e8c860', 9, 10); },
+    cavemouth(c) { LOOKS.rock(c); c.fillStyle = '#0a0806'; c.beginPath(); c.arc(8, 12, 7, Math.PI, 0); c.fill(); fill(c, '#0a0806', 1, 12, 14, 4); },
+    rock(c) { fill(c, '#6a6460'); speckle(c, ['#7a7470', '#5a5450', '#4a4440'], 0.3, 55); fill(c, '#4a4440', 0, 15, T, 1); },
+    cavefloor(c) { fill(c, '#3e3a36'); speckle(c, ['#4a4642', '#34302c'], 0.2, 57); },
+    straw(c) { LOOKS.cavefloor(c); for (let i = 0; i < 9; i++) fill(c, i % 2 ? '#c8a858' : '#a88a40', 1 + i, 4 + (i % 3) * 3, 6, 1); },
+    // ---- 山の里（6章）----
+    stonehouse(c) {
+      fill(c, '#8a8278'); fill(c, '#6a6258', 0, 7, T, 1); fill(c, '#6a6258', 0, 15, T, 1);
+      fill(c, '#6a6258', 4, 0, 1, 7); fill(c, '#6a6258', 11, 8, 1, 7); speckle(c, ['#9a9288', '#7a7268'], 0.1, 61);
+    },
+    furnace(c, f) {
+      LOOKS.stonehouse(c);
+      fill(c, '#2a1a10', 3, 5, 10, 10); fill(c, '#e05a1a', 4, 8, 8, 6); fill(c, '#ffc040', 6, 10, 4, 3);
+    },
+    // ---- 荒野（7章）----
+    dryland(c) { fill(c, '#a8925e'); speckle(c, ['#b8a26e', '#94804e', '#8a7a4a'], 0.2, 71); },
+    shrub(c) {
+      LOOKS.dryland(c);
+      c.fillStyle = '#5a6a2e'; c.beginPath(); c.arc(8, 9, 6, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#7a8a3e'; c.beginPath(); c.arc(7, 8, 3.5, 0, Math.PI * 2); c.fill();
+    },
+    stake(c) { LOOKS.dryland(c); fill(c, '#6a4a2a', 7, 2, 2, 13); fill(c, '#c83030', 6, 5, 4, 2); },
+    ruin(c) {
+      LOOKS.dryland(c);
+      fill(c, '#4a3e34', 1, 6, 6, 9); fill(c, '#2a221c', 9, 9, 6, 6); fill(c, '#1a1612', 3, 4, 2, 3); speckle(c, ['#1a1612'], 0.06, 73);
+    },
+    // ---- 王都と院（8〜9章）：白い都 ----
+    whitewall(c) { fill(c, '#f0f0ea'); fill(c, '#d8d8d0', 0, 15, T, 1); fill(c, '#e0e0d8', 0, 7, T, 1); speckle(c, ['#e4e4dc'], 0.05, 81); },
+    whiteroof(c) { fill(c, '#e8e8e0'); for (let y = 3; y < T; y += 4) fill(c, '#d0d0c8', 0, y, T, 1); fill(c, '#f8f8f4', 0, 0, T, 1); },
+    whitestone(c) { fill(c, '#e4e2da'); fill(c, '#cfcdc4', 0, 7, T, 1); fill(c, '#cfcdc4', 0, 15, T, 1); fill(c, '#cfcdc4', 5, 0, 1, 7); fill(c, '#cfcdc4', 12, 8, 1, 7); },
+    statue(c) { LOOKS.whitestone(c); fill(c, '#b8b8b0', 3, 11, 10, 5); fill(c, '#f4f4f0', 6, 2, 4, 9); fill(c, '#f4f4f0', 10, 0, 1, 6); fill(c, '#c8c8c0', 6, 10, 4, 1); },
+    belltower(c) { fill(c, '#d8d8d0'); fill(c, '#b0b0a8', 2, 0, 12, T); fill(c, '#3a3a40', 5, 3, 6, 5); fill(c, '#c8a040', 6, 5, 4, 3); },
+    crest(c) { LOOKS.darkstone(c); fill(c, '#5a5056', 3, 2, 10, 12); fill(c, '#7a7076', 4, 3, 8, 10); speckle(c, ['#8a8086'], 0.2, 83); },
+    stairs(c) { fill(c, '#2a2226'); for (let y = 0; y < T; y += 4) fill(c, '#4a4046', 0, y, T, 3); },
+    // ---- クリア後 ----
+    trialdoor(c) { fill(c, '#1a1424'); fill(c, '#3a2a5a', 1, 0, 14, T); fill(c, '#f0e8a0', 7, 2, 2, 12); fill(c, '#a090d0', 3, 6, 10, 1); },
+    altar(c) { LOOKS.darkstone(c); fill(c, '#5a5a7a', 2, 6, 12, 9); fill(c, '#8a8ac0', 3, 4, 10, 3); fill(c, '#e8e8ff', 7, 1, 2, 3); },
+    // ---- 魔界（黄泉）：赤みがかった色 ----
+    yomigrass(c) { fill(c, '#4a5a32'); speckle(c, ['#5a6a3a', '#3a4426', '#6a4a2a'], 0.18, 21); },
+    deadtree(c) {
+      LOOKS.yomigrass(c);
+      fill(c, '#2a1a14', 7, 4, 2, 11); fill(c, '#2a1a14', 4, 6, 3, 1); fill(c, '#2a1a14', 9, 3, 3, 1);
+      fill(c, '#2a1a14', 4, 5, 1, 1); fill(c, '#2a1a14', 11, 2, 1, 1);
+    },
+    reddirt(c) { fill(c, '#8a5a3e'); speckle(c, ['#9a6a48', '#704630'], 0.2, 23); },
+    rice(c) {
+      fill(c, '#5a5a2a');
+      for (let i = 0; i < 8; i++) {
+        const x = 1 + (i % 4) * 4, y = 2 + Math.floor(i / 4) * 7;
+        fill(c, '#7a8a2a', x, y + 1, 1, 4); fill(c, '#c8a840', x - 1, y, 2, 2); dot(c, '#e0c050', x + 1, y + 1);
+      }
+    },
+    ridge(c) { fill(c, '#6a4a32'); speckle(c, ['#7a5a3e', '#5a3c28'], 0.18, 25); fill(c, '#5a3c28', 0, 15, T, 1); },
+    sprout(c) { LOOKS.ridge(c); fill(c, '#4aa040', 7, 8, 1, 4); fill(c, '#6ad050', 5, 7, 2, 2); fill(c, '#6ad050', 8, 6, 2, 2); },
+    feast(c) { LOOKS.yomigrass(c); fill(c, '#4a2e1a', 0, 4, T, 9); fill(c, '#7a4e2a', 0, 4, T, 5); fill(c, '#9a6a3a', 0, 4, T, 1); },
+    sakebarrel(c) {
+      LOOKS.yomigrass(c);
+      fill(c, '#3a2414', 3, 2, 10, 13); fill(c, '#6a4024', 4, 2, 8, 13);
+      fill(c, '#1a1a1a', 3, 5, 10, 1); fill(c, '#1a1a1a', 3, 11, 10, 1); fill(c, '#c03030', 6, 7, 4, 3);
+    },
+    awning(c) {
+      for (let x = 0; x < T; x += 4) fill(c, (x / 4) % 2 ? '#e0d0b0' : '#8a2a2a', x, 0, 4, 12);
+      fill(c, '#5a1a1a', 0, 12, T, 2); fill(c, '#3a2a20', 0, 14, T, 2);
+    },
+    darkwall(c) {
+      fill(c, '#2e2228'); speckle(c, ['#3a2c34', '#241a20'], 0.12, 27);
+      fill(c, '#1a1216', 0, 7, T, 1); fill(c, '#1a1216', 0, 15, T, 1); fill(c, '#1a1216', 7, 0, 1, 7); fill(c, '#1a1216', 3, 8, 1, 7);
+    },
+    gate(c) { fill(c, '#1a1216'); fill(c, '#4a2a2a', 2, 0, 12, T); fill(c, '#2a1a1a', 7, 0, 2, T); dot(c, '#c8a040', 6, 8); dot(c, '#c8a040', 9, 8); },
+    darkstone(c) {
+      fill(c, '#3a3036'); speckle(c, ['#443a40', '#30282c'], 0.1, 29);
+      fill(c, '#2c2428', 0, 15, T, 1); fill(c, '#2c2428', 15, 0, 1, T);
+    },
+    // ---- フィールドマップ ----
+    woods(c) {
+      LOOKS.grass(c);
+      [[4, 6], [11, 5], [7, 12]].forEach(([x, y]) => {
+        fill(c, '#5a3a1e', x, y + 2, 1, 2);
+        c.fillStyle = '#1f5a24'; c.beginPath(); c.arc(x + 0.5, y, 3.5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#2f7a32'; c.beginPath(); c.arc(x, y - 0.5, 2, 0, Math.PI * 2); c.fill();
+      });
+    },
+    castle(c, f, base) {
+      (base || LOOKS.grass)(c);
+      fill(c, '#7a2e2e', 2, 6, 12, 9); fill(c, '#a04040', 2, 6, 12, 2);
+      fill(c, '#7a2e2e', 2, 3, 3, 4); fill(c, '#7a2e2e', 11, 3, 3, 4); fill(c, '#7a2e2e', 6, 1, 4, 6);
+      fill(c, '#ffe4a8', 7, 10, 2, 5); fill(c, '#2a1010', 7, 11, 2, 4);
+    },
+    village(c, f, base) {
+      (base || LOOKS.grass)(c);
+      [[1, 8], [8, 4]].forEach(([x, y]) => {
+        fill(c, '#a07a48', x, y + 3, 7, 4); fill(c, '#7a5a2e', x - 1, y, 9, 3); fill(c, '#3a2a18', x + 3, y + 4, 2, 3);
+      });
+    },
+    pit(c) {
+      LOOKS.dryland(c);
+      c.fillStyle = '#3a2a1e'; c.beginPath(); c.ellipse(8, 8, 7.5, 6, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#0a0604'; c.beginPath(); c.ellipse(8, 8.5, 5, 3.5, 0, 0, Math.PI * 2); c.fill();
+    },
+    marker(c) {
+      LOOKS.dryland(c);
+      c.fillStyle = '#5a2a6a'; c.beginPath(); c.moveTo(8, 2); c.lineTo(14, 8); c.lineTo(8, 14); c.lineTo(2, 8); c.closePath(); c.fill();
+      c.fillStyle = '#c8a0e0'; c.beginPath(); c.moveTo(8, 5); c.lineTo(11, 8); c.lineTo(8, 11); c.lineTo(5, 8); c.closePath(); c.fill();
+    },
+    waste(c) { fill(c, '#c8b27a'); speckle(c, ['#d8c28a', '#a89058', '#8a7a4a'], 0.25, 91); },
+    embers(c) { fill(c, '#3a2a22'); speckle(c, ['#4a3428', '#2a1e18'], 0.3, 93); dot(c, '#e0704a', 4, 5); dot(c, '#e0704a', 11, 10); dot(c, '#f0a060', 8, 13); },
+    yomiland(c) { fill(c, '#5a3a46'); speckle(c, ['#6a4a56', '#4a2e3a'], 0.22, 95); },
+    redland(c) { fill(c, '#9a4a2a'); speckle(c, ['#aa5a36', '#843c22'], 0.22, 97); },
+    steppe(c) { fill(c, '#8a8a5e'); speckle(c, ['#9a9a6a', '#74744e'], 0.2, 99); fill(c, '#a6a676', 3, 6, 4, 1); fill(c, '#a6a676', 9, 11, 4, 1); },
+    crag(c) {
+      fill(c, '#3c3c4a');
+      c.fillStyle = '#2a2830'; c.beginPath(); c.moveTo(1, 15); c.lineTo(6, 2); c.lineTo(10, 9); c.lineTo(15, 15); c.closePath(); c.fill();
+      fill(c, '#c9a66b', 6, 2, 1, 1);
+    },
+    // 広い地図の寄り道の祠（小さな木の祠。屋根と、手前の小さな鳥居）
+    shrine(c, f, base) {
+      (base || LOOKS.grass)(c);
+      fill(c, '#5a3a22', 4, 6, 8, 7); fill(c, '#7a5232', 5, 7, 6, 5); fill(c, '#2a1a10', 7, 9, 2, 3);
+      fill(c, '#8a2a22', 2, 4, 12, 2); fill(c, '#a83a2a', 3, 3, 10, 1);
+      fill(c, '#c03028', 1, 13, 1, 3); fill(c, '#c03028', 14, 13, 1, 3); fill(c, '#c03028', 0, 12, 16, 1);
+    },
+    shrine_y(c) { LOOKS.shrine(c, 0, LOOKS.yomiland); },
+    // 魔界のフィールドの城・村・町（地面が魔界の色）
+    yomicastle(c) { LOOKS.castle(c, 0, LOOKS.yomiland); },
+    yomivillage(c) { LOOKS.village(c, 0, LOOKS.yomiland); },
+    yomitown(c) { LOOKS.town(c, 0, LOOKS.yomiland); },
+    valley(c) { fill(c, '#4e3b2c'); speckle(c, ['#5e4a38', '#3e2e22'], 0.2, 101); fill(c, '#2e2218', 3, 7, 10, 1); fill(c, '#2e2218', 5, 8, 6, 1); },
+    carpet(c) { fill(c, '#6a1a22'); fill(c, '#8a2a30', 2, 0, 12, T); fill(c, '#c8a040', 1, 0, 1, T); fill(c, '#c8a040', 14, 0, 1, T); },
+    pillar(c) { LOOKS.darkstone(c); fill(c, '#5a4a52', 3, 0, 10, T); fill(c, '#6e5e66', 4, 0, 3, T); fill(c, '#2a2026', 3, 14, 10, 2); },
+    throne(c) {
+      LOOKS.carpet(c);
+      fill(c, '#2a1a20', 2, 1, 12, 14); fill(c, '#4a2a34', 3, 2, 10, 8); fill(c, '#8a2a30', 4, 9, 8, 4);
+      dot(c, '#c8a040', 3, 1); dot(c, '#c8a040', 12, 1);
+    },
+    bars(c) { LOOKS.darkstone(c); for (let x = 1; x < T; x += 4) fill(c, '#7a7a84', x, 0, 2, T); fill(c, '#5a5a64', 0, 2, T, 2); },
+    railing(c) { LOOKS.redsky(c); fill(c, '#4a3a40', 0, 9, T, 2); for (let x = 1; x < T; x += 5) fill(c, '#4a3a40', x, 9, 2, 7); },
+    // ---- ダンジョンのしかけ ----
+    hole(c) { LOOKS.cavefloor(c); fill(c, '#0a0806', 1, 1, 14, 14); fill(c, '#1a1612', 1, 1, 14, 2); fill(c, '#2a2420', 0, 0, T, 1); },
+    crackfloor(c) { LOOKS.cavefloor(c); [[3, 4, 5, 1], [7, 4, 1, 4], [7, 8, 4, 1], [10, 9, 1, 4], [4, 10, 3, 1], [4, 11, 1, 3]].forEach(v => fill(c, '#1a1614', ...v)); },
+    slick(c) { fill(c, '#3a6a3e'); speckle(c, ['#4a8a4e', '#2e5a32', '#6aa86e'], 0.25, 101); fill(c, '#8ad08e', 3, 4, 3, 1); fill(c, '#8ad08e', 10, 10, 3, 1); },
+    ice(c) { fill(c, '#8ab8d8'); fill(c, '#a8d0ec', 0, 0, T, 6); fill(c, '#e0f0ff', 3, 3, 5, 1); fill(c, '#e0f0ff', 9, 10, 4, 1); fill(c, '#6a98b8', 0, 15, T, 1); },
+    flowup(c) { LOOKS.flowbase(c); [[7, 3, 2, 10], [5, 5, 6, 1], [6, 4, 4, 1]].forEach(v => fill(c, '#e0f0ff', ...v)); },
+    flowdown(c) { LOOKS.flowbase(c); [[7, 3, 2, 10], [5, 10, 6, 1], [6, 11, 4, 1]].forEach(v => fill(c, '#e0f0ff', ...v)); },
+    flowleft(c) { LOOKS.flowbase(c); [[3, 7, 10, 2], [5, 5, 1, 6], [4, 6, 1, 4]].forEach(v => fill(c, '#e0f0ff', ...v)); },
+    flowright(c) { LOOKS.flowbase(c); [[3, 7, 10, 2], [10, 5, 1, 6], [11, 6, 1, 4]].forEach(v => fill(c, '#e0f0ff', ...v)); },
+    flowbase(c) { fill(c, '#2a5a8a'); speckle(c, ['#3a6a9a', '#24507e'], 0.25, 103); },
+    hotrock(c) { fill(c, '#5a2a1a'); speckle(c, ['#7a3a20', '#4a2014'], 0.3, 107); [[2, 3, 4, 1], [5, 3, 1, 4], [9, 8, 5, 1], [9, 8, 1, 5], [3, 12, 3, 1]].forEach(v => fill(c, '#f08030', ...v)); fill(c, '#ffd060', 4, 3, 1, 1); },
+    gatebars(c) { LOOKS.cavefloor(c); for (let x = 1; x < T; x += 4) fill(c, '#8a8a94', x, 0, 2, T); fill(c, '#6a6a74', 0, 3, T, 2); fill(c, '#6a6a74', 0, 11, T, 2); },
+    vines(c) { fill(c, '#1e3a1e'); for (let i = 0; i < 6; i++) { fill(c, '#3a6a2a', (i * 5) % 14, 0, 2, T); fill(c, '#2a4a1e', 0, (i * 7) % 15, T, 1); } fill(c, '#7a9a3a', 4, 5, 2, 2); fill(c, '#7a9a3a', 11, 10, 2, 2); },
+    gap(c) { fill(c, '#0a0806'); fill(c, '#3e3a36', 0, 0, 3, T); fill(c, '#3e3a36', 13, 0, 3, T); fill(c, '#5a3a1e', 4, 6, 3, 1); fill(c, '#5a3a1e', 10, 9, 2, 1); },
+    bridge(c) { fill(c, '#0a0806'); fill(c, '#7a5a34', 0, 2, T, 12); for (let x = 0; x < T; x += 4) fill(c, '#5a3e22', x, 2, 1, 12); fill(c, '#9a7a4a', 0, 2, T, 1); },
+    wisp(c) { LOOKS.cavefloor(c); fill(c, '#3a60c0', 4, 4, 8, 9); fill(c, '#6a9af0', 5, 3, 6, 8); fill(c, '#c8e0ff', 6, 5, 3, 4); fill(c, '#3a60c0', 7, 1, 2, 2); },
+    lockdoor(c) { fill(c, '#3a2a1a'); fill(c, '#6e4a2a', 2, 1, 12, 15); fill(c, '#5a3a1e', 7, 1, 2, 15); fill(c, '#c8a040', 5, 7, 6, 4); fill(c, '#3a2a1a', 7, 8, 2, 2); },
+    pad(c) { LOOKS.darkstone(c); fill(c, '#4a3a6a', 2, 2, 12, 12); fill(c, '#7a6ab0', 3, 3, 10, 10); fill(c, '#c0b0ff', 6, 6, 4, 4); fill(c, '#e8e0ff', 7, 7, 2, 2); },
+    minefloor(c) { fill(c, '#4a3e32'); speckle(c, ['#5a4c3e', '#3e342a'], 0.25, 109); fill(c, '#5a4a38', 0, 7, T, 1); },
+    minewall(c) { fill(c, '#3a3028'); speckle(c, ['#4a3e34', '#2e261e'], 0.3, 113); fill(c, '#6e4a2a', 2, 0, 3, T); fill(c, '#6e4a2a', 11, 0, 3, T); fill(c, '#8a5a30', 0, 2, T, 3); },
+    yomirock(c) { fill(c, '#140e18'); speckle(c, ['#22182a', '#0c080e', '#2e2036'], 0.3, 117); fill(c, '#3a2a44', 0, 0, T, 1); },
+    pitfloor(c) { fill(c, '#4e4258'); speckle(c, ['#5c4e68', '#42384c'], 0.25, 119); fill(c, '#3e3448', 0, 15, T, 1); },
+    redsky(c) { fill(c, '#4a1420'); speckle(c, ['#5a1a26', '#3a1018'], 0.1, 31); },
+  };
+
+  const cache = {};
+  function get(look, frame) {
+    const key = look + ':' + frame;
+    if (!cache[key]) {
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = T;
+      const c = cv.getContext('2d');
+      (LOOKS[look] || LOOKS.void)(c, frame);
+      cache[key] = cv;
+    }
+    return cache[key];
+  }
+
+  G.tileset = {
+    draw(ctx, look, x, y) {
+      const frame = look === 'water' ? Math.floor(G.frame / 40) % 2 : 0;
+      ctx.drawImage(get(look, frame), x, y);
+    },
+  };
+})();
