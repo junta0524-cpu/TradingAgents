@@ -31,12 +31,19 @@ const { chromium } = require('playwright');
     if (!GAME.state) GAME.party.newGame();
     // 寄り道の章の「読みますか？」は、ほかの確かめのじゃまになるので、聞いたことにしておく（寄り道の章の確かめで外す）
     GAME.DATA.sidestories.forEach(s => GAME.flags.set('side_offer_' + s.id, true));
+    window.__hushSq && window.__hushSq();
     GAME.scene.change(GAME.scenes.map(id, x, y, dir));
   }, [id, x, y, dir]);
   const closeMessages = async () => { for (let i = 0; i < 8 && (await scenes()).includes('メッセージ'); i++) await key('KeyZ', 150); };
 
   await page.goto(url);
   await wait(400);
+  // 寄り道クエストの「遊びますか？」（入ったときに聞くもの）は、ほかの確かめのじゃまになるので、記録を作り直すたびに聞いたことにしておく
+  await ev(() => {
+    window.__hushSq = () => ['sq_ch11_5_asked', 'sq_c85_lock', 'sq_ch05_5_began', 'sq_ch06_5_began'].forEach(f => GAME.flags.set(f, true));
+    const ng = GAME.party.newGame;
+    GAME.party.newGame = function () { ng.apply(this, arguments); window.__hushSq(); };
+  });
   // カーソルを覚える：キー操作の確かめは、いつもコマンドの先頭から始める（覚える動きは別に確かめる）
   await ev(() => { GAME.settings.cursorMemory = false; GAME.save.saveSettings(); });
   // フェーズ1〜5の確かめは「4章（ミナモ）にいる状態」で行う（物語の場面は最後にまとめて確かめる）
@@ -729,7 +736,7 @@ const { chromium } = require('playwright');
       if (q.kind === 'look') { const m = GAME.DATA.maps[q.look.map], t = GAME.DATA.tiles[m.rows[q.look.y][q.look.x]]; if (!t || !t.solid) return true; }
       return false;
     }).map(q => q.id).join() + '/' + GAME.DATA.quests.length + '/' + Object.keys(givers).length;
-  }), '/23/23');
+  }), '/21/21');
   // 地図から入って、戸から部屋へ（人間界のマガネ：地図の上で、村のマスへ歩く）
   await ev(() => { GAME.state.chapter = 6; });
   await placeAt('world_ningen', 34, 39, 'up');
@@ -792,25 +799,7 @@ const { chromium } = require('playwright');
   await key('KeyZ', 200);
   await closeMessages();
   expect('頼みごと：知らせるとごほうび', await ev(() => GAME.quests.status(GAME.quests.byId('magane_tokage'))) + '/' + ((await ev(() => GAME.state.copper)) - cop) + '/' + await ev(() => GAME.party.count('inochi_ishi') > 0), 'claimed/150/true');
-  // 届ける：マガネの母 → ヤチマタの大宿の息子 → 母に知らせる
-  expect('頼みごと：届ける', await ev(() => {
-    const out = [];
-    GAME.quests.accept('magane_fumi'); out.push(GAME.party.count('magane_tegami'));
-    out.push(GAME.quests.receive('yachimata_inn', 'yachimata_inn_youth') + ':' + GAME.party.count('magane_tegami') + ':' + GAME.quests.status(GAME.quests.byId('magane_fumi')));
-    out.push(GAME.quests.receive('yachimata_inn', 'yachimata_inn_youth'));
-    return out.join('|');
-  }), '1|true:0:ready|false');
-  await closeMessages();
-  // 調べる：イワクラ城の古井戸（頼まれる前は井戸のふつうの文）
-  await ev(() => { GAME.state.chapter = 7; });
-  await placeAt('iwakura', 12, 9, 'up');
-  await key('KeyZ', 200);
-  expect('頼みごと：頼まれる前は、ふつうに調べる', await ev(() => GAME.quests.status(GAME.quests.byId('iwakura_ido'))), 'open');
-  await closeMessages();
-  await ev(() => GAME.quests.accept('iwakura_ido'));
-  await key('KeyZ', 200);
-  await closeMessages();
-  expect('頼みごと：調べる', await ev(() => GAME.quests.status(GAME.quests.byId('iwakura_ido'))), 'ready');
+  // 届ける（マガネの母の手紙）と調べる（イワクラの古井戸）の頼みは、寄り道クエスト六・五章・七・五章に置き換えた（ユーザー決定）
   // 持ってくる：品が足りないと待つ、そろうと渡す
   expect('頼みごと：持ってくる', await ev(() => {
     const q = GAME.quests.byId('iwakura_kusuri'); GAME.quests.accept(q.id);
@@ -849,7 +838,7 @@ const { chromium } = require('playwright');
   expect('拠点：頼みを済ませた社守は、クリア後のひと言', await ev(() => { GAME.message.show = GAME.message._orig; GAME.state.quests = {}; return (window.__said || '').includes('彫り直して'); }), true);
   await closeMessages();
   // 章が来ていないと、ふつうの会話
-  expect('頼みごと：章の前はふつうの会話', await ev(() => { GAME.state.chapter = 5; return GAME.quests.talk('magane_fumi'); }), false);
+  expect('頼みごと：章の前はふつうの会話', await ev(() => { GAME.state.chapter = 5; return GAME.quests.talk('magane_tokage'); }), false);
   await closeMessages();
   await page.evaluate(k => { const o = JSON.parse(k); Object.assign(GAME.state, { quests: o.q, items: o.items, copper: o.copper, chapter: o.ch }); }, keepQ);
 
