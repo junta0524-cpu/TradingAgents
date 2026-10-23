@@ -36,18 +36,21 @@ const { chromium } = require('playwright');
   }, [id, x, y, dir]);
   const closeMessages = async () => { for (let i = 0; i < 8 && (await scenes()).includes('メッセージ'); i++) await key('KeyZ', 150); };
 
-  await page.goto(url);
-  await wait(400);
-  // 寄り道クエストの「遊びますか？」（入ったときに聞くもの）は、ほかの確かめのじゃまになるので、記録を作り直すたびに聞いたことにしておく
-  await ev(() => {
+  // 寄り道クエストの「遊びますか？」（入ったときに聞くもの）は、ほかの確かめのじゃまになるので、記録を作り直す・読み込む・章へ飛ぶたびに聞いたことにしておく
+  // （読み直し＝つづきからの確かめでページを開き直しても効くように、ページを開くたびに仕込む）
+  await page.addInitScript(() => window.addEventListener('load', () => {
     window.__hushSq = () => ['sq_ch11_5_asked', 'sq_c85_lock', 'sq_ch05_5_began', 'sq_ch06_5_began'].forEach(f => GAME.flags.set(f, true));
     const ng = GAME.party.newGame;
     GAME.party.newGame = function () { ng.apply(this, arguments); window.__hushSq(); };
     const ap = GAME.save.apply;
     GAME.save.apply = function () { const r = ap.apply(this, arguments); window.__hushSq(); return r; };
+    const sj = GAME.story.jump;
+    GAME.story.jump = function () { const r = sj.apply(this, arguments); window.__hushSq(); return r; };
     const fs = GAME.flags.reset;
     GAME.flags.reset = function () { fs.apply(this, arguments); window.__hushSq(); };
-  });
+  }));
+  await page.goto(url);
+  await wait(400);
   // カーソルを覚える：キー操作の確かめは、いつもコマンドの先頭から始める（覚える動きは別に確かめる）
   await ev(() => { GAME.settings.cursorMemory = false; GAME.save.saveSettings(); });
   // フェーズ1〜5の確かめは「4章（ミナモ）にいる状態」で行う（物語の場面は最後にまとめて確かめる）
