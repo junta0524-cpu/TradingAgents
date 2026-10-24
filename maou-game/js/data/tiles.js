@@ -1,7 +1,7 @@
 // このファイルの役目：マップに使う「マス目の種類」の一覧。
 // マップは文字の並びで書く。ここでは「どの文字がどのマスか」「通れるか」「調べたときの文」を決める。
 // look は絵の種類（絵は js/core/tileset.js が描く）。
-// noEncounter：このマスでは敵に出会わない（道など）。tallGrass：出会いやすい。
+// noEncounter：このマスでは敵に出会わない（町・桟橋など）。road：道（出会いにくい＝balance.js の ROAD_STEPS ぶんだけ数える。ユーザー報告：道を歩くと敵が出なかった）。tallGrass：出会いやすい。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -16,7 +16,7 @@
     '~': { name: '水',     look: 'water',    solid: true },
     '=': { name: '桟橋',   look: 'planks', noEncounter: true },
     ':': { name: '石畳',   look: 'stone', noEncounter: true },
-    '-': { name: '土の道', look: 'dirt', noEncounter: true },
+    '-': { name: '土の道', look: 'dirt', road: true },
     'M': { name: '町',     look: 'town', noEncounter: true },
     // ---- 建物 ----
     '^': { name: '屋根',   look: 'roof',   solid: true },
@@ -46,7 +46,7 @@
     'v': { name: '畑',       look: 'crops',  solid: true, check: '細い野菜が植わっている。' },
     'V': { name: '石垣',     look: 'stonewall', solid: true },
     // ---- 森（5章）----
-    'p': { name: '苔の道',   look: 'moss', noEncounter: true },
+    'p': { name: '苔の道',   look: 'moss', road: true },
     'U': { name: '大樹の幹', look: 'trunk', solid: true },
     'J': { name: '幹の戸口', look: 'trunkdoor' },
     'O': { name: '洞窟の入口', look: 'cavemouth' },
@@ -75,7 +75,7 @@
     // ---- 魔界（黄泉）----
     'g': { name: '黄泉の草地', look: 'yomigrass' },
     't': { name: '黒い木',   look: 'deadtree', solid: true },
-    'u': { name: '赤土の道', look: 'reddirt', noEncounter: true },
+    'u': { name: '赤土の道', look: 'reddirt', road: true },
     'r': { name: '田',       look: 'rice',     solid: true, check: '実り始めた稲穂が、風のたびに低い波をつくっていた。' },
     'h': { name: '畦',       look: 'ridge', noEncounter: true },
     's': { name: '芽',       look: 'sprout',   solid: true, check: '畦の際に、小さな芽が一本だけ顔を出している。' },

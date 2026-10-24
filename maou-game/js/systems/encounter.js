@@ -1,6 +1,6 @@
 // このファイルの役目：歩数で敵と出会う（エンカウント）しくみ。
 // マップの encounter に「何歩ごとか（steps）」と「出る敵の組（groups）」を書く。encounter がないマップでは出ない。
-// 道（noEncounter のマス）では数えない。草むらでは多めに数える。
+// 町・桟橋など（noEncounter のマス）では数えない。道（road）は半分だけ、草むらでは多めに数える。
 // byChapter：章ごとに出る組を変える（{ 4: [...], 7: [...] } なら 4〜6章は4の組、7章からは7の組。空の配列なら出ない）。
 // その章の値を { byLevel: [{ from, groups }] } にすると、オオナムチのレベルで組が変わる（クリア後のやりこみ）。
 // あとから増やした敵（js/data/enemies_more.js）：encounterMore の組をマップの組に足し、rares（白兎など）はその確率で先に選ぶ。
@@ -59,7 +59,7 @@
       // 結界張り：決まった歩数のあいだ、敵に出会わない
       if (G.state.barrier > 0) { G.state.barrier--; return null; }
       if (G.state.encounterSteps == null) G.state.encounterSteps = nextSteps(enc);
-      G.state.encounterSteps -= (tile && tile.tallGrass) ? G.DATA.balance.TALL_GRASS_STEPS : 1;
+      G.state.encounterSteps -= (tile && tile.tallGrass) ? G.DATA.balance.TALL_GRASS_STEPS : (tile && tile.road) ? G.DATA.balance.ROAD_STEPS : 1;
       if (G.state.encounterSteps > 0) return null;
       G.state.encounterSteps = nextSteps(enc);
       const base = groupsFor(enc);
