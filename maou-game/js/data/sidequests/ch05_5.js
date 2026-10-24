@@ -410,7 +410,8 @@
   });
 
   // ---- 場面 ----
-  E.sq_ch05_5_offer = Q.offer(ID, TITLE, [N('（聖の森の道に入るたびに、また聞く）')]);
+  // 入ったときに聞くのは最初の一度だけ（asked）。あとで遊ぶときは、入口のそばの「寄り道の立て札」を調べる（ユーザー決定）
+  E.sq_ch05_5_offer = [{ t: 'flag', set: F('asked') }].concat(Q.offer(ID, TITLE, [N('（あとで遊ぶときは、入口のそばの「寄り道の立て札」を調べる）')]));
   E.sq_ch05_5_begin = Q.begin(ID, TITLE, '（五章の翌朝。森の出口から一刻ほど）', ['bell', 'oonamuchi'], null, ['hijiri_path', 13, 18, 'up'])
     .concat([{ t: 'bg', key: 'forest_day', actors: [{ look: 'bell', x: 190, y: 220, dir: 'down' }, { look: 'oonamuchi', x: 240, y: 220, dir: 'down' }, { look: 'konoha', x: 300, y: 230, dir: 'left' }] }],
       L.start, [
@@ -476,7 +477,7 @@
   G.sq.add('hijiri_path', {
     onEnter: [
       { event: 'sq_ch05_5_shii2_lead', ...on('6', '7') },
-      { event: 'sq_ch05_5_offer', chapterFrom: 6, chapterTo: 9, chapterAlso: 13, unless: F('began') },
+      { event: 'sq_ch05_5_offer', chapterFrom: 6, chapterTo: 9, chapterAlso: 13, unless: F('asked') },
     ],
     npcs: [
       { id: 'sq55_shii', look: 'elf', x: 26, y: 5, dir: 'down', move: 'still', ...on('1', '2'), event: 'sq_ch05_5_shii' },
@@ -535,4 +536,6 @@
     { text: '森の道を進む' },
   ]);
   if (G.DATA.music) Object.assign(G.DATA.music.events, { sq_ch05_5_begin: 'forest', sq_ch05_5_stone: 'memory', sq_ch05_5_uro: 'memory', sq_ch05_5_hani: 'warm', sq_ch05_5_inn: 'night' });
+  // 寄り道の立て札（入口のそば）：まだ遊んでいないあいだ、調べると「遊びますか？」
+  G.sq.add('hijiri_path', { signs: [{ x: 15, y: 20, event: 'sq_ch05_5_offer', chapterFrom: 6, chapterTo: 9, chapterAlso: 13, unless: F('began'), text: '（寄り道の立て札）' }] });
 })();

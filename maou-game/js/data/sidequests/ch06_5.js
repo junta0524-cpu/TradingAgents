@@ -424,7 +424,8 @@
   const letterAt = L.fuji.findIndex(c => c.text && c.text.startsWith('細い子は、包みを')) + 1;
 
   // ---- 場面 ----
-  E.sq_ch06_5_offer = Q.offer(ID, TITLE, [N('（マガネに入るたびに、また聞く）')]);
+  // 入ったときに聞くのは最初の一度だけ（asked）。あとで遊ぶときは、入口のそばの「寄り道の立て札」を調べる（ユーザー決定）
+  E.sq_ch06_5_offer = [{ t: 'flag', set: F('asked') }].concat(Q.offer(ID, TITLE, [N('（あとで遊ぶときは、入口のそばの「寄り道の立て札」を調べる）')]));
   E.sq_ch06_5_begin = Q.begin(ID, TITLE, '（六章の霧の朝。炉ヶ岳の里を出て山道を下る）', ['bell', 'oonamuchi'], null, ['magane', 11, 9, 'up'])
     .concat([{ t: 'bg', key: 'road', actors: [{ look: 'bell', x: 200, y: 220, dir: 'down' }, { look: 'oonamuchi', x: 260, y: 230, dir: 'down' }] }],
       L.s1a, [{ t: 'bg', key: null }, { t: 'flag', set: F('1') }, N('（坑道の口の前で座り込んだ坑夫に、声をかける）')]);
@@ -498,7 +499,7 @@
   G.sq.add('magane', {
     onEnter: [
       { event: 'sq_ch06_5_village', ...on('7', '8') },
-      { event: 'sq_ch06_5_offer', chapterFrom: 7, chapterTo: 9, chapterAlso: 13, unless: F('began') },
+      { event: 'sq_ch06_5_offer', chapterFrom: 7, chapterTo: 9, chapterAlso: 13, unless: F('asked') },
     ],
     npcs: [
       { id: 'sq65_miner', look: 'dwarf2', x: 10, y: 4, dir: 'down', move: 'still', ...on('1', '2'), event: 'sq_ch06_5_miner' },
@@ -550,4 +551,6 @@
     { text: '鉱夫村マガネを歩く' },
   ]);
   if (G.DATA.music) Object.assign(G.DATA.music.events, { sq_ch06_5_begin: 'mountain', sq_ch06_5_fuji: 'memory', sq_ch06_5_window: 'night', sq_ch06_5_tatara: 'tension', sq_ch06_5_village: 'warm', sq_ch06_5_kai: 'warm', sq_ch06_5_well: 'night' });
+  // 寄り道の立て札（入口のそば）：まだ遊んでいないあいだ、調べると「遊びますか？」
+  G.sq.add('magane', { signs: [{ x: 13, y: 13, event: 'sq_ch06_5_offer', chapterFrom: 7, chapterTo: 9, chapterAlso: 13, unless: F('began'), text: '（寄り道の立て札）' }] });
 })();

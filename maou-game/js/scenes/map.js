@@ -110,6 +110,8 @@
       return G.DATA.tiles[rows[y][x]] || G.DATA.tiles[' '];
     }
     const at = (list, x, y) => (list || []).find(o => o.x === x && o.y === y);
+    // 立て札：条件（if／unless／chapter など）が合うものだけ置く（寄り道クエストの立て札は、遊べるあいだだけ）
+    const signs = () => (map.signs || []).filter(s => G.flags.check(s));
     // 出入口：同じマスに複数あるときは、when（条件）に合う最初のもの
     const warpAt = (x, y) => (map.warps || []).find(w => w.x === x && w.y === y && G.flags.check(w.when || null));
     function entityAt(x, y, except) {
@@ -118,7 +120,7 @@
     function blocked(x, y, self) {
       const t = tileAt(x, y);
       if (!t || t.solid) return true;
-      if (at(map.chests, x, y) || at(map.signs, x, y)) return true;
+      if (at(map.chests, x, y) || at(signs(), x, y)) return true;
       if (G.gimmick.blocks(gst, x, y)) return true;
       return !!entityAt(x, y, self);
     }
@@ -208,7 +210,7 @@
     const gimmickApi = {
       get st() { return gst; }, get map() { return map; }, get player() { return player; },
       tileAt,
-      occupied: (x, y) => !!(at(map.chests, x, y) || at(map.signs, x, y) || G.gimmick.blocks(gst, x, y) || entityAt(x, y)),
+      occupied: (x, y) => !!(at(map.chests, x, y) || at(signs(), x, y) || G.gimmick.blocks(gst, x, y) || entityAt(x, y)),
       rebuild: () => { buildRows(); refreshNpcs(); },
     };
 
@@ -255,8 +257,8 @@
       if (G.quests.look(mapId, fx, fy)) return;   // 頼まれて調べる場所
       const chest = at(map.chests, fx, fy);
       if (chest) { openChest(chest); return; }
-      const sign = at(map.signs, fx, fy);
-      if (sign) { G.message.show(sign.text); return; }
+      const sign = at(signs(), fx, fy);
+      if (sign) { if (sign.event) G.event.run(sign.event); else G.message.show(sign.text); return; }   // event：調べると場面が流れる立て札
       // 調べると場面が流れる場所
       const spot = (map.spots || []).find(o => o.x === fx && o.y === fy && G.flags.check(o));
       // 祠（spots の heal）：体力・MPがすべて戻る
@@ -436,7 +438,7 @@
         const things = [];
         (map.chests || []).forEach(c => things.push({ y: c.y * T, draw: () =>
           G.sprite.drawObject(ctx, G.flags.get(G.flags.chestKey(mapId, c.id)) ? 'chestOpen' : 'chest', c.x * T - cam.x, c.y * T - cam.y) }));
-        (map.signs || []).forEach(s => things.push({ y: s.y * T, draw: () =>
+        signs().forEach(s => things.push({ y: s.y * T, draw: () =>
           G.sprite.drawObject(ctx, 'sign', s.x * T - cam.x, s.y * T - cam.y) }));
         // 仲間は列の後ろから描き、ベルがいちばん手前になるようにする
         // 阻害ゲージが少ないと、ベルの輪郭が揺れる

@@ -8,13 +8,13 @@
   const KEEP = ['party', 'items', 'copper', 'mapId', 'x', 'y', 'dir', 'chapter', 'disguised', 'inhibit', 'inhibitShown', 'split', 'noEnc', 'barrier'];
 
   G.sq = {
-    // マップに、クエストの人（npcs）・調べる所（spots）・踏む所（triggers）・出入口（warps）・フラグで変わるマス（flagTiles）・宝箱（chests）・
+    // マップに、クエストの人（npcs）・調べる所（spots）・踏む所（triggers）・出入口（warps）・フラグで変わるマス（flagTiles）・宝箱（chests）・立て札（signs）・
     // 入ったときの場面（onEnter）を足す。
     // どれも if／unless／chapter などの条件を書いて、そのクエストのあいだだけ出す。onEnter は前に足す（先に調べる）。
     add(mapId, parts) {
       const m = G.DATA.maps[mapId];
       if (!m) throw new Error('寄り道クエスト：マップが見つかりません：' + mapId);
-      ['npcs', 'spots', 'triggers', 'warps', 'flagTiles', 'chests'].forEach(k => { if (parts[k]) m[k] = (m[k] || []).concat(parts[k]); });
+      ['npcs', 'spots', 'triggers', 'warps', 'flagTiles', 'chests', 'signs'].forEach(k => { if (parts[k]) m[k] = (m[k] || []).concat(parts[k]); });
       if (parts.onEnter) m.onEnter = parts.onEnter.concat(m.onEnter || []);
     },
     // いま遊んでいるクエストの id（なければ null）

@@ -24,11 +24,13 @@
   const A = (look, x, y, dir) => ({ look, x, y, dir });
 
   // ---- 受け方：9章、院に入る前（ch9_in の前）にウキハシへ入ったとき。いいえなら、次に入ったときにまた聞く ----
+  // 入ったときに聞くのは最初の一度だけ（sq_c85_asked）。あとで遊ぶときは、入口のそばの「寄り道の立て札」を調べる（ユーザー決定）
   E.sq_c85_offer = [
     { t: 'if', flag: 'ch9_in', then: [{ t: 'stop' }] },
+    { t: 'flag', set: 'sq_c85_asked' },
     { t: 'choice', text: '（寄り道しますか？　八・五「削られた丘」）', options: [
       { label: '寄り道する', then: [{ t: 'call', id: 'sq_c85_start' }] },
-      { label: '今はやめておく', then: [] },
+      { label: '今はやめておく', then: [{ t: 'nar', text: '（あとで遊ぶときは、入口のそばの「寄り道の立て札」を調べる）' }] },
     ] },
   ];
 
@@ -391,7 +393,8 @@
 
   // ---- マップに足すもの（クエストのあいだだけ）----
   G.sq.add('ukihashi', {
-    onEnter: [{ event: 'sq_c85_offer', chapter: 9, unless: 'sq_c85_lock' }],
+    onEnter: [{ event: 'sq_c85_offer', chapter: 9, unless: 'sq_c85_asked' }],
+    signs: [{ x: 14, y: 14, event: 'sq_c85_offer', chapter: 9, unless: 'sq_c85_lock', text: '（寄り道の立て札）' }],
     triggers: [12, 13].map(x => ({ x, y: 4, event: 'sq_c85_gate', if: 'sq_c85_go', unless: 'sq_c85_gate' })),
     npcs: [
       { id: 'c85_mother', look: 'beastwoman', x: 15, y: 4, dir: 'left', move: 'still', if: 'sq_c85_go', unless: 'sq_c85_gate', talk: ['……。'] },

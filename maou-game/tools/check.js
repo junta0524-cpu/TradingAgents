@@ -39,7 +39,7 @@ const { chromium } = require('playwright');
   // 寄り道クエストの「遊びますか？」（入ったときに聞くもの）は、ほかの確かめのじゃまになるので、記録を作り直す・読み込む・章へ飛ぶたびに聞いたことにしておく
   // （読み直し＝つづきからの確かめでページを開き直しても効くように、ページを開くたびに仕込む）
   await page.addInitScript(() => window.addEventListener('load', () => {
-    window.__hushSq = () => ['sq_ch11_5_asked', 'sq_c85_lock', 'sq_ch05_5_began', 'sq_ch06_5_began'].forEach(f => GAME.flags.set(f, true));
+    window.__hushSq = () => ['sq_ch11_5_asked', 'sq_c85_lock', 'sq_c85_asked', 'sq_ch05_5_began', 'sq_ch05_5_asked', 'sq_ch06_5_began', 'sq_ch06_5_asked'].forEach(f => GAME.flags.set(f, true));
     const ng = GAME.party.newGame;
     GAME.party.newGame = function () { ng.apply(this, arguments); window.__hushSq(); };
     const ap = GAME.save.apply;
