@@ -16,9 +16,8 @@
     { label: 'ぼうぎょ', type: 'defend' },
     { label: 'にげる', type: 'escape' },
   ];
-  const ENEMY_SCALE = 3;      // 敵の大きさ（16ドットの何倍か）
-  const BOSS_SCALE = 4;       // ボスが1体だけのとき
-  const ENEMY_BASE_Y = 152;   // 敵の足元の高さ
+  const VIEW = G.DATA.balance.BATTLE.VIEW;   // 敵の大きさと足元の高さ（balance.js）
+  const ENEMY_BASE_Y = VIEW.BASE_Y;          // 敵の足元の高さ
   const PANEL_W = 114;        // 上の味方の札の幅（4人で画面に収まる）
   const PANEL_GAP = 4;
   const CMD_Y = 196;          // コマンド窓の上端（ふつうの文字・5項目のとき）
@@ -350,16 +349,20 @@
     // 敵は画面の幅いっぱいを使って中央にそろえる。数が多いほど間をつめる。ボス1体だけなら大きく出す
     // 大きな敵（敵データの big：クリア後の強敵）は、2体までのときボスと同じ大きさ
     const bigOne = enemies.length <= 2 && enemies.some(e => (G.DATA.enemies[e.id] || {}).big);
-    // 1体だけのとき、敵データの artScale があればその大きさ（翼を広げた絵など、正方形の中で小さく見える絵）
+    // 1体だけのとき、敵データの artScale があればいちばん大きく（翼を広げた絵など、正方形の中で小さく見える絵）
+    // ふつうは数で決める（少ないほど大きく、手前に迫って見える）
     const solo = enemies.length === 1 && (G.DATA.enemies[enemies[0].id] || {}).artScale;
-    const scale = solo || ((enemies.length === 1 && (opts.boss || CH)) || bigOne ? BOSS_SCALE : ENEMY_SCALE);
+    const scale = solo ? VIEW.ART_SOLO : enemies.length === 1 && (opts.boss || CH) ? VIEW.BOSS : bigOne ? Math.max(VIEW.BIG, VIEW.BY_COUNT[enemies.length - 1])
+      : VIEW.BY_COUNT[Math.min(enemies.length, VIEW.BY_COUNT.length) - 1];
     const SIZE = 16 * scale;
     function enemyX(i) {
-      const n = enemies.length, gap = n <= 3 ? 32 : n <= 5 ? 20 : 12;
+      const n = enemies.length, gap = n <= 1 ? 0 : Math.max(0, Math.min(VIEW.GAP_MAX, Math.floor((G.renderer.W - 2 * VIEW.MARGIN - n * SIZE) / (n - 1))));
       const total = n * SIZE + (n - 1) * gap;
       return Math.round((G.renderer.W - total) / 2 + i * (SIZE + gap));
     }
     const enemyTop = () => ENEMY_BASE_Y - SIZE;
+    // 敵の頭の上の印（状態・▼）の高さ。大きな敵で味方の札に隠れないよう、上の札の下で止める
+    const markY = up => Math.max(enemyTop() - up, VIEW.MARK_MIN_Y + 28 - up);
     // 上の味方の札：人数に合わせて中央にそろえる
     const panelH = () => (G.renderer.large() ? 58 : 54);
     function panelX(i) {
@@ -545,17 +548,17 @@
           G.sprite.drawEnemy(ctx, e.id, x, top + dy, scale);
           ctx.globalAlpha = 1;
           const tg = e.hp > 0 ? G.status.tags(e) + (G.battle.wavering(e) ? '揺' : '') : '';
-          if (tg) r.text(tg, x + SIZE / 2, top - 14, '#ff9', 'center');
+          if (tg) r.text(tg, x + SIZE / 2, markY(14), '#ff9', 'center');
         });
         if (phase === 'target' && list[targetIndex] && G.ui.blinkOn()) {
           const e = list[targetIndex], i = enemies.indexOf(e);
-          r.text('▼', enemyX(i) + SIZE / 2, top - (G.status.tags(e) || G.battle.wavering(e) ? 28 : 14), '#fff', 'center');
+          r.text('▼', enemyX(i) + SIZE / 2, markY(G.status.tags(e) || G.battle.wavering(e) ? 28 : 14), '#fff', 'center');
         }
         // 心鎮めの相手に、揺らいでいる敵を選んでいるとき
         const at = phase === 'ally' && allyTargets()[allyIndex];
         if (at && at.side === 'enemy' && G.ui.blinkOn()) {
           const i = enemies.indexOf(at);
-          r.text('▼', enemyX(i) + SIZE / 2, top - 28, '#ffd866', 'center');
+          r.text('▼', enemyX(i) + SIZE / 2, markY(28), '#ffd866', 'center');
         }
         ctx.restore();
 
@@ -615,7 +618,8 @@
         const choosing = phase === 'command' || phase === 'sub' || phase === 'target' || phase === 'ally';
         if (choosing) {
           menu.draw();
-          if (phase === 'sub' || ((phase === 'target' || phase === 'ally') && pending.type !== 'attack' && pending.type !== 'fullpower')) {
+          const picking = phase === 'target' || phase === 'ally';
+          if (phase === 'sub') {
             if (subMenu) subMenu.draw();
             // カーソルを合わせた言霊・道具の効き目を、一覧の上に出す
             const pick = phase === 'sub' && subMenu && subList[subMenu.index];
@@ -634,13 +638,14 @@
             names.forEach((n, i) => r.text(`${n}　${groups[n]}${counterOf(n)}${tribeNote(n)}`,
               two ? 176 + Math.floor(i / 3) * 146 : 176, 244 + (two ? i % 3 : i) * (two ? 20 : 16), '#fff', 'left', undefined, two ? 140 : undefined));
           }
-          if (phase === 'target' || phase === 'ally') {
+          // 相手を選ぶ案内と短い知らせは、大きく手前に立つ敵に重ならないよう、下の右の窓に出す
+          if (picking) {
             const tgt = allyTargets()[allyIndex];
             const who = phase === 'target' ? (list[targetIndex] && list[targetIndex].name) : (tgt ? tgt.name + (tgt.side === 'enemy' ? '（目を覚まさせる）' : '') : '');
-            G.ui.drawWindow(162, 160, 310, 32);
-            r.text(`${phase === 'target' ? 'どの敵に' : 'だれに'}：▶ ${who}`, 176, 170, '#ffd866');
+            G.ui.drawWindow(162, 232, 310, 80);
+            r.text(`${phase === 'target' ? 'どの敵に' : 'だれに'}：▶ ${who}`, 176, 244, '#ffd866', 'left', undefined, 286);
           }
-          if (noteTimer > 0) { G.ui.drawWindow(162, 160, 310, 32); r.text(note, 176, 170, '#fff'); }
+          if (noteTimer > 0) { G.ui.drawWindow(162, 232, 310, 80); r.text(note, 176, 244, '#fff', 'left', undefined, 286); }
         } else if (phase !== 'gameover') {
           G.ui.drawWindow(8, 232, 464, 80);
           // 設定「文字の大きさ：大きい」のときは、新しい3行を大きな字で出す

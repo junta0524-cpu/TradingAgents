@@ -491,7 +491,7 @@ const { chromium } = require('playwright');
     const B = GAME.scenes.battle(['na_kui'], { boss: true }).layout(); GAME.sound.bgm(prev);
     return [(L.xs[0] + L.xs[5] + L.size) / 2, L.xs[0] >= 0 && L.xs[5] + L.size <= 480, B.size, B.xs[0] + B.size / 2].join(',');
   });
-  expect('6体が画面の中央にそろう・ボス1体は大きく中央', blay, '240,true,64,240');
+  expect('6体が画面の中央にそろう・ボス1体は大きく中央', blay, '240,true,' + 16 * (await ev(() => GAME.DATA.balance.BATTLE.VIEW.BOSS)) + ',240');
   // 目覚めさせる：人の敵は弱ると「揺」、心鎮め・名呼びで目を覚まして去る（経験値は半分、阻害ゲージが少し戻る、人数で品）
   const aw = await ev(() => {
     const keep = { aw: GAME.state.awakened, vars: JSON.stringify(GAME.state.vars || {}), items: JSON.stringify(GAME.state.items), dis: GAME.state.disguised, inh: GAME.state.inhibit, shown: GAME.state.inhibitShown };
