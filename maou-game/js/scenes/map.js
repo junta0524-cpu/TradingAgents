@@ -454,6 +454,7 @@
         things.push({ y: -1, draw: () => G.names.draw(ctx, mapId, cam, T) });   // 名の欠片の光（人より下に）
         things.push({ y: -0.5, draw: () => G.shopSigns.draw(ctx, mapId, cam, T) });   // 宿屋・店の戸の上の看板（js/systems/shopsigns.js）
         things.sort((a, b) => a.y - b.y).forEach(t => t.draw());
+        G.sq.draw(ctx, mapId, cam, T, npcs);   // 寄り道クエストの行き先の光（人の上に重ねる。js/systems/sidequest.js）
         const tint = typeof map.tint === 'function' ? map.tint() : map.tint;
         if (tint) r.rect(0, 0, r.W, r.H, tint);
         G.gimmick.drawDark(r, gst, player, cam, T);

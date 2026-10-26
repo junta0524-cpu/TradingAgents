@@ -14,6 +14,8 @@
     add(mapId, parts) {
       const m = G.DATA.maps[mapId];
       if (!m) throw new Error('寄り道クエスト：マップが見つかりません：' + mapId);
+      // 場面の流れる人・調べる所・踏む所には印（sqMark）を付ける：クエストのあいだ、マップで光らせて行き先を分かりやすくする（下の draw）
+      ['npcs', 'spots', 'triggers'].forEach(k => (parts[k] || []).forEach(o => { if (o.event) o.sqMark = true; }));
       ['npcs', 'spots', 'triggers', 'warps', 'flagTiles', 'chests', 'signs'].forEach(k => { if (parts[k]) m[k] = (m[k] || []).concat(parts[k]); });
       if (parts.onEnter) m.onEnter = parts.onEnter.concat(m.onEnter || []);
     },
@@ -38,6 +40,61 @@
       return saved;
     },
     done: id => G.flags.get('sq_done_' + id),
+
+    // クエストのあいだ、いま行くべき所を光らせる（マップの描画から。js/scenes/map.js）
+    // 調べる所は1マスずつ、踏む所は同じ場面のマスの真ん中あたりに1つ、人は頭の上に「！」
+    marks(mapId) {
+      const m = G.DATA.maps[mapId];
+      if (!m || !G.sq.active()) return [];
+      const on = o => o.sqMark && G.flags.check(o);
+      const out = (m.spots || []).filter(on).map(o => ({ x: o.x, y: o.y }));
+      const groups = {};
+      (m.triggers || []).filter(on).forEach(o => (groups[o.event] = groups[o.event] || []).push(o));
+      Object.values(groups).forEach(g => {
+        const cx = g.reduce((a, o) => a + o.x, 0) / g.length, cy = g.reduce((a, o) => a + o.y, 0) / g.length;
+        const best = g.reduce((a, o) => (Math.hypot(o.x - cx, o.y - cy) < Math.hypot(a.x - cx, a.y - cy) ? o : a));
+        out.push({ x: best.x, y: best.y });
+      });
+      return out;
+    },
+    draw(ctx, mapId, cam, T, npcs) {
+      if (!G.sq.active()) return;
+      const tw = (Math.sin(G.frame / 9) + 1) / 2;
+      G.sq.marks(mapId).forEach(p => {
+        const x = p.x * T - cam.x + T / 2, y = p.y * T - cam.y + T / 2;
+        ctx.save();
+        ctx.fillStyle = '#ffe070';
+        ctx.globalAlpha = 0.22 + tw * 0.2;    // 光の輪
+        ctx.beginPath(); ctx.arc(x, y, 8 + tw * 3, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 0.7 + tw * 0.3;     // きらめきの十字
+        ctx.fillRect(Math.round(x) - 8, Math.round(y), 17, 1); ctx.fillRect(Math.round(x), Math.round(y) - 8, 1, 17);
+        ctx.beginPath(); ctx.arc(x, y, 2 + tw * 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+      // 光る所が画面の外なら、いちばん近い所の向きに、画面の端へ矢印を出す
+      const W = G.renderer.W, H = G.renderer.H, ms = G.sq.marks(mapId).map(p => ({ x: p.x * T - cam.x + T / 2, y: p.y * T - cam.y + T / 2 }));
+      if (ms.length && !ms.some(p => p.x >= 0 && p.x < W && p.y >= 0 && p.y < H)) {
+        const cx = W / 2, cy = H / 2;
+        const p = ms.reduce((a, q) => (Math.hypot(q.x - cx, q.y - cy) < Math.hypot(a.x - cx, a.y - cy) ? q : a));
+        const ang = Math.atan2(p.y - cy, p.x - cx), m = 20;
+        const k = Math.min((W / 2 - m) / Math.abs(Math.cos(ang) || 1e-6), (H / 2 - m) / Math.abs(Math.sin(ang) || 1e-6));
+        const ax = cx + Math.cos(ang) * k, ay = cy + Math.sin(ang) * k;
+        ctx.save(); ctx.translate(ax, ay); ctx.rotate(ang);
+        ctx.globalAlpha = 0.6 + tw * 0.4;
+        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-7, -9); ctx.lineTo(-7, 9); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffe070'; ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(-5, -6); ctx.lineTo(-5, 6); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      // 話すと場面の流れる人：頭の上に「！」
+      (npcs || []).filter(e => e.data && e.data.sqMark).forEach(e => {
+        const x = e.px - cam.x + T / 2, y = e.py - cam.y - 10 - Math.round(tw * 2);
+        ctx.save();
+        ctx.fillStyle = '#000'; ctx.fillRect(Math.round(x) - 4, Math.round(y) - 1, 9, 13);
+        ctx.fillStyle = '#ffe070'; ctx.fillRect(Math.round(x) - 3, Math.round(y), 7, 11);
+        ctx.fillStyle = '#7a3a00'; ctx.fillRect(Math.round(x) - 1, Math.round(y) + 1, 3, 6); ctx.fillRect(Math.round(x) - 1, Math.round(y) + 8, 3, 2);
+        ctx.restore();
+      });
+    },
 
     // 戦いの hook（ラウンドの終わりに呼ばれる）の決まった形
     hooks: {

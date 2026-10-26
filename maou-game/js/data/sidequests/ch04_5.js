@@ -398,7 +398,7 @@
         { t: 'title', text: title, sub },
         { t: 'sq', start: id },
         { t: 'party', ids: party },
-        { t: 'state', set: Object.assign({ noEnc: true, disguised: true, split: null, inhibit: G.DATA.balance.INHIBIT.MAX }, set || {}) },
+        { t: 'state', set: Object.assign({ noEnc: false, disguised: true, split: null, inhibit: G.DATA.balance.INHIBIT.MAX }, set || {}) },
         { t: 'flag', set: 'sq_' + id + '_on' },
       ].concat(map ? [{ t: 'goto', map: map[0], x: map[1], y: map[2], dir: map[3] }] : [], [{ t: 'fade', to: 0 }, { t: 'save' }]);
     },
@@ -488,7 +488,7 @@
     { t: 'flag', set: F('6') },
     { t: 'fade', to: 1 }, { t: 'goto', map: 'minamo', x: 15, y: 21, dir: 'down' }, { t: 'fade', to: 0 },
     N('（三日後。野原の見回り。南の門から野原へ出て、東の河口の葦原へ）')]);
-  E.sq_ch04_5_reeds = L.reeds.concat([{ t: 'flag', set: F('6a') }, N('（河口の葦原（北の草むら）で、蒲の穂を摘む）')]);
+  E.sq_ch04_5_reeds = L.reeds.concat([{ t: 'flag', set: F('6a') }, N('（河口の葦原の、光っている所で、蒲の穂を摘む）')]);
   E.sq_ch04_5_rabbit = L.rabbit.concat([
     { t: 'flag', set: F('6b') },
     { t: 'fade', to: 1 }, { t: 'goto', map: 'minamo', x: 11, y: 16, dir: 'up' }, { t: 'fade', to: 0 },
@@ -597,7 +597,7 @@
     { if: F('8'), text: 'トマリとして、倉庫の壁で名の練習' },
     { if: F('7'), text: '東の桟橋の小舟のイサナに話す' },
     { if: F('6b'), text: '宿の裏庭の井戸（町の真ん中）を調べる' },
-    { if: F('6a'), text: '葦原（北の草むら）で蒲の穂を摘む' },
+    { if: F('6a'), text: '葦原の光っている所で、蒲の穂を摘む' },
     { if: F('6'), text: '野原の東の河口の葦原へ' },
     { if: F('5b'), text: '倉庫の裏の子どもたちのところへ' },
     { if: F('5'), text: '通りの角のパン屋へ' },
