@@ -1,5 +1,5 @@
 // このファイルの役目：設定の画面（仕様書 第11章）。文字の速さ（3段階）、敵の出やすさ（ふつう／少なめ）、音（入／切）、会話の文字の大きさ（ふつう／大きい）、
-// 戦いの速さ（3段階）、いつも走る（入／切）、カーソルを覚える（入／切：メニューと戦いのコマンドで前に選んだところから）。
+// 戦いの速さ（3段階）、いつも走る（入／切）、カーソルを覚える（入／切：メニューと戦いのコマンドで前に選んだところから）、行き先の光（入／切）。
 // タイトルとフィールドのメニューの両方から開く。選ぶたびに切り替わり、ブラウザに保存される。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -19,6 +19,7 @@
       { label: '戦いの速さ', note: (BSPEEDS.find(o => o[0] === S.battleSpeed) || BSPEEDS[0])[1] },
       { label: 'いつも走る', note: S.autoRun ? '入' : '切' },
       { label: 'カーソルを覚える', note: S.cursorMemory === false ? '切' : '入' },
+      { label: '行き先の光', note: S.guide === false ? '切' : '入' },
       { label: 'もどる' },
     ];
     // 窓が画面からはみ出さず、下の説明の窓にも重ならないように置く（項目が増えても、文字を大きくしても）
@@ -39,6 +40,7 @@
       else if (i === 3) { S.textSize = S.textSize === 'large' ? 'normal' : 'large'; G.message.show('この大きさで、会話の文字を出します。'); }
       else if (i === 4) { const k = BSPEEDS.findIndex(o => o[0] === S.battleSpeed); S.battleSpeed = BSPEEDS[(k + 1) % BSPEEDS.length][0]; }
       else if (i === 6) S.cursorMemory = S.cursorMemory === false;
+      else if (i === 7) { S.guide = S.guide === false; G.message.show(S.guide === false ? '行き先を光らせない。' : 'いまの目的の行き先を光らせる。画面の外なら端に矢印。'); }
       else if (i === 5) { S.autoRun = !S.autoRun; G.message.show(S.autoRun ? 'Shiftを押さなくても走る。押しているあいだは歩く。' : 'Shiftを押しているあいだ走る。'); }
       else { G.scene.pop(); return; }
       G.save.saveSettings();

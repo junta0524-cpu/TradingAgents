@@ -44,17 +44,18 @@
     // クエストのあいだ、いま行くべき所を光らせる（マップの描画から。js/scenes/map.js）
     // 調べる所は1マスずつ、踏む所は同じ場面のマスの真ん中あたりに1つ、人は頭の上に「！」
     // 行き先がこのマップになければ、行き先のあるマップへ向かう出入口を光らせる（出入口をたどって近い順に3つ先まで探す）
+    // 本編の目的の行き先（js/systems/guide.js）も同じしくみで光らせる
     marks(mapId) {
-      if (!G.sq.active()) return [];
+      if (!G.guide.active()) return [];
       const here = G.sq.marksOn(mapId);
-      if (here.length) return here;
+      if (here.length || G.guide.mapIsGoal(mapId)) return here;
       const key = G.frame + ':' + mapId + ':' + G.sq.active();
       if (G.sq._guideKey === key) return G.sq._guide;
       G.sq._guideKey = key; G.sq._guide = [];
       const warpsOf = id => ((G.DATA.maps[id] || {}).warps || []).filter(w => w.to && G.DATA.maps[w.to] && G.flags.check(w.when || null));
       let front = warpsOf(mapId).map(w => ({ first: w, at: w.to })), seen = new Set([mapId]);
       for (let depth = 0; depth < 3 && front.length; depth++) {
-        const hit = front.filter(f => G.sq.marksOn(f.at).length);
+        const hit = front.filter(f => G.sq.marksOn(f.at).length || G.guide.mapIsGoal(f.at));
         if (hit.length) { G.sq._guide = hit.map(f => ({ x: f.first.x, y: f.first.y })); break; }
         const next = [];
         front.forEach(f => { if (seen.has(f.at)) return; seen.add(f.at); warpsOf(f.at).forEach(w => next.push({ first: f.first, at: w.to })); });
@@ -65,8 +66,10 @@
     marksOn(mapId) {
       const m = G.DATA.maps[mapId];
       if (!m) return [];
-      const on = o => o.sqMark && G.flags.check(o);
+      const on = o => G.guide.isGoal(o) && G.flags.check(o);
       const out = (m.spots || []).filter(on).map(o => ({ x: o.x, y: o.y }));
+      // 話す人も行き先に数える（光の輪ではなく頭の上の「！」で描く。矢印と、別のマップからの案内に使う）
+      (m.npcs || []).filter(o => o.event && on(o)).forEach(o => out.push({ x: o.x, y: o.y, npc: true }));
       const groups = {};
       (m.triggers || []).filter(on).forEach(o => (groups[o.event] = groups[o.event] || []).push(o));
       Object.values(groups).forEach(g => {
@@ -77,9 +80,9 @@
       return out;
     },
     draw(ctx, mapId, cam, T, npcs) {
-      if (!G.sq.active()) return;
+      if (!G.guide.active()) return;
       const tw = (Math.sin(G.frame / 9) + 1) / 2;
-      G.sq.marks(mapId).forEach(p => {
+      G.sq.marks(mapId).filter(p => !p.npc).forEach(p => {
         const x = p.x * T - cam.x + T / 2, y = p.y * T - cam.y + T / 2;
         ctx.save();
         ctx.fillStyle = '#ffe070';
@@ -105,7 +108,7 @@
         ctx.restore();
       }
       // 話すと場面の流れる人：頭の上に「！」
-      (npcs || []).filter(e => e.data && e.data.sqMark).forEach(e => {
+      (npcs || []).filter(e => e.data && e.data.event && G.guide.isGoal(e.data)).forEach(e => {
         const x = e.px - cam.x + T / 2, y = e.py - cam.y - 10 - Math.round(tw * 2);
         ctx.save();
         ctx.fillStyle = '#000'; ctx.fillRect(Math.round(x) - 4, Math.round(y) - 1, 9, 13);

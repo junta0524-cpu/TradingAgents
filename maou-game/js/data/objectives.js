@@ -1,6 +1,6 @@
 // このファイルの役目：メニューの下に出す「いまの目的」の一覧（次に何をすればよいかの道しるべ）。
 // 上から順に見て、chapter と条件（if／unless／all、G.flags.check と同じ書き方）が合う最初の一行を出す。
-// 物語のセリフではなく案内の文。進み具合はフラグで判断する（場面の flag と同じ名前）。
+// 物語のセリフではなく案内の文。進み具合はフラグで判断する（場面の flag と同じ名前）。unless のフラグを立てる所が行き先として光る（guide: false で光らせない）。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -55,7 +55,7 @@
     { chapter: 11, text: '物語を先へ進める' },
     { chapter: 12, text: '王の詠唱を守りの言霊で遮り、満ちる直前に踏み込む' },
     // ---- クリア後 ----
-    { chapter: 13, unless: 'ame_lit', text: '師と手合わせして四系統をそろえ、畑のクナドへ' },
+    { chapter: 13, unless: 'ame_lit', guide: false, text: '師と手合わせして四系統をそろえ、畑のクナドへ' },
     { chapter: 13, unless: 'post_bell_win', text: '宮のオモイカに話し、ベルとの最終手合わせに挑む' },
     { chapter: 13, unless: 'gm:yomi_fuchi2:nushi', text: '最深部の南西の石段から、黄泉の深淵の底へ' },
     { chapter: 13, text: '両方の世界を自由に巡る（大穴で行き来できる）' },
@@ -69,7 +69,12 @@
       const q = (G.DATA.sqObjectives || []).find(x => x.sq === G.state.sq && G.flags.check(Object.assign({}, x, { chapter: null })));
       if (q) return q.text;
     }
-    const o = G.DATA.objectives.find(x => x.chapter === ch && G.flags.check(Object.assign({}, x, { chapter: null })));
+    const o = G.objectiveRow();
     return o ? o.text : null;
+  };
+  // いまの本編の目的の行（行き先の光が unless のフラグから行き先を探す。js/systems/guide.js）
+  G.objectiveRow = () => {
+    const ch = (G.state && G.state.chapter) || 1;
+    return G.DATA.objectives.find(x => x.chapter === ch && G.flags.check(Object.assign({}, x, { chapter: null }))) || null;
   };
 })();

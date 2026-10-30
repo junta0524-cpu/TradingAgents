@@ -982,11 +982,23 @@ const { chromium } = require('playwright');
     for (let i = 0; i < max; i++) {
       if (await ev(until)) break;
       if ((await scenes()).endsWith('選択肢')) {
+        if (await ev(until)) break;   // 確かめのあいだに選択肢が出たときは、待っていた選択肢かもう一度見る（勝手に選ばない）
         // 9章の祈りは、まだ灯っていない紋を上から順に。ほかの選択肢は下（正しい方）を選ぶ
         const n = await ev(() => GAME.state.mapId === 'yasuragi_temple' ? ['yama', 'iza', 'hono', 'tsuku'].filter(s => GAME.flags.get('pray_' + s)).length : 1);
         for (let k = 0; k < n; k++) await key('ArrowDown', 60);
+        await key('KeyZ', 60);
+        continue;
       }
-      await key('KeyZ', 60);
+      // 決定キーは、選択肢が出ていないときだけ押す（見てから押すまでのあいだに選択肢が出て、勝手に選んでしまわないよう、ページの中で一度に確かめて押す）
+      const pressed = await ev(() => {
+        const n = GAME.scene.names();
+        if (n[n.length - 1] === '選択肢') return false;
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyZ', key: 'z' }));
+        return true;
+      });
+      await wait(40);
+      if (pressed) await ev(() => window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyZ', key: 'z' })));
+      await wait(20);
     }
     await page.keyboard.up('Shift'); await wait(150);
   };
@@ -1372,6 +1384,8 @@ const { chromium } = require('playwright');
   await key('ArrowDown', 60); await key('KeyZ', 300); await closeMessages();   // いつも走る → 入
   await shot('83_settings_more');
   expect('設定：戦いの速さ・いつも走る', await ev(() => `${GAME.settings.battleSpeed}/${GAME.settings.autoRun}/${GAME.DATA.balance.BATTLE_MSG_WAIT[GAME.settings.battleSpeed]}`), 'fast/true/24');
+  await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 300); await closeMessages();   // 行き先の光 → 切
+  expect('設定：行き先の光を切れる', await ev(() => String(GAME.settings.guide)), 'false');
   await key('KeyX', 150);
   // いつも走る：Shiftを押さなくても、同じ時間で倍ほど進む
   await ev(() => { window.__keepState = JSON.stringify({ state: GAME.state, flags: GAME.flags.data }); });   // この確かめのあと元に戻す
@@ -1397,7 +1411,16 @@ const { chromium } = require('playwright');
     const k = JSON.parse(window.__keepState); GAME.state = k.state; GAME.flags.data = k.flags; GAME.event.running = 0; GAME.scene.change(GAME.scenes.title()); });
   await wait(200);
   expect('設定：敵は少なめ・音は切（保存される）', await ev(() => `${GAME.settings.encounter}/${GAME.settings.sound}/${JSON.parse(localStorage.getItem('maou_settings')).sound}`), 'low/false/false');
-  await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.settings.textSize = 'normal'; GAME.save.saveSettings(); });
+  await ev(() => { GAME.settings.encounter = 'normal'; GAME.settings.sound = true; GAME.settings.textSize = 'normal'; GAME.settings.guide = true; GAME.save.saveSettings(); });
+  // 本編の行き先の光：1章でハニヤスに話したあとは、市場（yomi_market）に行き先があり、畑では東の出口が光る（js/systems/guide.js）
+  const guide = await ev(() => {
+    const keep = JSON.stringify({ state: GAME.state, flags: GAME.flags.data });
+    GAME.party.newGame(); GAME.state.chapter = 1; GAME.flags.set('ch1_hani', true);
+    const r = `${GAME.guide.active()}/${GAME.guide.mapIsGoal('yomi_market') || GAME.sq.marksOn('yomi_market').length > 0}/${GAME.sq.marks('yomi_hani').length > 0}`;
+    const k = JSON.parse(keep); GAME.state = k.state; GAME.flags.data = k.flags;
+    return r;
+  });
+  expect('行き先の光：1章の市場へ（畑の出口が光る）', guide, 'true/true/true');
 
   // ===== 仕上げの追加（手紙・クナドの補助）=====
   await placeAt('minamo', 15, 12, 'up'); await wait(200);

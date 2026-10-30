@@ -12,6 +12,7 @@
     battleSpeed: 'normal', // normal / fast / fastest（戦いの文の速さ）
     autoRun: false,        // true：Shiftを押さなくても走る（押すと歩く）
     cursorMemory: true,    // true：メニューと戦いのコマンドで、前に選んだところにカーソルを置く
+    guide: true,           // true：いまの目的の行き先を光らせる（js/systems/guide.js）
   };
   G.save.loadSettings();
   G.frame = 0;
