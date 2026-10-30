@@ -43,9 +43,28 @@
 
     // クエストのあいだ、いま行くべき所を光らせる（マップの描画から。js/scenes/map.js）
     // 調べる所は1マスずつ、踏む所は同じ場面のマスの真ん中あたりに1つ、人は頭の上に「！」
+    // 行き先がこのマップになければ、行き先のあるマップへ向かう出入口を光らせる（出入口をたどって近い順に3つ先まで探す）
     marks(mapId) {
+      if (!G.sq.active()) return [];
+      const here = G.sq.marksOn(mapId);
+      if (here.length) return here;
+      const key = G.frame + ':' + mapId + ':' + G.sq.active();
+      if (G.sq._guideKey === key) return G.sq._guide;
+      G.sq._guideKey = key; G.sq._guide = [];
+      const warpsOf = id => ((G.DATA.maps[id] || {}).warps || []).filter(w => w.to && G.DATA.maps[w.to] && G.flags.check(w.when || null));
+      let front = warpsOf(mapId).map(w => ({ first: w, at: w.to })), seen = new Set([mapId]);
+      for (let depth = 0; depth < 3 && front.length; depth++) {
+        const hit = front.filter(f => G.sq.marksOn(f.at).length);
+        if (hit.length) { G.sq._guide = hit.map(f => ({ x: f.first.x, y: f.first.y })); break; }
+        const next = [];
+        front.forEach(f => { if (seen.has(f.at)) return; seen.add(f.at); warpsOf(f.at).forEach(w => next.push({ first: f.first, at: w.to })); });
+        front = next;
+      }
+      return G.sq._guide;
+    },
+    marksOn(mapId) {
       const m = G.DATA.maps[mapId];
-      if (!m || !G.sq.active()) return [];
+      if (!m) return [];
       const on = o => o.sqMark && G.flags.check(o);
       const out = (m.spots || []).filter(on).map(o => ({ x: o.x, y: o.y }));
       const groups = {};
