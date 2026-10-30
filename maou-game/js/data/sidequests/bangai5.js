@@ -83,7 +83,7 @@
     { t: 'fade', to: 1 },
     { t: 'bg', key: null },
     setParty(['b5_nakime']),
-    { t: 'state', set: { noEnc: true } },
+    { t: 'state', set: { noEnc: false } },
     { t: 'flag', set: 'b5_kan' },
     { t: 'goto', map: 'hirasaka', x: 10, y: 12, dir: 'up' },
     { t: 'fade', to: 0 },

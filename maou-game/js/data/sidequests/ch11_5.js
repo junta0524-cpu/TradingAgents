@@ -88,7 +88,7 @@
     { t: 'fade', to: 1 },
     { t: 'title', text: '四天王編　土と角と牙と羽', sub: '（十一章の修行の日々。四天王の目から）' },
     { t: 'sq', start: SQ },
-    { t: 'state', set: { chapter: 12, noEnc: true, split: null, disguised: false, inhibitShown: false, resume: null } },
+    { t: 'state', set: { chapter: 12, noEnc: false, split: null, disguised: false, inhibitShown: false, resume: null } },
     { t: 'party', ids: ['sq_haniyasu'] },
     { t: 'flag', set: ON }, { t: 'flag', set: P + 'dawn' },
     { t: 'goto', map: 'yomi_hani', x: 8, y: 8, dir: 'up' },

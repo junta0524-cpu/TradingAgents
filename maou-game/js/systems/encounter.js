@@ -43,18 +43,28 @@
     return r ? r.groups[G.rng.int(0, r.groups.length - 1)] : null;
   }
 
+  // 寄り道クエストのあいだだけ出る敵（js/data/sidequests/encounters.js）。あればマップの encounter の代わりに使う
+  function sqEnc(mapId) {
+    const q = G.sq && G.sq.active(), e = q && ((G.DATA.sqEncounters || {})[q] || {})[mapId];
+    if (!e) return null;
+    if (e.notWith && G.party.active().some(m => e.notWith.includes(m.id))) return { steps: e.steps, groups: [] };
+    return e;
+  }
+  const encOf = map => sqEnc(G.state.mapId) || map.encounter;
+
   G.encounter = {
-    moreFor, rareFor,
+    moreFor, rareFor, encOf,
     enabled: true,   // デバッグで切り替える
 
     // マップに入ったとき：歩数を決め直す
     reset(map) {
-      G.state.encounterSteps = map.encounter ? nextSteps(map.encounter) : null;
+      const enc = encOf(map);
+      G.state.encounterSteps = enc ? nextSteps(enc) : null;
     },
 
     // 1歩歩いたとき：敵が出るなら、出る敵の組（id の配列）を返す
     step(map, tile) {
-      const enc = map.encounter;
+      const enc = encOf(map), sq = enc && enc !== map.encounter;
       if (!enc || !G.encounter.enabled || G.state.noEnc || (tile && tile.noEncounter)) return null;   // noEnc：寄り道クエストで敵を出さないとき
       // 結界張り：決まった歩数のあいだ、敵に出会わない
       if (G.state.barrier > 0) { G.state.barrier--; return null; }
@@ -64,6 +74,7 @@
       G.state.encounterSteps = nextSteps(enc);
       const base = groupsFor(enc);
       if (!base || !base.length) return null;   // 敵の出ない章（10章の人間界など）は、足した敵も出さない
+      if (sq) return base[G.rng.int(0, base.length - 1)].slice();   // 寄り道クエストの組は、そのまま（足す敵・めったに出ない敵は混ぜない）
       const rare = rareFor(G.state.mapId);
       if (rare) return rare.slice();
       const groups = base.concat(moreFor(G.state.mapId));

@@ -74,7 +74,7 @@
     { t: 'fade', to: 1 },
     { t: 'title', text: '一・五　避難の夜', sub: '（一章の終わりから二章の終わりまで。魔界の側）' },
     { t: 'sq', start: SQ },
-    { t: 'state', set: { chapter: 2, noEnc: true, split: null, disguised: false, inhibitShown: false, resume: null } },
+    { t: 'state', set: { chapter: 2, noEnc: false, split: null, disguised: false, inhibitShown: false, resume: null } },
     { t: 'party', ids: ['sq_haniyasu'] },
     { t: 'flag', set: ON }, { t: 'flag', set: P + 'eve' },
     { t: 'goto', map: 'yomi_hani', x: 8, y: 13, dir: 'up' },

@@ -74,7 +74,7 @@
     { t: 'fade', to: 1 },
     { t: 'title', text: '二・五　牢の粥', sub: '（二章のあと、三章の前）' },
     { t: 'sq', start: SQ },
-    { t: 'state', set: { chapter: 3, noEnc: true, split: null, disguised: false, inhibitShown: false, resume: null } },
+    { t: 'state', set: { chapter: 3, noEnc: false, split: null, disguised: false, inhibitShown: false, resume: null } },
   ].concat(toHisame, [
     { t: 'flag', set: ON },
     { t: 'goto', map: 'nenosu', x: 9, y: 1, dir: 'down' },
