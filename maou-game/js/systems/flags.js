@@ -25,6 +25,7 @@
         if (!m || !m.kotodama.includes(o.knows)) return false;
       }
       if (o.member && !(G.state && G.state.party.some(m => m.id === o.member))) return false;
+      if (o.sq && !(G.state && [].concat(o.sq).includes(G.state.sq))) return false;   // その寄り道クエストを遊んでいるあいだだけ
       const ch = (G.state && G.state.chapter) || 1;
       if (o.chapter != null && !([].concat(o.chapter)).includes(ch)) return false;
       // chapterFrom／chapterTo：その章から／その章まで（フィールドマップの出入口）
