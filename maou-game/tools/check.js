@@ -315,7 +315,7 @@ const { chromium } = require('playwright');
 
   // 装備：頭椎の大刀に替える（レベル2：攻7＋6＝13）
   await key('KeyX', 150); await key('ArrowDown', 60); await key('ArrowDown', 60); await key('KeyZ', 150); // そうび
-  await key('KeyZ', 150);                       // オオナムチ（ベルは選べない）
+  await key('ArrowDown', 60); await key('KeyZ', 150);   // オオナムチ（先頭はベル。ベルも装備できるので、1つ下へ）
   await key('KeyZ', 150);                       // 武器
   await shot('28_equip');
   await key('KeyZ', 200);                       // 頭椎の大刀
