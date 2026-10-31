@@ -133,7 +133,7 @@
 
   // ---- そうび ----
   function equipMenu() {
-    pickMember('だれの装備を変えますか', p => p.lv != null, m => {
+    pickMember('だれの装備を変えますか', null, m => {   // ベルも、臨時の仲間も、育てた仲間も、全員が装備できる
       const slots = G.party.SLOTS;
       const build = () => slots.map(s => {
         const it = G.DATA.items[m.equip[s]];

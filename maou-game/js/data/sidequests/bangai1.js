@@ -13,7 +13,7 @@
 
   // ---- 品 ----
   Object.assign(G.DATA.items, {
-    kunado_ishi: Object.assign({ name: '岐の石', type: 'accessory', who: ['oonamuchi'],
+    kunado_ishi: Object.assign({ name: '岐の石', type: 'accessory',
       desc: '境の番人の岐人から渡された、夜の色の小石。道の分かれ目に置かれる石で、身につけると、毒・眠り・惑わし・口封じ・縛りにかかりにくい。' }, SQ.accessory),
   });
   B.PRICES.kunado_ishi = SQ.price;

@@ -21,7 +21,7 @@
   Object.assign(G.DATA.items, {
     b4_misaki_tegami: { name: 'ミサキの手紙', type: 'key', desc: '焼け残った一枚と、ミサキが書いた二枚。父ちゃんのいた場所へ。',
       read: () => LETTER.concat(['『おまえにも土産を、たくさん持って帰る。……待っていてくれ。父より』', '『父ちゃんへ。土産は、いらない。ちゃんと、待ってた。ミサキより』']) },
-    shiraume_kushi: Object.assign({ name: '白梅の櫛', type: 'accessory', who: ['oonamuchi'],
+    shiraume_kushi: Object.assign({ name: '白梅の櫛', type: 'accessory',
       desc: '北の山の村の、いちばん高い梅の木の枝で作った櫛。続きを書く者が、ちゃんといた。' }, G.DATA.balance.SIDEQUEST.bangai4.ITEM.shiraume_kushi),
   });
 

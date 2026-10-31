@@ -19,7 +19,7 @@
   const NAMES14 = ['ササラ。フミト。ツバメ。', 'アオイ。カガリ。シノ。ハヤテ。ミズキ。ツムギ。', 'イブキ。コハル。トウゴ。ユラ。セナ。'];
   Object.assign(G.DATA.items, {
     inaho_fumi: { name: '稲穂の封の文', type: 'key', desc: '黒い封蝋に、稲穂の印が押された文。今年の収穫祭への、招き。' },
-    karasuba_fude: Object.assign({ name: '鴉羽の筆', type: 'accessory', who: ['oonamuchi'],
+    karasuba_fude: Object.assign({ name: '鴉羽の筆', type: 'accessory',
       desc: 'ナキメが記録に使う筆の替え。十四人ぶんの名と、好物と、最後の言葉を、一字も乱さずに書いた。' }, G.DATA.balance.SIDEQUEST.bangai5.ITEM.karasuba_fude),
   });
 

@@ -21,7 +21,7 @@
 
   // ---- ごほうび ----
   Object.assign(G.DATA.items, {
-    hokuchi_hiuchi: Object.assign({ name: '火口の火打ち石', type: 'accessory', who: ['oonamuchi'],
+    hokuchi_hiuchi: Object.assign({ name: '火口の火打ち石', type: 'accessory',
       desc: '火口がないと点かない、と教わった火打ち石。言霊の火が、少しよく熾る。（寄り道「三・五　比良坂を渡る」）' }, B.accessory),
   });
   G.DATA.balance.PRICES.hokuchi_hiuchi = B.price;

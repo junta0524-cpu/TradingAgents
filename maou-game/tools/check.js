@@ -1460,6 +1460,23 @@ const { chromium } = require('playwright');
     return out.join(' ');
   });
   expect('育てられる仲間：成長表・呼ぶ・外す・追い上げ・言霊・酒場の人', ros, 'true ok/ok/full/already true true true true');
+  // 装備は全員できる（ユーザー決定B）：ベル（偽名で弱いあいだ）も着けて強くなる／オオナムチ専用の品は着けられない／去る臨時の仲間の装備は持ち物へ戻る
+  const eqAll = await ev(() => {
+    const keep = JSON.stringify({ state: GAME.state, flags: GAME.flags.data }), cnt = id => (GAME.state.items.find(i => i.id === id) || { count: 0 }).count;
+    GAME.party.newGame(); GAME.state.chapter = 5; GAME.state.disguised = true;
+    const bell = GAME.party.member('bell'); GAME.party.recalc(bell); const a0 = bell.atk;
+    GAME.party.addItem('iron_sword'); const can = GAME.party.canEquip(bell, 'iron_sword');
+    GAME.party.equip(bell, 'weapon', 'iron_sword');
+    const raised = bell.atk > a0;
+    const unique = !GAME.party.canEquip(bell, 'kumoginu') && GAME.party.canEquip(GAME.party.member('oonamuchi'), 'kumoginu');
+    GAME.party.join('sukuna'); const sk = GAME.party.member('sukuna');
+    GAME.party.addItem('iron_sword'); GAME.party.equip(sk, 'weapon', 'iron_sword'); const before = cnt('iron_sword');
+    GAME.party.leave('sukuna');
+    const res = `${can}/${raised}/${unique}/${before}→${cnt('iron_sword')}`;
+    const k = JSON.parse(keep); GAME.state = k.state; GAME.flags.data = k.flags;
+    return res;
+  });
+  expect('装備：ベルも着けられる・専用の品は着けられない・去る仲間の装備は戻る', eqAll, 'true/true/true/0→1');
 
   // ===== 仕上げの追加（手紙・クナドの補助）=====
   await placeAt('minamo', 15, 12, 'up'); await wait(200);

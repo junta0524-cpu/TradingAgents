@@ -19,7 +19,7 @@
   Object.assign(G.DATA.items, {
     bell_fuda: { name: 'ベルの登録の札', type: 'key', desc: 'ミナモのギルドの受付で預かった、銅色の札。',
       read: () => ['銅色の、いちばん下の等級の札。', '『ベル』と書かれている。', '（今夜、渡そう、と思った）'] },
-    hani_tsuchi: Object.assign({ name: '埴土の守り', type: 'accessory', who: ['oonamuchi'],
+    hani_tsuchi: Object.assign({ name: '埴土の守り', type: 'accessory',
       desc: '埴の里の段々田の土を焼いて作った守り。土は、ただ、そこにある。身につけると、守りと体力が増す。' }, SQ.accessory),
   });
   B.PRICES.hani_tsuchi = SQ.price;

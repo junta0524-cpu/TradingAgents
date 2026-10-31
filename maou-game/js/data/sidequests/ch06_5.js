@@ -417,7 +417,7 @@
   Object.assign(G.DATA.balance.TEMP_PARTY, B.party);
   Object.assign(G.DATA.balance.PRICES, B.prices);
   Object.assign(G.DATA.items, {
-    sumi_hiuchi: { name: '炭焼きの火打ち石', type: 'accessory', wis: B.HIUCHI_WIS, who: ['oonamuchi'],
+    sumi_hiuchi: { name: '炭焼きの火打ち石', type: 'accessory', wis: B.HIUCHI_WIS,
       desc: '炭焼きのスミが使っていた火打ち石。灯りのない夜に、月明かりで手紙を書いた人の石。言葉の力が少し増す。' },
   });
 

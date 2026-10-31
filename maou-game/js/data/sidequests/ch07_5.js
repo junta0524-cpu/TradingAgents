@@ -396,7 +396,7 @@
   Object.assign(G.DATA.balance.TEMP_PARTY, B.party);
   Object.assign(G.DATA.balance.PRICES, B.prices);
   Object.assign(G.DATA.items, {
-    kuzu_nuno: { name: 'ノギクの葛布', type: 'armor', def: B.NUNO_DEF, resist: { sleep: 0.5, confuse: 0.5 }, who: ['oonamuchi'],
+    kuzu_nuno: { name: 'ノギクの葛布', type: 'armor', def: B.NUNO_DEF, resist: { sleep: 0.5, confuse: 0.5 },
       desc: '機織りのノギクが、葛の糸で目を詰めて織った灰色の布。風を通さない。眠り・惑わしが効きにくい。' },
     tane_mame: { name: 'タネ爺の豆', type: 'key', desc: 'ひなた野の畑から持ってきた種の、残り。「蒔きます。どこかに、必ず」' },
     eiji_suzu: { name: '衛士の鈴', type: 'key', desc: '苔と泥にまみれ、緑青の浮いた小さな鈴。イワクラの広場の井戸の底から引き上げた。' },

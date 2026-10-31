@@ -460,7 +460,7 @@
   Object.assign(G.DATA.balance.TEMP_PARTY, B.party);
   Object.assign(G.DATA.balance.PRICES, B.prices);
   Object.assign(G.DATA.items, {
-    gama_howata: { name: '蒲の穂綿', type: 'accessory', hp: B.GAMA_HP, resist: { poison: 0.5 }, who: ['oonamuchi'],
+    gama_howata: { name: '蒲の穂綿', type: 'accessory', hp: B.GAMA_HP, resist: { poison: 0.5 },
       desc: '蒲の穂をほぐした綿を、布に縫いこんだお守り。傷には真水と蒲の花（古事記の因幡の白兎）。毒が効きにくい。' },
   });
 

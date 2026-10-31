@@ -23,6 +23,11 @@
     return m;
   }
 
+  // 去る仲間の装備を持ち物へ戻す（全員が装備できるので、臨時の仲間の装備がなくならないように）
+  function returnEquip(m) {
+    SLOTS.forEach(sl => { if (m.equip && m.equip[sl]) { G.party.addItem(m.equip[sl]); delete m.equip[sl]; } });
+  }
+
   // 育てられる仲間（js/systems/roster.js）の、はじめの状態：はじめのレベル・その強さ・覚えている言霊
   function makeRosterMember(id) {
     const B = G.DATA.balance, c = G.DATA.characters[id], lv = G.roster.startLv(id);
@@ -118,11 +123,14 @@
       const m = G.party.member(id);
       if (!m || G.DATA.characters[id].isBell) return false;
       G.state.party.splice(G.state.party.indexOf(m), 1);
+      returnEquip(m);
       return true;
     },
     // 仲間をこの顔ぶれ・この順に入れ替える（いる人はそのまま、いない人は新しく加わる）
     setMembers(ids) {
+      const old = G.state.party;
       G.state.party = ids.map(id => G.party.member(id) || makeMember(id));
+      old.filter(m => !G.state.party.includes(m) && !m.roster).forEach(returnEquip);   // 外れる人の装備は、持ち物へ戻す（酒場で待つ仲間は着けたまま）
     },
     // 臨時の仲間を全員別れさせてから、指定の仲間を加える（章の切り替え用）
     setTemps(ids) {

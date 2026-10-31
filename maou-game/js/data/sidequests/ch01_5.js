@@ -19,7 +19,7 @@
 
   // ---- ごほうび ----
   Object.assign(G.DATA.items, {
-    kara_wan: Object.assign({ name: '空の椀', type: 'accessory', who: ['oonamuchi'],
+    kara_wan: Object.assign({ name: '空の椀', type: 'accessory',
       desc: '収穫祭の卓に、帰ってくる者の席として置かれた、何も入っていない椀。（寄り道「一・五　避難の夜」）' }, B.accessory),
   });
   G.DATA.balance.PRICES.kara_wan = B.price;

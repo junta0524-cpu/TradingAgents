@@ -29,14 +29,14 @@
     });
   }
 
-  // 選んでいる品の説明（装備なら、能力と、オオナムチがいま着けている物）
+  // 選んでいる品の説明（装備なら、能力と、オオナムチがいま着けている物。装備は全員できる）
   function drawInfo(id) {
     const it = G.DATA.items[id], r = G.renderer;
     if (!it) return;
     G.ui.drawWindow(8, 232, 464, 80);
     const equip = G.party.SLOTS.includes(it.type);
     const o = G.party.member('oonamuchi');
-    const head = equip ? `${G.equipNote(it)}${o && o.equip[it.type] ? `　（いま：${G.DATA.items[o.equip[it.type]].name}）` : ''}` : '';
+    const head = equip ? `${G.equipNote(it)}${o && o.equip[it.type] ? `　（オオナムチのいま：${G.DATA.items[o.equip[it.type]].name}）` : ''}` : '';
     const lines = [head, [equip ? G.equipEffects(it) : '', it.desc].filter(Boolean).join('　')].filter(Boolean);
     lines.flatMap(l => r.wrap(l, 440)).slice(0, 3).forEach((l, i) => r.text(l, 20, 242 + i * 20, i === 0 && equip ? '#ffd866' : '#fff'));
   }

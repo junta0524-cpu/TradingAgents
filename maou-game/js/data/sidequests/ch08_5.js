@@ -12,7 +12,7 @@
   Object.assign(G.DATA.items, {
     c85_tane: { name: '丘の青い花の種', type: 'key', desc: 'タカマの丘の斜面で集めた、青い花の種。',
       read: () => ['布の切れ端に包んだ、指先ほどの、黒い粒。', 'タカマの丘の斜面いっぱいに咲く、青い花の種だ。'] },
-    okano_aobana: Object.assign({ name: '丘の青花', type: 'accessory', who: ['oonamuchi'],
+    okano_aobana: Object.assign({ name: '丘の青花', type: 'accessory',
       desc: 'タカマの丘の斜面に咲く、小さな青い花を編んだ飾り。身につけると考えが澄み、惑わしにかかりにくい。' }, SQ.accessory),
   });
   B.PRICES.okano_aobana = SQ.price;
