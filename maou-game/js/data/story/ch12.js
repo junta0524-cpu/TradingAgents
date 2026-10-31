@@ -39,6 +39,7 @@
     S(KING, '「三度は、言わぬぞ」'),
     S('クナド', '「三度でも、同じです」'),
     N('王は、笑みを、消した。消す、というより、剥がれた。目の奥には、最初から、温度がなかった。それが、表に出ただけだった。'),
+    { t: 'flag', set: 'ch12_king_true' },   // ここから、王の顔グラは笑みのない顔（face_states.js）
     S(KING, '「……ならば」'),
     S(KING, '「もうよい」'),
     S('オモイカ', '「あの時も、最後に、この顔をしました」'),
@@ -81,6 +82,7 @@
 
   // ---- 五：王戦（倒れたり、詠唱が満ちたら、ここからやり直す）----
   E.ch12_battle = [
+    { t: 'flag', set: 'ch12_king_true' },
     { t: 'bg', key: 'fortress', actors: [{ look: 'amatsu', x: 260, y: 236, dir: 'left' }, { look: 'oonamuchi', x: 180, y: 256, dir: 'right' }, { look: 'bell_true', x: 60, y: 270, dir: 'right' }] },
     { t: 'fade', to: 0 },
     N('(あの人の、詠唱を)'),

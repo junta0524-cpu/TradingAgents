@@ -546,7 +546,9 @@
           // 倒れた敵：薄れながら沈む／行動する敵：前へ出る
           const l = lunge.get(e) || 0, dy = down ? (24 - f) * (risen[e.key] ? -0.6 : 0.8) : Math.round(Math.sin(l / 14 * Math.PI) * 6);
           ctx.globalAlpha = down ? f / 24 : 1;
-          G.sprite.drawEnemy(ctx, e.id, x, top + dy, scale);
+          // 敵データの artMul：その敵だけ大きく描く（群れの中のボスなど）。足元と真ん中の位置は変えない
+          const mul = (G.DATA.enemies[e.id] || {}).artMul || 1;
+          G.sprite.drawEnemy(ctx, e.id, x - (SIZE * mul - SIZE) / 2, top + dy - (SIZE * mul - SIZE), scale * mul);
           ctx.globalAlpha = 1;
           const tg = e.hp > 0 ? G.status.tags(e) + (G.battle.wavering(e) ? '揺' : '') : '';
           if (tg) r.text(tg, x + SIZE / 2, markY(14), '#ff9', 'center');

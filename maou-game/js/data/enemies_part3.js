@@ -72,7 +72,7 @@
     },
     // 12章：アマツ王（武力は低い。詠唱が満ちる直前に核心へ踏み込むと決着）と護衛
     amatsu_king: {
-      name: 'アマツ王', counter: '人', hp: 200, atk: 6, def: 99, agi: 4, wis: 60, exp: 200, copper: 0,
+      name: 'アマツ王', counter: '人', artMul: 1.5, hp: 200, atk: 6, def: 99, agi: 4, wis: 60, exp: 200, copper: 0,
       actions: [{ w: 2, type: 'kotodama', id: 'kangen' }, { w: 1, type: 'attack' }],
       resist: { sleep: 0, confuse: 0, silence: 0 },
       palette: { K: '#120e16', H: '#e8e0c0', D: '#f4f4f4', E: '#4a4a4a', W: '#c8c0a0' },
