@@ -285,6 +285,7 @@
       if (enemies.every(e => e.fled)) { play([{ type: 'msg', text: '敵は、みな逃げてしまった。' }], () => { phase = 'result'; }); return; }
       const r = G.battle.rewards(st);
       G.party.addCopper(r.copper);
+      if (G.sq.active()) G.sq.gain(r);   // 寄り道クエストのあいだの戦いは、終わりに持ち帰る（js/systems/sidequest.js）
       G.sound.jingle('victory');   // 勝ったときの短い曲（終わると、戦いのあとでもとの曲へ戻る）
       const ev = [{ type: 'msg', text: '敵を退けた！' }];
       r.alive.forEach(p => {

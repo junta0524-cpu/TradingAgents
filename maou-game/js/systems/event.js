@@ -162,6 +162,8 @@
           if (c.start) { G.sq.start(c.start); return; }
           const saved = G.sq.end(c.end);
           if (saved && saved.mapId && !c.stay) { G.scene.change(G.scenes.map(saved.mapId, saved.x, saved.y, saved.dir)); G.scene.push(self); }
+          // 戦って得たものを持ち帰ったときは、知らせる（replay では何も変えないので、ここは通らない）
+          if (G.sq.lastGain && G.sq.lastGain.length) { cmds.splice(i, 0, { t: 'nar', text: '（寄り道で戦って得たもの：' + G.sq.lastGain.join('、') + '）' }); G.sq.lastGain = null; }
           return;
         }
         case 'rename': {

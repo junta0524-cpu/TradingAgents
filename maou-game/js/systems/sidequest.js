@@ -27,13 +27,38 @@
       KEEP.forEach(k => { saved[k] = st[k] === undefined ? null : clone(st[k]); });
       st.sqSaved = saved;
       st.sq = id;
+      st.sqGain = { copper: 0, items: [], exp: {} };   // 戦って得たもの（終わりに持ち帰る。下の gain／end）
+    },
+    // 勝った戦いのごほうびを、持ち帰る分に足す（js/scenes/battle.js から）。クエストのあいだの銅貨・品・仲間の状態は終わりに戻るので、ここだけ別に覚える
+    gain(r) {
+      const g = G.state && G.state.sqGain;
+      if (!g) return;
+      g.copper += r.copper || 0;
+      if (r.drop) g.items.push(r.drop);
+      (r.alive || []).forEach(p => { g.exp[p.id] = (g.exp[p.id] || 0) + r.each; });
     },
     // 終わり：預けたものを戻し、済んだ印を立てる（思い出の帳の「寄り道の章」にも入る）
     end(id) {
-      const st = G.state, saved = st.sqSaved;
+      const st = G.state, saved = st.sqSaved, gain = st.sqGain;
       if (saved) KEEP.forEach(k => { if (saved[k] === null) delete st[k]; else st[k] = saved[k]; });
-      delete st.sqSaved; delete st.sq;
+      delete st.sqSaved; delete st.sq; delete st.sqGain;
       st.party.forEach(m => G.party.recalc(m));
+      // 戦って得た銅貨・品・経験値を持ち帰る（レベルの上がる仲間＝オオナムチだけが経験値をもらう）
+      const lines = [];
+      G.sq.lastGain = lines;
+      if (gain) {
+        if (gain.copper) { G.party.addCopper(gain.copper); lines.push(`銅貨 ${gain.copper}枚`); }
+        const counts = {};
+        gain.items.forEach(id => { G.party.addItem(id); counts[id] = (counts[id] || 0) + 1; });
+        Object.keys(counts).forEach(id => lines.push(`${(G.DATA.items[id] || {}).name || id}${counts[id] > 1 ? '×' + counts[id] : ''}`));
+        Object.keys(gain.exp).forEach(id => {
+          const m = st.party.find(p => p.id === id);
+          if (!m || !gain.exp[id]) return;
+          m.exp += gain.exp[id];
+          lines.push(`${m.name}の経験値 ${gain.exp[id]}`);
+          G.growth.checkLevelUp(m).forEach(u => lines.push(`${m.name}はレベル${u.lv}になった`));
+        });
+      }
       G.flags.set('sq_done_' + id, true);
       G.flags.set('side_read_side_' + id, true);
       if (G.memories) G.memories.mark('side_' + id);

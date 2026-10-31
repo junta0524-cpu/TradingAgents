@@ -1421,6 +1421,21 @@ const { chromium } = require('playwright');
     return r;
   });
   expect('行き先の光：1章の市場へ（畑の出口が光る）', guide, 'true/true/true');
+  // 寄り道クエストで戦って得た銅貨・経験値は、終わりに持ち帰る（js/systems/sidequest.js の gain／end）
+  const carry = await ev(() => {
+    const keep = JSON.stringify({ state: GAME.state, flags: GAME.flags.data });
+    GAME.party.newGame(); GAME.state.chapter = 13; GAME.state.cleared = true;
+    const o0 = GAME.party.member('oonamuchi'), e0 = o0.exp, c0 = GAME.state.copper;
+    GAME.sq.start('ch04_5'); GAME.party.setMembers(['bell', 'oonamuchi']);
+    const st = GAME.battle.create(GAME.state.party, ['yomotsu_inu']); st.lastKilled = st.enemies[0]; st.enemies[0].hp = 0;
+    const r = GAME.battle.rewards(st); GAME.party.addCopper(r.copper); GAME.sq.gain(r);
+    GAME.sq.end('ch04_5');
+    const o1 = GAME.party.member('oonamuchi');
+    const res = `${GAME.state.copper - c0 === r.copper && r.copper > 0}/${o1.exp - e0 >= r.each && r.each > 0}/${GAME.state.sqGain === undefined}`;
+    const k = JSON.parse(keep); GAME.state = k.state; GAME.flags.data = k.flags;
+    return res;
+  });
+  expect('寄り道クエスト：戦って得た銅貨・経験値を持ち帰る', carry, 'true/true/true');
 
   // ===== 仕上げの追加（手紙・クナドの補助）=====
   await placeAt('minamo', 15, 12, 'up'); await wait(200);
