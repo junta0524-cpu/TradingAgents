@@ -23,6 +23,11 @@
       name: 'ベル', counter: '人', big: true, artScale: 6, battleBg: 'throne', hp: 999, atk: 40, def: 60, agi: 20, wis: 60, exp: 80, copper: 0,
       palette: { K: '#0a0608', H: '#e0c0a8', D: '#1a141e', E: '#d02030', W: '#3a2a40' }, sprite: H,
     },
+    // ベルの力解放版（用意だけ。まだどの戦いにも出ていない。bell_t と同じ強さ）
+    bell_t_power: {
+      name: 'ベル', counter: '人', big: true, artScale: 6, battleBg: 'throne', hp: 999, atk: 40, def: 60, agi: 20, wis: 60, exp: 80, copper: 0,
+      palette: { K: '#0a0608', H: '#e0c0a8', D: '#1a141e', E: '#d02030', W: '#3a2a40' }, sprite: H,
+    },
     // ベルとの最終手合わせ（試練の扉のあと）
     bell_final: {
       name: 'ベルイザナ', counter: '人', big: true, artScale: 6, battleBg: 'throne', hp: 999, atk: 52, def: 80, agi: 30, wis: 80, exp: 500, copper: 0,
