@@ -23,6 +23,16 @@
     return m;
   }
 
+  // 育てられる仲間（js/systems/roster.js）の、はじめの状態：はじめのレベル・その強さ・覚えている言霊
+  function makeRosterMember(id) {
+    const B = G.DATA.balance, c = G.DATA.characters[id], lv = G.roster.startLv(id);
+    const m = { id, name: c.name, lv, exp: B.EXP_TABLE[lv], roster: true, base: G.growth.baseAt(id, lv), equip: {}, kotodama: (c.kotodama || []).slice(), tactic: 'auto' };
+    G.roster.learnUpTo(m, lv);
+    recalc(m);
+    m.hp = m.maxHp; m.mp = m.maxMp;
+    return m;
+  }
+
   // ベルの素の強さ：魔王の姿はカンスト。偽名の冒険者ベルは「章の推奨レベル＋BELL_OVER」のオオナムチと同じ（MPだけ BELL.mp）
   function bellBase() {
     const B = G.DATA.balance, st = G.state || {};
@@ -63,6 +73,7 @@
     SLOTS,
     SLOT_NAMES: { weapon: '武器', armor: '防具', accessory: '装飾' },
     recalc,
+    makeRosterMember,
 
     newGame() {
       const B = G.DATA.balance, start = B.START;
@@ -80,6 +91,7 @@
         disguised: false,           // 偽名「ベル」で人間界にいるか（4〜9章）。このときだけ阻害ゲージが動く
         resume: G.DATA.chapters ? G.DATA.chapters[1].start : null,   // つづきから遊ぶとき、最初に流す場面
         vars: {},
+        roster: {},                 // 酒場で待っている、育てられる仲間（js/systems/roster.js）
         playFrames: 0,              // 遊んだ時間（1秒に60ずつ増える。タイトル画面では数えない）
       };
       G.flags.reset();
@@ -114,7 +126,7 @@
     },
     // 臨時の仲間を全員別れさせてから、指定の仲間を加える（章の切り替え用）
     setTemps(ids) {
-      G.state.party.filter(m => G.DATA.characters[m.id].temp).forEach(m => G.party.leave(m.id));
+      G.state.party.filter(m => G.DATA.characters[m.id].temp && !m.roster).forEach(m => G.party.leave(m.id));
       (ids || []).forEach(id => G.party.join(id));
     },
 

@@ -1436,6 +1436,30 @@ const { chromium } = require('playwright');
     return res;
   });
   expect('寄り道クエスト：戦って得た銅貨・経験値を持ち帰る', carry, 'true/true/true');
+  // 育てられる仲間（js/systems/roster.js）：はじめの強さ・最終の強さ・呼ぶ／外す／4人まで・追い上げ・言霊を覚える・酒場の人はクリア後だけ
+  const ros = await ev(() => {
+    const keep = JSON.stringify({ state: GAME.state, flags: GAME.flags.data }), B = GAME.DATA.balance, R = B.ROSTER, out = [];
+    GAME.party.newGame(); GAME.state.chapter = 13; GAME.state.cleared = true;
+    const oo = GAME.party.member('oonamuchi'); while (oo.lv < 60) { oo.exp = B.EXP_TABLE[oo.lv + 1]; GAME.growth.checkLevelUp(oo); }
+    // 6人とも：はじめのレベル＝推奨レベル−3、はじめの強さ＝TEMP_PARTY、Lv99＝最終の強さ、下がらない
+    out.push(GAME.roster.ids().every(id => {
+      const lv0 = GAME.roster.startLv(id), g = (GAME.growth.baseAt(id, 1), B.GROWTH[id]), t = B.TEMP_PARTY[id], f = R.members[id].final;
+      const same = (row, o) => ['hp', 'mp', 'atk', 'def', 'agi', 'wis'].every((k, i) => row[i] === o[k]);
+      let mono = true; for (let l = 2; l <= B.MAX_LEVEL; l++) g[l].forEach((v, i) => { if (v < g[l - 1][i]) mono = false; });
+      return lv0 === B.REC_LV[R.members[id].join] - R.START_BELOW && same(g[lv0], t) && same(g[B.MAX_LEVEL], f) && mono;
+    }));
+    out.push(GAME.roster.recruit('sukuna') + '/' + GAME.roster.recruit('konoha') + '/' + GAME.roster.recruit('kaname') + '/' + GAME.roster.recruit('sukuna'));
+    const s = GAME.party.member('sukuna'), k0 = s.kotodama.length;
+    out.push(GAME.roster.expMult(s) > 1 && s.lv === GAME.roster.startLv('sukuna') && GAME.state.party.length === 4);
+    s.exp = B.EXP_TABLE[20]; GAME.growth.checkLevelUp(s);
+    out.push(s.lv === 20 && s.kotodama.includes('kiyome') && s.kotodama.length > k0);
+    GAME.roster.dismiss('sukuna'); const kept = GAME.state.roster.sukuna && GAME.state.roster.sukuna.lv === 20; GAME.roster.recruit('sukuna');
+    out.push(kept && GAME.party.member('sukuna').lv === 20);
+    out.push(GAME.flags.check({ chapter: 13 }) && !GAME.flags.check({ chapter: 12 }) && (GAME.DATA.maps.minamo_guild.npcs.find(n => n.tavern) || {}).chapter === 13);
+    const k = JSON.parse(keep); GAME.state = k.state; GAME.flags.data = k.flags;
+    return out.join(' ');
+  });
+  expect('育てられる仲間：成長表・呼ぶ・外す・追い上げ・言霊・酒場の人', ros, 'true ok/ok/full/already true true true true');
 
   // ===== 仕上げの追加（手紙・クナドの補助）=====
   await placeAt('minamo', 15, 12, 'up'); await wait(200);
@@ -1724,7 +1748,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/16');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/17');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない

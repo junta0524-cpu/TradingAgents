@@ -1,6 +1,6 @@
 // このファイルの役目：マップ「ミナモのギルド（建物の中）」のデータ。
 // 受付は台の向こうにいるが、台越しに話しかけられる。セリフは仮。
-// 奥の壁の掲示板で寄り道の依頼を受け（5章から）、受付に話すと済んだ依頼を報告できる。
+// 奥の壁の掲示板で寄り道の依頼を受け（5章から）、受付に話すと済んだ依頼を報告できる。受付の隣の酒場の主（クリア後）で、育てられる仲間を入れ替える。
 (function () {
   const G = window.GAME = window.GAME || {};
   G.DATA = G.DATA || {};
@@ -40,6 +40,9 @@
     npcs: [
       { id: 'clerk', look: 'clerk', x: 7, y: 2, dir: 'down', move: 'still',
         talk: [{ name: '受付の女', text: '「次の方」' }], requestDesk: true },   // 話すと、済んだ寄り道の依頼を報告する
+      // 仲間の酒場（ユーザー決定：クリア後、受付の隣）。物語のあいだの仲間を育てて、入れ替えられる（js/systems/roster.js）
+      { id: 'tavern_keeper', look: 'merchant', x: 10, y: 2, dir: 'down', move: 'still', chapter: 13, tavern: true,
+        talk: [{ name: '酒場の主', text: '（仮）旅で縁のあった連中が、ここで杯を傾けてるよ。連れていくなら、声をかけてやんな。' }] },
       { id: 'oonamuchi', look: 'oonamuchi', x: 5, y: 4, dir: 'up', move: 'still', chapter: 4, unless: 'ch4_guild' },
       { id: 'adventurer', look: 'guard', x: 12, y: 7, dir: 'left', move: 'wander',
         talk: ['（仮）新顔か。ここじゃ腕より、まず信用だぜ。'] },

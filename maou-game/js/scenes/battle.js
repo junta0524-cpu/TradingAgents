@@ -289,8 +289,9 @@
       G.sound.jingle('victory');   // 勝ったときの短い曲（終わると、戦いのあとでもとの曲へ戻る）
       const ev = [{ type: 'msg', text: '敵を退けた！' }];
       r.alive.forEach(p => {
-        p.exp += r.each;
-        ev.push({ type: 'msg', text: `${p.name}は経験値を ${r.each} 手に入れた。` });
+        const got = Math.ceil(r.each * G.roster.expMult(p));   // レベルがずっと低い仲間は、経験値が増える（追い上げ）
+        p.exp += got;
+        ev.push({ type: 'msg', text: `${p.name}は経験値を ${got} 手に入れた。` });
       });
       if (r.copper) ev.push({ type: 'msg', text: `銅貨を ${r.copper}枚 手に入れた。` });
       if (r.drop) {

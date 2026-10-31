@@ -73,6 +73,53 @@
     },
     PARTY_MAX: 4,
 
+    // ---- 育てられる仲間（ユーザー決定：各章の仲間をクリア後に育成・入れ替え。js/systems/roster.js）----
+    // 物語のあいだの臨時の仲間（TEMP_PARTY）とは別に、クリア後、ミナモのギルドの酒場で呼べる。強さは次のとおり：
+    //   はじめの強さ＝TEMP_PARTY の数字（その章の強さ）、はじめのレベル＝仲間になった章の推奨レベル（REC_LV）−START_BELOW、
+    //   Lv99の最終の強さ＝final（体力・MPは999、ほかは255が上限）。途中の強さは、オオナムチの成長の進み方に合わせてなだらかに増える。
+    ROSTER: {
+      START_BELOW: 3,                       // はじめのレベル：その章の推奨レベルより、これだけ低い
+      CATCHUP: { GAP: 4, PER: 6, MAX: 8 },  // 追い上げ：オオナムチよりGAPレベル以上低いとき、経験値が 1＋差÷PER 倍（MAX倍まで）
+      members: {
+        sukuna: {   // 5章：老薬師（回復役・後衛）。MPが多く、守りと素早さは中くらい
+          role: '回復役（後衛）',
+          join: 5,
+          final: { hp: 640, mp: 999, atk: 70, def: 130, agi: 150, wis: 255 },
+          learn: { 20: 'kiyome', 35: 'iyashi_mai', 55: 'ikikaeshi', 75: 'michi_iyashi_omi', 90: 'musuhi' },
+        },
+        konoha: {   // 5章：混血エルフ（弓と剣）。素早く、攻めと言霊の両方ができる
+          role: '弓と剣の素早い攻め手',
+          join: 5,
+          final: { hp: 780, mp: 330, atk: 235, def: 150, agi: 250, wis: 120 },
+          learn: { 15: 'takeri', 25: 'madowashi', 40: 'hibashiri', 55: 'sakiyomi', 70: 'oboro_jin' },
+        },
+        kaname: {   // 6章：女鍛冶師（前衛・火）。体力・攻撃・守りが高い
+          role: '前衛（火）',
+          join: 6,
+          final: { hp: 999, mp: 300, atk: 255, def: 255, agi: 90, wis: 130 },
+          learn: { 18: 'hibashiri', 32: 'ikazuchi', 48: 'takeri_jin', 62: 'haze', 80: 'ikazuchi_jin', 92: 'kaen_omi' },
+        },
+        kotoshiro: {   // 6章：検品官（落とし物が増える）。器用で、見破りと妨げの言霊が得意
+          role: '器用な見破り役。落とし物が増える',
+          join: 6,
+          final: { hp: 700, mp: 420, atk: 140, def: 160, agi: 170, wis: 200 },
+          learn: { 16: 'oboro', 28: 'kuchifuuji', 40: 'katame', 52: 'naabaki', 68: 'shibari', 84: 'naabaki_omi' },
+        },
+        uzume: {   // 7章：斥候（先手を取りやすい）。いちばん素早い
+          role: '斥候。先手を取りやすい',
+          join: 7,
+          final: { hp: 760, mp: 220, atk: 215, def: 130, agi: 255, wis: 110 },
+          learn: { 14: 'katame', 26: 'takeri', 38: 'sakiyomi', 50: 'hibashiri', 65: 'katame_ren', 80: 'kokoroshizume' },
+        },
+        hieda: {   // 7章：語り部（見破り・後衛）。賢さとMPがカンスト。守りの言霊が得意
+          role: '語り部（後衛）。守りの言霊が得意',
+          join: 7,
+          final: { hp: 600, mp: 999, atk: 60, def: 110, agi: 120, wis: 255 },
+          learn: { 20: 'kekkai', 34: 'migawari', 48: 'iwato', 62: 'katame_jin', 78: 'iwagaki', 92: 'yamamori_omi' },
+        },
+      },
+    },
+
     // ---- ダンジョンのしかけ（js/systems/gimmick.js）----
     GIMMICK: {
       HURT_STEP: 3,       // 熱い床：1歩ごとに減る体力（1より下にはならない）

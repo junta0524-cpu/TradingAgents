@@ -5,6 +5,7 @@
   const B = () => G.DATA.balance;
 
   function baseAt(id, lv) {
+    if (!B().GROWTH[id]) G.roster.buildGrowth(id);   // 育てられる仲間の成長表は、はじめて使うときに作る
     const row = B().GROWTH[id][lv];
     return { hp: row[0], mp: row[1], atk: row[2], def: row[3], agi: row[4], wis: row[5] };
   }
@@ -14,8 +15,7 @@
   // 経験値に見合うまでレベルを上げる。上がった分の記録を返す [{ lv, diffs: ['最大HP +4', ...] }]
   function checkLevelUp(m) {
     const ups = [];
-    const c = G.DATA.characters[m.id];
-    if (c.fixed || m.lv == null) return ups;
+    if (m.lv == null) return ups;   // ベルと臨時の仲間はレベルがない（育てられる仲間は lv がある）
     while (m.lv < B().MAX_LEVEL && m.exp >= B().EXP_TABLE[m.lv + 1]) {
       const before = m.base, after = baseAt(m.id, m.lv + 1);
       m.lv++;
@@ -28,6 +28,8 @@
       const diffs = Object.keys(LABELS)
         .filter(k => after[k] !== before[k])
         .map(k => `${LABELS[k]} +${after[k] - before[k]}`);
+      // 育てられる仲間は、そのレベルで言霊も覚える
+      G.roster.learnUpTo(m, m.lv, m.lv - 1).forEach(k => diffs.push(`言霊「${(G.DATA.kotodama[k] || {}).name || k}」を覚えた`));
       ups.push({ lv: m.lv, diffs });
     }
     return ups;

@@ -381,7 +381,7 @@
     const won = st.enemies.filter(e => !e.fled);   // 逃げた敵の分はもらえない
     const exp = Math.floor(won.reduce((s, e) => s + G.DATA.enemies[e.id].exp * (e.awakened ? AW().EXP_RATE : 1), 0) * (hasPerk(st, 'expBoost') ? G.DATA.balance.EXP_BOOST : 1) * chapterExpRate());
     const copper = Math.floor(won.reduce((s, e) => s + G.DATA.enemies[e.id].copper, 0) * (hasPerk(st, 'copperBoost') ? G.DATA.balance.COPPER_BOOST : 1));
-    const alive = st.party.filter(p => p.hp > 0 && !charOf(p).fixed);
+    const alive = st.party.filter(p => p.hp > 0 && p.lv != null);   // レベルの上がる仲間（オオナムチと、育てられる仲間）
     const each = b.EXP_SPLIT ? Math.ceil(exp / Math.max(1, alive.length)) : exp;
     // 落とし物は、最後に倒した敵1体だけが判定
     let drop = null;

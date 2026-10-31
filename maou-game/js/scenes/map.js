@@ -241,6 +241,8 @@
         // 頼みごとを済ませたあとは、条件つきのひと言のほうを話す
         const questDone = d.quest && G.quests.byId(d.quest) && G.quests.status(G.quests.byId(d.quest)) === 'claimed';
         if (d.quest && !(special && questDone) && G.quests.talk(d.quest)) return;
+        // ギルドの酒場の人：育てられる仲間を呼ぶ・外す（js/systems/roster.js）
+        if (d.tavern) { G.message.show(d.talk || ['……。'], () => G.roster.openTavern()); return; }
         // 話すと場面が流れる人（doneFlag が立ったあとは、ふつうの会話）
         if (d.event && !(d.doneFlag && G.flags.get(d.doneFlag))) { G.event.run(d.event); return; }
         const said = special || d.talk;
