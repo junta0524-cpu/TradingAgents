@@ -71,7 +71,6 @@
       Object.assign({ id: 'susano',    look: 'susano',    x: 7,  y: 6, dir: 'right' }, KING),
       Object.assign({ id: 'haniyasu',  look: 'haniyasu',  x: 12, y: 6, dir: 'left' }, KING),
     ],
-    chests: [],
     signs: [],
   };
 })();
