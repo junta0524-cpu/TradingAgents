@@ -9,7 +9,7 @@
 
   // ---- 操る人・見た目・品 ----
   Object.assign(G.DATA.characters, {
-    b4_takeru: { name: 'タケル', look: 'takeru', temp: true, fixed: true, tactic: 'auto', kotodama: [] },
+    b4_takeru: { name: 'タケル', look: 'takeru', temp: true, fixed: true, tactic: 'auto', kotodama: [], equip: { weapon: 'takeru_bokuto', armor: 'takeru_yoroi', accessory: 'takeru_seigyoku' } },
   });
   Object.assign(G.DATA.balance.TEMP_PARTY, G.DATA.balance.SIDEQUEST.bangai4.party);
   Object.assign(G.DATA.sprites.LOOKS, {

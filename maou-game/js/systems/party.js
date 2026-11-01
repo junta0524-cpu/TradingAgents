@@ -56,7 +56,9 @@
     // 賢さを足す前の記録：成長表（臨時の仲間は TEMP_PARTY）から賢さだけ補う
     if (m.base.wis == null) m.base.wis = c.temp ? G.DATA.balance.TEMP_PARTY[m.id].wis : m.lv != null ? G.growth.baseAt(m.id, m.lv).wis : m.base.atk;
     // 装備の特別な効き目：resist（状態異常の効きやすさ）・crit（会心）・perks（先手・経験値・銅貨）
-    const t = { maxHp: m.base.hp, maxMp: m.base.mp, atk: m.base.atk, def: m.base.def, agi: m.base.agi, wis: m.base.wis, resist: {}, crit: 0, perks: [] };
+    // 素の強さはカンスト（255／体力・MPは999）まで。装備はその上に足す（合計の上限は STAT_CAP.TOTAL）
+    const C = G.DATA.balance.STAT_CAP, bs = k => Math.min(m.base[k], C.BASE);
+    const t = { maxHp: Math.min(m.base.hp, C.BASE_HP), maxMp: Math.min(m.base.mp, C.BASE_HP), atk: bs('atk'), def: bs('def'), agi: bs('agi'), wis: bs('wis'), resist: {}, crit: 0, perks: [] };
     SLOTS.forEach(s => {
       const it = G.DATA.items[m.equip[s]];
       if (!it) return;
@@ -66,9 +68,9 @@
       Object.entries(it.resist || {}).forEach(([k, v]) => { t.resist[k] = Math.min(t.resist[k] == null ? 1 : t.resist[k], v); });
       if (it.perk) t.perks.push(it.perk);
     });
-    // 上限（カンスト）：体力・MPは999、ほかは255（装備を足しても超えない）
-    t.maxHp = Math.min(t.maxHp, 999); t.maxMp = Math.min(t.maxMp, 999);
-    ['atk', 'def', 'agi', 'wis'].forEach(k => { t[k] = Math.min(t[k], 255); });
+    // 合計の上限（カンストの素の強さ＋装備）：体力・MPは TOTAL_HP、ほかは TOTAL
+    t.maxHp = Math.min(t.maxHp, C.TOTAL_HP); t.maxMp = Math.min(t.maxMp, C.TOTAL_HP);
+    ['atk', 'def', 'agi', 'wis'].forEach(k => { t[k] = Math.min(t[k], C.TOTAL); });
     Object.assign(m, t);
     if (m.hp != null) m.hp = Math.min(m.hp, m.maxHp);
     if (m.mp != null) m.mp = Math.min(m.mp, m.maxMp);

@@ -12,7 +12,7 @@
 
   // ---- 操る人：タケル（樫の木刀。斬らない）----
   Object.assign(G.DATA.characters, {
-    c_takeru: { name: 'タケル', look: 'takeru', temp: true, fixed: true, tactic: 'auto', kotodama: [] },
+    c_takeru: { name: 'タケル', look: 'takeru', temp: true, fixed: true, tactic: 'auto', kotodama: [], equip: { weapon: 'takeru_bokuto', armor: 'takeru_yoroi', accessory: 'takeru_seigyoku' } },
   });
   Object.assign(B.TEMP_PARTY, SQ.party);
 

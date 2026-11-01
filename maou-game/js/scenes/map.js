@@ -110,6 +110,8 @@
       return G.DATA.tiles[rows[y][x]] || G.DATA.tiles[' '];
     }
     const at = (list, x, y) => (list || []).find(o => o.x === x && o.y === y);
+    // 宝箱：条件（chapter／if／unless など）が合うものだけ置く（クリア後だけ出る宝箱など）
+    const chests = () => (map.chests || []).filter(c => G.flags.check(c));
     // 立て札：条件（if／unless／chapter など）が合うものだけ置く（寄り道クエストの立て札は、遊べるあいだだけ）
     const signs = () => (map.signs || []).filter(s => G.flags.check(s));
     // 出入口：同じマスに複数あるときは、when（条件）に合う最初のもの
@@ -120,7 +122,7 @@
     function blocked(x, y, self) {
       const t = tileAt(x, y);
       if (!t || t.solid) return true;
-      if (at(map.chests, x, y) || at(signs(), x, y)) return true;
+      if (at(chests(), x, y) || at(signs(), x, y)) return true;
       if (G.gimmick.blocks(gst, x, y)) return true;
       return !!entityAt(x, y, self);
     }
@@ -210,7 +212,7 @@
     const gimmickApi = {
       get st() { return gst; }, get map() { return map; }, get player() { return player; },
       tileAt,
-      occupied: (x, y) => !!(at(map.chests, x, y) || at(signs(), x, y) || G.gimmick.blocks(gst, x, y) || entityAt(x, y)),
+      occupied: (x, y) => !!(at(chests(), x, y) || at(signs(), x, y) || G.gimmick.blocks(gst, x, y) || entityAt(x, y)),
       rebuild: () => { buildRows(); refreshNpcs(); },
     };
 
@@ -257,7 +259,7 @@
       }
       if (G.gimmick.interact(gimmickApi, fx, fy)) return;
       if (G.quests.look(mapId, fx, fy)) return;   // 頼まれて調べる場所
-      const chest = at(map.chests, fx, fy);
+      const chest = at(chests(), fx, fy);
       if (chest) { openChest(chest); return; }
       const sign = at(signs(), fx, fy);
       if (sign) { if (sign.event) G.event.run(sign.event); else G.message.show(sign.text); return; }   // event：調べると場面が流れる立て札
@@ -438,7 +440,7 @@
         }
         // 小物と人物（下にいるものほど手前）
         const things = [];
-        (map.chests || []).forEach(c => things.push({ y: c.y * T, draw: () =>
+        chests().forEach(c => things.push({ y: c.y * T, draw: () =>
           G.sprite.drawObject(ctx, G.flags.get(G.flags.chestKey(mapId, c.id)) ? 'chestOpen' : 'chest', c.x * T - cam.x, c.y * T - cam.y) }));
         signs().forEach(s => things.push({ y: s.y * T, draw: () =>
           G.sprite.drawObject(ctx, 'sign', s.x * T - cam.x, s.y * T - cam.y) }));

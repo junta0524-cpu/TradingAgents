@@ -124,6 +124,18 @@
     kakikake_tegami: { name: '書きかけの手紙', type: 'key', desc: '兵の懐にあった、書きかけの手紙。', read: () => G.DATA.rampage.ch2.letter },
   };
 
+  // ---- 専用の装備（ユーザー決定：ベルとオオナムチは全部位、タケルは番外編の場面用）----
+  // ベルの3つは、クリア後に黄泉津の宮の広間の宝箱にある（js/data/maps/yomi_palace.js）。オオナムチの専用は上の `who: ['oonamuchi']` の品。
+  Object.assign(G.DATA.items, {
+    bell_tachi:   { name: '夜見の太刀', type: 'weapon', atk: 56, wis: 14, agi: 6, crit: 0.05, who: ['bell'], desc: '黄泉の国を統べる王が佩く、銀の長剣。黄泉は古くは「夜見」と書いた。（ベル専用）' },
+    bell_koromo:  { name: '紫紺の黄泉衣', type: 'armor', def: 38, hp: 120, resist: { silence: 0 }, who: ['bell'], desc: '黒に近い紫の外套。金の蔦の縫い取りが、裾まで続く。（ベル専用）' },
+    bell_kan:     { name: '八雷の環', type: 'accessory', wis: 22, mp: 120, perk: 'firstStrike', who: ['bell'], desc: '黄泉の女神の身に宿った八つの雷の名をもつ環。敵より先に動きやすい。（ベル専用）' },
+    // タケル（番外編の臨時の仲間。最初から着けている）
+    takeru_bokuto: { name: '樫の木刀', type: 'weapon', atk: 30, who: ['c_takeru', 'b4_takeru'], desc: '斬らないと決めた勇者が握る、樫の木刀。（タケル専用）' },
+    takeru_yoroi:  { name: '白銀の礼鎧', type: 'armor', def: 40, hp: 100, who: ['c_takeru', 'b4_takeru'], desc: '金の縁取りのある白銀の鎧。傷だらけでも、磨かれている。（タケル専用）' },
+    takeru_seigyoku: { name: '青玉の留め具', type: 'accessory', hp: 80, def: 12, who: ['c_takeru', 'b4_takeru'], desc: '鎧の胸に嵌まっていた、青い石の留め具。（タケル専用）' },
+  });
+
   // 装備の能力を短く（一覧の右に出す）：攻+6 賢+4 など。特別な効き目は短い印
   const SPECIAL = { poison: '毒', venom: '猛毒', sleep: '眠', confuse: '惑', silence: '封', bind: '縛' };
   G.equipNote = it => [['atk', '攻'], ['def', '守'], ['agi', '速'], ['wis', '賢'], ['hp', 'HP'], ['mp', 'MP']]

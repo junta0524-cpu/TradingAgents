@@ -27,6 +27,12 @@
       'GffffffffccffffffffG',
       'GGGGGGGGGHHGGGGGGGGG',
     ],
+    // クリア後だけ：ベルの専用の装備（右の壁ぎわ。js/data/items.js の bell_*）
+    chests: [
+      { id: 'bell_tachi', x: 17, y: 9, item: 'bell_tachi', chapter: 13 },
+      { id: 'bell_koromo', x: 17, y: 10, item: 'bell_koromo', chapter: 13 },
+      { id: 'bell_kan', x: 17, y: 11, item: 'bell_kan', chapter: 13 },
+    ],
     warps: [
       { x: 9,  y: 12, to: 'yomi_market', tx: 11, ty: 1, dir: 'down' },
       { x: 10, y: 12, to: 'yomi_market', tx: 12, ty: 1, dir: 'down' },

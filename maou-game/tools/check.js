@@ -1593,7 +1593,21 @@ const { chromium } = require('playwright');
     GAME.encounter.enabled = false; o.lv = lv; return out.join('/');
   }), 'false/true');
   await placeAt('world_makai', 63, 70, 'left'); await wait(2500); await shot('94_world_makai_post');
-  expect('レベル99でカンスト（装備を足しても255まで）', await ev(() => { const o = GAME.party.member('oonamuchi'); while (GAME.growth.forceLevelUp(o).length) {} return `${o.lv}/${o.maxHp}/${o.maxMp}/${o.atk}/${o.def}`; }), '99/999/999/255/255');
+  expect('レベル99でカンスト（素の強さは255／999）', await ev(() => { const o = GAME.party.member('oonamuchi'); while (GAME.growth.forceLevelUp(o).length) {} return `${o.lv}/${o.base.hp}/${o.base.mp}/${o.base.atk}/${o.base.def}`; }), '99/999/999/255/255');
+  // 装備はカンストの上に上乗せ：オオナムチ Lv99（素の攻撃255）に生大刀（攻+48・賢+10）→ 303／265。合計の上限（能力999・HP/MP1999）で止まる
+  const stack = await ev(() => {
+    const keep = JSON.stringify({ state: GAME.state, flags: GAME.flags.data }), C = GAME.DATA.balance.STAT_CAP;
+    const o = GAME.party.member('oonamuchi'), b = { atk: o.base.atk, wis: o.base.wis };
+    GAME.party.addItem('akatsuki_ken'); GAME.party.equip(o, 'weapon', 'akatsuki_ken');
+    const added = o.atk === b.atk + 48 && o.wis === b.wis + 10;   // 255の上に足される（255で頭打ちにならない）
+    GAME.DATA.items.__big = { name: 'テスト', type: 'armor', def: 9999, hp: 9999, mp: 9999 };
+    const probe = { id: 'oonamuchi', lv: 99, base: { hp: 999, mp: 999, atk: 255, def: 255, agi: 255, wis: 255 }, equip: { armor: '__big' } };
+    GAME.party.recalc(probe); delete GAME.DATA.items.__big;
+    const capped = probe.def === C.TOTAL && probe.maxHp === C.TOTAL_HP && probe.maxMp === C.TOTAL_HP;
+    const k = JSON.parse(keep); GAME.state = k.state; GAME.flags.data = k.flags;
+    return `${b.atk}/${added}/${capped}`;
+  });
+  expect('装備はカンストの上に上乗せされる（上限は能力999・HP/MP1999）', stack, '255/true/true');
   await ev(() => { GAME.encounter.enabled = true; });
 
   // メニューの「いまの目的」
@@ -1765,7 +1779,7 @@ const { chromium } = require('playwright');
   await ev(() => GAME.scene.change(GAME.scenes.title())); await wait(300);
   for (let i = 0; i < 5; i++) await key('ArrowDown', 60);
   await key('KeyZ', 400);
-  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/17');
+  expect('タイトルの「遊び方」で操作と決まりが出る', await ev(() => `${GAME.scene.names().join('>')}/${GAME.DATA.howToPlay.length}`), 'タイトル>メッセージ/18');
   await closeMessages();
 
   // 思い出の帳：タイトルの7つ目。見た場面だけ選べて、見返しても記録・フラグ・場所が変わらない
