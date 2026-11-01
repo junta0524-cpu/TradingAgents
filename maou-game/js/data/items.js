@@ -127,9 +127,9 @@
   // ---- 専用の装備（ユーザー決定：ベルとオオナムチは全部位、タケルは番外編の場面用）----
   // ベルの3つは、クリア後に黄泉津の宮の広間の宝箱にある（js/data/maps/yomi_palace.js）。オオナムチの専用は上の `who: ['oonamuchi']` の品。
   Object.assign(G.DATA.items, {
-    bell_tachi:   { name: '夜見の太刀', type: 'weapon', atk: 56, wis: 14, agi: 6, crit: 0.05, who: ['bell'], desc: '黄泉の国を統べる王が佩く、銀の長剣。黄泉は古くは「夜見」と書いた。（ベル専用）' },
-    bell_koromo:  { name: '紫紺の黄泉衣', type: 'armor', def: 38, hp: 120, resist: { silence: 0 }, who: ['bell'], desc: '黒に近い紫の外套。金の蔦の縫い取りが、裾まで続く。（ベル専用）' },
-    bell_kan:     { name: '八雷の環', type: 'accessory', wis: 22, mp: 120, perk: 'firstStrike', who: ['bell'], desc: '黄泉の女神の身に宿った八つの雷の名をもつ環。敵より先に動きやすい。（ベル専用）' },
+    bell_tachi:   { name: '後手の十拳', type: 'weapon', atk: 56, wis: 14, agi: 6, crit: 0.05, who: ['bell'], desc: 'イザナギが黄泉の軍勢から逃れるとき、背に回して振り払った十拳剣。（古事記・黄泉の国）（ベル専用）' },
+    bell_koromo:  { name: '黄泉津大神の黒衣', type: 'armor', def: 38, hp: 120, resist: { silence: 0 }, who: ['bell'], desc: 'イザナミは黄泉の国の主となり、黄泉津大神と呼ばれた。その名を継ぐ王の黒い衣。（古事記・黄泉の国）（ベル専用）' },
+    bell_kan:     { name: '道反の玉', type: 'accessory', wis: 22, mp: 120, perk: 'firstStrike', who: ['bell'], desc: '黄泉の入口を塞いだ千引の岩は、道反大神と呼ばれた。通さぬと決めた者を守る玉。敵より先に動きやすい。（古事記・黄泉の国）（ベル専用）' },
     // タケル（番外編の臨時の仲間。最初から着けている）
     takeru_bokuto: { name: '樫の木刀', type: 'weapon', atk: 30, who: ['c_takeru', 'b4_takeru'], desc: '斬らないと決めた勇者が握る、樫の木刀。（タケル専用）' },
     takeru_yoroi:  { name: '白銀の礼鎧', type: 'armor', def: 40, hp: 100, who: ['c_takeru', 'b4_takeru'], desc: '金の縁取りのある白銀の鎧。傷だらけでも、磨かれている。（タケル専用）' },
