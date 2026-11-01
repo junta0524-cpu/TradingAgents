@@ -121,6 +121,11 @@ BACKGROUNDS = [
   "A dark ancient stone chamber with a shallow round hollow in the floor, glowing with a light that is neither white nor gold but all colors merged into one, soft rainbow-like glow on old carved walls and an ancient door behind."),
 ]
 
+# 版：v1＝最初にお渡しした5人。v2＝完全版で足した分（目印「追加」）。あとで足す絵は、ここに id と版を書く（例：'xxx': 'v3'）
+SINCE = {'hina': 'v1', 'hisame': 'v1', 'hal': 'v1', 'isana': 'v1', 'yuzuriha': 'v1'}
+LATEST = 'v2'
+VERSIONS = {'v2': '完全版で足した分', 'v3': 'このあとに足した分'}
+
 DONE = {
  '顔（会話の窓）': 'オオナムチ（4段階）、ベル、ベルイザナ、スクナ、コノハ、カナメ、コトシロ、ウズメ、ヒエダ、クシナダ、イシコリドメ、サルタヒコ、ユウ、タケル（怒った顔・穏やかな顔）、アマツ王（ほほえみ・本性）、ミカヅチ、スサノ、ナキメ、ハニヤス、オモイカ、クナド',
  '戦いの敵': '普通の敵55種類すべて、ボス・番人（苔の大蜘蛛・岩喰らい・風の大鷲・氷門の番人・大穴の主・黄泉の大蛇・名喰いの王・残党の将）、四天王・ベル・ベルイザナ・タケル・アマツ王の戦闘絵、冒険者ベル（力解放版は用意だけ）',
@@ -147,20 +152,22 @@ def tier(n):
     return '最優先' if n >= 29 else '次に' if n >= 11 else 'そのあと'
 
 GROUPS = []
+def since(i): return SINCE.get(i, LATEST)
 GROUPS.append(dict(key='named', title='顔グラ：名前のある人', note='会話の窓の左に出す顔。話す回数の多い順。1:1。', items=[
-    dict(id=i, name=n, role=r, file=f, tag=f'{c}回・{tier(c)}', prompt=full('face', t)) for i, n, r, f, c, t in FACES_NAMED]))
+    dict(id=i, name=n, role=r, file=f, tag=f'{c}回・{tier(c)}', prompt=full('face', t), since=since(i)) for i, n, r, f, c, t in FACES_NAMED]))
 GROUPS.append(dict(key='role', title='顔グラ：役の人', note='名前のない町の人。役ごとに1枚ずつ作れば、同じ役の人みんなで使える。', items=[
-    dict(id=i, name=n, role=r, file=f, tag='役の人', prompt=full('face', t)) for i, n, r, f, t in FACES_ROLE]))
+    dict(id=i, name=n, role=r, file=f, tag='役の人', prompt=full('face', t), since=since(i)) for i, n, r, f, t in FACES_ROLE]))
 GROUPS.append(dict(key='battle', title='戦いの絵', note='戦闘画面の敵。全身、1:1。', items=[
-    dict(id=i, name=n, role=r, file=f, tag='戦い', prompt=full('body', t)) for i, n, r, f, t in BATTLE]))
+    dict(id=i, name=n, role=r, file=f, tag='戦い', prompt=full('body', t), since=since(i)) for i, n, r, f, t in BATTLE]))
 GROUPS.append(dict(key='bg', title='場面の背景', note='会話だけの場面の1枚絵。横長3:2。いまは手描きの簡単な絵で代わりに出している。()内は場面で使う回数。', items=[
-    dict(id=i, name=n, role=r, file=f, tag='背景', prompt=full('bg', t)) for i, n, r, f, t in BACKGROUNDS]))
+    dict(id=i, name=n, role=r, file=f, tag='背景', prompt=full('bg', t), since=since(i)) for i, n, r, f, t in BACKGROUNDS]))
 
 TOTAL = sum(len(g['items']) for g in GROUPS)
+NEW = sum(1 for g in GROUPS for it in g['items'] if it['since'] != 'v1')
 
 def build_md():
     L = ['# イラスト生成プロンプト 完全版（現時点）', '',
-         f'これから作る絵は全部で **{TOTAL}枚**。各項目の文は、そのまま貼れる完成形（共通の絵柄＋構図＋その絵の文＋「基準の絵に合わせる」の1行）。',
+         f'これから作る絵は全部で **{TOTAL}枚**（うち、完全版で足した **{NEW}枚** には見出しに【追加】の目印）。各項目の文は、そのまま貼れる完成形（共通の絵柄＋構図＋その絵の文＋「基準の絵に合わせる」の1行）。',
          'スマホでコピーしやすいページ版：`docs/イラスト生成プロンプト_完全版.html`（公開ページは作業の報告に書いたリンク）。',
          '最初に作った第1弾〜第3弾の文は `docs/イラスト生成プロンプト.md` にある（できている絵の作り直し用）。', '',
          '## 1. できている絵', '']
@@ -172,12 +179,12 @@ def build_md():
     for g in GROUPS:
         L += ['', f'## {n}. {g["title"]}（{len(g["items"])}枚）', '', g['note'], '']
         for it in g['items']:
-            L += [f'### {it["name"]}　`{it["file"]}`', f'{it["role"]}　／　{it["tag"]}', '```', it['prompt'], '```', '']
+            L += [f'### {"【追加】" if it["since"] != "v1" else ""}{it["name"]}　`{it["file"]}`', f'{it["role"]}　／　{it["tag"]}', '```', it['prompt'], '```', '']
         n += 1
     return '\n'.join(L).rstrip('\n') + '\n'
 
 def build_html():
-    data = json.dumps(dict(groups=GROUPS, done=DONE, tips=TIPS, style_char=STYLE_CHAR, style_bg=STYLE_BG, ref=REF, total=TOTAL), ensure_ascii=False)
+    data = json.dumps(dict(groups=GROUPS, done=DONE, tips=TIPS, style_char=STYLE_CHAR, style_bg=STYLE_BG, ref=REF, total=TOTAL, new=NEW, latest=LATEST, versions=VERSIONS), ensure_ascii=False)
     data = data.replace('</', '<\\/')
     return HTML.replace('/*DATA*/', data).replace('__TOTAL__', str(TOTAL))
 
@@ -199,6 +206,7 @@ HTML = '''<!DOCTYPE html>
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #12151c; --card: #1b2030; --ink: #e8ecf4; --sub: #9aa5ba; --line: #2c3448; --accent: #ff5fc8; --accent-ink: #1a0b14; --ok: #5fd09a; --code: #151a27; color-scheme: dark; } }
 :root[data-theme="dark"] { --bg: #12151c; --card: #1b2030; --ink: #e8ecf4; --sub: #9aa5ba; --line: #2c3448; --accent: #ff5fc8; --accent-ink: #1a0b14; --ok: #5fd09a; --code: #151a27; color-scheme: dark; }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); line-height: 1.7; }
 .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 80px; display: flex; flex-direction: column; gap: 20px; }
@@ -223,6 +231,10 @@ section { display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 5
 .role { color: var(--sub); font-size: .85rem; }
 .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: .78rem; }
 .pill { background: var(--code); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; }
+.pill.new { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.item.isnew { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, var(--card)), var(--card) 60%); }
+button.filter[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+button.filter { padding: 6px 12px; min-height: 0; border-radius: 999px; font-size: .85rem; }
 code.file { background: var(--code); border-radius: 6px; padding: 1px 7px; font-size: .78rem; }
 pre { margin: 0; background: var(--code); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: .78rem/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9.5em; overflow: auto; }
 pre.open { max-height: none; }
@@ -243,7 +255,7 @@ dd { margin: 0; color: var(--sub); font-size: .85rem; }
 <div class="wrap">
   <header>
     <h1>イラスト・プロンプト完全版</h1>
-    <p class="lead">『魔王が仲間になりたそうな顔でこちらを見ている』に、これから足す絵のプロンプトを、そのまま貼れる形でまとめました。1枚ずつ「コピー」を押して、Geminiに貼ってください。</p>
+    <p class="lead">『魔王が仲間になりたそうな顔でこちらを見ている』に、これから足す絵のプロンプトを、そのまま貼れる形でまとめました。1枚ずつ「コピー」を押して、Geminiに貼ってください。<b style="color:var(--accent)">「追加」</b>の目印は、最初にお渡しした5人のあとに足した分です。</p>
   </header>
   <div class="tiles" id="tiles"></div>
 
@@ -292,6 +304,7 @@ function progress() {
 (function init() {
   const tiles = $('#tiles');
   tiles.append(el('div', { class: 'tile' }, el('b', { text: String(DATA.total) }), el('span', { text: 'これから作る絵' })));
+  tiles.append(el('div', { class: 'tile', style: 'border-color:var(--accent)' }, el('b', { text: String(DATA.new), style: 'color:var(--accent)' }), el('span', { text: '追加（完全版で足した分）' })));
   DATA.groups.forEach(g => tiles.append(el('div', { class: 'tile', 'data-g': g.key }, el('b', { text: String(g.items.length) }), el('span', { text: g.title }))));
   DATA.tips.forEach(t => $('#tips').append(el('li', { text: t })));
   const common = $('#common');
@@ -301,12 +314,16 @@ function progress() {
   });
   Object.entries(DATA.done).forEach(([k, v]) => { $('#done').append(el('dt', { text: k }), el('dd', { text: v })); });
   const nav = $('#nav'); nav.append(el('span', { class: 'prog', id: 'prog', style: 'align-self:center;margin-right:4px' }));
+  const flt = el('button', { class: 'filter', type: 'button', 'aria-pressed': 'false', text: '追加だけ表示' });
+  flt.addEventListener('click', () => { const on = flt.getAttribute('aria-pressed') !== 'true'; flt.setAttribute('aria-pressed', String(on)); flt.textContent = on ? '全部表示にもどす' : '追加だけ表示'; document.querySelectorAll('.item').forEach(c => { c.hidden = on && c.dataset.new !== '1'; }); document.querySelectorAll('#groups section').forEach(sec => { sec.hidden = on && !sec.querySelector('.item:not([hidden])'); }); });
+  nav.append(flt);
   const host = $('#groups');
   DATA.groups.forEach(g => {
     nav.append(el('a', { href: '#' + g.key, text: `${g.title.replace('顔グラ：', '顔：')}（${g.items.length}）` }));
     const sec = el('section', { id: g.key }, el('div', {}, el('h2', { text: g.title }), el('p', { class: 'lead', text: g.note })));
     g.items.forEach(it => {
-      const card = el('div', { class: 'item' + (store.get(it.id) ? ' done' : '') });
+      const isNew = it.since !== 'v1';
+      const card = el('div', { class: 'item' + (isNew ? ' isnew' : '') + (store.get(it.id) ? ' done' : ''), 'data-new': isNew ? '1' : '0' });
       const chk = el('input', { type: 'checkbox', id: 'c-' + it.id }); chk.checked = !!store.get(it.id);
       chk.addEventListener('change', () => { store.set(it.id, chk.checked); card.classList.toggle('done', chk.checked); progress(); });
       const copy = el('button', { class: 'copy', type: 'button', text: 'コピー' }); copy.addEventListener('click', () => copyText(it.prompt, copy));
@@ -314,7 +331,7 @@ function progress() {
       more.addEventListener('click', () => { const o = pre.classList.toggle('open'); more.textContent = o ? 'たたむ' : '全文を見る'; });
       card.append(
         el('div', { class: 'head' }, el('div', {}, el('div', { class: 'name', text: it.name }), el('div', { class: 'role', text: it.role })),
-          el('div', { class: 'meta' }, el('span', { class: 'pill', text: it.tag }), el('code', { class: 'file', text: it.file }))),
+          el('div', { class: 'meta' }, ...(isNew ? [el('span', { class: 'pill new', text: '追加' })] : []), el('span', { class: 'pill', text: it.tag }), el('code', { class: 'file', text: it.file }))),
         pre,
         el('div', { class: 'row' }, copy, more, el('label', { class: 'chk', for: 'c-' + it.id }, chk, document.createTextNode('作った'))));
       sec.append(card);
