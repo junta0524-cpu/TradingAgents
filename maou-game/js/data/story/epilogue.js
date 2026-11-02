@@ -139,6 +139,7 @@
     S(BELL, '「半分ずつだ」'),
     S(OO, '「半分ずつ、ですね」'),
     // ---- 七：橋の上で ----
+    { t: 'bgm', name: 'dawn' },
     ...scene('hirasaka', [{ look: 'bell_true', x: 220, y: 250, dir: 'up' }, { look: 'oonamuchi', x: 260, y: 250, dir: 'up' }, { look: 'kunado', x: 380, y: 256, dir: 'left' }]),
     N('夜明け前、比良坂の縁に、二つの影が、並んで立っていた。'),
     N('境ではなく、橋になったのだ、と思った。'),

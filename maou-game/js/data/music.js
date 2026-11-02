@@ -34,6 +34,21 @@
       ch11_start: 'yomi', ch11_naki: 'shrine', ch11_fest: 'festival', ch11_takeru: 'tension',
       ch12_start: 'tension', ch12_battle: 'tension',
       post_door: 'shrine',
+      // 第二弾（本編の穴・クリア後）
+      ch1_start: 'burn', ch2_start: 'ambush', ch3_balcony_hint: 'whisper', ch7_secret: 'whisper',
+      ch8_wait: 'city', ch9_caught: 'chase', ch11_mika: 'oni', ch11_susa: 'storm', ch12_battle: 'throne',
+      post_start: 'warm', post_intro: 'warm', post_hani: 'master', post_mika: 'oni', post_naki: 'master', post_omoika: 'memory',
+      post_kunado: 'shrine', post_altar1: 'shrine', post_altar2: 'shrine', post_altar3: 'shrine', post_shrine_open: 'shrine',
+    },
+    // 寄り道クエストのあいだの曲（クエストの id → 場所の曲の代わり。マップに bgm があればそちらが先）
+    sq: {
+      ch01_5: 'burn', ch02_5: 'burn', ch03_5: 'whisper', ch04_5: 'town', ch05_5: 'forest', ch06_5: 'mountain', ch07_5: 'wild', ch08_5: 'city',
+      ch11_5: 'master', ch12_5: 'warm', bangai1: 'memory', bangai2: 'chase', bangai3: 'abyss', bangai4: 'wild', bangai5: 'sad', bangai6: 'festival',
+    },
+    // 戦いの曲（場所の名前の頭 → 曲。ボス・手合わせ・王戦が先）
+    battle: {
+      prefixes: [['yomi_fuchi', 'battle_abyss'], ['oana', 'battle_abyss'], ['world_makai', 'battle_yomi'], ['yomi', 'battle_yomi'], ['tsunogahara', 'battle_yomi'], ['arashigamine', 'battle_yomi']],
+      enemies: { bell_final: 'duel', bell_t: 'duel', bell_t_power: 'duel', mikazuchi_t: 'oni', susano_t: 'storm', haniyasu_t: 'master', nakime_t: 'master' },
     },
   };
 
@@ -41,8 +56,20 @@
   G.musicForMap = (mapId, map) => {
     const M = G.DATA.music;
     if (map && map.bgm) return map.bgm;
+    const q = G.sq && G.sq.active && G.sq.active();
+    if (q && M.sq && M.sq[q]) return M.sq[q];
     if (M.maps[mapId]) return M.maps[mapId];
     const p = M.prefixes.find(([head]) => mapId.startsWith(head));
     return p ? p[1] : (map && map.encounter ? 'field' : 'town');
+  };
+
+  // 戦いの曲：敵ごと（手合わせの師・ベル）→ 場所 → ふつう。ボス・王戦は呼ぶ側が先に決める
+  G.musicForBattle = (group, opts, base) => {
+    const B = G.DATA.music.battle;
+    const e = (group || []).map(id => B.enemies[id]).find(Boolean);
+    if (e) return e;
+    if (opts && opts.training || base === 'boss') return base;
+    const id = G.state && G.state.mapId, hit = id && B.prefixes.find(([h]) => id.startsWith(h));
+    return hit ? hit[1] : base;
   };
 })();

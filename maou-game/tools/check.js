@@ -1358,6 +1358,10 @@ const { chromium } = require('playwright');
     const S = GAME.sound.SONGS, bad = [];
     Object.entries(GAME.DATA.maps).forEach(([id, m]) => { if (!S[GAME.musicForMap(id, m)]) bad.push(id); });
     Object.entries(GAME.DATA.music.events).forEach(([id, n]) => { if (!S[n] || !GAME.DATA.events[id]) bad.push(id); });
+    Object.values(GAME.DATA.music.sq).forEach(n => { if (!S[n]) bad.push('sq:' + n); });
+    const B = GAME.DATA.music.battle;
+    Object.values(B.enemies).concat(B.prefixes.map(x => x[1])).forEach(n => { if (!S[n]) bad.push('battle:' + n); });
+    Object.keys(B.enemies).forEach(id => { if (!GAME.DATA.enemies[id]) bad.push('enemy:' + id); });
     return bad.join('、') || 'なし';
   }), 'なし');
   expect('曲：場所ごと（森・山・荒野・洞窟・王都・貧民区・院・宮・大穴・人間界・魔界）', await ev(() => ['hijiri_village', 'ro_path', 'kemono_field', 'ro_mine', 'amatsu', 'amatsu_slum', 'yasuragi', 'yomi_palace', 'oana_jou', 'world_ningen', 'world_makai'].map(id => GAME.musicForMap(id, GAME.DATA.maps[id])).join(',')),

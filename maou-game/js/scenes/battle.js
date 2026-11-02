@@ -44,7 +44,8 @@
     const CH = opts.chant || null;
     const prevBgm = G.sound.current();   // 戦いが終わったら、もとの曲へ戻す
     // 曲：12章の王戦＝final、手合わせ＝training、ボス（1体）＝boss、ふつう＝battle
-    G.sound.bgm(CH ? 'final' : opts.training ? 'training' : opts.boss && group.length === 1 ? 'boss' : 'battle');
+    const baseSong = CH ? 'final' : opts.training ? 'training' : opts.boss && group.length === 1 ? 'boss' : 'battle';
+    G.sound.bgm(CH ? baseSong : G.musicForBattle(group, opts, baseSong));
     if (CH) st.chant = 0;
     const watching = G.state.split === 'watch';   // ベルは画面の端で見守るだけ
     const party = st.party, enemies = st.enemies;
