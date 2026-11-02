@@ -26,7 +26,7 @@
   // ---- スサノの手合わせの相手：11章のオオナムチ（倒しきれない。SPAR_ROUNDS ラウンド目で勝ち）----
   const otte = G.DATA.enemies.otte || {};
   G.DATA.enemies.oonamuchi_t = Object.assign({
-    name: 'オオナムチ', counter: '人', exp: 0, copper: 0, spare: true,
+    name: 'オオナムチ', counter: '人', exp: 0, copper: 0, spare: true, big: true, artScale: 6,
     palette: { K: '#120e16', H: '#5a3a22', D: '#7a6a4a', E: '#2a2a2a', W: '#e8e0c8' },
     sprite: otte.sprite,
   }, B.SPAR_ENEMY);
