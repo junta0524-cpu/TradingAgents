@@ -88,7 +88,8 @@ BATTLE = [
   "A monster made of tangled thick green vines with thorns, a rough face-like hollow in the knot at its center with two dim glowing eyes, vine tendrils reaching out. Dark green and brown."),
 ]
 
-BACKGROUNDS = [
+BACKGROUNDS_DONE = [  # ゲームに入れた背景（作り直し用に文を残す）
+
  ('balcony', '宮の露台（10回）', '黄泉津の宮の露台。夜', 'bg_balcony.png',
   "A stone balcony of the underworld palace at night: a worn stone railing, carved pillars, a deep red sky with a pale crimson moon, a view over dark underworld fields with tiny lantern lights far below."),
  ('scorched_after', '根の洲、数か月後（8回）', '焼け跡に緑が戻り始めた朝', 'bg_scorched_after.png',
@@ -126,10 +127,12 @@ SINCE = {'hina': 'v1', 'hisame': 'v1', 'hal': 'v1', 'isana': 'v1', 'yuzuriha': '
 LATEST = 'v2'
 VERSIONS = {'v2': '完全版で足した分', 'v3': 'このあとに足した分'}
 
+BACKGROUNDS = []   # 作る背景が増えたら、ここに足す（形は BACKGROUNDS_DONE と同じ）
+
 DONE = {
  '顔（会話の窓）': 'オオナムチ（4段階）、ベル、ベルイザナ、スクナ、コノハ、カナメ、コトシロ、ウズメ、ヒエダ、クシナダ、イシコリドメ、サルタヒコ、ユウ、タケル（怒った顔・穏やかな顔）、アマツ王（ほほえみ・本性）、ミカヅチ、スサノ、ナキメ、ハニヤス、オモイカ、クナド',
  '戦いの敵': '普通の敵55種類すべて、ボス・番人（苔の大蜘蛛・岩喰らい・風の大鷲・氷門の番人・大穴の主・黄泉の大蛇・名喰いの王・残党の将）、四天王・ベル・ベルイザナ・タケル・アマツ王の戦闘絵、冒険者ベル（力解放版は用意だけ）',
- '場面の背景': 'scorched・palace・fields・hirasaka・roundtable・fortress・temple・sanatorium・well_night・workshop・forest_day・city・harvest（13枚）',
+ '場面の背景': 'scorched・palace・fields・hirasaka・roundtable・fortress・temple・sanatorium・well_night・workshop・forest_day・city・harvest（13枚）に加えて、露台・焼け跡の数か月後・屋根裏・宿の部屋・葛の里の昼・大穴の縁の回廊・牢・月夜の森・隠れ家・祝賀の夜・街道・会談の間・夕暮れの丘・祝賀の壇上・試練の窪み（15枚。ゲームに入れた。作る絵の一覧からは外した）。計28枚',
  '戦いの背景': 'field・forest・mountain・wild・night、throne・oni_arena・storm_crag・feather_hall・hani_terrace（10枚）',
 }
 
@@ -159,7 +162,7 @@ GROUPS.append(dict(key='role', title='顔グラ：役の人', note='名前のな
     dict(id=i, name=n, role=r, file=f, tag='役の人', prompt=full('face', t), since=since(i)) for i, n, r, f, t in FACES_ROLE]))
 GROUPS.append(dict(key='battle', title='戦いの絵', note='戦闘画面の敵。全身、1:1。', items=[
     dict(id=i, name=n, role=r, file=f, tag='戦い', prompt=full('body', t), since=since(i)) for i, n, r, f, t in BATTLE]))
-GROUPS.append(dict(key='bg', title='場面の背景', note='会話だけの場面の1枚絵。横長3:2。いまは手描きの簡単な絵で代わりに出している。()内は場面で使う回数。', items=[
+if BACKGROUNDS: GROUPS.append(dict(key='bg', title='場面の背景', note='会話だけの場面の1枚絵。横長3:2。いまは手描きの簡単な絵で代わりに出している。()内は場面で使う回数。', items=[
     dict(id=i, name=n, role=r, file=f, tag='背景', prompt=full('bg', t), since=since(i)) for i, n, r, f, t in BACKGROUNDS]))
 
 TOTAL = sum(len(g['items']) for g in GROUPS)
