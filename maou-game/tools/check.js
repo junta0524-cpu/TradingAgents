@@ -1360,7 +1360,7 @@ const { chromium } = require('playwright');
     Object.entries(GAME.DATA.music.events).forEach(([id, n]) => { if (!S[n] || !GAME.DATA.events[id]) bad.push(id); });
     Object.values(GAME.DATA.music.sq).forEach(n => { if (!S[n]) bad.push('sq:' + n); });
     const B = GAME.DATA.music.battle;
-    Object.values(B.enemies).concat(B.prefixes.map(x => x[1])).forEach(n => { if (!S[n]) bad.push('battle:' + n); });
+    [B.awaken, B.bossPost].concat(Object.values(B.enemies)).concat(B.prefixes.map(x => x[1])).forEach(n => { if (!S[n]) bad.push('battle:' + n); });
     Object.keys(B.enemies).forEach(id => { if (!GAME.DATA.enemies[id]) bad.push('enemy:' + id); });
     return bad.join('、') || 'なし';
   }), 'なし');

@@ -47,7 +47,8 @@
     },
     // 戦いの曲（場所の名前の頭 → 曲。ボス・手合わせ・王戦が先）
     battle: {
-      prefixes: [['yomi_fuchi', 'battle_abyss'], ['oana', 'battle_abyss'], ['world_makai', 'battle_yomi'], ['yomi', 'battle_yomi'], ['tsunogahara', 'battle_yomi'], ['arashigamine', 'battle_yomi']],
+      prefixes: [['hijiri', 'battle_forest'], ['ro_', 'battle_wild'], ['kemono', 'battle_wild'], ['yomi_fuchi', 'battle_abyss'], ['oana', 'battle_abyss'], ['world_makai', 'battle_yomi'], ['yomi', 'battle_yomi'], ['tsunogahara', 'battle_yomi'], ['arashigamine', 'battle_yomi']],
+      awaken: 'battle_sorrow', bossPost: 'boss_post',
       enemies: { bell_final: 'duel', bell_t: 'duel', bell_t_power: 'duel', mikazuchi_t: 'oni', susano_t: 'storm', haniyasu_t: 'master', nakime_t: 'master' },
     },
   };
@@ -68,7 +69,9 @@
     const B = G.DATA.music.battle;
     const e = (group || []).map(id => B.enemies[id]).find(Boolean);
     if (e) return e;
-    if (opts && opts.training || base === 'boss') return base;
+    if (opts && opts.training) return base;
+    if (base === 'boss') return G.state && G.state.chapter >= 13 ? B.bossPost : base;
+    if ((group || []).some(id => (G.DATA.enemies[id] || {}).awaken)) return B.awaken;
     const id = G.state && G.state.mapId, hit = id && B.prefixes.find(([h]) => id.startsWith(h));
     return hit ? hit[1] : base;
   };
