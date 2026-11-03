@@ -1,5 +1,6 @@
 // このファイルの役目：セーブ（記録）。ブラウザの中（localStorage）に、3枠＋自動保存1枠で記録する。
 // 記録を「文字」にして書き出す・読み込む機能もある（別のパソコンへ持っていくときなど）。
+// 公開ページ（claude.ai）ではブラウザの保存が消えることがあるので、自分専用のクラウド（db）にも写す（無ければ localStorage だけ）。
 // 記録には version（形式の番号）を入れる。形式を変えたら VERSION を上げて、古い記録の直し方を足す。
 (function () {
   const G = window.GAME = window.GAME || {};
@@ -12,14 +13,73 @@
 
   const clone = o => JSON.parse(JSON.stringify(o));
 
-  function store(key, value) {
+  // ---- クラウドへの写し（自分専用の領域 data/users/<id>/<キー>。ゲームを閉じても残る）----
+  // 状態：off＝使えない／connecting＝つなぎ中／ok＝写している／error＝つなげなかった
+  const cloud = { col: null, status: 'off', timers: {}, busy: {}, again: {} };
+  const MIRROR_KEYS = () => SLOTS.map(s => PREFIX + s).concat([SETTINGS_KEY, 'maou_memories', 'maou_kenbun']);
+  const raw = key => { try { const v = localStorage.getItem(key); if (v != null) return v; } catch (e) { /* 使えない */ } return memory[key] != null ? memory[key] : null; };
+
+  function cloudPut(key) {
+    if (!cloud.col) return;
+    if (cloud.busy[key]) { cloud.again[key] = true; return; }   // 1つの文書には1度に1回だけ書く
+    const v = raw(key);
+    if (v == null) return;
+    cloud.busy[key] = true;
+    cloud.col.doc(key).set({ v, t: Date.now() })
+      .catch(() => { cloud.status = 'error'; })
+      .then(() => { cloud.busy[key] = false; if (cloud.again[key]) { cloud.again[key] = false; cloudPut(key); } });
+  }
+  // 少しまとめてから写す（自動保存は歩くたびに起こるので）
+  function mirror(key) {
+    if (!cloud.col) return;
+    clearTimeout(cloud.timers[key]);
+    cloud.timers[key] = setTimeout(() => cloudPut(key), 1200);
+  }
+
+  function store(key, value, noMirror) {
     memory[key] = value;
-    try { localStorage.setItem(key, value); return true; } catch (e) { return false; }
+    let ok = false;
+    try { localStorage.setItem(key, value); ok = true; } catch (e) { /* 使えない */ }
+    if (!noMirror) mirror(key);
+    return ok;
   }
-  function load(key) {
-    try { const v = localStorage.getItem(key); if (v != null) return v; } catch (e) { /* 使えない */ }
-    return memory[key] != null ? memory[key] : null;
+
+  function savedAtOf(v) { try { return JSON.parse(v).savedAt || 0; } catch (e) { return 0; } }
+
+  // つないで、クラウドと手元を合わせる：記録は新しいほう、設定・見聞録は手元がなければクラウドから、思い出の帳は合わせる
+  async function initCloud() {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      cloud.status = 'connecting';
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      const uid = db && user && user.id ? await user.id() : null;
+      if (!uid) { cloud.status = 'off'; return; }
+      const col = db.collection('data/users/' + uid);
+      const snap = await Promise.race([col.get(), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))]);
+      const remote = {};
+      snap.docs.forEach(d => { const x = d.data(); if (x && typeof x.v === 'string') remote[d.id] = x.v; });
+      cloud.col = col;
+      let changed = false;
+      MIRROR_KEYS().forEach(key => {
+        const local = raw(key), far = remote[key];
+        if (far == null) { if (local != null) cloudPut(key); return; }
+        if (local == null) { store(key, far, true); changed = true; return; }
+        if (local === far) return;
+        if (key.startsWith(PREFIX)) {
+          if (savedAtOf(far) > savedAtOf(local)) { store(key, far, true); changed = true; } else cloudPut(key);
+        } else if (key === 'maou_memories') {
+          try {
+            const u = JSON.stringify([...new Set(JSON.parse(local).concat(JSON.parse(far)))]);
+            if (u !== local) { store(key, u, true); changed = true; }
+            if (u !== far) cloudPut(key);
+          } catch (e) { /* 壊れていたら手元のまま */ }
+        } else cloudPut(key);   // 設定・見聞録は、いま遊んでいる手元を優先
+      });
+      cloud.status = 'ok';
+      if (changed) { G.save.loadSettings(); G.save.syncCount++; }
+    } catch (e) { cloud.status = 'error'; cloud.col = null; }
   }
+  const load = raw;
 
   function snapshot() {
     return { version: VERSION, savedAt: Date.now(), state: clone(G.state), flags: clone(G.flags.data) };
@@ -33,7 +93,10 @@
   function decode(str) { return JSON.parse(decodeURIComponent(escape(atob(str.trim())))); }
 
   G.save = {
-    VERSION, SLOTS,
+    VERSION, SLOTS, syncCount: 0,
+    cloudStatus() { return cloud.status; },
+    mirror,   // localStorage に直接書く場所（思い出の帳・見聞録）が、書いたあとに呼ぶ
+    initCloud,
     slotName(slot) { return slot === 'auto' ? '自動' : `記録${slot}`; },
 
     write(slot) {

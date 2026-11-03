@@ -10,6 +10,7 @@
   }
   function store(set) {
     try { localStorage.setItem(KEY, JSON.stringify([...set])); } catch (e) { /* 覚えられなくても遊べる */ }
+    if (G.save && G.save.mirror) G.save.mirror(KEY);
   }
   const M = () => G.DATA.memories;
   const entry = id => M().list.find(m => m.id === id);

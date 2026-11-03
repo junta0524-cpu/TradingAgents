@@ -58,12 +58,14 @@
     ];
     const menu = new G.ui.Menu(makeItems(), { x: 152, y: 168, w: 176, cancelable: false });
     G.sound.bgm('title');
+    let synced = G.save.syncCount;
 
     return {
       name: 'タイトル',
       opaque: true,
       resume() { menu.items = makeItems(); },
       update() {
+        if (synced !== G.save.syncCount) { synced = G.save.syncCount; menu.items = makeItems(); }   // クラウドの記録が届いたら、つづきからを選べるように
         const res = menu.update();
         if (!res || res.type !== 'select' || res.item.disabled) return;
         if (res.index === 0) G.story.newGame();
@@ -89,6 +91,10 @@
         if (G.save.SLOTS.some(s => { const d = G.save.read(s); return d && d.state.cleared; })) r.text('★ クリア後の扉が、開いている', r.W / 2, 154, '#f0e8a0', 'center');
         menu.draw();
         r.text('F1：デバッグメニュー', r.W - 8, r.H - 18, '#666', 'right');
+        // 記録の置き場所の案内（クラウドにも写しているか）
+        const cs = G.save.cloudStatus();
+        const note = cs === 'ok' ? '記録はクラウドにも保存中' : cs === 'connecting' ? 'クラウドにつなぎ中…' : cs === 'error' ? 'クラウドにつなげません（この端末だけに保存）' : '記録はこの端末だけに保存';
+        r.text(note, 8, r.H - 18, cs === 'ok' ? '#7ac47a' : '#888');
       },
     };
   };

@@ -15,6 +15,7 @@
     guide: true,           // true：いまの目的の行き先を光らせる（js/systems/guide.js）
   };
   G.save.loadSettings();
+  G.save.initCloud();   // 公開ページなら、クラウドの記録も取り込む（終わるとタイトルが更新される）
   G.frame = 0;
 
   const STEP = 1000 / 60;

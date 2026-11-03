@@ -8,7 +8,7 @@
   function load() {
     try { const d = JSON.parse(localStorage.getItem(KEY) || '{}'); return { e: d.e || {}, k: d.k || {}, i: d.i || {} }; } catch (e) { return { e: {}, k: {}, i: {} }; }
   }
-  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { /* 覚えられなくても遊べる */ } }
+  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { /* 覚えられなくても遊べる */ } if (G.save && G.save.mirror) G.save.mirror(KEY); }
 
   // 見聞録に載せるもの（言霊は物語だけの特別なもの・言伝を除く。品は大事なもの（鍵や手紙）を除く）
   const enemyIds = () => Object.keys(G.DATA.enemies);
