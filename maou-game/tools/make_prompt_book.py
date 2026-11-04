@@ -16,10 +16,6 @@ BODY = ("Full-body battle sprite, facing the viewer, centered, whole body visibl
 
 # 各項目：id, 名前, 役・場面, ファイル名, 文、（話す回数など）
 FACES_NAMED = [
- ('hina', 'ヒナ', '貧民区の少女。ミオの娘（8.5章・番外編三）', 'face_hina.png', 43,
-  "A small human girl of about six. Big, round, clear eyes looking straight ahead, soft black hair tied in two short bunches, a thin but rosy face. A patched, faded homespun top in muted brown and cream. She holds a tiny unglazed clay pot with a small green sprout. Shy, hopeful expression, eyes a little teary."),
- ('hisame', 'ヒサメ', '若い鬼の看守（2.5章）', 'face_hisame.png', 38,
-  "A young oni (demon) prison guard in his early twenties. Short unkempt black hair, two short ivory horns, reddish-brown skin, amber-yellow eyes, an earnest, nervous expression with a slight frown. A plain dark guard's tunic with a studded leather vest. The end of a thick iron club rests on his shoulder."),
  ('hal', 'ハル', '耳の先が尖った少年（ひなた野・番外編六）', 'face_hal.png', 34,
   "A thin boy of about eleven with slightly pointed elf-blood ears, tousled brown hair and large honest brown eyes, a few freckles. A worn hemp tunic in muted green-brown with a thin scarf. A shy, earnest expression, as if reading something precious."),
  ('isana', 'イサナ', 'ミナモの港の老人（4.5章）', 'face_isana.png', 34,
@@ -80,12 +76,6 @@ FACES_ROLE = [
 ]
 
 BATTLE = [
- ('oonamuchi_t', 'オオナムチ（四天王編で戦う相手）', '四天王編で、ハニヤスたちが手合わせする相手。③魔界の修行の姿（全身）', 'enemy_oonamuchi_t.png',
-  "A young adventurer-hero in a fighting stance, full body, holding a worn old short dagger with a small flame resting on the blade. Spiky brown hair tied back with red beads and a black feather. Brown cloak with a patch and a grey fur collar (a gift of the storm-wolf tribe), leather armor, a red oni-forged gauntlet on one arm, a violet-dyed sash. Focused, calm expression."),
- ('morigumo', '森蜘蛛', '5.5章の敵。苔の大蜘蛛より小さい普通の蜘蛛', 'enemy_morigumo.png',
-  "A forest spider, small and fast, dark green body with pale moss-colored spots and long thin legs, glowing yellow eyes, lurking in a leafy forest mood."),
- ('tsuta', '絡み蔦', '仕掛けの敵。蔦の化け物', 'enemy_tsuta.png',
-  "A monster made of tangled thick green vines with thorns, a rough face-like hollow in the knot at its center with two dim glowing eyes, vine tendrils reaching out. Dark green and brown."),
 ]
 
 BACKGROUNDS_DONE = [  # ゲームに入れた背景（作り直し用に文を残す）
@@ -123,15 +113,15 @@ BACKGROUNDS_DONE = [  # ゲームに入れた背景（作り直し用に文を�
 ]
 
 # 版：v1＝最初にお渡しした5人。v2＝完全版で足した分（目印「追加」）。あとで足す絵は、ここに id と版を書く（例：'xxx': 'v3'）
-SINCE = {'hina': 'v1', 'hisame': 'v1', 'hal': 'v1', 'isana': 'v1', 'yuzuriha': 'v1'}
+SINCE = {'hal': 'v1', 'isana': 'v1', 'yuzuriha': 'v1'}
 LATEST = 'v2'
 VERSIONS = {'v2': '完全版で足した分', 'v3': 'このあとに足した分'}
 
 BACKGROUNDS = []   # 作る背景が増えたら、ここに足す（形は BACKGROUNDS_DONE と同じ）
 
 DONE = {
- '顔（会話の窓）': 'オオナムチ（4段階）、ベル、ベルイザナ、スクナ、コノハ、カナメ、コトシロ、ウズメ、ヒエダ、クシナダ、イシコリドメ、サルタヒコ、ユウ、タケル（怒った顔・穏やかな顔）、アマツ王（ほほえみ・本性）、ミカヅチ、スサノ、ナキメ、ハニヤス、オモイカ、クナド',
- '戦いの敵': '普通の敵55種類すべて、ボス・番人（苔の大蜘蛛・岩喰らい・風の大鷲・氷門の番人・大穴の主・黄泉の大蛇・名喰いの王・残党の将）、四天王・ベル・ベルイザナ・タケル・アマツ王の戦闘絵、冒険者ベル（力解放版は用意だけ）',
+ '顔（会話の窓）': 'ヒナ、ヒサメ、オオナムチ（4段階）、ベル、ベルイザナ、スクナ、コノハ、カナメ、コトシロ、ウズメ、ヒエダ、クシナダ、イシコリドメ、サルタヒコ、ユウ、タケル（怒った顔・穏やかな顔）、アマツ王（ほほえみ・本性）、ミカヅチ、スサノ、ナキメ、ハニヤス、オモイカ、クナド',
+ '戦いの敵': '絡み蔦・森蜘蛛・オオナムチ（四天王編）、普通の敵55種類すべて、ボス・番人（苔の大蜘蛛・岩喰らい・風の大鷲・氷門の番人・大穴の主・黄泉の大蛇・名喰いの王・残党の将）、四天王・ベル・ベルイザナ・タケル・アマツ王の戦闘絵、冒険者ベル（力解放版は用意だけ）',
  '場面の背景': 'scorched・palace・fields・hirasaka・roundtable・fortress・temple・sanatorium・well_night・workshop・forest_day・city・harvest（13枚）に加えて、露台・焼け跡の数か月後・屋根裏・宿の部屋・葛の里の昼・大穴の縁の回廊・牢・月夜の森・隠れ家・祝賀の夜・街道・会談の間・夕暮れの丘・祝賀の壇上・試練の窪み（15枚。ゲームに入れた。作る絵の一覧からは外した）。計28枚',
  '戦いの背景': 'field・forest・mountain・wild・night、throne・oni_arena・storm_crag・feather_hall・hani_terrace（10枚）',
 }
