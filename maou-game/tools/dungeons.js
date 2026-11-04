@@ -87,7 +87,7 @@ async function run(page, expect) {
     await face(dir); await page.keyboard.press('KeyZ'); await wait(250);
     for (let i = 0; i < 12; i++) {
       const s = await scenes();
-      if (s === 'マップ') break;
+      if (s === 'マップ') { await wait(200); if ((await scenes()) === 'マップ') break; continue; }   // 窓が出るまで少し遅れることがあるので、二度見て確かめる
       await page.keyboard.press('KeyZ'); await wait(200);   // 確認は最初が「はい」
     }
     await idle();
@@ -299,6 +299,7 @@ if (require.main === module) {
     const page = await browser.newPage({ viewport: { width: 960, height: 640 } });
     const errors = [], fails = [];
     page.on('pageerror', e => errors.push(e.message));
+    await page.addInitScript(() => { window.__hushSq = true; });   // 寄り道クエストの「遊びますか？」を聞かない（check.js と同じ）
     await page.goto('file://' + require('path').resolve(__dirname, '..', 'index.html'));
     await page.waitForTimeout(400);
     const expect = (label, got, want) => {
