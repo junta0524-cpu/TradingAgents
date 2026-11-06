@@ -68,9 +68,10 @@ def parse_plus(fn, fid, label, title):
     secs = [x for x in secs if x['p'] or x['h']]
     return dict(id=fid, label=label, title=title, chars=sum(len(q) for x in secs for q in x['p']), sections=secs)
 groups.append(dict(name='試作（読んで決めるための試し読み）', note='本編の加筆と前日譚の、見本です。気に入ったら、同じ形で全体に広げます', items=[
+    parse_plus('ch02_plus.md', 'plus_ch02', '第二章（加筆）', '静かなる迎撃'),
     parse_plus('ch04_pilot.md', 'plus_ch04', '第四章（加筆）', '荒れ地の道（五）'),
     parse_plus('prequel_haniyasu.md', 'plus_haniyasu', '前日譚', 'ハニヤス　最初の一株')]))
-TRACKS.append(['plus_ch04', 'plus_haniyasu'])
+TRACKS.append(['plus_ch02', 'plus_ch04', 'plus_haniyasu'])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')
