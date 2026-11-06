@@ -34,9 +34,27 @@ def parse(fid):
     if not m: sys.exit('見出しが読めない: ' + fid + ' ' + title)
     chars = sum(len(p) for s in secs for p in s['p'])
     return dict(id=fid, label=m.group(1), title=m.group(2), chars=chars, sections=secs)
+# 名の欠片の24人の短編（docs/novel/names.md。「# **名の欠片　名前　題**」で始まる24編）
+NAME_IDS = ['isana', 'asagi', 'tomari', 'nogiku', 'fuki', 'tane', 'tsuyukusa', 'shii', 'yuzuriha', 'hagane', 'sumi', 'tatara',
+            'susuki', 'nazuna', 'kuzuha', 'shiroe', 'mikage', 'uta', 'akane', 'kuroha', 'yamabuki', 'utsuho', 'yomiji', 'homura']
+def parse_names():
+    items = []; cur = None
+    for ln in open(os.path.join(NOV, 'names.md'), encoding='utf8').read().split('\n'):
+        t = clean(ln)
+        if not t: continue
+        m = re.match(r'^名の欠片　(\S+)　(.+)$', t)
+        if m:
+            cur = dict(label=m.group(1), title=m.group(2), sections=[{'h': None, 'p': []}]); items.append(cur); continue
+        if cur is not None: cur['sections'][0]['p'].append(t)
+    if len(items) != len(NAME_IDS): sys.exit('名の欠片の編数が合わない: %d' % len(items))
+    for it, i in zip(items, NAME_IDS):
+        it['id'] = 'meishi_' + i; it['chars'] = sum(len(p) for p in it['sections'][0]['p'])
+    return items
 groups = []
 for name, note, ids in ORDER:
     groups.append(dict(name=name, note=note, items=[parse(i) for i in ids]))
+groups.append(dict(name='名の欠片の二十四人', note='名を呼ばれなくなる前の、それぞれの一日。本編・寄り道の章で出会う人たちの、もう少し前の話', items=parse_names()))
+TRACKS.append(['meishi_' + i for i in NAME_IDS])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')
