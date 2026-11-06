@@ -74,8 +74,10 @@ groups.append(dict(name='試作（読んで決めるための試し読み）', n
     parse_plus('ch04_pilot.md', 'plus_ch04', '第四章（加筆）', '荒れ地の道（五）'),
     parse_plus('ch11_plus.md', 'plus_ch11', '第十一章（加筆）', '受けきる者'),
     parse_plus('prequel_haniyasu.md', 'plus_haniyasu', '前日譚', 'ハニヤス　最初の一株'),
-    parse_plus('prequel_mikazuchi.md', 'plus_mikazuchi', '前日譚', 'ミカヅチ　受けきった日')]))
-TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch11', 'plus_haniyasu', 'plus_mikazuchi'])
+    parse_plus('prequel_mikazuchi.md', 'plus_mikazuchi', '前日譚', 'ミカヅチ　受けきった日'),
+    parse_plus('prequel_susano.md', 'plus_susano', '前日譚', 'スサノ　手の形'),
+    parse_plus('prequel_nakime.md', 'plus_nakime', '前日譚', 'ナキメ　底の見えない人')]))
+TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch11', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime'])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')
