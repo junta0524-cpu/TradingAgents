@@ -72,6 +72,8 @@ groups.append(dict(name='試作（読んで決めるための試し読み）', n
     parse_plus('ch02_plus.md', 'plus_ch02', '第二章（加筆）', '静かなる迎撃'),
     parse_plus('ch03_plus.md', 'plus_ch03', '第三章（加筆）', '問うても答えぬ者'),
     parse_plus('ch04_pilot.md', 'plus_ch04', '第四章（加筆）', '荒れ地の道（五）'),
+    parse_plus('ch06_plus.md', 'plus_ch06', '第六章（加筆）', '炉の火は消えず'),
+    parse_plus('ch09_plus.md', 'plus_ch09', '第九章（加筆）', '削られた名'),
     parse_plus('ch11_plus.md', 'plus_ch11', '第十一章（加筆）', '受けきる者'),
     parse_plus('prequel_haniyasu.md', 'plus_haniyasu', '前日譚', 'ハニヤス　最初の一株'),
     parse_plus('prequel_mikazuchi.md', 'plus_mikazuchi', '前日譚', 'ミカヅチ　受けきった日'),
@@ -79,7 +81,7 @@ groups.append(dict(name='試作（読んで決めるための試し読み）', n
     parse_plus('prequel_nakime.md', 'plus_nakime', '前日譚', 'ナキメ　底の見えない人'),
     parse_plus('prequel_omoika.md', 'plus_omoika', '前日譚', 'オモイカ　十四の名'),
     parse_plus('prequel_amatsu.md', 'plus_amatsu', '前日譚', 'アマツ王　穏やかな始まり')]))
-TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch11', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu'])
+TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch06', 'plus_ch09', 'plus_ch11', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu'])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')
