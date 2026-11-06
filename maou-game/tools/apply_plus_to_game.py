@@ -3,7 +3,7 @@
 # 目印がゲームの場面にない所（ゲームでは省いた文の後ろ）は、入れずに数だけ報告する。何度流しても、同じ文は二重に入らない。
 import os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAIRS = [('ch01', 'ch01_plus'), ('ch02', 'ch02_plus'), ('ch03', 'ch03_plus'), ('ch04', 'ch04_pilot'), ('ch06', 'ch06_plus'), ('ch09', 'ch09_plus'), ('ch10', 'ch10_plus'), ('ch11', 'ch11_plus'), ('ch12', 'ch12_plus')]
+PAIRS = [('ch01', 'ch01_plus'), ('ch02', 'ch02_plus'), ('ch03', 'ch03_plus'), ('ch04', 'ch04_pilot'), ('ch05', 'ch05_plus'), ('ch06', 'ch06_plus'), ('ch07', 'ch07_plus'), ('ch08', 'ch08_plus'), ('ch09', 'ch09_plus'), ('ch10', 'ch10_plus'), ('ch11', 'ch11_plus'), ('ch12', 'ch12_plus'), ('epilogue', 'epilogue_plus')]
 
 def lines(path):
     out = []
