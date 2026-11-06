@@ -50,6 +50,7 @@
       st()[id] = 'returned';
       const lines = [`（名の欠片が、${f.who}の胸に吸いこまれていった）`, `（${f.who}は、自分の名「${f.name}」を、確かめるように小さく繰り返した。目に、光が戻った）`];
       lines.push(`名を返した。（${G.names.returned()}／${list().length}）`);
+      if (G.memories && G.memories.isListed('side_meishi_' + id)) lines.push(`（${f.name}の話が、思い出の帳の「名の欠片」に加わった）`);
       rewards().forEach(r => lines.push(`名を取り戻した人たちから、${G.DATA.items[r.item].name}が届いた。`));
       return lines;
     },

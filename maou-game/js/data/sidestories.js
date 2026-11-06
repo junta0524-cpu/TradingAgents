@@ -24,6 +24,15 @@
     { id: 'side_bangai6', title: '番外編六　名を呼び合う祭り', after: 13 },
   ];
 
+  // 前日譚（docs/novel/plus/prequel_*.md。クリア後に帳で読める）と、名の欠片の人の話（docs/novel/names.md。名を返すと帳に加わる）
+  const PRE = [['haniyasu', 'ハニヤス　最初の一株'], ['mikazuchi', 'ミカヅチ　受けきった日'], ['susano', 'スサノ　手の形'], ['nakime', 'ナキメ　底の見えない人'], ['omoika', 'オモイカ　十四の名'], ['amatsu', 'アマツ王　穏やかな始まり']];
+  PRE.forEach(([id, title]) => G.DATA.sidestories.push({ id: 'side_prequel_' + id, title, after: 13, group: 16 }));
+  const NAMES = [['isana', 'イサナ　十の年の舟'], ['asagi', 'アサギ　網の目の数'], ['tomari', 'トマリ　泊まりなさい'], ['nogiku', 'ノギク　裾の名'], ['fuki', 'フキ　かくれんぼの数'], ['tane', 'タネ　豆の畝'],
+    ['tsuyukusa', 'ツユクサ　朝露の籠'], ['shii', 'シイ　見えるもの'], ['yuzuriha', 'ユズリハ　火の前の話'], ['hagane', 'ハガネ　打つ音'], ['sumi', 'スミ　炭の灯り'], ['tatara', 'タタラ　炉の守りの弟子'],
+    ['susuki', 'ススキ　見張りの朝'], ['nazuna', 'ナズナ　井戸の縄'], ['kuzuha', 'クズハ　織り場の窓'], ['shiroe', 'シロエ　書き写す手'], ['mikage', 'ミカゲ　門の番'], ['uta', 'ウタ　節回し'],
+    ['akane', 'アカネ　畦の声'], ['kuroha', 'クロハ　風の便り'], ['yamabuki', 'ヤマブキ　研ぎ上げた日'], ['utsuho', 'ウツホ　番小屋の茶'], ['yomiji', 'ヨミジ　道を訊く'], ['homura', 'ホムラ　消さない火']];
+  NAMES.forEach(([id, title]) => G.DATA.sidestories.push({ id: 'side_meishi_' + id, title, nameId: id, group: 17 }));
+
   // 思い出の帳の「寄り道の章」に並べる（読んだかは side_read_<id>、章を過ぎたかは after）
-  if (G.DATA.memories) G.DATA.sidestories.forEach(s => G.DATA.memories.list.push({ id: s.id, group: 15, title: s.title, flag: 'side_read_' + s.id, after: s.after }));
+  if (G.DATA.memories) G.DATA.sidestories.forEach(s => G.DATA.memories.list.push({ id: s.id, group: s.group || 15, title: s.title, flag: 'side_read_' + s.id, after: s.after, nameId: s.nameId }));
 })();

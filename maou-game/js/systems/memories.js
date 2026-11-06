@@ -20,6 +20,7 @@
     if (!data || !data.state) return;
     const ch = data.state.chapter || 1, flags = data.flags || {};
     M().list.forEach(m => {
+      if (m.nameId) { if (data.state.names && data.state.names[m.nameId] === 'returned') set.add(m.id); if (flags[m.flag || m.id]) set.add(m.id); return; }   // 名の欠片の人の話：名を返したら
       const passed = m.after != null ? (m.after >= 13 ? !!data.state.cleared : (ch > m.after || !!data.state.cleared))   // 寄り道の章：after の章を過ぎたら
         : (m.group <= 12 && ch > m.group) || (m.group === 13 && data.state.cleared);
       if (passed || flags[m.flag || m.id]) set.add(m.id);

@@ -566,10 +566,19 @@ const { chromium } = require('playwright');
     GAME.state.chapter = keep.ch; GAME.flags.set('takeru_free', keep.f); return out.join();
   }), 'takeru,takeru_free,takeru_free,sarutahiko,yuu');
   expect('寄り道の章：16章が場面になっていて、思い出の帳の「寄り道の章」に並ぶ。「読みますか？」は聞かず、寄り道クエスト（G.sq）で遊ぶ', await ev(() => {
-    const n = GAME.DATA.sidestories.filter(s => (GAME.DATA.events[s.id] || []).length > 20).length;
+    const n = GAME.DATA.sidestories.filter(s => !s.group && (GAME.DATA.events[s.id] || []).length > 20).length;
     const m = GAME.DATA.memories.list.filter(x => x.group === 15).length;
     return `${n}/${m}/${GAME.DATA.sidestories.some(s => s.offer)}/${typeof GAME.sq.add}`;
   }), '16/16/false/function');
+  expect('前日譚6編・名の欠片24編が場面になっていて、思い出の帳に並ぶ。名の欠片は名を返すと加わる', await ev(() => {
+    const pre = GAME.DATA.sidestories.filter(s => s.group === 16 && GAME.DATA.events[s.id].length > 20).length;
+    const nm = GAME.DATA.sidestories.filter(s => s.group === 17 && GAME.DATA.events[s.id].length > 20 && GAME.DATA.nameFragments.some(f => f.id === s.nameId)).length;
+    const keep = JSON.stringify([GAME.state.names]);
+    GAME.state.names = { isana: 'returned' }; localStorage.removeItem('maou_memories');
+    const seen = GAME.memories.sync(); const a = seen.has('side_meishi_isana'), b = seen.has('side_meishi_asagi');
+    GAME.state.names = JSON.parse(keep)[0]; localStorage.removeItem('maou_memories');
+    return `${pre}/${nm}/${a}/${b}`;
+  }), '6/24/true/false');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
   expect('ギルドの依頼：残党の将・残党の隊は、その敵を目覚めさせた数で済む', await ev(() => {
     const keep = JSON.stringify(GAME.state.requests || {}); GAME.state.requests = {};
@@ -624,7 +633,7 @@ const { chromium } = require('playwright');
     const k = JSON.parse(keep); Object.assign(GAME.state, { names: k.names, vars: k.vars, items: k.items, chapter: k.ch });
     return out.join(' | ');
   });
-  expect('名の欠片：拾う・返す・6人で品', nm, 'isana/3 | true | isana/null/0 | 3:returned:1 | true:true');
+  expect('名の欠片：拾う・返す・6人で品', nm, 'isana/3 | true | isana/null/0 | 4:returned:1 | true:true');
   // 言の葉の石碑：置き場所が通れるマスで、答えの文字が並び、ごほうびの品がある。文字を順に選ぶと解ける
   expect('言の葉の石碑：置き場所・答え・ごほうび', await ev(() => GAME.DATA.kotobaStones.filter(s => {
     const m = GAME.DATA.maps[s.map], t = m && GAME.DATA.tiles[(m.rows[s.y] || '')[s.x]];
