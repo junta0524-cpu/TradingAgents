@@ -55,6 +55,22 @@ for name, note, ids in ORDER:
     groups.append(dict(name=name, note=note, items=[parse(i) for i in ids]))
 groups.append(dict(name='名の欠片の二十四人', note='名を呼ばれなくなる前の、それぞれの一日。本編・寄り道の章で出会う人たちの、もう少し前の話', items=parse_names()))
 TRACKS.append(['meishi_' + i for i in NAME_IDS])
+# 試作（docs/novel/plus/。ユーザーが読んで決めるまでの試し読み。本編の原文は書き換えない）
+def parse_plus(fn, fid, label, title):
+    lines = open(os.path.join(NOV, 'plus', fn), encoding='utf8').read().split('\n')
+    secs = [{'h': None, 'p': []}]; first = True
+    for ln in lines:
+        t = clean(ln)
+        if not t: continue
+        if first: first = False; continue
+        if NUM.match(t): secs.append({'h': t, 'p': []}); continue
+        secs[-1]['p'].append(t)
+    secs = [x for x in secs if x['p'] or x['h']]
+    return dict(id=fid, label=label, title=title, chars=sum(len(q) for x in secs for q in x['p']), sections=secs)
+groups.append(dict(name='試作（読んで決めるための試し読み）', note='本編の加筆と前日譚の、見本です。気に入ったら、同じ形で全体に広げます', items=[
+    parse_plus('ch04_pilot.md', 'plus_ch04', '第四章（加筆）', '荒れ地の道（五）'),
+    parse_plus('prequel_haniyasu.md', 'plus_haniyasu', '前日譚', 'ハニヤス　最初の一株')]))
+TRACKS.append(['plus_ch04', 'plus_haniyasu'])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')
