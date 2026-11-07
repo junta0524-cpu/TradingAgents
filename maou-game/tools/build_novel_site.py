@@ -89,8 +89,12 @@ groups.append(dict(name='試作（読んで決めるための試し読み）', n
     parse_plus('prequel_amatsu.md', 'plus_amatsu', '前日譚', 'アマツ王　穏やかな始まり'),
     parse_plus('prequel_takeru.md', 'plus_takeru', '前日譚', 'タケル　胸にあるもの'),
     parse_plus('prequel_oonamuchi.md', 'plus_oonamuchi', '前日譚', 'オオナムチ　同じ井戸の水'),
-    parse_plus('prequel_bell.md', 'plus_bell', '前日譚', 'ベルイザナ　宮の書庫')]))
-TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch05', 'plus_ch06', 'plus_ch07', 'plus_ch08', 'plus_ch09', 'plus_ch10', 'plus_ch11', 'plus_ch12', 'plus_epilogue', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu', 'plus_takeru', 'plus_oonamuchi', 'plus_bell'])
+    parse_plus('prequel_bell.md', 'plus_bell', '前日譚', 'ベルイザナ　宮の書庫'),
+    parse_plus('prequel_konoha.md', 'plus_konoha', '前日譚', 'コノハ　半分の耳'),
+    parse_plus('prequel_kaname.md', 'plus_kaname', '前日譚', 'カナメ　火床の夜明け'),
+    parse_plus('prequel_kotoshiro.md', 'plus_kotoshiro', '前日譚', 'コトシロ　目利きの帳面'),
+    parse_plus('prequel_uzume.md', 'plus_uzume', '前日譚', 'ウズメ　杭を抜く朝')]))
+TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch05', 'plus_ch06', 'plus_ch07', 'plus_ch08', 'plus_ch09', 'plus_ch10', 'plus_ch11', 'plus_ch12', 'plus_epilogue', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu', 'plus_takeru', 'plus_oonamuchi', 'plus_bell', 'plus_konoha', 'plus_kaname', 'plus_kotoshiro', 'plus_uzume'])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')
