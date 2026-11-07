@@ -10,7 +10,7 @@ def head(line):
     m = re.match(r'^#\s*\*\*(.+?)\*\*\s*$', line.strip()) or re.match(r'^#\s*(.+?)\s*$', line.strip())
     return m.group(1).strip() if m else None
 
-PREQUELS = ['haniyasu', 'mikazuchi', 'susano', 'nakime', 'omoika', 'amatsu', 'takeru', 'oonamuchi', 'bell', 'konoha', 'kaname', 'kotoshiro', 'uzume', 'hieda', 'kunado']   # docs/novel/plus/prequel_<名>.md → side_prequel_<名>
+PREQUELS = ['haniyasu', 'mikazuchi', 'susano', 'nakime', 'omoika', 'amatsu', 'takeru', 'oonamuchi', 'bell', 'konoha', 'kaname', 'kotoshiro', 'uzume', 'hieda', 'kunado', 'sukuna']   # docs/novel/plus/prequel_<名>.md → side_prequel_<名>
 NAME_IDS = ['isana', 'asagi', 'tomari', 'nogiku', 'fuki', 'tane', 'tsuyukusa', 'shii', 'yuzuriha', 'hagane', 'sumi', 'tatara',
             'susuki', 'nazuna', 'kuzuha', 'shiroe', 'mikage', 'uta', 'akane', 'kuroha', 'yamabuki', 'utsuho', 'yomiji', 'homura']   # docs/novel/names.md の順 → side_meishi_<id>
 

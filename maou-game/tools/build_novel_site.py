@@ -95,8 +95,9 @@ groups.append(dict(name='試作（読んで決めるための試し読み）', n
     parse_plus('prequel_kotoshiro.md', 'plus_kotoshiro', '前日譚', 'コトシロ　目利きの帳面'),
     parse_plus('prequel_uzume.md', 'plus_uzume', '前日譚', 'ウズメ　杭を抜く朝'),
     parse_plus('prequel_hieda.md', 'plus_hieda', '前日譚', 'ヒエダ　糸の見える目'),
-    parse_plus('prequel_kunado.md', 'plus_kunado', '前日譚', 'クナド　足音のない道')]))
-TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch05', 'plus_ch06', 'plus_ch07', 'plus_ch08', 'plus_ch09', 'plus_ch10', 'plus_ch11', 'plus_ch12', 'plus_epilogue', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu', 'plus_takeru', 'plus_oonamuchi', 'plus_bell', 'plus_konoha', 'plus_kaname', 'plus_kotoshiro', 'plus_uzume', 'plus_hieda', 'plus_kunado'])
+    parse_plus('prequel_kunado.md', 'plus_kunado', '前日譚', 'クナド　足音のない道'),
+    parse_plus('prequel_sukuna.md', 'plus_sukuna', '前日譚', 'スクナ　袋の口')]))
+TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch05', 'plus_ch06', 'plus_ch07', 'plus_ch08', 'plus_ch09', 'plus_ch10', 'plus_ch11', 'plus_ch12', 'plus_epilogue', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu', 'plus_takeru', 'plus_oonamuchi', 'plus_bell', 'plus_konoha', 'plus_kaname', 'plus_kotoshiro', 'plus_uzume', 'plus_hieda', 'plus_kunado', 'plus_sukuna'])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')
