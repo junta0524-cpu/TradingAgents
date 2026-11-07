@@ -25,7 +25,7 @@
   ];
 
   // 前日譚（docs/novel/plus/prequel_*.md。クリア後に帳で読める）と、名の欠片の人の話（docs/novel/names.md。名を返すと帳に加わる）
-  const PRE = [['haniyasu', 'ハニヤス　最初の一株'], ['mikazuchi', 'ミカヅチ　受けきった日'], ['susano', 'スサノ　手の形'], ['nakime', 'ナキメ　底の見えない人'], ['omoika', 'オモイカ　十四の名'], ['amatsu', 'アマツ王　穏やかな始まり'], ['takeru', 'タケル　胸にあるもの'], ['oonamuchi', 'オオナムチ　同じ井戸の水']];
+  const PRE = [['haniyasu', 'ハニヤス　最初の一株'], ['mikazuchi', 'ミカヅチ　受けきった日'], ['susano', 'スサノ　手の形'], ['nakime', 'ナキメ　底の見えない人'], ['omoika', 'オモイカ　十四の名'], ['amatsu', 'アマツ王　穏やかな始まり'], ['takeru', 'タケル　胸にあるもの'], ['oonamuchi', 'オオナムチ　同じ井戸の水'], ['bell', 'ベルイザナ　宮の書庫']];
   PRE.forEach(([id, title]) => G.DATA.sidestories.push({ id: 'side_prequel_' + id, title, after: 13, group: 16 }));
   const NAMES = [['isana', 'イサナ　十の年の舟'], ['asagi', 'アサギ　網の目の数'], ['tomari', 'トマリ　泊まりなさい'], ['nogiku', 'ノギク　裾の名'], ['fuki', 'フキ　かくれんぼの数'], ['tane', 'タネ　豆の畝'],
     ['tsuyukusa', 'ツユクサ　朝露の籠'], ['shii', 'シイ　見えるもの'], ['yuzuriha', 'ユズリハ　火の前の話'], ['hagane', 'ハガネ　打つ音'], ['sumi', 'スミ　炭の灯り'], ['tatara', 'タタラ　炉の守りの弟子'],

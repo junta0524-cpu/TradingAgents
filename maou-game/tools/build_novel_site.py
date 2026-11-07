@@ -71,7 +71,7 @@ groups.append(dict(name='試作（読んで決めるための試し読み）', n
     parse_plus('ch01_plus.md', 'plus_ch01', '第一章（加筆）', '黄泉の大地、焼ける'),
     parse_plus('ch02_plus.md', 'plus_ch02', '第二章（加筆）', '静かなる迎撃'),
     parse_plus('ch03_plus.md', 'plus_ch03', '第三章（加筆）', '問うても答えぬ者'),
-    parse_plus('ch04_pilot.md', 'plus_ch04', '第四章（加筆）', '荒れ地の道（五）'),
+    parse_plus('ch04_plus.md', 'plus_ch04', '第四章（加筆）', '同じ受付の前で'),
     parse_plus('ch05_plus.md', 'plus_ch05', '第五章（加筆）', '中立という名の森'),
     parse_plus('ch06_plus.md', 'plus_ch06', '第六章（加筆）', '炉の火は消えず'),
     parse_plus('ch07_plus.md', 'plus_ch07', '第七章（加筆）', '井戸の水を、皆で'),
@@ -88,8 +88,9 @@ groups.append(dict(name='試作（読んで決めるための試し読み）', n
     parse_plus('prequel_omoika.md', 'plus_omoika', '前日譚', 'オモイカ　十四の名'),
     parse_plus('prequel_amatsu.md', 'plus_amatsu', '前日譚', 'アマツ王　穏やかな始まり'),
     parse_plus('prequel_takeru.md', 'plus_takeru', '前日譚', 'タケル　胸にあるもの'),
-    parse_plus('prequel_oonamuchi.md', 'plus_oonamuchi', '前日譚', 'オオナムチ　同じ井戸の水')]))
-TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch05', 'plus_ch06', 'plus_ch07', 'plus_ch08', 'plus_ch09', 'plus_ch10', 'plus_ch11', 'plus_ch12', 'plus_epilogue', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu', 'plus_takeru', 'plus_oonamuchi'])
+    parse_plus('prequel_oonamuchi.md', 'plus_oonamuchi', '前日譚', 'オオナムチ　同じ井戸の水'),
+    parse_plus('prequel_bell.md', 'plus_bell', '前日譚', 'ベルイザナ　宮の書庫')]))
+TRACKS.append(['plus_ch01', 'plus_ch02', 'plus_ch03', 'plus_ch04', 'plus_ch05', 'plus_ch06', 'plus_ch07', 'plus_ch08', 'plus_ch09', 'plus_ch10', 'plus_ch11', 'plus_ch12', 'plus_epilogue', 'plus_haniyasu', 'plus_mikazuchi', 'plus_susano', 'plus_nakime', 'plus_omoika', 'plus_amatsu', 'plus_takeru', 'plus_oonamuchi', 'plus_bell'])
 data = json.dumps(dict(groups=groups, tracks=TRACKS), ensure_ascii=False).replace('</', '<\\/')
 tpl = open(os.path.join(ROOT, 'tools', 'novel_site', 'template.html'), encoding='utf8').read()
 out = os.path.join(ROOT, 'docs', '小説サイト.html')

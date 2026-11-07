@@ -578,7 +578,7 @@ const { chromium } = require('playwright');
     const seen = GAME.memories.sync(); const a = seen.has('side_meishi_isana'), b = seen.has('side_meishi_asagi');
     GAME.state.names = JSON.parse(keep)[0]; localStorage.removeItem('maou_memories');
     return `${pre}/${nm}/${a}/${b}`;
-  }), '8/24/true/false');
+  }), '9/24/true/false');
   expect('ギルドの依頼：ごほうびの品はどれもある', await ev(() => GAME.DATA.requests.filter(r => r.reward.item && !GAME.DATA.items[r.reward.item]).map(r => r.id).join()), '');
   expect('ギルドの依頼：残党の将・残党の隊は、その敵を目覚めさせた数で済む', await ev(() => {
     const keep = JSON.stringify(GAME.state.requests || {}); GAME.state.requests = {};
