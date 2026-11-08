@@ -4,7 +4,7 @@
 import json, os, re
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILES = ['ch01_5', 'ch02_5', 'ch03_5', 'ch04_5', 'ch05_5', 'ch06_5', 'ch07_5', 'ch08_5', 'ch11_5', 'ch12_5',
-         'bangai1', 'bangai2', 'bangai3', 'bangai4', 'bangai5', 'bangai6']
+         'bangai1', 'bangai2', 'bangai3', 'bangai4', 'bangai5', 'bangai6', 'bangai7']
 
 def head(line):
     m = re.match(r'^#\s*\*\*(.+?)\*\*\s*$', line.strip()) or re.match(r'^#\s*(.+?)\s*$', line.strip())

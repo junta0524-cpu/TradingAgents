@@ -9,11 +9,11 @@ ORDER = [
  ('本編　第二部', '名を隠して、人の世へ', ['ch04', 'ch05', 'ch06', 'ch07']),
  ('本編　第三部', '白い都から、最後の橋まで', ['ch08', 'ch09', 'ch10', 'ch11', 'ch12', 'epilogue']),
  ('寄り道の章', '本編の章のあいだにある、もう一つの時間（第一・五章は第一章のあと、という具合）', ['ch01_5', 'ch02_5', 'ch03_5', 'ch04_5', 'ch05_5', 'ch06_5', 'ch07_5', 'ch08_5', 'ch11_5', 'ch12_5']),
- ('番外編', 'エピローグのあとの物語（順番に読むのをおすすめします）', ['bangai1', 'bangai2', 'bangai3', 'bangai4', 'bangai5', 'bangai6']),
+ ('番外編', 'エピローグのあとの物語（順番に読むのをおすすめします）', ['bangai1', 'bangai2', 'bangai3', 'bangai4', 'bangai5', 'bangai6', 'bangai7']),
 ]
 TRACKS = [['ch01','ch02','ch03','ch04','ch05','ch06','ch07','ch08','ch09','ch10','ch11','ch12','epilogue'],
           ['ch01_5','ch02_5','ch03_5','ch04_5','ch05_5','ch06_5','ch07_5','ch08_5','ch11_5','ch12_5'],
-          ['bangai1','bangai2','bangai3','bangai4','bangai5','bangai6']]
+          ['bangai1','bangai2','bangai3','bangai4','bangai5','bangai6','bangai7']]
 HEAD = re.compile(r'^(第[^　]+章|四天王編|番外編[一二三四五六七八九十]|エピローグ)　(.+)$')
 NUM = re.compile(r'^[一二三四五六七八九十]+$')
 def clean(s):

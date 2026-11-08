@@ -569,7 +569,7 @@ const { chromium } = require('playwright');
     const n = GAME.DATA.sidestories.filter(s => !s.group && (GAME.DATA.events[s.id] || []).length > 20).length;
     const m = GAME.DATA.memories.list.filter(x => x.group === 15).length;
     return `${n}/${m}/${GAME.DATA.sidestories.some(s => s.offer)}/${typeof GAME.sq.add}`;
-  }), '16/16/false/function');
+  }), '17/17/false/function');
   expect('前日譚6編・名の欠片24編が場面になっていて、思い出の帳に並ぶ。名の欠片は名を返すと加わる', await ev(() => {
     const pre = GAME.DATA.sidestories.filter(s => s.group === 16 && GAME.DATA.events[s.id].length > 20).length;
     const nm = GAME.DATA.sidestories.filter(s => s.group === 17 && GAME.DATA.events[s.id].length > 20 && GAME.DATA.nameFragments.some(f => f.id === s.nameId)).length;

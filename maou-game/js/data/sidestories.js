@@ -22,6 +22,7 @@
     { id: 'side_bangai4', title: '番外編四　ミサキへ', after: 13 },
     { id: 'side_bangai5', title: '番外編五　十一人の名', after: 13 },
     { id: 'side_bangai6', title: '番外編六　名を呼び合う祭り', after: 13 },
+    { id: 'side_bangai7', title: '番外編七　名の帳', after: 13 },
   ];
 
   // 前日譚（docs/novel/plus/prequel_*.md。クリア後に帳で読める）と、名の欠片の人の話（docs/novel/names.md。名を返すと帳に加わる）
