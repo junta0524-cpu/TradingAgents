@@ -155,7 +155,40 @@
       menu.y = CMD_BOTTOM - menu.h;   // 下の端をそろえる（項目の数や文字の大きさで高さが変わる）
       phase = 'command';
     }
-    function setCommand(cmd) { commands[cmdIndex] = cmd; nextMember(); }
+    // 前の回と同じ行動（Shiftでくり返す）：仲間ごとに最後の指示を覚える（ゲームを閉じるまで）
+    const lastCmd = G.battleLast = G.battleLast || {};
+    function setCommand(cmd) {
+      const m = party[cmdIndex];
+      if (m && cmd.type !== 'escape') lastCmd[m.id] = { type: cmd.type, id: cmd.id, tIdx: cmd.target ? (cmd.target.side === 'party' ? party.indexOf(cmd.target) : -1) : -2 };
+      commands[cmdIndex] = cmd; nextMember();
+    }
+    // 覚えた指示をいまの場面に当てはめる。使えなければ null（理由は why に入る）
+    function repeatCmd(m) {
+      const l = lastCmd[m.id]; if (!l) return { why: 'まだ、くり返す指示がない。' };
+      if (l.type === 'attack' || l.type === 'fullpower') {
+        if (l.type === 'fullpower' && !G.DATA.characters[m.id].isBell) return { why: 'くり返せない。' };
+        const t = visibleEnemies()[0]; return t ? { cmd: { type: l.type, target: t } } : { why: '相手がいない。' };
+      }
+      if (l.type === 'defend') return { cmd: { type: 'defend' } };
+      if (l.type === 'kotodama') {
+        const d = G.DATA.kotodama[l.id];
+        if (!d || !(m.kotodama || []).includes(l.id) || m.mp < d.mp) return { why: 'MPが足りない。' };
+        if (d.target === 'enemy') { const t = visibleEnemies()[0]; return t ? { cmd: { type: 'kotodama', id: l.id, target: t } } : { why: '相手がいない。' }; }
+        if (d.target === 'ally' || d.target === 'fallen') {
+          const pool = party.filter(a => d.target === 'fallen' ? a.hp <= 0 : a.hp > 0);
+          const t = (l.tIdx >= 0 && pool.includes(party[l.tIdx])) ? party[l.tIdx] : pool[0];
+          return t ? { cmd: { type: 'kotodama', id: l.id, target: t } } : { why: '相手がいない。' };
+        }
+        return { cmd: { type: 'kotodama', id: l.id } };
+      }
+      if (l.type === 'item') {
+        const d = G.DATA.items[l.id], has = G.state.items.some(i => i.id === l.id && i.count > 0);
+        if (!d || !has) return { why: 'その道具は、もうない。' };
+        if (d.target === 'ally' || d.target === 'fallen' || !d.target) { const t = (l.tIdx >= 0 && party[l.tIdx]) || party.find(a => a.hp > 0); return t ? { cmd: { type: 'item', id: l.id, target: t } } : { why: '相手がいない。' }; }
+        const t = visibleEnemies()[0]; return t ? { cmd: { type: 'item', id: l.id, target: t } } : { why: '相手がいない。' };
+      }
+      return { why: 'くり返せない。' };
+    }
     function nextMember() {
       do { cmdIndex++; } while (cmdIndex < party.length && !needsInput(party[cmdIndex]));
       if (cmdIndex >= party.length) executeTurn();
@@ -465,6 +498,11 @@
         if (phase === 'result') { if (inp.pressed('ok')) endBattle(); return; }
 
         if (phase === 'command') {
+          if (inp.pressed('fast')) {
+            const r = repeatCmd(party[cmdIndex]);
+            if (r.cmd) { setCommand(r.cmd); return; }
+            flashNote(r.why); return;
+          }
           const res = menu.update();
           if (!res) return;
           if (res.type === 'cancel') { prevMember(); return; }
