@@ -97,6 +97,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .item .m { grid-column: 2; margin-top: -6px; }
 }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+.search { margin: 18px 0 6px; }
+.search input { width: 100%; box-sizing: border-box; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); color: var(--ink); font: inherit; }
+.hits { list-style: none; margin: 8px 0 0; padding: 0; }
+.hits li a { display: block; padding: 9px 2px; border-bottom: 1px solid var(--rule); color: inherit; text-decoration: none; }
+.hits .h { font-size: .8rem; color: var(--mark); }
+.hits .x { font-family: var(--serif); font-size: .95rem; overflow-wrap: anywhere; }
+.hits mark, .story mark { background: var(--accent); color: var(--accent-ink); border-radius: 2px; }
+.hits .more { color: var(--muted); font-size: .82rem; padding: 8px 2px; }
 </style>
 
 <div id="app"></div>
@@ -125,6 +133,39 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
   var current = null, scroller = null, onScroll = null;
 
+  // ---- 検索 ----
+  var Q = '';
+  function doSearch(q, ul) {
+    ul.innerHTML = '';
+    if (q.length < 1) return;
+    var n = 0, MAX = 60, total = 0;
+    D.groups.forEach(function (g) { g.items.forEach(function (c) {
+      var shown = 0;
+      c.sections.forEach(function (sc) { sc.p.forEach(function (t) {
+        var i = t.indexOf(q); if (i < 0) return;
+        total++;
+        if (n >= MAX || shown >= 3) return;
+        shown++; n++;
+        var a = Math.max(0, i - 18), b = Math.min(t.length, i + q.length + 28);
+        var x = (a > 0 ? '…' : '') + esc(t.slice(a, i)) + '<mark>' + esc(q) + '</mark>' + esc(t.slice(i + q.length, b)) + (b < t.length ? '…' : '');
+        var li = el('li'); var link = el('a', '', '<div class="h">' + esc(c.label + '　' + c.title) + '</div><div class="x">' + x + '</div>');
+        link.href = '#' + c.id; link.onclick = function () { Q = q; };
+        li.appendChild(link); ul.appendChild(li);
+      }); });
+    }); });
+    if (!total) ul.appendChild(el('li', 'more', '見つかりませんでした'));
+    else if (total > n) ul.appendChild(el('li', 'more', '全 ' + total + ' か所のうち ' + n + ' か所を表示しています。言葉をしぼるとさがしやすくなります。'));
+  }
+  function markIn(story, q) {
+    var first = null;
+    Array.prototype.forEach.call(story.querySelectorAll('p'), function (p) {
+      if (p.textContent.indexOf(q) < 0) return;
+      p.innerHTML = p.innerHTML.split(esc(q)).join('<mark>' + esc(q) + '</mark>');
+      if (!first) first = p.querySelector('mark');
+    });
+    return first;
+  }
+
   // ---- 一覧 ----
   function home() {
     current = null; scroller = null; document.body.classList.remove('v'); window.removeEventListener('scroll', onScroll || function () {});
@@ -142,6 +183,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     if (P.last && CH[P.last]) st.appendChild(Object.assign(el('a', 'btn ghost', 'つづきから：' + CH[P.last].label), { href: '#' + P.last }));
     side.appendChild(st);
     cover.appendChild(side); w.appendChild(cover);
+    var sb = el('div', 'search');
+    var inp = el('input'); inp.type = 'search'; inp.placeholder = '検索（人物名・言葉）'; inp.setAttribute('aria-label', '小説の中を検索');
+    var hits = el('ul', 'hits');
+    inp.oninput = function () { doSearch(inp.value.trim(), hits); };
+    sb.appendChild(inp); sb.appendChild(hits); w.appendChild(sb);
     D.groups.forEach(function (g) {
       var sec = el('section', 'group');
       sec.appendChild(el('h2', '', esc(g.name)));
@@ -233,8 +279,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       show();
     }
     var saved = P.pos[id] || 0; if (saved > 0.97) saved = 0;
-    requestAnimationFrame(function () { restore(saved); });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { restore(P.pos[id] || 0); });
+    var hitMark = Q ? markIn(story, Q) : null; Q = '';
+    function toHit() { if (hitMark && hitMark.scrollIntoView) hitMark.scrollIntoView({ block: 'center', inline: 'center' }); }
+    requestAnimationFrame(function () { if (hitMark) toHit(); else restore(saved); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (hitMark) toHit(); else restore(P.pos[id] || 0); });
   }
   function ratio() { return window.ratio ? window.ratio() : 0; }
   function restore(r) { if (window.restore) window.restore(r); }
