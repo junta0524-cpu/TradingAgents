@@ -12,9 +12,10 @@
     KeyZ: 'ok', Enter: 'ok', NumpadEnter: 'ok', Space: 'ok',
     KeyX: 'cancel', Escape: 'cancel',
     ShiftLeft: 'fast', ShiftRight: 'fast',
+    KeyC: 'again',
     F1: 'debug',
   };
-  const ACTIONS = ['up', 'down', 'left', 'right', 'ok', 'cancel', 'fast', 'debug'];
+  const ACTIONS = ['up', 'down', 'left', 'right', 'ok', 'cancel', 'fast', 'again', 'debug'];
 
   // 命令ごとに「いま押しているもの」の一覧（キーボードとタッチを同時に扱うため）
   const sources = {};

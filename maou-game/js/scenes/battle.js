@@ -498,7 +498,7 @@
         if (phase === 'result') { if (inp.pressed('ok')) endBattle(); return; }
 
         if (phase === 'command') {
-          if (inp.pressed('fast')) {
+          if (inp.pressed('again')) {
             const r = repeatCmd(party[cmdIndex]);
             if (r.cmd) { setCommand(r.cmd); return; }
             flashNote(r.why); return;
