@@ -34,6 +34,18 @@
     let toast = '', toastTimer = 0;   // 上の小さな知らせ（名の欠片を拾ったとき）
     const BATTLE_FLASH_FRAMES = 30;
 
+    // 広い地図で、いまの章よりずっと先のエリアに入ったら、空気が変わったことを知らせる（js/data/areas.js）
+    let lastArea = null;
+    function watchArea() {
+      const ar = G.encounter.areaAt(mapId, player.x, player.y), key = ar ? ar.area.name : null;
+      if (key === lastArea) return;
+      lastArea = key;
+      if (!ar || ar.gap < 2) return;
+      toast = ar.gap >= 3 ? `空気が張りつめている。「${ar.area.name}」……いまの自分では、ひとたまりもないかもしれない。` : `空気が重い。「${ar.area.name}」は、まだ早いかもしれない。`;
+      toastTimer = 200;
+      if (G.sound) G.sound.se('encounter');
+    }
+
     function randWait() { return G.rng.int(B.NPC_WANDER_MIN, B.NPC_WANDER_MAX); }
 
     function load(id, x, y, dir) {
@@ -48,6 +60,7 @@
       buildFollowers();
       Object.assign(G.state, { mapId: id, x, y, dir: player.dir });
       G.encounter.reset(map);
+      lastArea = null;
       // 敵の出ない場所（町・建物）に入ったら、自動で記録する（物語の場面の途中は記録しない）
       if (!map.encounter && !G.event.running && !G.state.resume) G.party.saveRecord();
       nameTimer = 120;
@@ -401,7 +414,8 @@
             }
             forced = gs.slide || null;
             if (forced) return;
-            const group = G.encounter.step(map, tileAt(player.x, player.y));
+            watchArea();
+            const group = G.encounter.step(map, tileAt(player.x, player.y), player.x, player.y);
             if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; if (G.sound) G.sound.se('encounter'); return; }
           }
         }
@@ -412,7 +426,8 @@
           if (tryMove(player, dir)) { followStep(fx, fy); forced = dir; }
           if (forced) { updateNpcs(); return; }
           // 止まったマスで、出会いを確かめる
-          const group = G.encounter.step(map, tileAt(player.x, player.y));
+          watchArea();
+          const group = G.encounter.step(map, tileAt(player.x, player.y), player.x, player.y);
           if (group) { pendingBattle = group; battleFlash = BATTLE_FLASH_FRAMES; player.walk = 0; if (G.sound) G.sound.se('encounter'); return; }
         }
         if (!player.moving) {

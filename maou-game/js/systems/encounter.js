@@ -14,9 +14,9 @@
     return n;
   }
 
-  function groupsFor(enc) {
+  function groupsFor(enc, chOver) {
     if (!enc.byChapter) return enc.groups;
-    const ch = G.state.chapter || 1;
+    const ch = chOver || G.state.chapter || 1;
     const key = Object.keys(enc.byChapter).map(Number).filter(k => k <= ch).sort((a, b) => b - a)[0];
     const g = key != null ? enc.byChapter[key] : enc.groups;
     // { byLevel: [{ from: レベル, groups }] }：オオナムチのレベルで組を変える（クリア後のやりこみ）
@@ -30,8 +30,8 @@
 
   const oonaLv = () => { const m = G.party.member('oonamuchi'); return (m && m.lv) || 1; };
   // あとから増やした敵の組（from／to：章、lv：オオナムチのレベル）
-  function moreFor(mapId) {
-    const ch = G.state.chapter || 1;
+  function moreFor(mapId, chOver) {
+    const ch = chOver || G.state.chapter || 1;
     return ((G.DATA.encounterMore || {})[mapId] || [])
       .filter(o => (o.from == null || ch >= o.from) && (o.to == null || ch <= o.to) && (o.lv == null || oonaLv() >= o.lv))
       .reduce((a, o) => a.concat(o.groups), []);
@@ -50,10 +50,32 @@
     if (e.notWith && G.party.active().some(m => e.notWith.includes(m.id))) return { steps: e.steps, groups: [] };
     return e;
   }
+  // エリア（js/data/areas.js）：いる所に一番近い印のエリアと、いまの章との差 gap（先のエリアほど大きい）。4〜9章と魔界の11章だけ
+  function areaAt(mapId, x, y) {
+    const list = (G.DATA.areas || {})[mapId], ch = G.state.chapter || 1;
+    if (!list || x == null || ch >= 13 || ch === 10 || (mapId === 'world_ningen' && (ch < 4 || ch > 9)) || (mapId === 'world_makai' && ch !== 11)) return null;
+    let best = null, bd = 1e9;
+    list.forEach(a => { const d = (a.x - x) * (a.x - x) + (a.y - y) * (a.y - y); if (d < bd) { bd = d; best = a; } });
+    if (!best) return null;
+    return { area: best, gap: best.danger ? 3 : (best.tier || 0) - ch };
+  }
+  // エリアに合わせた組。先のエリアは、その章の強い敵。低いエリアは、いまの章の組に昔の敵も混ぜる
+  function areaGroups(enc, mapId, ar) {
+    const ch = G.state.chapter || 1, a = ar.area;
+    let base;
+    if (ar.gap >= 1 && a.tier) base = groupsFor(enc, a.tier) || [];
+    else {
+      // 章が進んでも、前の土地の敵の顔ぶれは変わらない（いまの章の組は、1つ前の土地までだけ混ぜる）
+      base = a.tier && ar.gap < -1 ? (groupsFor(enc, a.tier) || []).slice() : (groupsFor(enc) || []).concat(a.tier && a.tier < ch ? (groupsFor(enc, a.tier) || []) : []);
+    }
+    let out = base.concat(moreFor(mapId, a.tier && ar.gap >= 1 ? a.tier : null), a.add || []);
+    if (ar.gap >= 3 && a.risky) out = out.concat(a.risky, a.risky);   // 辺境は、桁違いの組が半分ほど
+    return out;
+  }
   const encOf = map => sqEnc(G.state.mapId) || map.encounter;
 
   G.encounter = {
-    moreFor, rareFor, encOf,
+    moreFor, rareFor, encOf, areaAt,
     enabled: true,   // デバッグで切り替える
 
     // マップに入ったとき：歩数を決め直す
@@ -63,7 +85,7 @@
     },
 
     // 1歩歩いたとき：敵が出るなら、出る敵の組（id の配列）を返す
-    step(map, tile) {
+    step(map, tile, x, y) {
       const enc = encOf(map), sq = enc && enc !== map.encounter;
       if (!enc || !G.encounter.enabled || G.state.noEnc || (tile && tile.noEncounter)) return null;   // noEnc：寄り道クエストで敵を出さないとき
       // 結界張り：決まった歩数のあいだ、敵に出会わない
@@ -77,7 +99,8 @@
       if (sq) return base[G.rng.int(0, base.length - 1)].slice();   // 寄り道クエストの組は、そのまま（足す敵・めったに出ない敵は混ぜない）
       const rare = rareFor(G.state.mapId);
       if (rare) return rare.slice();
-      const groups = base.concat(moreFor(G.state.mapId));
+      const ar = areaAt(G.state.mapId, x, y);
+      const groups = ar ? areaGroups(enc, G.state.mapId, ar) : base.concat(moreFor(G.state.mapId));
       return groups[G.rng.int(0, groups.length - 1)].slice();
     },
   };
