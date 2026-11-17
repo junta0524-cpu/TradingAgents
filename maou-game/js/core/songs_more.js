@@ -38,5 +38,40 @@
     // ボス（クリア後の番人・強敵）
     boss_post: { bpm: 172, wave: 'sawtooth', bass: 'square', drum: 'xoxx', notes: P('62:1 65:1 69:1 65:1 74:2 72:2 | 62:1 65:1 69:1 72:1 74:2 77:2 | 76:1 74:1 72:1 70:1 69:2 65:2 | 62:1 65:1 69:1 74:1 62:4'), bassline: [38, 38, 41, 41, 43, 43, 38, 38] },
   };
+
+  // ---- 熱い戦闘曲（ユーザー依頼：もっとアツく・心躍る）----
+  // 1歩＝8分音符。低音は毎歩刻み（bassRun）、大太鼓k・小太鼓s・ハイハットxで走らせ、主旋律の5度下を重ねる（harmony）。
+  // 3つの旋律（A：駆け抜ける／B：ボスの重い刻み／C：叙事詩）を、高さ・速さ・音色を変えて各戦闘曲にする。1歩＝8分。1小節＝8歩、8小節。
+  const HOT = {
+    A: { roots: [45, 41, 43, 45, 41, 43, 40, 40],
+      lead: '69:1 72:1 76:1 72:1 81:2 76:1 72:1 | 77:1 74:1 72:1 74:1 77:2 72:1 74:1 | 79:1 76:1 74:1 76:1 79:2 74:1 76:1 | 81:2 76:1 72:1 69:2 76:2 | 77:2 77:1 81:1 84:2 81:2 | 79:2 79:1 83:1 86:2 83:2 | 88:2 84:2 81:2 76:2 | 80:2 76:1 80:1 83:2 0:2' },
+    B: { roots: [38, 34, 36, 38, 34, 36, 33, 33],
+      lead: '62:1 62:1 74:2 62:1 65:1 69:2 | 70:1 70:1 82:2 70:1 74:1 77:2 | 72:1 72:1 84:2 72:1 76:1 79:2 | 74:2 73:1 74:1 77:2 81:2 | 82:2 81:1 82:1 86:2 82:2 | 84:2 83:1 84:1 88:2 84:2 | 81:2 79:1 81:1 85:2 88:2 | 86:1 85:1 86:1 85:1 81:2 0:2' },
+    C: { roots: [40, 36, 38, 40, 36, 38, 35, 35],
+      lead: '76:2 79:1 83:1 88:2 83:2 | 84:2 79:1 84:1 91:2 88:2 | 86:2 81:1 86:1 90:2 86:2 | 88:2 86:1 83:1 79:2 76:2 | 84:1 88:1 91:2 88:1 84:1 79:2 | 86:1 90:1 93:2 90:1 86:1 81:2 | 83:1 87:1 90:2 87:1 83:1 90:2 | 95:2 90:1 87:1 83:4' },
+  };
+  const hot = (key, shift, bpm, wave, bass, drum) => {
+    const h = HOT[key], notes = P(h.lead).map(([n, l]) => [n ? n + shift : 0, l]);
+    // 低音：小節ごとに根音を、根音・根音・1オクターブ上……と刻む
+    const bassRun = [];
+    h.roots.forEach(r => [0, 0, 12, 0, 0, 0, 12, 0].forEach(o => bassRun.push(r + shift + o)));
+    return { bpm, wave, bass, drum, notes, bassRun, bassline: [h.roots[0] + shift],
+      harmony: notes.map(([n, l]) => [n ? n - 7 : 0, l]), hwave: 'square', hvol: 0.045 };
+  };
+  const KS = 'kxsxkxsx', KS2 = 'kxsxkksx', KS3 = 'kksxkksk';
+  Object.assign(add, {
+    battle:        hot('A', 0, 280, 'square', 'sawtooth', KS),
+    battle_forest: hot('A', 3, 270, 'square', 'triangle', KS),
+    battle_wild:   hot('A', -2, 290, 'sawtooth', 'triangle', KS2),
+    battle_sorrow: hot('A', -7, 250, 'square', 'triangle', KS),
+    training:      hot('A', 5, 250, 'square', 'triangle', KS),
+    master:        hot('A', 7, 270, 'square', 'triangle', KS2),
+    boss:          hot('B', 0, 300, 'sawtooth', 'square', KS2),
+    boss_post:     hot('B', 2, 320, 'sawtooth', 'square', KS3),
+    battle_yomi:   hot('B', 5, 300, 'sawtooth', 'sawtooth', KS2),
+    battle_abyss:  hot('C', -5, 270, 'sawtooth', 'sawtooth', KS2),
+    duel:          hot('C', 0, 310, 'sawtooth', 'square', KS3),
+    final:         hot('C', -2, 330, 'sawtooth', 'square', KS3),
+  });
   Object.assign(G.sound.SONGS, add);
 })();

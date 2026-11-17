@@ -133,12 +133,16 @@
     if (s.loop === false && step >= total) { step++; return; }
     // 1拍ごとに、その拍で始まる音と低音（2拍ごと）と打ち物を鳴らす
     voice(s.notes, step, beat, s.wave, 0.13);
-    if (s.harmony) voice(s.harmony, step, beat, 'triangle', 0.06);
-    if (step % 2 === 0) tone(N(s.bassline[(step / 2) % s.bassline.length]), beat * 1.9, s.bass, 0.12);
+    if (s.harmony) voice(s.harmony, step, beat, s.hwave || 'triangle', s.hvol || 0.06);
+    // bassRun：1拍ごとに低音を刻む（熱い戦闘曲）。なければ2拍ごとにのばす
+    if (s.bassRun) { const b = s.bassRun[step % s.bassRun.length]; if (b) tone(N(b), beat * 0.92, s.bass, 0.12); }
+    else if (step % 2 === 0) tone(N(s.bassline[(step / 2) % s.bassline.length]), beat * 1.9, s.bass, 0.12);
     if (s.drum) {
       const d = s.drum[step % s.drum.length];
-      if (d === 'x') noise(0.04, 0.08);
-      else if (d === 'o') tone(N(36), 0.12, 'sine', 0.3);
+      if (d === 'x') noise(0.04, 0.08);                                        // ハイハット
+      else if (d === 'o') tone(N(36), 0.12, 'sine', 0.3);                      // 太鼓
+      else if (d === 'k') { tone(N(33), 0.11, 'sine', 0.38); noise(0.02, 0.06); }   // 大太鼓（ドン）
+      else if (d === 's') { noise(0.1, 0.17); tone(N(52), 0.05, 'triangle', 0.12); } // 小太鼓（タン）
     }
     step++;
   }
