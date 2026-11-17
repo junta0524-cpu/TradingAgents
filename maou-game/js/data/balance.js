@@ -336,6 +336,9 @@
       ORDER_RAND_MAX: 1.0,
       DEFEND_RATE: 0.5,              // ぼうぎょ中の被ダメージ倍率
       ESCAPE_CHANCE: [1 / 2, 1 / 2, 3 / 4, 7 / 8],  // 1回目・2回目・3回目・4回目以降
+      // 敵との強さの差で逃げやすさを変える（ratio＝敵の強さ÷仲間の強さ。強さ＝攻撃＋守り＋最大体力÷4）。
+      // 差の目盛り shift＝log2(ratio)を SHIFT_MIN〜SHIFT_MAX にして、逃げる確率から K×shift を引く（弱い敵なら逃げやすく、強い敵ほど逃げにくい）。MIN〜MAX に収める
+      ESCAPE_GAP: { K: 0.3, SHIFT_MIN: -1, SHIFT_MAX: 1.5, MIN: 0.05, MAX: 0.98 },
       TARGET_WEIGHTS: [40, 30, 20, 10],             // 狙われ率（前列から）
       EXP_SPLIT: true,               // true：経験値を生きている仲間で分ける（レベルの上がらないベルは数えない）
       DROP_RATE: { S: 1 / 128, A: 1 / 32, B: 1 / 16, C: 1 / 8 },  // 落とし物の確率ランク

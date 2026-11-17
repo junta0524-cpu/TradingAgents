@@ -316,11 +316,27 @@
   }
 
   // 逃げる（ボス戦・イベント戦はできない）
+  // 敵との強さの差：1より大きいほど敵が強い（強さ＝攻撃＋守り＋最大体力÷4。敵は生きている全員の平均、味方は倒れうる仲間の平均）
+  const powerOf = u => (u.atk || 0) + (u.def || 0) + (u.maxHp || u.hp || 0) / 4;
+  function powerRatio(st) {
+    const es = aliveEnemies(st);
+    const ps = st.party.filter(p => p.hp > 0 && !charOf(p).isBell);
+    const us = ps.length ? ps : st.party.filter(p => p.hp > 0);
+    if (!es.length || !us.length) return 1;
+    const avg = l => l.reduce((s, u) => s + powerOf(u), 0) / l.length;
+    return avg(es) / Math.max(1, avg(us));
+  }
+  // 逃げる確率：回数ごとの基本（ESCAPE_CHANCE）を、強さの差で上げ下げする
+  function escapeChanceFor(st) {
+    const g = B().ESCAPE_GAP, shift = Math.max(g.SHIFT_MIN, Math.min(g.SHIFT_MAX, Math.log2(powerRatio(st))));
+    return Math.max(g.MIN, Math.min(g.MAX, escapeChance(st.escapeTries) - g.K * shift));
+  }
   function tryEscape(st) {
     if (st.boss) return { ok: false, blocked: true };
-    const ok = G.rng.chance(escapeChance(st.escapeTries));
+    const ratio = powerRatio(st);
+    const ok = G.rng.chance(escapeChanceFor(st));
     st.escapeTries++;
-    return { ok };
+    return { ok, ratio };
   }
 
   // 勝敗：'win'（敵全滅）/ 'lose'（ベル以外の仲間が倒れた）/ null（続く）
@@ -422,5 +438,5 @@
     return result;
   }
 
-  G.battle = { chapterExpRate, calcPhysical, turnOrder, pickPartyTarget, escapeChance, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike, wavering, tryAwaken, awakenRewards, isHard };
+  G.battle = { chapterExpRate, calcPhysical, turnOrder, pickPartyTarget, escapeChance, escapeChanceFor, powerRatio, create, act, tryEscape, outcome, rewards, simulate, aliveEnemies, applyDamage, endRound, planEnemies, rollFirstStrike, wavering, tryAwaken, awakenRewards, isHard };
 })();

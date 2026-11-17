@@ -299,9 +299,9 @@
       log.length = 0;
       const r = G.battle.tryEscape(st);
       if (r.blocked) { play([{ type: 'msg', text: 'この戦いからは、逃げられない！' }], beginInput); return; }
-      if (r.ok) { play([{ type: 'msg', text: 'うまく逃げきれた。' }], () => endBattle()); return; }
-      // 失敗：このターンは敵だけが動く
-      play([{ type: 'msg', text: '逃げられなかった！' }], () => runOrder(G.battle.turnOrder(enemies)));
+      if (r.ok) { play([{ type: 'msg', text: r.ratio <= 0.6 ? '相手が弱い。あっさり逃げきれた。' : 'うまく逃げきれた。' }], () => endBattle()); return; }
+      // 失敗：このターンは敵だけが動く（強い相手ほど、逃げ切れない様子を知らせる）
+      play([{ type: 'msg', text: r.ratio >= 2 ? '強すぎる……逃げ道がない！' : r.ratio >= 1.4 ? '相手のほうが上手だ。逃げられなかった！' : '逃げられなかった！' }], () => runOrder(G.battle.turnOrder(enemies)));
     }
 
     // ---- 決着 ----
