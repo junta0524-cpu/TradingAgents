@@ -50,18 +50,38 @@
     if (e.notWith && G.party.active().some(m => e.notWith.includes(m.id))) return { steps: e.steps, groups: [] };
     return e;
   }
-  // エリア（js/data/areas.js）：いる所に一番近い印のエリアと、いまの章との差 gap（先のエリアほど大きい）。4〜9章と魔界の11章だけ
+  // エリア（js/data/areas.js）：いる所に一番近い印のエリアと、いまの強さとの差 gap（先のエリアほど大きい）。
+  // 4〜9章の人間界と11章の魔界は章で、クリア後（13章〜）はオオナムチのレベルの段（byLevel の何番目か）で比べる
+  const POST_TIER = t => Math.max(0, Math.min(3, Math.floor((t - 4) / 1.5)));   // 4・5→0、6・7→1、8→2、9→3
+  const postIdx = enc => {
+    const g = enc && enc.byChapter && enc.byChapter[13];
+    if (!g || !g.byLevel) return 0;
+    const lv = oonaLv();
+    return Math.max(0, g.byLevel.filter(t => t.from <= lv).length - 1);
+  };
   function areaAt(mapId, x, y) {
     const list = (G.DATA.areas || {})[mapId], ch = G.state.chapter || 1;
-    if (!list || x == null || ch >= 13 || ch === 10 || (mapId === 'world_ningen' && (ch < 4 || ch > 9)) || (mapId === 'world_makai' && ch !== 11)) return null;
+    if (!list || x == null || ch === 10 || ch === 12 || (mapId === 'world_ningen' && ch < 4) || (mapId === 'world_makai' && ch !== 11 && ch < 13)) return null;
     let best = null, bd = 1e9;
     list.forEach(a => { const d = (a.x - x) * (a.x - x) + (a.y - y) * (a.y - y); if (d < bd) { bd = d; best = a; } });
     if (!best) return null;
+    if (ch >= 13) {
+      const pt = best.post != null ? best.post : POST_TIER(best.tier || 4);
+      return { area: best, post: pt, gap: pt - postIdx((G.DATA.maps[mapId] || {}).encounter) };
+    }
+    if (mapId === 'world_ningen' && ch > 9) return null;
     return { area: best, gap: best.danger ? 3 : (best.tier || 0) - ch };
   }
-  // エリアに合わせた組。先のエリアは、その章の強い敵。低いエリアは、いまの章の組に昔の敵も混ぜる
+  // エリアに合わせた組。先のエリアは、その章（段）の強い敵。低いエリアは、いまの章の組に昔の敵も混ぜる
   function areaGroups(enc, mapId, ar) {
     const ch = G.state.chapter || 1, a = ar.area;
+    if (ch >= 13) {   // クリア後：先のエリアは、そのエリアの段の組
+      const tiers = ((enc.byChapter && enc.byChapter[13]) || {}).byLevel || [];
+      const t = tiers[Math.max(0, Math.min(tiers.length - 1, ar.gap >= 1 ? ar.post : postIdx(enc)))];
+      let out = (t ? t.groups : []).concat(moreFor(mapId));
+      if (ar.gap >= 3 && a.risky) out = out.concat(a.risky, a.risky);
+      return out;
+    }
     let base;
     if (ar.gap >= 1 && a.tier) base = groupsFor(enc, a.tier) || [];
     else {

@@ -35,12 +35,12 @@
       { x: 120, y: 82, name: '南東の辺境', tier: 9, danger: true, risky: DEEP },
     ],
     world_makai: [
-      { x: 62, y: 70, name: '土蜘蛛の谷', add: [['yomotsu_inu'], ['hainezumi', 'hainezumi']] },
-      { x: 62, y: 10, name: '宮のまわり', add: [['yakeno_onibi'], ['yomotsu_inu', 'yomotsu_inu']] },
-      { x: 18, y: 42, name: '角ヶ原', add: [['hainezumi', 'yakeno_onibi']] },
-      { x: 102, y: 38, name: '嵐ヶ峰', add: [['yomotsu_inu', 'yakeno_onibi']] },
-      { x: 110, y: 74, name: 'ヨミノハラ', danger: true, risky: [['kage_oni'], ['kage_oni', 'yomotsu_inu'], ['yomi_hebi']] },
-      { x: 114, y: 66, name: 'イワヤトの奥', danger: true, risky: [['na_kui'], ['kage_oni', 'na_kui']] },
+      { x: 62, y: 70, name: '土蜘蛛の谷', post: 0, add: [['yomotsu_inu'], ['hainezumi', 'hainezumi']] },
+      { x: 62, y: 10, name: '宮のまわり', post: 1, add: [['yakeno_onibi'], ['yomotsu_inu', 'yomotsu_inu']] },
+      { x: 18, y: 42, name: '角ヶ原', post: 1, add: [['hainezumi', 'yakeno_onibi']] },
+      { x: 102, y: 38, name: '嵐ヶ峰', post: 2, add: [['yomotsu_inu', 'yakeno_onibi']] },
+      { x: 110, y: 74, name: 'ヨミノハラ', post: 3, danger: true, risky: [['kage_oni'], ['kage_oni', 'yomotsu_inu'], ['yomi_hebi']] },
+      { x: 114, y: 66, name: 'イワヤトの奥', post: 3, danger: true, risky: [['na_kui'], ['kage_oni', 'na_kui']] },
     ],
   };
 })();
