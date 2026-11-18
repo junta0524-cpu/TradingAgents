@@ -1,0 +1,305 @@
+<title>魔王が仲間になりたそうな顔でこちらを見ている</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* 小説サイト。配色：紙の灰白と墨紫（夜は紫黒に稲穂の金）。章の番号だけ朱を使う。
+   構成：一覧（縦書きの題の扉＋章の並び）と、読む画面（横書き・縦書きの切り替え）。 */
+:root {
+  --bg: #f1f0ec; --surface: #faf9f6; --ink: #221f27; --muted: #6a6571; --rule: #d8d5cf;
+  --accent: #34466b; --accent-ink: #ffffff; --mark: #a4413a; --read: #8a8693;
+  --serif: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --sans: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  --fs: 1.12rem; --hdr: 52px; --ftr: 56px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141218; --surface: #1c1a21; --ink: #e4e0e6; --muted: #9c97a3; --rule: #2e2b35;
+    --accent: #c8a56a; --accent-ink: #1a1510; --mark: #d6766c; --read: #6f6a78; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141218; --surface: #1c1a21; --ink: #e4e0e6; --muted: #9c97a3; --rule: #2e2b35;
+  --accent: #c8a56a; --accent-ink: #1a1510; --mark: #d6766c; --read: #6f6a78; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); margin: 0; line-height: 1.7; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 880px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* ---- 一覧 ---- */
+.cover { padding-block: 36px 28px; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
+.cover h1 { margin: 0; font-family: var(--serif); font-weight: 700; font-size: clamp(1.3rem, 4vw, 1.9rem); line-height: 1.55; letter-spacing: .12em; writing-mode: vertical-rl; height: 14.6em; text-wrap: balance; }
+.cover .side { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding-top: 6px; }
+.cover .lead { margin: 0; color: var(--muted); font-size: .95rem; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; font-size: .88rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.facts b { color: var(--ink); font-weight: 700; }
+.start { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); padding: 10px 18px; border-radius: 4px; font-weight: 700; text-decoration: none; display: inline-block; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.group { padding-block: 26px 4px; }
+.group > h2 { font-family: var(--serif); font-size: 1.15rem; margin: 0 0 4px; letter-spacing: .08em; }
+.group > p { margin: 0 0 12px; color: var(--muted); font-size: .86rem; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 0 28px; }
+.item { min-width: 0; }
+.item a { display: grid; grid-template-columns: 5.6em 1fr auto; align-items: baseline; gap: 10px; padding: 11px 2px; border-bottom: 1px solid var(--rule); color: inherit; text-decoration: none; }
+.item a:hover .t { color: var(--accent); }
+.item .n { font-family: var(--serif); font-size: .84rem; color: var(--mark); letter-spacing: .04em; white-space: nowrap; }
+.item .t { font-family: var(--serif); font-weight: 500; font-size: 1.02rem; min-width: 0; overflow-wrap: anywhere; }
+.item .m { font-size: .76rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.item.done .t { color: var(--read); }
+.item.done .m::before { content: "読了 · "; }
+footer.site { padding-block: 36px 48px; color: var(--muted); font-size: .8rem; }
+
+/* ---- 読む画面 ---- */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--rule); height: var(--hdr); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+.bar .in { height: 100%; display: flex; align-items: center; gap: 10px; }
+.bar .ttl { flex: 1; min-width: 0; font-family: var(--serif); font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar .ttl i { font-style: normal; color: var(--mark); margin-right: .6em; }
+.ib { color: var(--ink); text-decoration: none; display: inline-block; border: 1px solid var(--rule); background: transparent; border-radius: 4px; padding: 6px 12px; font-size: .84rem; white-space: nowrap; }
+.ib[aria-expanded="true"] { background: var(--surface); border-color: var(--accent); }
+.panel { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(var(--hdr) - 4px); background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; width: min(320px, calc(100vw - 32px)); display: grid; gap: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
+.panel .row { display: grid; grid-template-columns: 4.2em 1fr; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
+.seg { display: flex; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.seg button { flex: 1; border: 0; background: transparent; padding: 7px 4px; font-size: .84rem; border-right: 1px solid var(--rule); color: var(--ink); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.prog { position: fixed; left: 0; right: 0; bottom: calc(var(--ftr) + env(safe-area-inset-bottom, 0px)); height: 2px; background: transparent; z-index: 21; }
+.prog i { display: block; height: 100%; width: 0; background: var(--accent); }
+.foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bg); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.foot .in { height: var(--ftr); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.foot .pg { font-size: .76rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.foot .ib:disabled { opacity: .35; cursor: default; }
+.story { padding-block: 28px calc(var(--ftr) + 56px); font-family: var(--serif); font-size: var(--fs); line-height: 2.05; }
+.story .head { margin-bottom: 2.2em; font-family: var(--serif); }
+.story .head .lab { color: var(--mark); letter-spacing: .12em; font-size: .85rem; }
+.story .head h1 { margin: .2em 0 0; font-size: 1.55rem; line-height: 1.5; letter-spacing: .06em; text-wrap: balance; font-weight: 700; }
+.story .sec { margin: 2.6em 0 1.4em; font-size: .95rem; font-weight: 500; color: var(--mark); text-align: center; letter-spacing: .3em; font-family: var(--serif); }
+.story p { margin: 0 0 .8em; text-indent: 1em; overflow-wrap: anywhere; }
+.story p.q { text-indent: 0; }
+.story .end { text-align: center; color: var(--muted); margin-top: 3em; letter-spacing: .4em; font-size: .9rem; }
+/* 縦書き：文章の欄を横にスクロールする（右から左へ読む） */
+.v .story { writing-mode: vertical-rl; width: 100%; height: calc(100svh - var(--hdr) - var(--ftr) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); max-width: none; overflow-x: auto; overflow-y: hidden; padding: 24px 28px; margin: 0; line-height: 1.95; scrollbar-width: thin; }
+.v .story .head { margin: 0 0 0 3em; }
+.v .story .sec { margin: 0 1.6em; letter-spacing: .3em; text-align: start; }
+.v .story p { margin: 0 0 0 .8em; text-indent: 1em; }
+.v .story p.q { text-indent: 0; }
+.v .story .end { margin: 0 3em 0 0; }
+.v .wrapper { max-width: none; padding: 0; }
+@media (max-width: 520px) {
+  .cover { grid-template-columns: 1fr; }
+  .cover h1 { height: auto; writing-mode: horizontal-tb; font-size: 1.45rem; letter-spacing: .06em; }
+  .item a { grid-template-columns: 4.8em 1fr; }
+  .item .m { grid-column: 2; margin-top: -6px; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+.search { margin: 18px 0 6px; }
+.search input { width: 100%; box-sizing: border-box; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); color: var(--ink); font: inherit; }
+.hits { list-style: none; margin: 8px 0 0; padding: 0; }
+.hits li a { display: block; padding: 9px 2px; border-bottom: 1px solid var(--rule); color: inherit; text-decoration: none; }
+.hits .h { font-size: .8rem; color: var(--mark); }
+.hits .x { font-family: var(--serif); font-size: .95rem; overflow-wrap: anywhere; }
+.hits mark, .story mark { background: var(--accent); color: var(--accent-ink); border-radius: 2px; }
+.hits .more { color: var(--muted); font-size: .82rem; padding: 8px 2px; }
+</style>
+
+<div id="app"></div>
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById('data').textContent);
+  var app = document.getElementById('app');
+  var CH = {}; D.groups.forEach(function (g) { g.items.forEach(function (c) { CH[c.id] = c; }); });
+  var root = document.documentElement;
+
+  // ---- 好みと読んだ印（この端末だけ。使えなくても読める）----
+  var P = { size: 1, vertical: false, theme: 'auto', read: {}, pos: {}, last: null };
+  try { var s = JSON.parse(localStorage.getItem('maou_novel') || 'null'); if (s) Object.keys(s).forEach(function (k) { P[k] = s[k]; }); } catch (e) {}
+  function save() { try { localStorage.setItem('maou_novel', JSON.stringify(P)); } catch (e) {} }
+  var SIZES = [1.0, 1.12, 1.3];
+  function applyPrefs() {
+    root.style.setProperty('--fs', SIZES[P.size] + 'rem');
+    if (P.theme === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', P.theme);
+    document.body.classList.toggle('v', !!(P.vertical && current));
+  }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function esc(s) { return s.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function mins(n) { return Math.max(1, Math.round(n / 500)); }
+  function kana(n) { return n >= 10000 ? (n / 10000).toFixed(1) + '万字' : Math.round(n / 100) / 10 + '千字'; }
+
+  var current = null, scroller = null, onScroll = null;
+
+  // ---- 検索 ----
+  var Q = '';
+  function doSearch(q, ul) {
+    ul.innerHTML = '';
+    if (q.length < 1) return;
+    var n = 0, MAX = 60, total = 0;
+    D.groups.forEach(function (g) { g.items.forEach(function (c) {
+      var shown = 0;
+      c.sections.forEach(function (sc) { sc.p.forEach(function (t) {
+        var i = t.indexOf(q); if (i < 0) return;
+        total++;
+        if (n >= MAX || shown >= 3) return;
+        shown++; n++;
+        var a = Math.max(0, i - 18), b = Math.min(t.length, i + q.length + 28);
+        var x = (a > 0 ? '…' : '') + esc(t.slice(a, i)) + '<mark>' + esc(q) + '</mark>' + esc(t.slice(i + q.length, b)) + (b < t.length ? '…' : '');
+        var li = el('li'); var link = el('a', '', '<div class="h">' + esc(c.label + '　' + c.title) + '</div><div class="x">' + x + '</div>');
+        link.href = '#' + c.id; link.onclick = function () { Q = q; };
+        li.appendChild(link); ul.appendChild(li);
+      }); });
+    }); });
+    if (!total) ul.appendChild(el('li', 'more', '見つかりませんでした'));
+    else if (total > n) ul.appendChild(el('li', 'more', '全 ' + total + ' か所のうち ' + n + ' か所を表示しています。言葉をしぼるとさがしやすくなります。'));
+  }
+  function markIn(story, q) {
+    var first = null;
+    Array.prototype.forEach.call(story.querySelectorAll('p'), function (p) {
+      if (p.textContent.indexOf(q) < 0) return;
+      p.innerHTML = p.innerHTML.split(esc(q)).join('<mark>' + esc(q) + '</mark>');
+      if (!first) first = p.querySelector('mark');
+    });
+    return first;
+  }
+
+  // ---- 一覧 ----
+  function home() {
+    current = null; scroller = null; document.body.classList.remove('v'); window.removeEventListener('scroll', onScroll || function () {});
+    document.title = '魔王が仲間になりたそうな顔でこちらを見ている';
+    app.innerHTML = '';
+    var total = 0, count = 0; D.groups.forEach(function (g) { g.items.forEach(function (c) { total += c.chars; count++; }); });
+    var w = el('div', 'wrap');
+    var cover = el('header', 'cover');
+    cover.appendChild(el('h1', '', '魔王が仲間になりたそうな顔でこちらを見ている'));
+    var side = el('div', 'side');
+    side.appendChild(el('p', 'lead', '本編のほか、章のあいだの寄り道、四天王編、番外編、名の欠片の二十四人の短編までを収めた小説です。'));
+    side.appendChild(el('ul', 'facts', '<li><b>' + count + '</b> 編</li><li>約 <b>' + (total / 10000).toFixed(1) + '万</b> 字</li><li>通しで約 <b>' + Math.round(total / 500 / 60) + '</b> 時間</li>'));
+    var st = el('div', 'start');
+    st.appendChild(Object.assign(el('a', 'btn', '第一章から読む'), { href: '#ch01' }));
+    if (P.last && CH[P.last]) st.appendChild(Object.assign(el('a', 'btn ghost', 'つづきから：' + CH[P.last].label), { href: '#' + P.last }));
+    side.appendChild(st);
+    cover.appendChild(side); w.appendChild(cover);
+    var sb = el('div', 'search');
+    var inp = el('input'); inp.type = 'search'; inp.placeholder = '検索（人物名・言葉）'; inp.setAttribute('aria-label', '小説の中を検索');
+    var hits = el('ul', 'hits');
+    inp.oninput = function () { doSearch(inp.value.trim(), hits); };
+    sb.appendChild(inp); sb.appendChild(hits); w.appendChild(sb);
+    D.groups.forEach(function (g) {
+      var sec = el('section', 'group');
+      sec.appendChild(el('h2', '', esc(g.name)));
+      if (g.note) sec.appendChild(el('p', '', esc(g.note)));
+      var ul = el('ul', 'list');
+      g.items.forEach(function (c) {
+        var li = el('li', 'item' + (P.read[c.id] ? ' done' : ''));
+        var a = el('a', '', '<span class="n">' + esc(c.label) + '</span><span class="t">' + esc(c.title) + '</span><span class="m">' + kana(c.chars) + ' · ' + mins(c.chars) + '分</span>');
+        a.href = '#' + c.id; li.appendChild(a); ul.appendChild(li);
+      });
+      sec.appendChild(ul); w.appendChild(sec);
+    });
+    w.appendChild(el('footer', 'site', '文章の端末内の記録（読んだ印・文字の大きさ・縦書き）は、このブラウザにだけ残ります。'));
+    app.appendChild(w); window.scrollTo(0, 0);
+  }
+
+  // ---- 読む画面 ----
+  function track(id) {
+    var g = D.groups.filter(function (g) { return g.items.some(function (c) { return c.id === id; }); })[0];
+    return D.tracks.filter(function (t) { return t.indexOf(id) >= 0; })[0] || g.items.map(function (c) { return c.id; });
+  }
+  function read(id) {
+    var c = CH[id]; current = id;
+    document.title = c.label + ' ' + c.title + '｜魔王が仲間になりたそうな顔でこちらを見ている';
+    app.innerHTML = '';
+    var tr = track(id), i = tr.indexOf(id);
+    var bar = el('div', 'bar'), bi = el('div', 'in wrap');
+    var back = Object.assign(el('a', 'ib', '一覧'), { href: '#' }); bi.appendChild(back);
+    bi.appendChild(el('div', 'ttl', '<i>' + esc(c.label) + '</i>' + esc(c.title)));
+    var set = el('button', 'ib', '文字'); set.setAttribute('aria-expanded', 'false'); set.id = 'set'; bi.appendChild(set);
+    bar.appendChild(bi);
+    var panel = el('div', 'panel'); panel.hidden = true;
+    function seg(label, opts, get, put) {
+      var row = el('div', 'row'); row.appendChild(el('span', '', label));
+      var s = el('div', 'seg');
+      opts.forEach(function (o) {
+        var b = el('button', '', o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(get() === o[0]));
+        b.onclick = function () { var r = ratio(); put(o[0]); save(); applyPrefs(); read(id); restore(r); panel.hidden = false; document.getElementById('set').setAttribute('aria-expanded', 'true'); };
+        s.appendChild(b);
+      });
+      row.appendChild(s); panel.appendChild(row);
+    }
+    seg('大きさ', [[0, '小'], [1, '中'], [2, '大']], function () { return P.size; }, function (v) { P.size = v; });
+    seg('向き', [[false, '横書き'], [true, '縦書き']], function () { return P.vertical; }, function (v) { P.vertical = v; });
+    seg('配色', [['auto', '自動'], ['light', '明'], ['dark', '暗']], function () { return P.theme; }, function (v) { P.theme = v; });
+    bar.appendChild(panel);
+    set.onclick = function () { panel.hidden = !panel.hidden; set.setAttribute('aria-expanded', String(!panel.hidden)); };
+
+    var story = el('article', 'story' + (P.vertical ? '' : ' wrap'));
+    var head = el('div', 'head', '<div class="lab">' + esc(c.label) + '</div><h1>' + esc(c.title) + '</h1>');
+    story.appendChild(head);
+    c.sections.forEach(function (s) {
+      if (s.h) story.appendChild(el('div', 'sec', esc(s.h)));
+      s.p.forEach(function (t) { story.appendChild(el('p', t.charAt(0) === '「' || t.charAt(0) === '（' ? 'q' : '', esc(t))); });
+    });
+    story.appendChild(el('div', 'end', '了'));
+
+    var prog = el('div', 'prog', '<i></i>');
+    var foot = el('div', 'foot'), fi = el('div', 'in wrap');
+    var prev = el('button', 'ib', '← ' + (i > 0 ? esc(CH[tr[i - 1]].label) : '前')); prev.disabled = i <= 0;
+    var next = el('button', 'ib', (i < tr.length - 1 ? esc(CH[tr[i + 1]].label) : '次') + ' →'); next.disabled = i >= tr.length - 1;
+    prev.onclick = function () { location.hash = '#' + tr[i - 1]; };
+    next.onclick = function () { location.hash = '#' + tr[i + 1]; };
+    var pg = el('span', 'pg', ''); pg.id = 'pg';
+    fi.appendChild(prev); fi.appendChild(pg); fi.appendChild(next); foot.appendChild(fi);
+    app.appendChild(bar); app.appendChild(story); app.appendChild(prog); app.appendChild(foot);
+    applyPrefs();
+
+    scroller = P.vertical ? story : null;
+    function bounds() { var s = scroller || document.scrollingElement; return P.vertical ? s.scrollWidth - s.clientWidth : s.scrollHeight - s.clientHeight; }
+    function pos() { var s = scroller || document.scrollingElement; return P.vertical ? Math.abs(s.scrollLeft) : s.scrollTop; }
+    window.ratio = ratio;
+    function ratio() { var b = bounds(); return b > 0 ? Math.min(1, pos() / b) : 0; }
+    function show() {
+      var r = ratio(); prog.firstChild.style.width = (r * 100) + '%';
+      pg.textContent = Math.round(r * 100) + '%　約' + mins(c.chars) + '分';
+      P.pos[id] = r; P.last = id; if (r > 0.97) P.read[id] = true; save();
+    }
+    window.removeEventListener('scroll', onScroll || function () {});
+    onScroll = show;
+    (P.vertical ? story : window).addEventListener('scroll', onScroll, { passive: true });
+    if (P.vertical) {
+      story.addEventListener('wheel', function (e) { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { story.scrollLeft -= e.deltaY; e.preventDefault(); } }, { passive: false });
+    }
+    window.restore = restore;
+    function restore(r) {
+      var b = bounds(); var v = Math.max(0, Math.min(1, r || 0)) * b;
+      if (P.vertical) story.scrollLeft = -v; else window.scrollTo(0, v);
+      show();
+    }
+    var saved = P.pos[id] || 0; if (saved > 0.97) saved = 0;
+    var hitMark = Q ? markIn(story, Q) : null; Q = '';
+    function toHit() { if (hitMark && hitMark.scrollIntoView) hitMark.scrollIntoView({ block: 'center', inline: 'center' }); }
+    requestAnimationFrame(function () { if (hitMark) toHit(); else restore(saved); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (hitMark) toHit(); else restore(P.pos[id] || 0); });
+  }
+  function ratio() { return window.ratio ? window.ratio() : 0; }
+  function restore(r) { if (window.restore) window.restore(r); }
+
+  document.addEventListener('keydown', function (e) {
+    if (!current || !P.vertical || !scroller) return;
+    var step = scroller.clientWidth * 0.9;
+    if (e.key === 'ArrowLeft') { scroller.scrollLeft -= step; e.preventDefault(); }
+    if (e.key === 'ArrowRight') { scroller.scrollLeft += step; e.preventDefault(); }
+  });
+
+  function route() {
+    var id = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+    if (CH[id]) read(id); else home();
+    applyPrefs();
+  }
+  window.addEventListener('hashchange', route);
+  applyPrefs(); route();
+})();
+</script>
